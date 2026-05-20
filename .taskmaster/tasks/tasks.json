@@ -1813,6 +1813,24 @@
         "complexity": 6,
         "recommendedSubtasks": 5,
         "expansionPrompt": "Break down into: (1) Create improvement branches for each of 7 categories with descriptive commits, (2) Update README with ShipShape section, reproduction instructions, and links, (3) Commit all baseline files and audit report, (4) Verify all 8 deliverables are complete, (5) Push branches and create submission document with all links"
+      },
+      {
+        "id": "25",
+        "title": "Phase 1 Gate Repair — close the four gaps the audit flagged after Audits 1-7 ran",
+        "description": "Land the four corrective branches that close the Phase 1 baseline gaps the audit identified post-Audit-1-through-7: Cat 6 normal-usage console pass, Cat 7 real VoiceOver transcript, Cat 2 bundle reproducibility, and the revert of audit-period test edits.",
+        "details": "Tasks 7 (Audit 6) and 8 (Audit 7) were marked done before the PRD's stricter measurements were added. Tasks 3 (Audit 2) accepted a bundle treemap that wasn't reproducible from a clean checkout. The four corrective branches landed in this session each close one of those gaps:\n\n- feat/phase2-cat-6-runtime-errors\n  - Adds orientation/baselines/runtime-errors/normal-usage.mjs (Playwright walker for /login, /dashboard, /my-week, /docs, /issues, /projects, /programs, /team/allocation, /team/directory, /settings, doc editor).\n  - Captures per-route console.error / console.warning / pageerror counts in a clean browser context.\n  - Writes orientation/baselines/runtime-errors/evidence/normal-usage-*.{md,json,png}.\n  - Result on master @ 076a183: 1 console.error total (a structurally expected 401 on /api/auth/me at /login), 0 warnings, 0 uncaught page errors.\n\n- feat/phase2-cat-7-accessibility\n  - Adds @guidepup/guidepup + @guidepup/playwright at the workspace root.\n  - orientation/baselines/accessibility/voiceover-walk.mjs drives Playwright (headed Chromium), starts VoiceOver, walks /my-week and a wiki doc page, and records the official macOS speech log via voiceOver.spokenPhraseLog().\n  - Two raw runs preserved: voiceover-results-2026-05-20-dev-stack.{md,json} and voiceover-results-2026-05-20-preview.{md,json}.\n  - Canonical curated summary at voiceover-results-2026-05-20.md, which surfaces six Phase 2 candidates (e.g. 'Mon5/18' no-space, no editor-body landmark, etc.).\n  - voiceover-test-script.md is kept as a manual fallback for environments without guidepup.\n  - Existing axe/Lighthouse/keyboard baseline artifacts brought under version control on the same branch.\n\n- feat/phase2-cat-2-bundle\n  - Adds rollup-plugin-visualizer as a web devDep.\n  - web/vite.config.ts loads it only when BUNDLE_ANALYZE=1 — normal builds (CI, deploy, dev, prod) are byte-identical to before.\n  - orientation/baselines/bundle/regenerate.sh produces build.txt + bundle-baseline.html in one command from a clean checkout.\n  - orientation/baselines/bundle/README.md documents what each artifact is.\n\n- master\n  - Reverted the four audit-period web test edits (DetailsExtension.test.ts, useSessionTimeout.test.ts, document-tabs.test.ts, drag-handle.test.ts). These were edited mid-audit and violated the 'no fixes during baseline' rule. They remain broken in their original form — a Phase 2 concern, not a Phase 1 measurement concern.\n  - orientation/prd-compliance-audit.md updated with a 'Recheck — 2026-05-20 (second pass)' section that records what was done per gap and explains the one borderline case (web/vite.config.ts BUNDLE_ANALYZE hook).\n\nThis task exists so Taskmaster's view of Tasks 7, 8, 9 isn't out of sync with the audit doc's view. Completion = the three feature branches are merged into the integration target (master, or a release branch), and the audit doc's Gate Matrix reads 'Pass' without 'pending merge of …' annotations.",
+        "testStrategy": "Verify: (1) `git log master --oneline` contains the three corrective branches' merge commits (or their commits if rebased): for Cat 6 the normal-usage.mjs walker, for Cat 7 the voiceover-walk.mjs walker + guidepup deps, for Cat 2 the regenerate.sh + vite.config.ts BUNDLE_ANALYZE hook. (2) orientation/baselines/runtime-errors/evidence/normal-usage-summary.md, orientation/baselines/accessibility/voiceover-results-2026-05-20.md, and orientation/baselines/bundle/bundle-baseline.html all exist on master. (3) orientation/prd-compliance-audit.md Gate Matrix entries for Cat 2, 5, 6, 7 read 'Pass' with no 'pending merge of …' annotation.",
+        "priority": "high",
+        "dependencies": [
+          "7",
+          "8",
+          "9"
+        ],
+        "status": "pending",
+        "subtasks": [],
+        "complexity": 2,
+        "recommendedSubtasks": 0,
+        "expansionPrompt": "N/A — purely a merge-and-verify task"
       }
     ],
     "metadata": {
