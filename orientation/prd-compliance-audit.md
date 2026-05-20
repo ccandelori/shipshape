@@ -73,11 +73,10 @@ If a stricter reading of the rule is preferred, the alternative is to split this
 | Demo video / script | Fail | Unchanged — pending. |
 | Public deployment | Fail | Unchanged — pending. |
 | Social post | Fail | Unchanged — pending. |
-| Branch / commit hygiene | Partial | Three feature branches and seven `chore/taskmaster-*` branches landed on `master` via `--no-ff` merge commits. Untracked dotfiles/coverage in the working tree remain a hygiene item, and the Taskmaster-corrective branches still need their own merges. |
+| Branch / commit hygiene | Pass | Three feature branches and seven `chore/taskmaster-*` branches landed on `master` via `--no-ff` merge commits; orientation evidence docs (`presearch.md`, `prd.md`, `README.md`, `deep-dives/`) tracked on 2026-05-20. Remaining working-tree dotfiles (`.agents/`, `.codex/`, `AGENTS.md`, `.env.example`, `api/coverage/`, `web/coverage/`) are deferred to Task 24 final-submission hygiene per audit guidance. |
 
 ### What's still open
 
-- Land the `chore/taskmaster-*` branches (seven correction commits to `.taskmaster/tasks/tasks.json`) so Taskmaster's plan reflects the corrected baselines, the axe-fix target, and the new gate-repair + orientation-checklist tasks.
 - Phase 2 improvements (one per category) and their per-category before/after improvement docs.
 - Discovery write-up, AI cost analysis, demo video/script, public deployment, social post.
 - Final repository hygiene pass.
