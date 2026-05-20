@@ -49,6 +49,12 @@ Thumbs.db
 evidence/
 *.png
 
+# Override: orientation/ holds the PRD-required baseline artifacts and must
+# be tracked despite the generic evidence/ and *.png ignores above.
+!orientation/**/evidence/
+!orientation/**/evidence/**
+!orientation/**/*.png
+
 # Playwright test artifacts
 playwright-report/
 test-results/
