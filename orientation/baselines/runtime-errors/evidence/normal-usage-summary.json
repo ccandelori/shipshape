@@ -1,0 +1,144 @@
+{
+  "capturedAt": "2026-05-20T14:35:57.241Z",
+  "web": "http://localhost:5173",
+  "api": "http://localhost:3000",
+  "routes": [
+    {
+      "slug": "login",
+      "label": "Login (unauth)",
+      "target": "http://localhost:5173/login",
+      "finalUrl": "http://localhost:5173/login",
+      "errorCount": 1,
+      "errorUnique": 1,
+      "warningCount": 0,
+      "warningUnique": 0,
+      "pageerrorCount": 0,
+      "pageerrorUnique": 0
+    },
+    {
+      "slug": "dashboard",
+      "label": "Dashboard",
+      "target": "http://localhost:5173/dashboard",
+      "finalUrl": "http://localhost:5173/dashboard",
+      "errorCount": 0,
+      "errorUnique": 0,
+      "warningCount": 0,
+      "warningUnique": 0,
+      "pageerrorCount": 0,
+      "pageerrorUnique": 0
+    },
+    {
+      "slug": "my-week",
+      "label": "My Week",
+      "target": "http://localhost:5173/my-week",
+      "finalUrl": "http://localhost:5173/my-week",
+      "errorCount": 0,
+      "errorUnique": 0,
+      "warningCount": 0,
+      "warningUnique": 0,
+      "pageerrorCount": 0,
+      "pageerrorUnique": 0
+    },
+    {
+      "slug": "docs",
+      "label": "Docs list",
+      "target": "http://localhost:5173/docs",
+      "finalUrl": "http://localhost:5173/docs",
+      "errorCount": 0,
+      "errorUnique": 0,
+      "warningCount": 0,
+      "warningUnique": 0,
+      "pageerrorCount": 0,
+      "pageerrorUnique": 0
+    },
+    {
+      "slug": "issues",
+      "label": "Issues list",
+      "target": "http://localhost:5173/issues",
+      "finalUrl": "http://localhost:5173/issues",
+      "errorCount": 0,
+      "errorUnique": 0,
+      "warningCount": 0,
+      "warningUnique": 0,
+      "pageerrorCount": 0,
+      "pageerrorUnique": 0
+    },
+    {
+      "slug": "projects",
+      "label": "Projects list",
+      "target": "http://localhost:5173/projects",
+      "finalUrl": "http://localhost:5173/projects",
+      "errorCount": 0,
+      "errorUnique": 0,
+      "warningCount": 0,
+      "warningUnique": 0,
+      "pageerrorCount": 0,
+      "pageerrorUnique": 0
+    },
+    {
+      "slug": "programs",
+      "label": "Programs list",
+      "target": "http://localhost:5173/programs",
+      "finalUrl": "http://localhost:5173/programs",
+      "errorCount": 0,
+      "errorUnique": 0,
+      "warningCount": 0,
+      "warningUnique": 0,
+      "pageerrorCount": 0,
+      "pageerrorUnique": 0
+    },
+    {
+      "slug": "team-allocation",
+      "label": "Team allocation",
+      "target": "http://localhost:5173/team/allocation",
+      "finalUrl": "http://localhost:5173/team/allocation",
+      "errorCount": 0,
+      "errorUnique": 0,
+      "warningCount": 0,
+      "warningUnique": 0,
+      "pageerrorCount": 0,
+      "pageerrorUnique": 0
+    },
+    {
+      "slug": "team-directory",
+      "label": "Team directory",
+      "target": "http://localhost:5173/team/directory",
+      "finalUrl": "http://localhost:5173/team/directory",
+      "errorCount": 0,
+      "errorUnique": 0,
+      "warningCount": 0,
+      "warningUnique": 0,
+      "pageerrorCount": 0,
+      "pageerrorUnique": 0
+    },
+    {
+      "slug": "settings",
+      "label": "Settings",
+      "target": "http://localhost:5173/settings",
+      "finalUrl": "http://localhost:5173/settings",
+      "errorCount": 0,
+      "errorUnique": 0,
+      "warningCount": 0,
+      "warningUnique": 0,
+      "pageerrorCount": 0,
+      "pageerrorUnique": 0
+    },
+    {
+      "slug": "doc-editor-wiki",
+      "label": "Document editor (wiki)",
+      "target": "http://localhost:5173/documents/57895cfe-dcba-419a-8dbc-a919a846c0b7",
+      "finalUrl": "http://localhost:5173/documents/57895cfe-dcba-419a-8dbc-a919a846c0b7",
+      "errorCount": 0,
+      "errorUnique": 0,
+      "warningCount": 0,
+      "warningUnique": 0,
+      "pageerrorCount": 0,
+      "pageerrorUnique": 0
+    }
+  ],
+  "totals": {
+    "errorCount": 1,
+    "warningCount": 0,
+    "pageerrorCount": 0
+  }
+}
