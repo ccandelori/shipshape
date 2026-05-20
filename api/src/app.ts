@@ -84,6 +84,12 @@ const apiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   message: { error: 'Too many requests. Please slow down.' },
+  // Test-mode-only bypass for `orientation/baselines/api-response-time/`
+  // load benchmarks. Gated on isTestEnv so the skip is unreachable in dev or
+  // production (isTestEnv requires NODE_ENV=test or E2E_TEST=1). Same precedent
+  // as web/vite.config.ts's BUNDLE_ANALYZE=1 hook — a measurement scaffold
+  // with zero observable behavior change under normal operation.
+  skip: (req) => isTestEnv && req.headers['x-bench'] === '1',
 });
 
 

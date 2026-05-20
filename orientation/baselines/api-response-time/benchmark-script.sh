@@ -3,7 +3,12 @@
 #
 # Prerequisites (the parent thread runs these BEFORE this script):
 #   1. PostgreSQL running locally on :5432
-#   2. API running on :3000 (e.g. `pnpm dev:api`)
+#   2. API running on :3000 with E2E_TEST=1 set, e.g.:
+#        E2E_TEST=1 pnpm dev:api
+#      The E2E_TEST flag activates the test-mode `X-Bench: 1` rate-limit
+#      skip in `apiLimiter` (`api/src/app.ts`), so the benchmark measures
+#      route+DB latency instead of rate-limiter behavior. The skip is
+#      unreachable in dev or production (isTestEnv guard).
 #   3. DB seeded: `pnpm db:seed`  → verify counts with the psql block below
 #   4. A valid session cookie exported as $SESSION_COOKIE. Easiest:
 #        - open http://localhost:5173, sign in as a seeded user
@@ -27,6 +32,21 @@ DURATION="${DURATION:-30}"
 # Sanity: server up?
 curl -sf --max-time 3 "${API}/health" >/dev/null \
   || { echo "API not reachable at ${API}/health"; exit 1; }
+
+# Sanity: X-Bench rate-limit skip is active. Burst 30 requests under 1s and
+# require all 200s. Without the skip, autocannon at c=10+ would 429 within
+# seconds. Aborts early if the API wasn't started with E2E_TEST=1.
+burst_status=$(for _ in $(seq 1 30); do
+  curl -s -o /dev/null -w "%{http_code} " \
+    -H "Cookie: session_id=${SESSION_COOKIE}" \
+    -H "X-Bench: 1" \
+    "${API}/api/auth/me"
+done)
+if echo "$burst_status" | grep -q "429"; then
+  echo "Rate-limit hit on burst probe — start the API with E2E_TEST=1 to activate the X-Bench bypass."
+  echo "Got: $burst_status"
+  exit 1
+fi
 
 # Sanity: session cookie actually authenticates?
 status=$(curl -s -o /dev/null -w '%{http_code}' \

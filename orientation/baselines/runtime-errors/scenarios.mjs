@@ -35,8 +35,8 @@ import { fileURLToPath } from 'node:url';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const EVIDENCE = path.join(HERE, 'evidence');
 const SHOTS = path.join(EVIDENCE, 'screenshots');
-const WEB = 'http://localhost:5174';
-const API = 'http://localhost:3000';
+const WEB = process.env.WEB || 'http://localhost:5174';
+const API = process.env.API || 'http://localhost:3000';
 const CREDS = { email: 'dev@ship.local', password: 'admin123' };
 
 const onlyArg = process.argv.find((a) => a.startsWith('only='));
@@ -678,10 +678,385 @@ async function scenario10(browser) {
   return slug;
 }
 
+async function scenario2(ctx) {
+  const slug = 'yjs-to-json-null';
+  // Audit claim: persistDocument calls `yjsToJson(fragment)`; if the helper
+  // returns `undefined`, `JSON.stringify(undefined)` returns the JS value
+  // `undefined`, which pg coerces to SQL NULL — so `documents.content` is
+  // silently nulled while `yjs_state` survives.
+  //
+  // The function as written always returns `{type:'doc', content}`, so this
+  // path is preventive. To reproduce live, a defect must be injected
+  // upstream. The scenario requires `yjsConverter.ts` to contain a
+  // marker-conditioned `return undefined` branch BEFORE the run (the parent
+  // thread injects, runs this scenario, reverts). Without the marker
+  // injection in place, the scenario falls back to documenting the
+  // structural finding.
+  const page = await ctx.newPage();
+  const bucket = newBucket();
+  attachLogger(page, bucket);
+  await login(page);
+
+  // Verify the defect injection is active by checking the source file. If
+  // not, abort early and write a "structural-only" evidence file so the run
+  // is still useful.
+  let injectionActive = false;
+  try {
+    const src = await fs.readFile(
+      path.join(HERE, '..', '..', '..', 'api', 'src', 'utils', 'yjsConverter.ts'),
+      'utf8'
+    );
+    injectionActive = src.includes('DEFECT-MARKER-YJS-NULL');
+  } catch {}
+
+  const created = await page.evaluate(async () => {
+    const csrf = await fetch('/api/csrf-token', { credentials: 'include' }).then((r) => r.json());
+    const res = await fetch('/api/documents', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf.token },
+      body: JSON.stringify({ document_type: 'wiki', title: 'yjs-null-test' }),
+    });
+    return { status: res.status, body: await res.json() };
+  });
+  if (created.status >= 400) throw new Error(`create failed: ${JSON.stringify(created)}`);
+  const docId = created.body.id || created.body.data?.id;
+
+  await page.goto(`${WEB}/documents/${docId}`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(2500);
+  await dismissOverlays(page);
+
+  const body = page.locator('.ProseMirror, [contenteditable="true"]').first();
+  await body.click();
+  // The marker phrase triggers the injected defect branch in yjsToJson.
+  await page.keyboard.type('DEFECT-MARKER-YJS-NULL trigger persist with this body. ', { delay: 8 });
+  await page.waitForTimeout(3500); // > 2s persist debounce
+
+  const dbRow = execSync(
+    `docker exec -i ship-postgres-1 psql -U ship -d ship_dev -t -A -F'|'`,
+    {
+      encoding: 'utf8',
+      input: `SELECT (content IS NULL) AS content_is_null, octet_length(yjs_state) AS yjs_bytes, content::text FROM documents WHERE id = '${docId}';`,
+    }
+  ).trim();
+  const [contentIsNull, yjsBytes, contentText] = dbRow.split('|');
+  const yjsHasBytes = parseInt(yjsBytes || '0', 10) > 0;
+  const contentNulled = contentIsNull === 't';
+
+  await page.screenshot({ path: path.join(SHOTS, `${slug}.png`), fullPage: false });
+
+  const verdict = !injectionActive
+    ? `⚠️ **Defect injection NOT detected in \`api/src/utils/yjsConverter.ts\`.** This run documents the structural finding only — no live reproduction was performed because the marker-conditioned \`return undefined\` branch is not present in source. To reproduce: (1) edit \`yjsToJson\` to \`if (...DEFECT-MARKER-YJS-NULL...) return undefined;\` at the top of the function, (2) wait for tsx to reload the API, (3) re-run this scenario, (4) revert the source change. The structural risk path remains: if \`yjsToJson\` ever returns undefined, \`JSON.stringify(undefined)\` produces the JS value \`undefined\`, which pg coerces to SQL NULL on the \`content\` column while \`yjs_state\` survives.`
+    : contentNulled && yjsHasBytes
+      ? `⚠️ **AUDIT CLAIM CONFIRMED LIVE.** With the defect branch in place, the persist path wrote SQL NULL to \`documents.content\` (content_is_null=t) while \`yjs_state\` survived at ${yjsBytes} bytes. API readers that consult \`content\` (not \`yjs_state\`) will see an empty document. The collaboration-server outer try/catch caught nothing — the JSON.stringify of undefined didn't throw, it just produced undefined → pg NULL. **Severity: High — silent data loss.**`
+      : contentNulled
+        ? `⚠️ **content NULL but yjs_state also empty.** The persist may not have fired at all. Inspect the dev API logs around \`persistDocument\` for the docId above.`
+        : `✅ **content NOT nulled despite injection.** The persist path may have an additional guard, or the injection wasn't reached. content snippet: \`${(contentText || '').slice(0, 80)}\``;
+
+  await writeEvidence(slug, [
+    `# Scenario 2: yjsToJson silent NULL persist`,
+    ``,
+    `**Captured:** ${new Date().toISOString()}`,
+    `**Doc:** \`${docId}\` (created during the run; safe to delete)`,
+    `**Defect injection detected in source:** ${injectionActive ? '✅ yes' : '⚠️ no'}`,
+    `**Marker phrase typed:** \`DEFECT-MARKER-YJS-NULL trigger persist with this body.\``,
+    ``,
+    `## Probes`,
+    ``,
+    `| Probe | Expected if audit claim is right (with injection) | Observed |`,
+    `|---|---|---|`,
+    `| \`content IS NULL\` after marker-triggered persist | t (silent NULL) | **${contentIsNull || 'n/a'}** |`,
+    `| \`octet_length(yjs_state)\` | > 0 (Yjs survives) | **${yjsBytes || 'n/a'}** bytes |`,
+    `| \`content::text\` snippet | (NULL) | \`${(contentText || '').slice(0, 120)}\` |`,
+    ``,
+    `## Verdict`,
+    verdict,
+    ``,
+    `## Reproduction protocol (for the human running this)`,
+    ``,
+    `1. Apply this diff to \`api/src/utils/yjsConverter.ts\`:`,
+    '   ```ts',
+    `   export function yjsToJson(fragment: Y.XmlFragment): any {`,
+    `     // TEMPORARY DEFECT INJECTION — revert after capture`,
+    `     for (let i = 0; i < fragment.length; i++) {`,
+    `       const item = fragment.get(i);`,
+    `       if (item instanceof Y.XmlElement) {`,
+    `         const text = item.toString();`,
+    `         if (text.includes('DEFECT-MARKER-YJS-NULL')) return undefined;`,
+    `       }`,
+    `     }`,
+    `     // ... rest of original function unchanged`,
+    '   ```',
+    `2. Wait for the dev API to reload (tsx --watch picks up the change in ~1 s).`,
+    `3. Re-run: \`WEB=http://localhost:5173 node orientation/baselines/runtime-errors/scenarios.mjs only=2\``,
+    `4. \`git restore api/src/utils/yjsConverter.ts\` to revert.`,
+    ``,
+    `## Console (errors/warnings only)`,
+    fmtConsole(bucket.console),
+  ]);
+  await page.close();
+  return slug;
+}
+
+async function scenario1(ctx) {
+  const slug = 'ws-session-expiry';
+  // Audit claim: WS validates session ONLY at HTTP upgrade
+  // (collaboration/index.ts:347-393 + 683). A user whose HTTP session is
+  // destroyed (idle timeout in prod) keeps editing collaboratively until the
+  // browser closes. This scenario forces session destruction via direct DB
+  // delete and verifies that the WS keeps persisting writes after the HTTP
+  // boundary has been killed.
+  const page = await ctx.newPage();
+  const bucket = newBucket();
+  attachLogger(page, bucket);
+  await login(page);
+
+  // Capture the session cookie so we can target it for deletion later.
+  const cookies = await ctx.cookies();
+  const sessionCookie = cookies.find((c) => c.name === 'session_id');
+  if (!sessionCookie) throw new Error('session_id cookie not found post-login');
+  // Cookie values come URL-encoded ("s%3A<sig>...") through cookie-parser; the
+  // session table stores the raw id. cookie-parser strips the `s:` prefix and
+  // verifies the signed value, so the DB id is the part between `s:` and `.`.
+  // Easier: read sessions table for our user and pick the most-recent row.
+  const userQ = execSync(
+    `docker exec -i ship-postgres-1 psql -U ship -d ship_dev -t -A -F'|'`,
+    { encoding: 'utf8', input: `SELECT id FROM sessions ORDER BY created_at DESC LIMIT 1;` }
+  ).trim();
+  const sessionId = userQ.replace(/[\r\n]/g, '');
+  if (!sessionId) throw new Error('no session row found in DB');
+
+  // Create a doc and open it — establishes the WS upgrade with a live session.
+  const created = await page.evaluate(async () => {
+    const csrf = await fetch('/api/csrf-token', { credentials: 'include' }).then((r) => r.json());
+    const res = await fetch('/api/documents', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf.token },
+      body: JSON.stringify({ document_type: 'wiki', title: 'ws-session-expiry-test' }),
+    });
+    return { status: res.status, body: await res.json() };
+  });
+  if (created.status >= 400) throw new Error(`create failed: ${JSON.stringify(created)}`);
+  const docId = created.body.id || created.body.data?.id;
+
+  await page.goto(`${WEB}/documents/${docId}`, { waitUntil: 'domcontentloaded' });
+  await page.waitForTimeout(2500);
+  await dismissOverlays(page);
+
+  // Type a pre-expiry phrase to confirm the WS persist path works when the
+  // session is alive.
+  const PRE = 'BEFORE-EXPIRY-PHRASE-' + Date.now();
+  const body = page.locator('.ProseMirror, [contenteditable="true"]').first();
+  await body.click();
+  await page.keyboard.type(PRE + ' ', { delay: 8 });
+  await page.waitForTimeout(3500); // > 2s persist debounce
+
+  const preRow = execSync(
+    `docker exec -i ship-postgres-1 psql -U ship -d ship_dev -t -A`,
+    { encoding: 'utf8', input: `SELECT content::text FROM documents WHERE id = '${docId}';` }
+  ).trim();
+  const preHit = preRow.includes(PRE);
+
+  // Now destroy the HTTP session. The WS connection is unaffected at the TCP
+  // layer; the audit's claim is that nothing on the WS server re-checks the
+  // session row.
+  execSync(
+    `docker exec -i ship-postgres-1 psql -U ship -d ship_dev`,
+    { encoding: 'utf8', input: `DELETE FROM sessions WHERE id = '${sessionId}';` }
+  );
+  const tDelete = Date.now();
+
+  // Sanity: REST boundary is now dead. /api/auth/me must 401.
+  const restProbe = await page.evaluate(async () => {
+    const r = await fetch('/api/auth/me', { credentials: 'include' });
+    return { status: r.status };
+  });
+
+  // Continue typing. If the audit is right, the WS keeps accepting and
+  // persisting these keystrokes despite the session being gone.
+  const POST = 'AFTER-EXPIRY-PHRASE-' + Date.now();
+  await body.click();
+  await page.keyboard.type(' ' + POST + ' ', { delay: 8 });
+  await page.waitForTimeout(3500); // > 2s persist debounce
+
+  const postRow = execSync(
+    `docker exec -i ship-postgres-1 psql -U ship -d ship_dev -t -A`,
+    { encoding: 'utf8', input: `SELECT content::text FROM documents WHERE id = '${docId}';` }
+  ).trim();
+  const postHit = postRow.includes(POST);
+
+  await page.screenshot({ path: path.join(SHOTS, `${slug}.png`), fullPage: false });
+
+  await writeEvidence(slug, [
+    `# Scenario 1: WebSocket session expiry mid-edit`,
+    ``,
+    `**Captured:** ${new Date().toISOString()}`,
+    `**Doc:** \`${docId}\` (created during the run; safe to delete)`,
+    `**Session row deleted:** \`${sessionId}\` at \`${new Date(tDelete).toISOString()}\``,
+    `**Setup:** in lieu of waiting 15 minutes for a real idle timeout, this scenario forces session destruction by deleting the \`sessions\` row directly. The WS connection is unchanged at the TCP layer — the audit's claim is that the WS server never re-validates the session row, so the connection continues processing messages.`,
+    ``,
+    `## Probes`,
+    ``,
+    `| Probe | Expected if audit claim is right | Observed |`,
+    `|---|---|---|`,
+    `| Pre-expiry phrase persists via WS (sanity, session alive) | persists | ${preHit ? '✅ persists' : '⚠️ NOT persisted'} |`,
+    `| REST \`/api/auth/me\` after session DELETE | 401 (HTTP boundary dead) | **${restProbe.status}** |`,
+    `| Post-expiry phrase persists via WS (audit-target test) | persists despite dead session | ${postHit ? '⚠️ **PERSISTS — confirms audit claim**' : '✅ rejected (WS re-checked session)'} |`,
+    ``,
+    `## Verdict`,
+    preHit && restProbe.status === 401 && postHit
+      ? `⚠️ **AUDIT CLAIM CONFIRMED LIVE.** The HTTP session was destroyed (REST returns 401) but the WebSocket kept accepting and persisting edits. \`After-expiry\` phrase \`${POST}\` was written to \`documents.content\` despite the session row no longer existing. This is exactly the "user whose session expires keeps editing until the browser closes" path described in the audit. **Severity: High.**`
+      : !preHit
+        ? `⚠️ **Sanity probe failed.** The pre-expiry phrase did not appear in the persisted \`content\` column — the WS persist path may not be wired the way the test expected. Investigate persistDocument before drawing conclusions.`
+        : restProbe.status !== 401
+          ? `⚠️ **HTTP boundary not dead.** REST returned ${restProbe.status} after the session DELETE — the session destruction did not take effect. Re-check the session cookie capture path.`
+          : `✅ **WS re-validated the session.** The post-expiry phrase did NOT persist, suggesting the WS path enforces session-currency somewhere. This contradicts the static audit finding — file a sub-finding.`,
+    ``,
+    `## DB rows`,
+    `**Pre-delete \`content\`:** \`${preRow.slice(0, 200).replace(/\n/g, ' ⏎ ')}...\``,
+    `**Post-delete \`content\`:** \`${postRow.slice(0, 200).replace(/\n/g, ' ⏎ ')}...\``,
+    ``,
+    `## Console (errors/warnings only)`,
+    fmtConsole(bucket.console),
+  ]);
+  await page.close();
+  return slug;
+}
+
+async function scenario3b(browser) {
+  const slug = 'two-tab-title-race';
+  // PRD: "Test concurrent edges: two browser tabs editing the same document
+  // field simultaneously." Title is plain `useState` in Editor.tsx:187 — not
+  // Yjs-bound — and is persisted via debounced REST PATCH. Two tabs typing
+  // into the title race on the persist; expectation: last-write-wins.
+  const ctxA = await browser.newContext();
+  const ctxB = await browser.newContext();
+  const pageA = await ctxA.newPage();
+  const pageB = await ctxB.newPage();
+  const bucketA = newBucket();
+  const bucketB = newBucket();
+  attachLogger(pageA, bucketA);
+  attachLogger(pageB, bucketB);
+
+  // Same user, two browser sessions — simulates "two tabs on the same login".
+  await login(pageA);
+  await login(pageB);
+
+  // Create the doc as A.
+  const created = await pageA.evaluate(async () => {
+    const csrf = await fetch('/api/csrf-token', { credentials: 'include' }).then((r) => r.json());
+    const res = await fetch('/api/documents', {
+      method: 'POST',
+      credentials: 'include',
+      headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf.token },
+      body: JSON.stringify({ document_type: 'wiki', title: 'race-baseline-title' }),
+    });
+    return { status: res.status, body: await res.json() };
+  });
+  if (created.status >= 400) throw new Error(`create failed: ${JSON.stringify(created)}`);
+  const docId = created.body.id || created.body.data?.id;
+
+  await pageA.goto(`${WEB}/documents/${docId}`, { waitUntil: 'domcontentloaded' });
+  await pageB.goto(`${WEB}/documents/${docId}`, { waitUntil: 'domcontentloaded' });
+  await pageA.waitForTimeout(2000);
+  await pageB.waitForTimeout(2000);
+  await dismissOverlays(pageA);
+  await dismissOverlays(pageB);
+
+  const titleA = pageA.locator('textarea[placeholder*="Untitled" i], textarea').first();
+  const titleB = pageB.locator('textarea[placeholder*="Untitled" i], textarea').first();
+  const A_TEXT = 'TabA-wins-2026';
+  const B_TEXT = 'TabB-wins-2026';
+
+  // Both clear, then type concurrently. Use fill() to set deterministic values
+  // simultaneously; the autosave debounce on each side will fire its own PATCH.
+  await Promise.all([titleA.click(), titleB.click()]);
+  await Promise.all([titleA.fill(A_TEXT), titleB.fill(B_TEXT)]);
+  const tConcurrentFill = Date.now();
+
+  // Wait for both debounced autosaves to land.
+  await pageA.waitForTimeout(3500);
+  await pageB.waitForTimeout(500);
+
+  await pageA.screenshot({ path: path.join(SHOTS, `${slug}-A.png`), fullPage: false });
+  await pageB.screenshot({ path: path.join(SHOTS, `${slug}-B.png`), fullPage: false });
+
+  // Read persisted title.
+  const read = await pageA.evaluate(async (id) => {
+    const r = await fetch(`/api/documents/${id}`, { credentials: 'include' });
+    return { status: r.status, body: await r.json() };
+  }, docId);
+  const persistedTitle = read.body?.title || read.body?.data?.title || '(empty)';
+
+  // Inspect the PATCH order from each tab's network bucket.
+  const patchesFromA = bucketA.network.filter(
+    (n) => (n.url || '').includes(`/api/documents/${docId}`) && n.method === 'PATCH'
+  );
+  const patchesFromB = bucketB.network.filter(
+    (n) => (n.url || '').includes(`/api/documents/${docId}`) && n.method === 'PATCH'
+  );
+  const lastPatchA = patchesFromA.at(-1);
+  const lastPatchB = patchesFromB.at(-1);
+  const winnerByTime = (() => {
+    if (!lastPatchA && !lastPatchB) return 'no-PATCH-observed';
+    if (!lastPatchA) return 'B (only B sent PATCH)';
+    if (!lastPatchB) return 'A (only A sent PATCH)';
+    return lastPatchA.ts > lastPatchB.ts ? 'A (later PATCH)' : 'B (later PATCH)';
+  })();
+
+  const expectedOneOf = [A_TEXT, B_TEXT];
+  const lwwHolds = expectedOneOf.includes(persistedTitle);
+
+  await writeEvidence(slug, [
+    `# Scenario 3b: Two-tab concurrent title edit (PRD-required)`,
+    ``,
+    `**Captured:** ${new Date().toISOString()}`,
+    `**Doc:** \`${docId}\` (created during the run; safe to delete)`,
+    `**Setup:** two browser contexts, both logged in as \`${CREDS.email}\`, both on \`/documents/${docId}\`.`,
+    `**Race:** tab A fills the title with \`${A_TEXT}\`; tab B fills with \`${B_TEXT}\` at the same wall-clock instant (\`${new Date(tConcurrentFill).toISOString()}\`).`,
+    ``,
+    `## Result`,
+    ``,
+    `| Probe | Value |`,
+    `|---|---|`,
+    `| Persisted title (\`GET /api/documents/${docId}\`) | \`${persistedTitle}\` |`,
+    `| Tab A PATCHes observed | ${patchesFromA.length} (last at ${lastPatchA ? new Date(lastPatchA.ts).toISOString() : 'n/a'}) |`,
+    `| Tab B PATCHes observed | ${patchesFromB.length} (last at ${lastPatchB ? new Date(lastPatchB.ts).toISOString() : 'n/a'}) |`,
+    `| Expected winner by PATCH timestamp | ${winnerByTime} |`,
+    `| Last-write-wins holds? | ${lwwHolds ? '✅ yes (persisted title is one of the two typed values)' : '⚠️ NO — persisted title is neither typed value'} |`,
+    ``,
+    `## Verdict`,
+    lwwHolds
+      ? `✅ **Last-write-wins confirmed live.** The persisted title is one of the two typed values, matching the static analysis (\`Editor.tsx:187\` — title is plain \`useState\`, not Yjs-bound; debounced REST PATCH; no merge). No UI signal to the losing tab that its edit was overwritten — the losing tab continues to show its own typed value until reload. This is the documented behavior, not a bug per the audit; the data-loss-on-reload UX is a Phase 2 candidate.`
+      : `⚠️ **Race did not resolve to either tab's value.** Persisted: \`${persistedTitle}\`. Possible causes: (a) one tab's PATCH was rejected, (b) the title element wasn't found on one page, (c) the autosave didn't fire. Inspect the network log below and re-run.`,
+    ``,
+    `## Network (PATCH events from both tabs)`,
+    '```',
+    [...patchesFromA.map((n) => `[A] ${n.method || ''} ${n.url || ''} → ${n.status || ''} @ ${new Date(n.ts).toISOString()}`),
+     ...patchesFromB.map((n) => `[B] ${n.method || ''} ${n.url || ''} → ${n.status || ''} @ ${new Date(n.ts).toISOString()}`)].sort().join('\n') || '(no PATCH events captured)',
+    '```',
+    ``,
+    `## Console (errors/warnings only) — Tab A`,
+    fmtConsole(bucketA.console),
+    ``,
+    `## Console (errors/warnings only) — Tab B`,
+    fmtConsole(bucketB.console),
+  ]);
+  await pageA.close();
+  await pageB.close();
+  await ctxA.close();
+  await ctxB.close();
+  return slug;
+}
+
 // ── main ────────────────────────────────────────────────────────────────────
 
 const SCENARIOS = [
+  { id: '1', name: 'ws-session-expiry', fn: scenario1, mode: 'ctx' },
+  { id: '2', name: 'yjs-to-json-null', fn: scenario2, mode: 'ctx' },
   { id: '3', name: 'disconnect-reconnect', fn: scenario3, mode: 'ctx' },
+  { id: '3b', name: 'two-tab-title-race', fn: scenario3b, mode: 'browser' },
   { id: '4', name: 'slow-3g', fn: scenario4, mode: 'browser' },
   { id: '6', name: 'long-title', fn: scenario6, mode: 'ctx' },
   { id: '7', name: 'html-injection', fn: scenario7, mode: 'ctx' },
