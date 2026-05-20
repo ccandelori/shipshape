@@ -1,0 +1,10 @@
+/Users/sheep/Desktop/Gauntlet/ship/web/src/main.tsx:251:ReactDOM.createRoot(document.getElementById('root')!).render(
+/Users/sheep/Desktop/Gauntlet/ship/web/src/contexts/ReviewQueueContext.tsx:49:    navigateToItem(queue[0]!);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/contexts/ReviewQueueContext.tsx:61:      navigateToItem(s.queue[nextIndex]!);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useSessionTimeout.ts:147:              clearInterval(countdownIntervalRef.current!);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useSessionTimeout.ts:191:              clearInterval(countdownIntervalRef.current!);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useSessionTimeout.ts:215:              clearInterval(countdownIntervalRef.current!);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProjectsQuery.ts:369:    queryFn: () => fetchProjectIssues(projectId!),
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProjectsQuery.ts:390:    queryFn: () => fetchProjectWeeks(projectId!),
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDocumentContextQuery.ts:61:    queryFn: () => fetchDocumentContext(id!),
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/CommentDisplay.tsx:88:        <span class="comment-resolved-text">Resolved by ${escapeHtml(root.author.name)} · ${formatRelativeTime(root.resolved_at!)}</span>

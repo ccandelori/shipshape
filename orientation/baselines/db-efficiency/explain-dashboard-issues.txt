@@ -1,0 +1,21 @@
+                                                                                                                                                  QUERY PLAN                                                                                                                                                   
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=42.06..42.06 rows=1 width=180) (actual time=0.121..0.122 rows=12 loops=1)
+   Sort Key: updated_at DESC
+   Sort Method: quicksort  Memory: 28kB
+   Buffers: shared hit=11
+   ->  Bitmap Heap Scan on documents d  (cost=4.93..42.05 rows=1 width=180) (actual time=0.039..0.103 rows=12 loops=1)
+         Recheck Cond: (document_type = 'issue'::document_type)
+         Filter: ((archived_at IS NULL) AND (deleted_at IS NULL) AND (workspace_id = '9dbdd448-5522-4fcf-854f-2c2f3736e323'::uuid) AND ((properties ->> 'state'::text) <> ALL ('{done,cancelled}'::text[])) AND (((properties ->> 'assignee_id'::text))::uuid = 'e6596c5e-971c-4f7e-bbbb-456c142b3876'::uuid))
+         Rows Removed by Filter: 92
+         Heap Blocks: exact=7
+         Buffers: shared hit=8
+         ->  Bitmap Index Scan on idx_documents_document_type  (cost=0.00..4.93 rows=104 width=0) (actual time=0.013..0.013 rows=104 loops=1)
+               Index Cond: (document_type = 'issue'::document_type)
+               Buffers: shared hit=1
+ Planning:
+   Buffers: shared hit=378
+ Planning Time: 0.906 ms
+ Execution Time: 0.149 ms
+(17 rows)
+

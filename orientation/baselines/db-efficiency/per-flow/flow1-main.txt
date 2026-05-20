@@ -1,0 +1,19 @@
+  0.606ms	(prepared stmt — SQL same as prior)
+  0.454ms	(prepared stmt — SQL same as prior)
+  0.321ms	(prepared stmt — SQL same as prior)
+  0.186ms	(prepared stmt — SQL same as prior)
+  0.160ms	(prepared stmt — SQL same as prior)
+  0.152ms	(prepared stmt — SQL same as prior)
+  0.147ms	(prepared stmt — SQL same as prior)
+  0.126ms	(prepared stmt — SQL same as prior)
+  0.117ms	(prepared stmt — SQL same as prior)
+  0.091ms	(prepared stmt — SQL same as prior)
+  0.082ms	(prepared stmt — SQL same as prior)
+  0.073ms	(prepared stmt — SQL same as prior)
+  0.072ms	(prepared stmt — SQL same as prior)
+  0.032ms	SELECT s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at, u.is_super_admin FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.id = $1
+  0.032ms	SELECT s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at, u.is_super_admin FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.id = $1
+  0.029ms	SELECT s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at, u.is_super_admin FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.id = $1
+  0.027ms	SELECT s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at, u.is_super_admin FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.id = $1
+  0.024ms	SELECT s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at, u.is_super_admin FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.id = $1
+  0.024ms	SELECT s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at, u.is_super_admin FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.id = $1

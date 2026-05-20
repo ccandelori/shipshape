@@ -1,0 +1,50 @@
+/Users/sheep/Desktop/Gauntlet/ship/e2e/pending-invites-allocation.spec.ts:547:    // Should NOT have "(pending)" next to their name anymore
+/Users/sheep/Desktop/Gauntlet/ship/e2e/mentions.spec.ts:72:    // Check for any tippy elements
+/Users/sheep/Desktop/Gauntlet/ship/e2e/mentions.spec.ts:76:    // Check for any popup-like elements
+/Users/sheep/Desktop/Gauntlet/ship/e2e/autosave-race-conditions.spec.ts:80:    // Wait for any stale responses to arrive
+/Users/sheep/Desktop/Gauntlet/ship/e2e/changes-requested-notifications.spec.ts:70:  // The seed data creates sprints with assignee_ids. Check if any sprint
+/Users/sheep/Desktop/Gauntlet/ship/e2e/changes-requested-notifications.spec.ts:84:  // If no sprint has the person assigned, try to find any sprint
+/Users/sheep/Desktop/Gauntlet/ship/e2e/emoji.spec.ts:265:    // Type something that won't match any emoji
+/Users/sheep/Desktop/Gauntlet/ship/e2e/feedback-consolidation.spec.ts:191:    // Should NOT show any tracking/status links
+/Users/sheep/Desktop/Gauntlet/ship/e2e/fixtures/isolated-env.ts:98:    // Set localStorage flag to disable action items modal before any navigation
+/Users/sheep/Desktop/Gauntlet/ship/e2e/fixtures/isolated-env.ts:170:          CORS_ORIGIN: '*', // Allow any origin during tests
+/Users/sheep/Desktop/Gauntlet/ship/e2e/team-mode.spec.ts:316:      // Check if there are any projects (not just None)
+/Users/sheep/Desktop/Gauntlet/ship/e2e/team-mode.spec.ts:348:      // Check if there are any projects (not just None)
+/Users/sheep/Desktop/Gauntlet/ship/e2e/team-mode.spec.ts:495:        // Check if there are any projects (not just None)
+/Users/sheep/Desktop/Gauntlet/ship/e2e/accountability-banner-urgency.spec.ts:7: * - red (bg-red-600) when any overdue items exist
+/Users/sheep/Desktop/Gauntlet/ship/e2e/toc.spec.ts:218:    // First dismiss any tooltips/menus
+/Users/sheep/Desktop/Gauntlet/ship/e2e/toc.spec.ts:398:    // Add TOC without any headings
+/Users/sheep/Desktop/Gauntlet/ship/e2e/bulk-selection.spec.ts:824:      // Press j - should still work and focus first row (without clicking anything)
+/Users/sheep/Desktop/Gauntlet/ship/e2e/inline-comments.spec.ts:15:  async function createDocumentWithText(page: any, text: string) {
+/Users/sheep/Desktop/Gauntlet/ship/e2e/inline-comments.spec.ts:34:  async function selectText(page: any, target: string) {
+/Users/sheep/Desktop/Gauntlet/ship/e2e/programs.spec.ts:158:    // Look for any "Week of" text which indicates week cards are visible
+/Users/sheep/Desktop/Gauntlet/ship/e2e/tables.spec.ts:361:      // Check if any cells have the selected class
+/Users/sheep/Desktop/Gauntlet/ship/e2e/session-timeout.spec.ts:289:    // Wait for any in-flight API calls to complete
+/Users/sheep/Desktop/Gauntlet/ship/e2e/session-timeout.spec.ts:780:    // - Inactivity modal dismisses on any keyboard activity (Tab counts as activity)
+/Users/sheep/Desktop/Gauntlet/ship/e2e/session-timeout.spec.ts:878:    // for inactivity warnings (as any activity resets the timer)
+/Users/sheep/Desktop/Gauntlet/ship/e2e/session-timeout.spec.ts:1067:    // Verify the modal is accessible - the warning modal takes priority over any other dialogs
+/Users/sheep/Desktop/Gauntlet/ship/e2e/accountability-week.spec.ts:323:    // Check action items - future sprint should NOT show any accountability items
+/Users/sheep/Desktop/Gauntlet/ship/e2e/issue-display-id.spec.ts:169:      // Check that any issue results use #N format, not PREFIX-N format
+/Users/sheep/Desktop/Gauntlet/ship/e2e/security.spec.ts:347:    // The API validates UUID format before processing - any non-UUID ID returns 400
+/Users/sheep/Desktop/Gauntlet/ship/e2e/status-colors-accessibility.spec.ts:87:      // Check for any low-contrast sprint status indicators
+/Users/sheep/Desktop/Gauntlet/ship/e2e/status-colors-accessibility.spec.ts:120:    const anyLowContrastStatus = page.locator('[class*="-400"]').filter({ hasText: /backlog|todo|in.progress|done|cancelled|planned|active|completed|upcoming|draft|submitted|pending|accepted|rejected|urgent|high|medium|low/i });
+/Users/sheep/Desktop/Gauntlet/ship/e2e/status-overview-heatmap.spec.ts:65:    // Look for any person name from the seed data
+/Users/sheep/Desktop/Gauntlet/ship/e2e/status-overview-heatmap.spec.ts:77:    // Wait for any person to be visible
+/Users/sheep/Desktop/Gauntlet/ship/e2e/accessibility-remediation.spec.ts:423:      // When focused, any action buttons MUST be visible (not just on hover)
+/Users/sheep/Desktop/Gauntlet/ship/e2e/accessibility-remediation.spec.ts:429:        let anyVisible = false
+/Users/sheep/Desktop/Gauntlet/ship/e2e/accessibility-remediation.spec.ts:432:            anyVisible = true
+/Users/sheep/Desktop/Gauntlet/ship/e2e/accessibility-remediation.spec.ts:974:      // Click on any document from the sidebar tree specifically
+/Users/sheep/Desktop/Gauntlet/ship/e2e/accessibility-remediation.spec.ts:1035:      // Find any loading indicators
+/Users/sheep/Desktop/Gauntlet/ship/e2e/real-integration.spec.ts:79:    expect(data.people.some((p: any) => p.name.toLowerCase().includes('dev'))).toBe(true);
+/Users/sheep/Desktop/Gauntlet/ship/e2e/features-real.spec.ts:345:      // Fallback: try pressing Enter anyway in case dropdown appears
+/Users/sheep/Desktop/Gauntlet/ship/e2e/drag-handle.spec.ts:124:      // Saved indicator may not always appear, continue anyway
+/Users/sheep/Desktop/Gauntlet/ship/e2e/drag-handle.spec.ts:478:        const view = (proseMirror as any).pmViewDesc?.view || (proseMirror as any).__vue__?.editor || (window as any).__TIPTAP_EDITOR__
+/Users/sheep/Desktop/Gauntlet/ship/e2e/drag-handle.spec.ts:512:          // Dropdown didn't appear - press Escape to clear any partial state
+/Users/sheep/Desktop/Gauntlet/ship/e2e/accountability-standup.spec.ts:267:    // DON'T create any issues assigned to this user
+/Users/sheep/Desktop/Gauntlet/ship/e2e/private-documents.spec.ts:638:      // Wait a moment for any WebSocket events
+/Users/sheep/Desktop/Gauntlet/ship/e2e/backlinks.spec.ts:262:    // Wait for any pending syncs
+/Users/sheep/Desktop/Gauntlet/ship/e2e/backlinks.spec.ts:309:    // Wait for page to stabilize and dismiss any modal that might be open
+/Users/sheep/Desktop/Gauntlet/ship/e2e/backlinks.spec.ts:375:    // Wait a moment for any potential backlinks to load
+/Users/sheep/Desktop/Gauntlet/ship/e2e/program-mode-week-ux.spec.ts:24:async function cleanupExtraSprints(request: any) {
+/Users/sheep/Desktop/Gauntlet/ship/e2e/program-mode-week-ux.spec.ts:58:// Before EVERY test, clean up any sprints > 10 to ensure empty windows exist
+/Users/sheep/Desktop/Gauntlet/ship/e2e/program-mode-week-ux.spec.ts:997:    // Check for any of these patterns

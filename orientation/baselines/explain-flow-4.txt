@@ -1,0 +1,70 @@
+# EXPLAIN ANALYZE — Flow 4 — Team grid (slowest: issues×sprints×programs join via document_associations)
+# Captured: 2026-05-19 (Postgres on Docker, warm shared_buffers)
+# Methodology: psql EXPLAIN (ANALYZE, BUFFERS, VERBOSE) with realistic seed-data parameters
+#
+                                                                                                                                                                                                         QUERY PLAN                                                                                                                                                                                                          
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Hash Left Join  (cost=61.04..123.50 rows=22 width=284) (actual time=0.071..0.205 rows=87 loops=1)
+   Output: i.id, i.title, da_sprint.related_id, (i.properties ->> 'assignee_id'::text), (i.properties ->> 'state'::text), i.ticket_number, (s.properties ->> 'start_date'::text), (s.properties ->> 'end_date'::text), prog_da.related_id, p.title, (p.properties ->> 'emoji'::text), (p.properties ->> 'color'::text)
+   Inner Unique: true
+   Hash Cond: (prog_da.related_id = p.id)
+   Buffers: shared hit=454
+   ->  Nested Loop Left Join  (cost=42.48..104.55 rows=22 width=344) (actual time=0.061..0.176 rows=87 loops=1)
+         Output: i.id, i.title, i.properties, i.ticket_number, da_sprint.related_id, s.properties, prog_da.related_id
+         Buffers: shared hit=452
+         ->  Nested Loop  (cost=42.33..92.52 rows=22 width=328) (actual time=0.055..0.122 rows=87 loops=1)
+               Output: i.id, i.title, i.properties, i.ticket_number, da_sprint.related_id, s.properties
+               Inner Unique: true
+               Buffers: shared hit=276
+               ->  Hash Join  (cost=42.06..54.36 rows=22 width=192) (actual time=0.050..0.075 rows=87 loops=1)
+                     Output: i.id, i.title, i.properties, i.ticket_number, da_sprint.related_id
+                     Inner Unique: true
+                     Hash Cond: (da_sprint.document_id = i.id)
+                     Buffers: shared hit=15
+                     ->  Seq Scan on public.document_associations da_sprint  (cost=0.00..12.01 rows=108 width=32) (actual time=0.006..0.020 rows=108 loops=1)
+                           Output: da_sprint.id, da_sprint.document_id, da_sprint.related_id, da_sprint.relationship_type, da_sprint.created_at, da_sprint.metadata
+                           Filter: (da_sprint.relationship_type = 'sprint'::relationship_type)
+                           Rows Removed by Filter: 293
+                           Buffers: shared hit=7
+                     ->  Hash  (cost=40.77..40.77 rows=103 width=176) (actual time=0.039..0.039 rows=104 loops=1)
+                           Output: i.id, i.title, i.properties, i.ticket_number
+                           Buckets: 1024  Batches: 1  Memory Usage: 37kB
+                           Buffers: shared hit=8
+                           ->  Bitmap Heap Scan on public.documents i  (cost=4.95..40.77 rows=103 width=176) (actual time=0.009..0.026 rows=104 loops=1)
+                                 Output: i.id, i.title, i.properties, i.ticket_number
+                                 Recheck Cond: (i.document_type = 'issue'::document_type)
+                                 Filter: (((i.properties ->> 'assignee_id'::text) IS NOT NULL) AND (i.workspace_id = '9dbdd448-5522-4fcf-854f-2c2f3736e323'::uuid))
+                                 Heap Blocks: exact=7
+                                 Buffers: shared hit=8
+                                 ->  Bitmap Index Scan on idx_documents_document_type  (cost=0.00..4.93 rows=104 width=0) (actual time=0.005..0.005 rows=104 loops=1)
+                                       Index Cond: (i.document_type = 'issue'::document_type)
+                                       Buffers: shared hit=1
+               ->  Index Scan using documents_pkey on public.documents s  (cost=0.27..1.73 rows=1 width=152) (actual time=0.000..0.000 rows=1 loops=87)
+                     Output: s.id, s.workspace_id, s.document_type, s.title, s.content, s.yjs_state, s.parent_id, s."position", s.properties, s.ticket_number, s.archived_at, s.deleted_at, s.started_at, s.completed_at, s.cancelled_at, s.reopened_at, s.converted_to_id, s.converted_from_id, s.converted_at, s.converted_by, s.original_type, s.conversion_count, s.created_at, s.updated_at, s.created_by, s.visibility
+                     Index Cond: (s.id = da_sprint.related_id)
+                     Buffers: shared hit=261
+         ->  Index Scan using idx_document_associations_document_id on public.document_associations prog_da  (cost=0.15..0.54 rows=1 width=32) (actual time=0.000..0.000 rows=1 loops=87)
+               Output: prog_da.id, prog_da.document_id, prog_da.related_id, prog_da.relationship_type, prog_da.created_at, prog_da.metadata
+               Index Cond: (prog_da.document_id = i.id)
+               Filter: (prog_da.relationship_type = 'program'::relationship_type)
+               Rows Removed by Filter: 2
+               Buffers: shared hit=176
+   ->  Hash  (cost=18.50..18.50 rows=5 width=172) (actual time=0.003..0.003 rows=5 loops=1)
+         Output: p.title, p.properties, p.id
+         Buckets: 1024  Batches: 1  Memory Usage: 9kB
+         Buffers: shared hit=2
+         ->  Bitmap Heap Scan on public.documents p  (cost=4.19..18.50 rows=5 width=172) (actual time=0.002..0.002 rows=5 loops=1)
+               Output: p.title, p.properties, p.id
+               Recheck Cond: (p.document_type = 'program'::document_type)
+               Heap Blocks: exact=1
+               Buffers: shared hit=2
+               ->  Bitmap Index Scan on idx_documents_document_type  (cost=0.00..4.18 rows=5 width=0) (actual time=0.001..0.001 rows=5 loops=1)
+                     Index Cond: (p.document_type = 'program'::document_type)
+                     Buffers: shared hit=1
+ Query Identifier: -8792357523130781852
+ Planning:
+   Buffers: shared hit=564
+ Planning Time: 0.737 ms
+ Execution Time: 0.260 ms
+(62 rows)
+

@@ -1,0 +1,11 @@
+Superseded.
+
+This was an earlier placeholder written before the Docker database was found
+and queried. It should not be used as evidence.
+
+Use these live EXPLAIN files instead:
+
+- `explain-dashboard-issues.txt`
+- `explain-issues.txt`
+- `explain-projects.txt`
+- `explain-search.txt`

@@ -1,0 +1,17 @@
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/AccountabilityGrid.tsx:138:      groups.get(groupKey)!.projects.push(project);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/AdminDashboard.tsx:87:      setUsers(prev => prev.map(u => u.id === userId ? { ...u, isSuperAdmin: res.data!.isSuperAdmin } : u));
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/Editor.tsx:402:          wsProvider!.shouldConnect = false;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/Editor.tsx:410:          wsProvider!.shouldConnect = false;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/Editor.tsx:461:        wsProvider!.awareness.getStates().forEach((state) => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/ReviewsPage.tsx:329:      groups.get(groupKey)!.people.push(person);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/ReviewsPage.tsx:395:        if (needsPlanReview(cell)) counts[week.number]!.plans += 1;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/ReviewsPage.tsx:396:        if (needsRetroReview(cell)) counts[week.number]!.retros += 1;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/TeamMode.tsx:159:      groups.get(groupKey)!.users.push(user);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/documentTree.ts:25:      nodeMap.get(doc.parent_id)!.children.push(node);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/AdminWorkspaceDetail.tsx:126:      setInvites(prev => [res.data!.invite, ...prev]);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/AdminWorkspaceDetail.tsx:179:      setMembers(prev => [...prev, res.data!.member]);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/MyWeekPage.tsx:178:                <p className="text-xs text-orange-300/70 mt-0.5">Week {previous_retro!.week_number} retro needs your input</p>
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/MyWeekPage.tsx:180:              {previous_retro!.id ? (
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/MyWeekPage.tsx:182:                  to={`/documents/${previous_retro!.id}`}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/MyWeekPage.tsx:189:                  onClick={() => handleCreateRetro(previous_retro!.week_number)}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useRealtimeEvents.tsx:59:    subscribersRef.current.get(eventType)!.add(callback);

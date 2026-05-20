@@ -1,0 +1,14 @@
+                                                                            QUERY PLAN                                                                             
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=0.00..41.50 rows=8 width=40) (actual time=0.018..0.578 rows=9 loops=1)
+   Buffers: shared hit=34
+   ->  Seq Scan on documents d  (cost=0.00..41.50 rows=8 width=40) (actual time=0.017..0.575 rows=9 loops=1)
+         Filter: ((archived_at IS NULL) AND (deleted_at IS NULL) AND (title ~~* '%test%'::text) AND (workspace_id = '9dbdd448-5522-4fcf-854f-2c2f3736e323'::uuid))
+         Rows Removed by Filter: 491
+         Buffers: shared hit=34
+ Planning:
+   Buffers: shared hit=261
+ Planning Time: 0.854 ms
+ Execution Time: 0.604 ms
+(10 rows)
+

@@ -1,0 +1,29 @@
+69:        ? (document.properties?.project_id as string | undefined) ?? null
+294:    await updateMutation.mutateAsync({ documentId: id, updates: updates as Partial<DocumentResponse> });
+311:    const authorId = document?.properties?.author_id as string | undefined;
+385:    const belongsTo = document.belongs_to as Array<{ id: string; type: string }> | undefined;
+392:      document_type: document.document_type as UnifiedDocument['document_type'],
+395:      created_by: document.created_by as string | undefined,
+399:        state: (document.state as string) || 'backlog',
+400:        priority: (document.priority as string) || 'medium',
+401:        estimate: document.estimate as number | undefined,
+402:        assignee_id: document.assignee_id as string | undefined,
+403:        assignee_name: document.assignee_name as string | undefined,
+407:        converted_from_id: document.converted_from_id as string | undefined,
+408:        display_id: (document.ticket_number as number) ? `#${document.ticket_number}` : undefined,
+409:        belongs_to: document.belongs_to as Array<{
+417:        impact: (document.impact as number | null) ?? null,
+418:        confidence: (document.confidence as number | null) ?? null,
+419:        ease: (document.ease as number | null) ?? null,
+420:        color: (document.color as string) || '#3b82f6',
+424:        owner_id: document.owner_id as string | undefined,
+426:        accountable_id: document.accountable_id as string | undefined,
+427:        consulted_ids: document.consulted_ids as string[] | undefined,
+428:        informed_ids: document.informed_ids as string[] | undefined,
+429:        converted_from_id: document.converted_from_id as string | undefined,
+432:        start_date: (document.start_date as string) || '',
+433:        end_date: (document.end_date as string) || '',
+434:        status: ((document.status as string) || 'planning') as 'planning' | 'active' | 'completed',
+436:        plan: (document.plan as string) || '',
+439:        parent_id: document.parent_id as string | undefined,
+442:    } as UnifiedDocument;

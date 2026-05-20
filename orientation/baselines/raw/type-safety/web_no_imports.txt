@@ -1,0 +1,426 @@
+/Users/sheep/Desktop/Gauntlet/ship/web/src/services/upload.ts:258: * Get MIME type from filename extension as fallback
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/AdminDashboard.tsx:25:  const tabParam = searchParams.get('tab') as Tab | null;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/ReviewsPage.tsx:17:] as const;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/ReviewsPage.tsx:1173:            {(isRetroMode ? (selectedCell.cell.reviewApproval as { feedback?: string })?.feedback : (selectedCell.cell.planApproval as { feedback?: string })?.feedback) || 'No feedback provided'}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/ReviewsPage.tsx:1347:/** Renders TipTap JSON content as simple HTML */
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/ReviewsPage.tsx:1353:  const doc = content as { type?: string; content?: unknown[] };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/ReviewsPage.tsx:1369:  const n = node as { type?: string; content?: unknown[]; text?: string; attrs?: Record<string, unknown>; marks?: Array<{ type: string }> };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/ReviewsPage.tsx:1386:      const level = (n.attrs?.level as number) || 2;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/Documents.tsx:251:          onChange={(id) => handleFilterChange(id as VisibilityFilter)}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/TeamMode.tsx:596:              <span>Viewing as {data.weeks.find(w => w.number === viewAsSprintNumber)?.name ?? `Week ${viewAsSprintNumber}`}</span>
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/TeamMode.tsx:762:                        title="View as current week"
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:66:      const docType = document.document_type as 'wiki' | 'issue' | 'project' | 'program' | 'sprint' | 'person' | 'weekly_plan' | 'weekly_retro' | 'standup';
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:69:        ? (document.properties?.project_id as string | undefined) ?? null
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:138:      const issueCount = (document as { issue_count?: number })?.issue_count ?? 0;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:164:    const sourceType = document.document_type as 'issue' | 'project';
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:294:    await updateMutation.mutateAsync({ documentId: id, updates: updates as Partial<DocumentResponse> });
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:311:    const authorId = document?.properties?.author_id as string | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:385:    const belongsTo = document.belongs_to as Array<{ id: string; type: string }> | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:392:      document_type: document.document_type as UnifiedDocument['document_type'],
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:395:      created_by: document.created_by as string | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:399:        state: (document.state as string) || 'backlog',
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:400:        priority: (document.priority as string) || 'medium',
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:401:        estimate: document.estimate as number | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:402:        assignee_id: document.assignee_id as string | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:403:        assignee_name: document.assignee_name as string | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:406:        source: document.source as 'internal' | 'external' | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:407:        converted_from_id: document.converted_from_id as string | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:408:        display_id: (document.ticket_number as number) ? `#${document.ticket_number}` : undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:409:        belongs_to: document.belongs_to as Array<{
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:417:        impact: (document.impact as number | null) ?? null,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:418:        confidence: (document.confidence as number | null) ?? null,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:419:        ease: (document.ease as number | null) ?? null,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:420:        color: (document.color as string) || '#3b82f6',
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:423:        owner: document.owner as { id: string; name: string; email: string } | null,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:424:        owner_id: document.owner_id as string | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:426:        accountable_id: document.accountable_id as string | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:427:        consulted_ids: document.consulted_ids as string[] | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:428:        informed_ids: document.informed_ids as string[] | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:429:        converted_from_id: document.converted_from_id as string | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:432:        start_date: (document.start_date as string) || '',
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:433:        end_date: (document.end_date as string) || '',
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:434:        status: ((document.status as string) || 'planning') as 'planning' | 'active' | 'completed',
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:436:        plan: (document.plan as string) || '',
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:439:        parent_id: document.parent_id as string | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:440:        visibility: document.visibility as 'private' | 'workspace' | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:442:    } as UnifiedDocument;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/Dashboard.tsx:31:  const doc = content as { content?: Array<{ content?: Array<{ text?: string }> }> };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/Dashboard.tsx:47:  const currentView: DashboardView = (searchParams.get('view') as DashboardView) || 'my-work';
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/App.tsx:778:    await updateDocument(document.id, { visibility: visibility as 'private' | 'workspace' });
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/AdminWorkspaceDetail.tsx:267:                          onChange={(e) => handleUpdateRole(member.userId, e.target.value as 'admin' | 'member')}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/AdminWorkspaceDetail.tsx:417:              onChange={(e) => setAddUserRole(e.target.value as 'admin' | 'member')}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/AdminWorkspaceDetail.tsx:454:                onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member')}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/PersonEditor.tsx:194:  const reportsTo = (props.reports_to as string) || null;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/PersonEditor.tsx:195:  const personUserId = (props.user_id as string) || null;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/Login.tsx:74:  const from = returnTo || (location.state as { from?: { pathname: string } })?.from?.pathname || '/';
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/WorkspaceSettings.tsx:21:  const tabParam = searchParams.get('tab') as Tab | null;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/WorkspaceSettings.tsx:326:                        onChange={(e) => onUpdateRole(member.userId, e.target.value as 'admin' | 'member')}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/WorkspaceSettings.tsx:422:            onChange={(e) => setInviteRole(e.target.value as 'admin' | 'member')}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/accountability.test.ts:51:    } as Response);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/accountability.test.ts:72:    } as Response);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/accountability.test.ts:93:    } as Response);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/Projects.tsx:220:      const result = await updateProject(id, { archived_at: new Date().toISOString() } as any);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/Projects.tsx:233:              await updateProject(id, { archived_at: null } as any);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/Projects.tsx:311:      const target = e.target as HTMLElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/Projects.tsx:580:    <span className={cn('font-medium', colors[value as keyof typeof colors] || 'text-muted')}>
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/document-tabs.tsx:199: * This is the preferred method as it handles dynamic tabs (e.g., sprint status).
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/document-tabs.tsx:211:    const properties = document.properties as { status?: string } | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/queryClient.ts:144:          const status = (error as { status: number }).status;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/queryClient.ts:154:          const status = (error as { status: number }).status;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/queryClient.ts:170:      const operation = mutation.options.meta?.operation as string | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/date-utils.ts:9:/** Format a date as relative time for recent dates, "Mon D" for older. */
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/date-utils.ts:27:/** Format a date as a relative time string (just now, Xm ago, yesterday, etc.). */
+/Users/sheep/Desktop/Gauntlet/ship/web/src/contexts/ArchivedPersonsContext.tsx:15:export const archivedPersonsKey = ['archivedPersons'] as const;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/api.ts:164:    ...(options.headers as Record<string, string>),
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/api.ts:187:      } as ApiResponse<T>;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/api.ts:410:        `/api/workspaces/${workspaceId}/audit-logs${params ? `?${new URLSearchParams(params as Record<string, string>)}` : ''}`
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/api.ts:492:      request<{ logs: AuditLog[] }>(`/api/admin/audit-logs${params ? `?${new URLSearchParams(params as Record<string, string>)}` : ''}`),
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/api.ts:495:      `${API_URL}/api/admin/audit-logs/export${params ? `?${new URLSearchParams(params as Record<string, string>)}` : ''}`,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useIssuesQuery.ts:101:  all: ['issues'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useIssuesQuery.ts:102:  lists: () => [...issueKeys.all, 'list'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useIssuesQuery.ts:103:  list: (filters?: IssueFilters) => [...issueKeys.lists(), filters] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useIssuesQuery.ts:104:  details: () => [...issueKeys.all, 'detail'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useIssuesQuery.ts:105:  detail: (id: string) => [...issueKeys.details(), id] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useIssuesQuery.ts:110:  const belongs_to = (apiIssue.belongs_to as BelongsTo[]) || [];
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useIssuesQuery.ts:115:  } as Issue;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useIssuesQuery.ts:130:    const error = new Error('Failed to fetch issues') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useIssuesQuery.ts:135:  let issues = (data as Record<string, unknown>[]).map(transformIssue);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useIssuesQuery.ts:162:    const error = new Error('Failed to create issue') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useIssuesQuery.ts:179:        throw new CascadeWarningError(body as CascadeWarning);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useIssuesQuery.ts:182:    const error = new Error('Failed to update issue') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useIssuesQuery.ts:324:    const error = new Error('Failed to bulk update issues') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDashboardActionItems.ts:24:    const error = new Error('Failed to fetch action items') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/SessionTimeoutModal.tsx:25:  // Format time as M:SS
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/document-tabs.test.ts:121:  it('returns first tab as default for URL without tab', () => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/StatusOverviewHeatmap.tsx:67: * StatusCell - Shows Plan/Retro status as two colored squares
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeklyReviewActions.ts:110:        sid = lookup.id as string;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeklyReviewActions.ts:118:      const props = (data.properties || {}) as Record<string, unknown>;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeklyReviewActions.ts:119:      const approval = (isRetro ? props.review_approval : props.plan_approval) as ApprovalData | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeklyReviewActions.ts:143:  const sprintProps = (sprintData?.properties || {}) as Record<string, unknown>;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeklyReviewActions.ts:144:  const planApproval = (sprintProps.plan_approval as ApprovalData | null) ?? null;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeklyReviewActions.ts:145:  const reviewApproval = (sprintProps.review_approval as ApprovalData | null) ?? null;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeklyReviewActions.ts:146:  const reviewRating = (sprintProps.review_rating as { value?: number } | null) ?? null;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeklyReviewActions.ts:190:      const approval = data?.approval as ApprovalData | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeklyReviewActions.ts:226:      const approval = data?.approval as ApprovalData | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeklyReviewActions.ts:261:      const approval = data?.approval as ApprovalData | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeklyReviewActions.ts:262:      const nextRating = (data?.review_rating as { value?: number } | null)?.value ?? rating;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/contextMenuActions.ts:111:  // Issue actions - most comprehensive, used as template for others
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/contextMenuActions.ts:120:        type: 'action' as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/contextMenuActions.ts:183:        type: 'action' as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/Editor.tsx:87:  /** AI scoring analysis data to render as inline decorations */
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/Editor.tsx:761:        onContentChange(json as Record<string, unknown>);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/Editor.tsx:811:    hasLocalChangesRef.current = true; // Mark as having local changes to prevent stale overwrites
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/Editor.tsx:972:                  if (!menu.contains(ev.target as Node)) {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/Editor.tsx:1007:            {/* Pending comment input is now rendered as a ProseMirror widget decoration in CommentDisplay */}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/WeekOverviewTab.tsx:57:        const sprintUpdates = updates as Record<string, unknown>;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/WeekOverviewTab.tsx:112:  const belongsTo = (document as { belongs_to?: Array<{ id: string; type: string }> }).belongs_to;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/WeekOverviewTab.tsx:122:    created_by: document.created_by as string | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/WeekOverviewTab.tsx:123:    properties: document.properties as Record<string, unknown> | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/WeekOverviewTab.tsx:124:    start_date: (document.start_date as string) || '',
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/WeekOverviewTab.tsx:125:    end_date: (document.end_date as string) || '',
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/WeekOverviewTab.tsx:126:    status: ((document.status as string) || 'planning') as 'planning' | 'active' | 'completed',
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/WeekOverviewTab.tsx:128:    plan: (document.plan as string) || '',
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/WeekOverviewTab.tsx:129:    owner_id: document.owner_id as string | null | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useSessionTimeout.test.ts:779:    (global.fetch as Mock).mockResolvedValue({ ok: true, json: async () => ({ success: true }) });
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useSessionTimeout.test.ts:795:    (global.fetch as Mock).mockResolvedValue({ ok: true, json: async () => ({ success: true }) });
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useTeamMembersQuery.ts:14:  all: ['teamMembers'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useTeamMembersQuery.ts:15:  lists: () => [...teamMemberKeys.all, 'list'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useTeamMembersQuery.ts:22:    const error = new Error('Failed to fetch team members') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useTeamMembersQuery.ts:53:    ) as AssignableMember[] | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/index.ts:2:export { default as ProjectDetailsTab } from './ProjectDetailsTab';
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/index.ts:3:export { default as ProjectIssuesTab } from './ProjectIssuesTab';
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/index.ts:4:export { default as ProjectWeeksTab } from './ProjectWeeksTab';
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/index.ts:5:export { default as ProjectRetroTab } from './ProjectRetroTab';
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/index.ts:8:export { default as ProgramOverviewTab } from './ProgramOverviewTab';
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/index.ts:9:export { default as ProgramIssuesTab } from './ProgramIssuesTab';
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/index.ts:10:export { default as ProgramProjectsTab } from './ProgramProjectsTab';
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/index.ts:11:export { default as ProgramWeeksTab } from './ProgramWeeksTab';
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDocumentContextQuery.ts:42:  all: ['documentContext'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDocumentContextQuery.ts:43:  detail: (id: string) => [...documentContextKeys.all, id] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDocumentContextQuery.ts:50:    const error = new Error('Failed to fetch document context') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/contexts/SelectionPersistenceContext.test.tsx:25:        thrownError = error as Error;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:69:        const projectUpdates = updates as Record<string, unknown>;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:74:          const impact = (projectUpdates.impact ?? previousDocument.impact) as number | null;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:75:          const confidence = (projectUpdates.confidence ?? previousDocument.confidence) as number | null;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:76:          const ease = (projectUpdates.ease ?? previousDocument.ease) as number | null;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:202:  const belongsTo = (document as { belongs_to?: Array<{ id: string; type: string }> }).belongs_to;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:212:    created_by: document.created_by as string | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:213:    properties: document.properties as Record<string, unknown> | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:214:    impact: (document.impact as number | null) ?? null,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:215:    confidence: (document.confidence as number | null) ?? null,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:216:    ease: (document.ease as number | null) ?? null,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:217:    color: (document.color as string) || '#3b82f6',
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:220:    owner: document.owner as { id: string; name: string; email: string } | null,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:221:    owner_id: document.owner_id as string | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:223:    accountable_id: document.accountable_id as string | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:224:    consulted_ids: (document.consulted_ids as string[]) || [],
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:225:    informed_ids: (document.informed_ids as string[]) || [],
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:226:    converted_from_id: document.converted_from_id as string | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:228:    has_design_review: document.has_design_review as boolean | null | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:229:    design_review_notes: document.design_review_notes as string | null | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/WeekReviewTab.tsx:16:  const belongsTo = (document as { belongs_to?: Array<{ id: string; type: string }> }).belongs_to;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/WeekReviewTab.tsx:19:  const properties = document.properties as { sprint_number?: number } | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useListFilters.ts:66:          return stored as ViewMode;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useStandupStatusQuery.ts:11:  all: ['standup-status'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useStandupStatusQuery.ts:12:  status: () => [...standupStatusKeys.all, 'status'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useStandupStatusQuery.ts:19:    const error = new Error('Failed to fetch standup status') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/TableOfContents.tsx:23:        const level = node.attrs.level as number;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/TableOfContents.tsx:109:  atom: true, // Non-editable, treated as a single unit
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/ProjectCombobox.tsx:24:  /** If provided and exists in projects list, shows a "Same as last week" quick option */
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/ProjectCombobox.tsx:164:            {/* Quick select: Same as last week */}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/ProjectCombobox.tsx:186:                  <span className="text-muted">Same as last week:</span>{' '}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/CommandPalette.tsx:86:      if (!dialog.contains(e.target as Node)) {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/WeekPlanningTab.tsx:28:  const belongsTo = (document as { belongs_to?: Array<{ id: string; type: string }> }).belongs_to;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/WeekPlanningTab.tsx:31:  const properties = document.properties as { status?: string; issue_count?: number } | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/WeekPlanningTab.tsx:72:          <StatusBadge status={status as 'planning' | 'active' | 'completed'} />
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useAuth.tsx:38:      const data = JSON.parse(cached) as CachedAuth;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProjectsQuery.ts:82:  all: ['projects'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProjectsQuery.ts:83:  lists: () => [...projectKeys.all, 'list'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProjectsQuery.ts:84:  list: (filters?: Record<string, unknown>) => [...projectKeys.lists(), filters] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProjectsQuery.ts:85:  details: () => [...projectKeys.all, 'detail'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProjectsQuery.ts:86:  detail: (id: string) => [...projectKeys.details(), id] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProjectsQuery.ts:87:  issues: (id: string) => [...projectKeys.detail(id), 'issues'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProjectsQuery.ts:88:  weeks: (id: string) => [...projectKeys.detail(id), 'weeks'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProjectsQuery.ts:95:    const error = new Error('Failed to fetch projects') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProjectsQuery.ts:121:    const error = new Error('Failed to create project') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProjectsQuery.ts:132:    const error = new Error('Failed to update project') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProjectsQuery.ts:143:    const error = new Error('Failed to delete project') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProjectsQuery.ts:358:    const error = new Error('Failed to fetch project issues') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProjectsQuery.ts:379:    const error = new Error('Failed to fetch project weeks') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectIssuesTab.tsx:11:  const belongsTo = (document as { belongs_to?: Array<{ id: string; type: string }> }).belongs_to;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProgramOverviewTab.tsx:49:        const programUpdates = updates as Record<string, unknown>;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProgramOverviewTab.tsx:109:    created_by: document.created_by as string | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProgramOverviewTab.tsx:110:    properties: document.properties as Record<string, unknown> | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProgramOverviewTab.tsx:111:    color: (document.color as string) || '#6366f1',
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProgramOverviewTab.tsx:112:    emoji: (document.emoji as string) || null,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProgramOverviewTab.tsx:113:    owner_id: document.owner_id as string | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProgramOverviewTab.tsx:115:    accountable_id: document.accountable_id as string | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProgramOverviewTab.tsx:116:    consulted_ids: (document.consulted_ids as string[]) || [],
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProgramOverviewTab.tsx:117:    informed_ids: (document.informed_ids as string[]) || [],
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/KanbanBoard.tsx:98:    setActiveId(event.active.id as string);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/KanbanBoard.tsx:117:      targetColumn = over.id as string;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/KanbanBoard.tsx:378:  const iconProps = { className: cn('h-3 w-3', colorClass), 'aria-hidden': 'true' as const };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.tsx:3: * Handles file attachments (PDF, DOCX, etc.) as embedded cards with download links
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.tsx:139:    } as any;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.tsx:295:    // Don't report cancellation as an error - it's intentional
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectWeeksTab.tsx:59: * StatusCell - Shows Plan/Retro status as two colored squares
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProgramsQuery.ts:25:  all: ['programs'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProgramsQuery.ts:26:  lists: () => [...programKeys.all, 'list'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProgramsQuery.ts:27:  list: (filters?: Record<string, unknown>) => [...programKeys.lists(), filters] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProgramsQuery.ts:28:  details: () => [...programKeys.all, 'detail'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProgramsQuery.ts:29:  detail: (id: string) => [...programKeys.details(), id] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProgramsQuery.ts:36:    const error = new Error('Failed to fetch programs') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProgramsQuery.ts:47:    const error = new Error('Failed to create program') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProgramsQuery.ts:58:    const error = new Error('Failed to update program') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProgramsQuery.ts:69:    const error = new Error('Failed to delete program') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useSelection.ts:7:  /** Optional hovered ID - used as anchor for Shift+Arrow when nothing is selected */
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/EmojiPicker.tsx:21:      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/WeekIssuesTab.tsx:15:  const belongsTo = (document as { belongs_to?: Array<{ id: string; type: string }> }).belongs_to;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/ContentHistoryPanel.tsx:29:// Format date as relative time (e.g., "2 hours ago")
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/ContentHistoryPanel.tsx:97:              No version history yet. Changes will be tracked as you edit.
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/ContentHistoryPanel.tsx:177:      const n = node as Record<string, unknown>;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useRealtimeEvents.tsx:83:        const data = JSON.parse(event.data) as RealtimeEvent;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeksQuery.ts:36:  all: ['sprints'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeksQuery.ts:37:  lists: () => [...sprintKeys.all, 'list'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeksQuery.ts:38:  list: (programId: string) => [...sprintKeys.lists(), programId] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeksQuery.ts:39:  projectLists: () => [...sprintKeys.all, 'projectList'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeksQuery.ts:40:  projectList: (projectId: string) => [...sprintKeys.projectLists(), projectId] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeksQuery.ts:41:  active: () => [...sprintKeys.all, 'active'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeksQuery.ts:42:  details: () => [...sprintKeys.all, 'detail'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeksQuery.ts:43:  detail: (id: string) => [...sprintKeys.details(), id] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeksQuery.ts:67:    const error = new Error('Failed to fetch active sprints') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeksQuery.ts:87:    const error = new Error('Failed to fetch sprints') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeksQuery.ts:105:    const error = new Error('Failed to create sprint') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeksQuery.ts:116:    const error = new Error('Failed to update sprint') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeksQuery.ts:127:    const error = new Error('Failed to delete sprint') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeksQuery.ts:224:          programId = queryKey[2] as string;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeksQuery.ts:287:          programId = queryKey[2] as string;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useWeeksQuery.ts:402:    const error = new Error('Failed to fetch project sprints') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useColumnVisibility.ts:47:        const parsed = JSON.parse(stored) as string[];
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/DocumentEmbed.tsx:8:  const { documentId, title } = node.attrs as { documentId: string; title: string };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/DocumentEmbed.tsx:46:  atom: true, // Non-editable, treated as a single unit
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/InlineWeekSelector.tsx:25: * Renders as a clickable cell that shows current sprint or placeholder.
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/InlineWeekSelector.tsx:45:      if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/MentionExtension.ts:107:        // Render inline, not as a block
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/MentionExtension.ts:144:              const target = event.target as HTMLElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/MentionExtension.ts:147:                const mentionType = target.getAttribute('data-mention-type') as 'person' | 'document';
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/MentionExtension.ts:173:        const mentionProps = props as MentionItem;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/MentionExtension.ts:214:              getReferenceClientRect: props.clientRect as () => DOMRect,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/MentionExtension.ts:236:              getReferenceClientRect: props.clientRect as () => DOMRect,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useGlobalListNavigation.ts:49:    const target = e.target as HTMLElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDashboardFocus.ts:45:    const error = new Error('Failed to fetch focus data') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useMyWeekQuery.ts:57:    const error = new Error('Failed to fetch my week data') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/PlanQualityBanner.tsx:239:            <span className="text-xs text-muted/50">AI quality check will appear as you write</span>
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/PlanQualityBanner.tsx:482:            <span className="text-xs text-muted/50">AI quality check will appear as you write</span>
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/DetailsExtension.test.ts:13:  it('should be configured as a block node with content', () => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/DetailsExtension.test.ts:75:    expect((editor.commands as any).setDetails).toBeDefined();
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/DetailsExtension.test.ts:76:    expect(typeof (editor.commands as any).setDetails).toBe('function');
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDocumentsQuery.ts:19:  all: ['documents'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDocumentsQuery.ts:20:  lists: () => [...documentKeys.all, 'list'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDocumentsQuery.ts:21:  list: (type: string) => [...documentKeys.lists(), type] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDocumentsQuery.ts:22:  wikiList: () => [...documentKeys.all, 'wiki'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDocumentsQuery.ts:23:  details: () => [...documentKeys.all, 'detail'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDocumentsQuery.ts:24:  detail: (id: string) => [...documentKeys.details(), id] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDocumentsQuery.ts:31:    const error = new Error('Failed to fetch documents') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDocumentsQuery.ts:42:    const error = new Error('Failed to create document') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDocumentsQuery.ts:53:    const error = new Error('Failed to update document') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDocumentsQuery.ts:64:    const error = new Error('Failed to delete document') as Error & { status: number };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/week/WeekTimeline.tsx:278:      const activeCard = scrollRef.current.querySelector('[data-active="true"]') as HTMLElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useUnifiedDocuments.ts:116:    return (wikiQuery.data || []) as WikiDocument[];
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useUnifiedDocuments.ts:121:    return (issuesQuery.data || []) as Issue[];
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useUnifiedDocuments.ts:126:    return (projectsQuery.data || []) as Project[];
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useUnifiedDocuments.ts:131:    return (programsQuery.data || []) as Program[];
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/PlanQualityBanner.test.tsx:70:    global.fetch = fetchMock as typeof fetch;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/SlashCommands.tsx:385:            const dataUrl = reader.result as string;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/SlashCommands.tsx:423:              // Don't report cancellation as an error - it's intentional
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/SlashCommands.tsx:595:        } as Partial<SuggestionOptions>,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useActionItemsQuery.ts:31:  all: ['action-items'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useActionItemsQuery.ts:32:  list: () => [...actionItemsKeys.all, 'list'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useContentHistoryQuery.ts:41:  all: ['content-history'] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useContentHistoryQuery.ts:43:    ['content-history', documentId, documentType] as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/DetailsExtension.ts:73:          const element = node as HTMLElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/DetailsExtension.ts:83:          const element = node as HTMLElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/DetailsExtension.ts:148:    } as Partial<RawCommands>;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDocumentConversion.ts:60:        return data as ConversionResult;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useDocumentConversion.ts:105:        return data as ConversionResult;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/ui/MultiAssociationChips.tsx:50:      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/ui/MultiAssociationChips.tsx:105:      {/* Current associations as chips */}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/IssuesList.tsx:437:          bulkUpdate.mutate({ ids: issueIds, action: 'update', updates: { state: actualValue as string } });
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/IssuesList.tsx:998:      const target = e.target as HTMLElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/IssuesList.tsx:1024:      { id: issueId, updates: { sprint_id: sprintId } as Partial<Issue> },
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/IssuesList.tsx:1452:  const iconProps = { className: 'h-3 w-3', 'aria-hidden': 'true' as const };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/review/WeeklyReviewSubNav.tsx:12:] as const;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:209:    const selectableType = document.document_type as SelectableDocumentType;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:215:        state: (document as IssueDocument).state,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:216:        priority: (document as IssueDocument).priority,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:217:        impact: (document as ProjectDocument).impact,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:218:        confidence: (document as ProjectDocument).confidence,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:219:        ease: (document as ProjectDocument).ease,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:220:        start_date: (document as SprintDocument).start_date,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:221:        end_date: (document as SprintDocument).end_date,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:222:        status: (document as SprintDocument).status,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:243:        await onTypeChange(newType as DocumentType);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:245:        await onUpdate({ document_type: newType as DocumentType } as Partial<UnifiedDocument>);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:265:    await onUpdate({ plan } as Partial<UnifiedDocument>);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:281:          document_type: document.document_type as 'weekly_plan' | 'weekly_retro',
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:282:          properties: document.properties as { person_id?: string; project_id?: string; week_number?: number } | undefined,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:294:        const wikiData = sidebarData as WikiSidebarData;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:298:        } as WikiPanelProps;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:301:        const issueData = sidebarData as IssueSidebarData;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:313:        } as IssuePanelProps;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:316:        const projectData = sidebarData as ProjectSidebarData;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:324:        } as ProjectPanelProps;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:327:        const sprintData = sidebarData as SprintSidebarData;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:331:        } as SprintPanelProps;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:334:        const programData = sidebarData as ProgramSidebarData;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:337:        } as ProgramPanelProps;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:359:        document={document as PanelDocument}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:361:        onUpdate={onUpdate as (updates: Partial<PanelDocument>) => Promise<void>}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:381:            value={document.document_type as SelectableDocumentType}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:489:// Re-export PropertiesPanel as the unified entry point for sidebars
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/WeekReconciliation.tsx:397:                    title="Mark as done"
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/DashboardSidebar.tsx:10:  const currentView = (searchParams.get('view') as DashboardView) || 'my-work';
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/DashboardSidebar.tsx:15:      const savedView = localStorage.getItem(STORAGE_KEY) as DashboardView | null;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/CommentDisplay.tsx:137: * CommentDisplay extension - Renders inline comment threads as widget decorations.
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/CommentDisplay.tsx:139: * Comments appear as bordered cards between content blocks, pushing content down
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/CommentDisplay.tsx:186:                    const input = container.querySelector('.comment-pending-field') as HTMLInputElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/CommentDisplay.tsx:268:              const target = event.target as HTMLElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/CommentDisplay.tsx:271:              const resolveBtn = target.closest('.comment-resolve-btn') as HTMLElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/CommentDisplay.tsx:282:              const resolvedToggle = target.closest('.comment-resolved-toggle') as HTMLElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/CommentDisplay.tsx:284:                const threadEl = resolvedToggle.closest('.comment-thread-inline') as HTMLElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/CommentDisplay.tsx:299:              const target = event.target as HTMLElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/CommentDisplay.tsx:303:                const input = target as HTMLInputElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/CommentDisplay.tsx:334:                const input = target as HTMLInputElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/icons/uswds/Icon.tsx:110:        role: 'img' as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/icons/uswds/Icon.tsx:114:        'aria-hidden': true as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/icons/uswds/Icon.tsx:115:        focusable: false as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/icons/uswds/Icon.tsx:116:        role: 'img' as const,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/icons/uswds/types.ts:506:] as const;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/icons/uswds/types.ts:512:  return ICON_NAMES.includes(name as IconName);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/VisibilityDropdown.tsx:12:  { value: 'private' as const, label: 'Private', icon: LockIcon },
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/VisibilityDropdown.tsx:13:  { value: 'workspace' as const, label: 'Workspace', icon: GlobeIcon },
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/EmojiExtension.ts:223:                getReferenceClientRect: props.clientRect as () => DOMRect,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/EmojiExtension.ts:255:                getReferenceClientRect: props.clientRect as () => DOMRect,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/ui/ContextMenu.tsx:46:      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/DiffViewer.tsx:77:        ? node.content.map((child) => extractText(child as Record<string, unknown>)).join('')
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/DiffViewer.tsx:85:        ? node.content.map((child) => extractText(child as Record<string, unknown>)).join('')
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/DiffViewer.tsx:93:        ? node.content.map((child) => extractText(child as Record<string, unknown>)).join('')
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/DiffViewer.tsx:101:        ? node.content.map((child) => extractText(child as Record<string, unknown>)).join('')
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/DiffViewer.tsx:109:        ? node.content.map((child) => extractText(child as Record<string, unknown>)).join('')
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/DiffViewer.tsx:117:        ? node.content.map((child) => extractText(child as Record<string, unknown>)).join('')
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/DiffViewer.tsx:129:      return node.content.map((child) => extractText(child as Record<string, unknown>)).join('');
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/DiffViewer.tsx:134:      return node.content.map((child) => extractText(child as Record<string, unknown>)).join('');
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/DragHandle.tsx:300:              const target = event.target as HTMLElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/AIScoringDisplay.tsx:6: * AIScoringDisplay — Renders inline AI quality feedback as widget decorations
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.test.ts:13:  it('should be configured as a block-level atom node', () => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.test.ts:70:    expect((editor.commands as any).setFileAttachment).toBeDefined();
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.test.ts:71:    expect(typeof (editor.commands as any).setFileAttachment).toBe('function');
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/BulkActionBar.tsx:92:      if (statusRef.current && !statusRef.current.contains(e.target as Node)) {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/BulkActionBar.tsx:95:      if (sprintRef.current && !sprintRef.current.contains(e.target as Node)) {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/BulkActionBar.tsx:98:      if (assigneeRef.current && !assigneeRef.current.contains(e.target as Node)) {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/BulkActionBar.tsx:101:      if (projectRef.current && !projectRef.current.contains(e.target as Node)) {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/ResizableImage.tsx:141:    } as Partial<RawCommands>;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/TableOfContents.test.ts:13:  it('should be configured as a block node', () => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/TableOfContents.test.ts:77:          level: node.attrs.level as number,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/TableOfContents.test.ts:180:          level: node.attrs.level as number,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/TableOfContents.test.ts:231:          level: node.attrs.level as number,
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/ProjectSidebar.tsx:24:const ICE_VALUES = [1, 2, 3, 4, 5] as const;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/ProjectSidebar.tsx:71:  /** Fields to highlight as missing (e.g., after type conversion) */
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/ProjectSidebar.tsx:193:          onChange={(ownerId) => onUpdate({ owner_id: ownerId } as Partial<Project>)}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/ProjectSidebar.tsx:203:          onChange={(accountableId) => onUpdate({ accountable_id: accountableId } as Partial<Project>)}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/ProjectSidebar.tsx:213:          onChange={(consultedIds) => onUpdate({ consulted_ids: consultedIds } as Partial<Project>)}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/ProjectSidebar.tsx:223:          onChange={(informedIds) => onUpdate({ informed_ids: informedIds } as Partial<Project>)}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/ProjectSidebar.tsx:236:                onChange={(e) => onUpdate({ has_design_review: e.target.checked } as Partial<Project>)}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/ProjectSidebar.tsx:245:                onChange={(e) => onUpdate({ design_review_notes: e.target.value } as Partial<Project>)}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/ImageUpload.tsx:45:    const editor = this.editor as Editor;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/ImageUpload.tsx:183:    // Don't report cancellation as an error - it's intentional
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/ImageUpload.tsx:195:    // For now, leave the data URL as fallback
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/ImageUpload.tsx:205:    reader.onload = () => resolve(reader.result as string);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/PlanReferenceBlock.ts:47:  atom: true, // Non-editable, selects as a whole unit
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/PlanReferenceBlock.ts:103:    } as Partial<RawCommands>;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/WikiSidebar.tsx:23:  const maintainerId = (document.properties as { maintainer_id?: string | null })?.maintainer_id || document.created_by;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/ui/ScrollFade.test.tsx:5:// Mock ResizeObserver as a class
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/ui/ScrollFade.test.tsx:33:    const wrapper = container.firstChild as HTMLElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/ui/ScrollFade.test.tsx:57:    const overlay = container.querySelector('[aria-hidden="true"]') as HTMLElement;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/HypothesisBlockExtension.ts:48:  // Store placeholder text as an attribute
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/HypothesisBlockExtension.ts:102:    } as Partial<RawCommands>;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/DocumentTypeSelector.tsx:33:        onChange={(e) => onChange(e.target.value as DocumentType)}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/IssueSidebar.tsx:68:  /** Fields to highlight as missing (e.g., after type conversion) */
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/IssueSidebar.tsx:156:      } as Partial<Issue> & { confirm_orphan_children: boolean });
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/IssueSidebar.tsx:230:    await onUpdate({ belongs_to: newBelongsTo } as Partial<Issue>);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/IssueSidebar.tsx:245:    await onUpdate({ belongs_to: newBelongsTo } as Partial<Issue>);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/MentionExtension.test.ts:11:  it('should configure with @ as trigger character', () => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/WeekSidebar.tsx:72:  /** Fields to highlight as missing (e.g., after type conversion) */
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/WeekSidebar.tsx:174:          onChange={(e) => onUpdate({ status: e.target.value as Sprint['status'] })}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/WeekSidebar.tsx:240:                  {([1, 2, 3, 4, 5] as const).map((rating) => (
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/ProgramSidebar.tsx:39:  /** Fields to highlight as missing */
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/ProgramSidebar.tsx:90:          onChange={(ownerId) => onUpdate({ owner_id: ownerId } as Partial<Program>)}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/ProgramSidebar.tsx:104:          onChange={(accountableId) => onUpdate({ accountable_id: accountableId } as Partial<Program>)}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/ProgramSidebar.tsx:117:          onChange={(consultedIds) => onUpdate({ consulted_ids: consultedIds } as Partial<Program>)}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/ProgramSidebar.tsx:130:          onChange={(informedIds) => onUpdate({ informed_ids: informedIds } as Partial<Program>)}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:208:  /** Fields to highlight as missing (e.g., after type conversion) */
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:221:] as const;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:236:  const weekNumber = docProperties.week_number as number | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:237:  const personId = docProperties.person_id as string | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:238:  const projectId = docProperties.project_id as string | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:390:        documentType={document.document_type as 'weekly_plan' | 'weekly_retro'}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:463:    const docWithAccountable = document as { accountable_id?: string | null };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:469:      const sprintDoc = document as SprintDocument;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:481:    const props = panelProps as { people?: Array<{ id?: string; user_id?: string; name: string }> };
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:500:        const wikiProps = panelProps as WikiPanelProps;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:503:            document={document as WikiDocument}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:506:            onUpdate={onUpdate as (updates: Partial<WikiDocument>) => Promise<void>}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:512:        const issueProps = panelProps as IssuePanelProps;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:515:            issue={document as IssueDocument}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:519:            onUpdate={onUpdate as (updates: Partial<IssueDocument>) => Promise<void>}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:533:        const projectProps = panelProps as ProjectPanelProps;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:536:            project={document as ProjectDocument}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:539:            onUpdate={onUpdate as (updates: Partial<ProjectDocument>) => Promise<void>}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:553:        const sprintProps = panelProps as SprintPanelProps;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:556:            sprint={document as SprintDocument}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:557:            onUpdate={onUpdate as (updates: Partial<SprintDocument>) => Promise<void>}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:569:        const programProps = panelProps as ProgramPanelProps;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:572:            program={document as ProgramDocument}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:574:            onUpdate={onUpdate as (updates: Partial<ProgramDocument>) => Promise<void>}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:586:            document={document as WeeklyPlanDocument | WeeklyRetroDocument}
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/PropertiesPanel.tsx:598:              Document type: {(document as BaseDocument).document_type}

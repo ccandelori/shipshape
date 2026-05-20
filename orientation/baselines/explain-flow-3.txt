@@ -1,0 +1,56 @@
+# EXPLAIN ANALYZE — Flow 3 — List issues (slowest: full issues query with CASE-priority sort)
+# Captured: 2026-05-19 (Postgres on Docker, warm shared_buffers)
+# Methodology: psql EXPLAIN (ANALYZE, BUFFERS, VERBOSE) with realistic seed-data parameters
+#
+                                                                                                                                                                                                                     QUERY PLAN                                                                                                                                                                                                                      
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=84.23..84.49 rows=104 width=542) (actual time=0.216..0.219 rows=104 loops=1)
+   Output: d.id, d.title, d.properties, d.ticket_number, d.content, d.created_at, d.updated_at, d.created_by, d.started_at, d.completed_at, d.cancelled_at, d.reopened_at, d.converted_from_id, u.name, (CASE WHEN (person_doc.archived_at IS NOT NULL) THEN true ELSE false END), (CASE (d.properties ->> 'state'::text) WHEN 'in_progress'::text THEN 1 WHEN 'todo'::text THEN 2 WHEN 'review'::text THEN 3 WHEN 'done'::text THEN 4 ELSE 5 END)
+   Sort Key: (CASE (d.properties ->> 'state'::text) WHEN 'in_progress'::text THEN 1 WHEN 'todo'::text THEN 2 WHEN 'review'::text THEN 3 WHEN 'done'::text THEN 4 ELSE 5 END), d.updated_at DESC
+   Sort Method: quicksort  Memory: 64kB
+   Buffers: shared hit=21
+   ->  Hash Left Join  (cost=42.42..80.74 rows=104 width=542) (actual time=0.058..0.147 rows=104 loops=1)
+         Output: d.id, d.title, d.properties, d.ticket_number, d.content, d.created_at, d.updated_at, d.created_by, d.started_at, d.completed_at, d.cancelled_at, d.reopened_at, d.converted_from_id, u.name, CASE WHEN (person_doc.archived_at IS NOT NULL) THEN true ELSE false END, CASE (d.properties ->> 'state'::text) WHEN 'in_progress'::text THEN 1 WHEN 'todo'::text THEN 2 WHEN 'review'::text THEN 3 WHEN 'done'::text THEN 4 ELSE 5 END
+         Hash Cond: ((d.properties ->> 'assignee_id'::text) = (person_doc.properties ->> 'user_id'::text))
+         Buffers: shared hit=15
+         ->  Hash Left Join  (cost=6.49..42.38 rows=104 width=553) (actual time=0.033..0.097 rows=104 loops=1)
+               Output: d.id, d.title, d.properties, d.ticket_number, d.content, d.created_at, d.updated_at, d.created_by, d.started_at, d.completed_at, d.cancelled_at, d.reopened_at, d.converted_from_id, d.workspace_id, u.name
+               Inner Unique: true
+               Hash Cond: (((d.properties ->> 'assignee_id'::text))::uuid = u.id)
+               Buffers: shared hit=9
+               ->  Bitmap Heap Scan on public.documents d  (cost=4.95..40.51 rows=104 width=521) (actual time=0.010..0.029 rows=104 loops=1)
+                     Output: d.id, d.workspace_id, d.document_type, d.title, d.content, d.yjs_state, d.parent_id, d."position", d.properties, d.ticket_number, d.archived_at, d.deleted_at, d.started_at, d.completed_at, d.cancelled_at, d.reopened_at, d.converted_to_id, d.converted_from_id, d.converted_at, d.converted_by, d.original_type, d.conversion_count, d.created_at, d.updated_at, d.created_by, d.visibility
+                     Recheck Cond: (d.document_type = 'issue'::document_type)
+                     Filter: ((d.archived_at IS NULL) AND (d.deleted_at IS NULL) AND (d.workspace_id = '9dbdd448-5522-4fcf-854f-2c2f3736e323'::uuid))
+                     Heap Blocks: exact=7
+                     Buffers: shared hit=8
+                     ->  Bitmap Index Scan on idx_documents_document_type  (cost=0.00..4.93 rows=104 width=0) (actual time=0.007..0.007 rows=104 loops=1)
+                           Index Cond: (d.document_type = 'issue'::document_type)
+                           Buffers: shared hit=1
+               ->  Hash  (cost=1.24..1.24 rows=24 width=48) (actual time=0.010..0.010 rows=20 loops=1)
+                     Output: u.name, u.id
+                     Buckets: 1024  Batches: 1  Memory Usage: 10kB
+                     Buffers: shared hit=1
+                     ->  Seq Scan on public.users u  (cost=0.00..1.24 rows=24 width=48) (actual time=0.003..0.004 rows=20 loops=1)
+                           Output: u.name, u.id
+                           Buffers: shared hit=1
+         ->  Hash  (cost=35.67..35.67 rows=20 width=160) (actual time=0.019..0.020 rows=20 loops=1)
+               Output: person_doc.archived_at, person_doc.workspace_id, person_doc.properties
+               Buckets: 1024  Batches: 1  Memory Usage: 12kB
+               Buffers: shared hit=6
+               ->  Bitmap Heap Scan on public.documents person_doc  (cost=4.30..35.67 rows=20 width=160) (actual time=0.005..0.013 rows=20 loops=1)
+                     Output: person_doc.archived_at, person_doc.workspace_id, person_doc.properties
+                     Recheck Cond: (person_doc.document_type = 'person'::document_type)
+                     Filter: (person_doc.workspace_id = '9dbdd448-5522-4fcf-854f-2c2f3736e323'::uuid)
+                     Heap Blocks: exact=5
+                     Buffers: shared hit=6
+                     ->  Bitmap Index Scan on idx_documents_document_type  (cost=0.00..4.30 rows=20 width=0) (actual time=0.003..0.003 rows=31 loops=1)
+                           Index Cond: (person_doc.document_type = 'person'::document_type)
+                           Buffers: shared hit=1
+ Query Identifier: -3257986574829455212
+ Planning:
+   Buffers: shared hit=671
+ Planning Time: 0.579 ms
+ Execution Time: 0.256 ms
+(48 rows)
+

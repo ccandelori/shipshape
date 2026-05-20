@@ -1,0 +1,64 @@
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:26: * UnifiedDocumentPage - Renders any document type via /documents/:id route
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/UnifiedDocumentPage.tsx:246:      // Cancel any outgoing refetches
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/App.tsx:92:    // Clear any existing timeout
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/App.tsx:697:// Check if any descendant node matches the activeId
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/App.tsx:723:  // Auto-expand if this node or any descendant is active
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/App.tsx:1151:    // Check if viewing any tab of a project that exists in the list
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useProjectsQuery.ts:236:            // Recompute ICE score if any ICE property changed
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useAutoSave.ts:56:    // Clear any pending trailing save
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useUnifiedDocuments.ts:64:  /** Overall loading state (true if any type is loading) */
+/Users/sheep/Desktop/Gauntlet/ship/web/src/lib/document-tabs.tsx:217:      // active, completed, or any other status uses active tabs
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useContentHistoryQuery.ts:6:  old_content: any | null;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useContentHistoryQuery.ts:7:  new_content: any | null;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.tsx:46:function FileAttachmentComponent({ node }: { node: any }) {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.tsx:134:        ({ commands }: any) =>
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.tsx:139:    } as any;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.tsx:203:async function handleFileUpload(editor: any, file: File, signal?: AbortSignal) {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.tsx:261:    state.doc.descendants((node: any, nodePos: number) => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.tsx:309:    state.doc.descendants((node: any, nodePos: number) => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.tsx:333:export function triggerFileUpload(editor: any, signal?: AbortSignal) {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.tsx:341:  // No accept restriction - allow any file type (blocklist enforced in isAllowedFileType)
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/Projects.tsx:220:      const result = await updateProject(id, { archived_at: new Date().toISOString() } as any);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/pages/Projects.tsx:233:              await updateProject(id, { archived_at: null } as any);
+/Users/sheep/Desktop/Gauntlet/ship/web/src/hooks/useSessionTimeout.test.ts:783:    // Call resetTimer before any warning
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/Editor.tsx:345:            // Clear the Y.Doc to remove any cached content before server sync
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/Editor.tsx:481:      // Abort any pending image uploads to prevent them from completing into wrong document
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/Editor.tsx:747:      // Flush any pending sync - but this won't complete if navigating away
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/SessionTimeoutModal.tsx:64:  // Handle any user activity to dismiss modal (for inactivity warning only)
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/SessionTimeoutModal.tsx:105:    ? 'Due to inactivity, you will be logged out automatically. Move your mouse or press any key to stay logged in.'
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.test.ts:70:    expect((editor.commands as any).setFileAttachment).toBeDefined();
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.test.ts:71:    expect(typeof (editor.commands as any).setFileAttachment).toBe('function');
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/SlashCommands.tsx:54:  command: (props: { editor: any; range: any }) => void;
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/SlashCommands.tsx:404:              state.doc.descendants((node: any, pos: number) => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/SlashCommands.tsx:592:          command: ({ editor, range, props }: { editor: any; range: any; props: SlashCommandItem }) => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/SlashCommands.tsx:662:              onStart: (props: any) => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/SlashCommands.tsx:683:              onUpdate(props: any) {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/SlashCommands.tsx:695:              onKeyDown(props: any) {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/DragHandle.tsx:145:      // Clear any existing timeout
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/DragHandle.tsx:160:      // Cancel any pending hide
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/DragHandle.tsx:269:            // Cancel any pending hide
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/DragHandle.tsx:348:                // Don't do anything if dropping in the same place
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/DiffViewer.tsx:132:    // Handle any other node with content
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/CommandPalette.tsx:84:    // Fallback: if focus escapes to anywhere outside dialog, bring it back immediately
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/CommandPalette.tsx:94:    // Use capture phase to intercept Tab before it can do anything
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/AIScoringDisplay.tsx:58:function extractNodeText(node: any): string {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/AIScoringDisplay.tsx:60:  node.descendants((child: any) => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/AIScoringDisplay.tsx:75:function findListItems(doc: any): Array<{ endPos: number; text: string }> {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/AIScoringDisplay.tsx:78:  doc.descendants((node: any, pos: number) => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/AIScoringDisplay.tsx:96:function findPlanReferenceNodes(doc: any): Array<{ endPos: number; text: string }> {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/AIScoringDisplay.tsx:99:  doc.descendants((node: any, pos: number) => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/DetailsExtension.test.ts:75:    expect((editor.commands as any).setDetails).toBeDefined();
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/DetailsExtension.test.ts:76:    expect(typeof (editor.commands as any).setDetails).toBe('function');
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/sidebars/ProjectSidebar.tsx:97:  // Compute ICE score from current values (null if any value is unset)
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:59:      // Cancel any outgoing refetches
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProjectDetailsTab.tsx:72:        // Recompute ICE score if any ICE property changed
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/CommentDisplay.tsx:26:function findCommentPositions(doc: any): Map<string, number> {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/CommentDisplay.tsx:29:  doc.descendants((node: any, pos: number) => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/CommentDisplay.tsx:213:                doc.descendants((node: any, pos: number) => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/CommentDisplay.tsx:235:              doc.descendants((node: any, pos: number) => {
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/ProgramOverviewTab.tsx:40:      // Cancel any outgoing refetches
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/PlanQualityBanner.tsx:126:    // Invalidate any in-flight analysis from the previous document.
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/PlanQualityBanner.tsx:346:    // Invalidate any in-flight analysis from the previous document.
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/document-tabs/WeekOverviewTab.tsx:48:      // Cancel any outgoing refetches
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/WeekReconciliation.tsx:295:  // If dismissed, don't show anything
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/ui/Tooltip.tsx:14: * Wraps any element to show descriptive text on hover/focus.

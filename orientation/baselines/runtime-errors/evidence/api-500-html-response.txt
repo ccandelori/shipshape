@@ -1,0 +1,33 @@
+=== Scenario 8: API 500 returns HTML ===
+
+Request: GET /api/documents/not-a-uuid (forces pg uuid cast error)
+
+HTTP/1.1 500 Internal Server Error
+Content-Security-Policy: default-src 'self';script-src 'self' 'unsafe-inline';style-src 'self' 'unsafe-inline';img-src 'self' data: blob: https:;connect-src 'self' wss: ws:;font-src 'self' data:;object-src 'none';frame-src 'none';base-uri 'self';form-action 'self';frame-ancestors 'self';script-src-attr 'none';upgrade-insecure-requests
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Resource-Policy: cross-origin
+Origin-Agent-Cluster: ?1
+Referrer-Policy: no-referrer
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+X-DNS-Prefetch-Control: off
+X-Download-Options: noopen
+X-Frame-Options: SAMEORIGIN
+X-Permitted-Cross-Domain-Policies: none
+X-XSS-Protection: 0
+RateLimit-Policy: 1000;w=60
+RateLimit-Limit: 1000
+RateLimit-Remaining: 999
+RateLimit-Reset: 60
+Access-Control-Allow-Origin: http://localhost:5174
+Vary: Origin
+Access-Control-Allow-Credentials: true
+Set-Cookie: session_id=03ed99cf1cd622feb03ae40300cea802120cd778b4021c6785050ef639947ec9; Max-Age=900; Path=/; Expires=Wed, 20 May 2026 00:42:38 GMT; HttpOnly; SameSite=Strict
+Content-Type: application/json; charset=utf-8
+Content-Length: 33
+ETag: W/"21-u8tno/8IdqEY6PFcopkQe0syfE4"
+Date: Wed, 20 May 2026 00:27:38 GMT
+Connection: keep-alive
+Keep-Alive: timeout=65
+
+{"error":"Internal server error"}

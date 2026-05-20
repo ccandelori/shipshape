@@ -1,0 +1,46 @@
+Taskmaster Task 4 seed verification
+Captured: 2026-05-19
+Database: Docker container ship-postgres-1, database ship_dev
+
+Commands executed:
+- ./node_modules/.bin/tsx src/db/migrate.ts (from api/)
+- ./node_modules/.bin/tsx src/db/seed.ts (from api/)
+- docker exec -i ship-postgres-1 psql -U ship -d ship_dev -v ON_ERROR_STOP=1 < orientation/baselines/api-response-time/supplemental-seed.sql
+
+Why supplemental seed was needed:
+- The normal project seed is intentionally compact and idempotent.
+- After the normal seed, live counts were:
+  documents: 257
+  issues: 104
+  users: 11
+  sprints: 35
+- Task 4 requires 500+ documents, 100+ issues, 20+ users, and 10+ sprints.
+
+Final verification query:
+SELECT 'documents', COUNT(*) FROM documents
+UNION ALL SELECT 'issues', COUNT(*) FROM documents WHERE document_type='issue'
+UNION ALL SELECT 'users', COUNT(*) FROM users
+UNION ALL SELECT 'sprints', COUNT(*) FROM documents WHERE document_type='sprint'
+UNION ALL SELECT 'benchmark_seed_docs', COUNT(*) FROM documents WHERE properties->>'benchmark_seed'='true';
+
+Final counts:
+documents|500
+issues|104
+users|20
+sprints|35
+benchmark_seed_docs|243
+
+Document-type distribution:
+wiki|241
+issue|104
+program|5
+project|15
+sprint|35
+person|20
+weekly_plan|32
+weekly_retro|27
+standup|6
+weekly_review|15
+
+Result:
+PASS. The Docker database now meets the Task 4 volume floor.

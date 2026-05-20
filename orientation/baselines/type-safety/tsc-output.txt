@@ -1,0 +1,11 @@
+
+> ship@0.0.0 type-check /Users/sheep/Desktop/Gauntlet/ship
+> pnpm --recursive run type-check
+
+Scope: 3 of 4 workspace projects
+shared type-check$ tsc --noEmit
+shared type-check: Done
+api type-check$ tsc --noEmit
+web type-check$ tsc --noEmit
+api type-check: Done
+web type-check: Done

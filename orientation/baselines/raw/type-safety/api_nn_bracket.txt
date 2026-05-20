@@ -1,0 +1,9 @@
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:189:      const queryArgs = vi.mocked(pool.query).mock.calls[0]![1] as any[];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:312:        const activityQuery = vi.mocked(pool.query).mock.calls[1]![0] as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:339:        const activityQuery = vi.mocked(pool.query).mock.calls[1]![0] as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:364:        const activityQuery = vi.mocked(pool.query).mock.calls[1]![0] as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:129:  const activeIssues = issues.filter(i => !['done', 'cancelled'].includes(i.state));
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:961:          active: issuesResult.rows.filter((i: any) => !['done', 'cancelled'].includes(i.state)).length,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:985:          active: issuesResult.rows.filter((i: any) => !['done', 'cancelled'].includes(i.state)).length,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:429:  if (!role || !['admin', 'member'].includes(role)) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2600:    if (!['planning', 'active'].includes(targetStatus)) {

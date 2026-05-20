@@ -1,0 +1,938 @@
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/secrets-manager.ts:61: * - Secret doesn't exist (will be created as empty)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/secrets-manager.ts:78:    const parsed = JSON.parse(response.SecretString) as Partial<CAIACredentials>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/secrets-manager.ts:175:    const awsErr = err as { name?: string };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/app.ts:48:  getTokenFromRequest: (req) => req.headers['x-csrf-token'] as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/app.ts:102:      const viaHeader = req.headers['via'] as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:139:  return response.json() as Promise<OpenAPIObject>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:207:  return spec.components.schemas[schemaName] as SchemaObject | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:246:      (result.properties as Record<string, unknown>)[key] = openApiToJsonSchema(
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:247:        prop as SchemaObject | ReferenceObject,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:259:      schema.items as SchemaObject | ReferenceObject,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:282:          param.schema as SchemaObject | ReferenceObject,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:288:        properties[param.name] = paramSchema as object;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:300:        .schema as SchemaObject | ReferenceObject,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:306:        properties[key] = value as object;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:315:    type: "object" as const,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:330:    const methods = ["get", "post", "put", "patch", "delete"] as const;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:333:      const operation = pathItem[method] as OperationObject | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:434:    // Try to parse as JSON for structured error, fall back to text
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:487:        (args || {}) as Record<string, unknown>
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:40:    vi.mocked(pool.query).mockResolvedValue({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:55:      } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:59:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:75:      .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:77:      .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:79:      .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:81:      .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:86:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:108:    it('handles workspace start date as Date object', async () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:111:        .mockResolvedValueOnce({ rows: [{ sprint_start_date: startDate }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:112:        .mockResolvedValueOnce({ rows: [{ id: personId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:113:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:114:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:115:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:116:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:122:    it('handles workspace start date as string', async () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:124:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:125:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:126:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:127:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:142:    it('shows next sprint plan as due on Saturday before the week starts', async () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:155:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:164:    it('shows current sprint plan as due on Monday (the week has started)', async () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:176:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:201:    it('shows plan as overdue on Tuesday (after Monday EOD)', async () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:212:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:227:    it('shows retro as due on Thursday', async () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:239:        .mockResolvedValueOnce({ rows: [{ id: 'plan-1', content: { type: 'doc', content: [{ type: 'text', text: 'My plan' }] } }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:241:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:262:        .mockResolvedValueOnce({ rows: [{ id: 'plan-1', content: { type: 'doc', content: [{ type: 'text', text: 'My plan' }] } }] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:271:    it('shows retro as overdue on Saturday', async () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:284:        .mockResolvedValueOnce({ rows: [{ id: 'plan-1', content: { type: 'doc', content: [{ type: 'text', text: 'My plan' }] } }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:286:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:318:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:320:        .mockResolvedValueOnce({ rows: [{ id: 'plan-1', content: { type: 'doc', content: [{ type: 'text', text: 'done' }] } }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:322:        .mockResolvedValueOnce({ rows: [{ id: 'retro-1', content: { type: 'doc', content: [{ type: 'text', text: 'done' }] } }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:324:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:326:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:355:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/extractHypothesis.test.ts:573:    it('treats empty strings as missing', () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:188:            element.setAttribute(key, value as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:221:          element.setAttribute(key, value as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/caia.ts:135:    const error = err as Error & { cause?: unknown; code?: string };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/caia.ts:249:    const error = err as Error & {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/caia.ts:294:    userInfoClaims = userInfoResponse as Record<string, unknown>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/caia.ts:327:    rawClaims: claims as Record<string, unknown>,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/caia.ts:366:    const error = err as Error & { cause?: unknown; code?: string };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:35:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:37:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:70:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:72:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:102:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:104:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:138:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:140:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:162:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:185:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:189:      const queryArgs = vi.mocked(pool.query).mock.calls[0]![1] as any[];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:218:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:220:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:234:    it('keeps issue reference as plain text when issue does not exist', async () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:248:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:250:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:273:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:275:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:362:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:364:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:390:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:392:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:429:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:455:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:479:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:481:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:506:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:508:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:552:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/allocation.ts:43:       SELECT (s.properties->>'project_id')::uuid as project_id, proj.title as project_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/allocation.ts:54:       SELECT proj_da.related_id as project_id, proj.title as project_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/standups.ts:178:      [workspaceId, userId, date_from as string, date_to as string]
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/standups.ts:184:      document_type: 'standup' as const,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/standups.ts:257:      `SELECT DISTINCT s.id as sprint_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/standups.ts:281:      `SELECT MAX(created_at) as last_posted
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/standups.ts:362:      `SELECT id, properties->>'author_id' as author_id FROM documents
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/standups.ts:411:              d.properties->>'author_id' as author_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/standups.ts:412:              u.name as author_name, u.email as author_email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/standups.ts:469:      `SELECT id, properties->>'author_id' as author_id FROM documents
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:51:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:59:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:88:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:94:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:121:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:126:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:151:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:154:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:186:        } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:204:        } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:241:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:244:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:272:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:278:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:303:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:306:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:312:        const activityQuery = vi.mocked(pool.query).mock.calls[1]![0] as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:330:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:333:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:339:        const activityQuery = vi.mocked(pool.query).mock.calls[1]![0] as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:355:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:358:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:364:        const activityQuery = vi.mocked(pool.query).mock.calls[1]![0] as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-crud.ts:120:    `SELECT da.related_id as id, da.relationship_type as type,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-crud.ts:121:            d.title, d.properties->>'color' as color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-crud.ts:156:    `SELECT da.document_id, da.related_id as id, da.relationship_type as type,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-crud.ts:157:            d.title, d.properties->>'color' as color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-crud.ts:284:    `SELECT da.related_id as id, da.relationship_type as type,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-crud.ts:285:            d.title, d.properties->>'color' as color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-crud.ts:312:    `SELECT da.related_id as id, da.relationship_type as type,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-crud.ts:313:            d.title, d.properties->>'color' as color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-crud.ts:340:    `SELECT da.related_id as id, da.relationship_type as type,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-crud.ts:341:            d.title, d.properties->>'color' as color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-crud.ts:436:    `SELECT da.document_id, da.related_id as id, da.relationship_type as type,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-crud.ts:437:            d.title, d.properties->>'color' as color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-crud.ts:558:            u.name as changed_by_name, u.email as changed_by_email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-crud.ts:595:            u.name as changed_by_name, u.email as changed_by_email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.ts:161:    `SELECT s.id, s.title, s.properties, COUNT(i.id) as issue_count
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.ts:190:        `SELECT MAX(created_at::date) as last_standup_date
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.ts:251:    `SELECT s.id, s.title, s.properties, da.related_id as project_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.ts:298:      `SELECT COUNT(*) as count
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.ts:379:    // A plan counts as "done" only if it has meaningful content (not just template headings)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.ts:409:    // A retro counts as "done" only if it has meaningful content (not just template headings)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.ts:581:       s.id as sprint_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.ts:582:       (s.properties->>'sprint_number')::int as sprint_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.ts:583:       s.properties->'plan_approval' as plan_approval,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.ts:584:       s.properties->'review_approval' as review_approval,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.ts:585:       s.title as sprint_title,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.ts:586:       da.related_id as project_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:17:  const req = { cookies } as unknown as Request;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:22:  } as unknown as Response;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:23:  const next = vi.fn() as NextFunction;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:48:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [], rowCount: 0 } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:72:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:73:        .mockResolvedValueOnce({ rows: [{ id: 'membership-1' }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:74:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:98:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:124:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:151:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:152:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:176:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:177:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:203:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:204:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:242:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:243:        .mockResolvedValueOnce({ rows: [{ id: 'membership-1' }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:244:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:272:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:273:        .mockResolvedValueOnce({ rows: [{ id: 'membership-1' }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:274:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:288:      } as unknown as Request;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:292:      } as unknown as Response;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:293:      const next = vi.fn() as NextFunction;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:309:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:311:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:324:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:340:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any); // No results means revoked/expired
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:353:      } as unknown as Request;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:357:      } as unknown as Response;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:358:      const next = vi.fn() as NextFunction;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:368:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:369:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/transformIssueLinks.ts:125:    // If issue exists, add as link; otherwise, add as plain text
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/transformIssueLinks.ts:209:  const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/transformIssueLinks.ts:253:    const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:26:const accountabilityTypes = ['standup', 'weekly_plan', 'weekly_review', 'week_start', 'week_issues', 'project_plan', 'project_retro'] as const;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:130:             u.name as assignee_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:131:             CASE WHEN person_doc.archived_at IS NOT NULL THEN true ELSE false END as assignee_archived
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:148:      params.push(source as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:153:      const states = (state as string).split(',');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:155:      params.push(states as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:160:      params.push(priority as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:168:        params.push(assignee_id as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:178:      params.push(program_id as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:187:      params.push(sprint_id as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:271:         d.properties->>'state' as state,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:272:         d.properties->>'priority' as priority,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:274:         d.properties->>'due_date' as due_date,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:275:         (d.properties->>'is_system_generated')::boolean as is_system_generated,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:276:         d.properties->>'accountability_type' as accountability_type,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:277:         d.properties->>'accountability_target_id' as accountability_target_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:278:         target.title as target_title
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:362:              u.name as assignee_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:363:              CASE WHEN person_doc.archived_at IS NOT NULL THEN true ELSE false END as assignee_archived,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:364:              creator.name as created_by_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:445:              u.name as assignee_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:446:              CASE WHEN person_doc.archived_at IS NOT NULL THEN true ELSE false END as assignee_archived
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:508:              u.name as assignee_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:509:              CASE WHEN person_doc.archived_at IS NOT NULL THEN true ELSE false END as assignee_archived,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:510:              creator.name as created_by_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:589:    // The lock key is derived from workspace_id (first 15 hex chars as bigint)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:596:      `SELECT COALESCE(MAX(ticket_number), 0) + 1 as next_number
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:643:        `SELECT COUNT(*) as count FROM document_associations
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:732:        `SELECT d.id, d.title, d.ticket_number, d.properties->>'state' as state
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:856:            `SELECT properties->>'sprint_number' as sprint_number, w.sprint_start_date
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:881:            // If the old sprint has ended, mark this as a carryover
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:973:          `SELECT COUNT(*) as count FROM document_associations
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:1035:              u.id as changed_by_id, u.name as changed_by_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:1541:      SELECT i.*, u.name as author_name, u.email as author_email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:7: * Returns the extracted text as a plain string, or null if no hypothesis found.
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:72:  const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:127:  const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:177:  const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:227:  const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-content.ts:9:// Template headings that don't count as real content
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-content.ts:21:  const n = node as { type?: string; text?: string; content?: unknown[] };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-content.ts:35:  const doc = content as { content?: unknown[] };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:72:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: mockProjects } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:91:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:105:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:133:        .mockResolvedValueOnce({ rows: [mockProject] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:162:        .mockResolvedValueOnce({ rows: [mockProject] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:164:        .mockResolvedValueOnce({ rows: [{ id: ownerId, name: 'Test Owner', email: 'owner@example.com' }] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:196:        .mockResolvedValueOnce({ rows: [mockProject] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:239:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [mockProject] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:249:            vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:281:        .mockResolvedValueOnce({ rows: [existingProject] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:283:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:285:        .mockResolvedValueOnce({ rows: [updatedProject] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:298:            vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:313:        .mockResolvedValueOnce({ rows: [{ id: 'project-123' }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:315:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:317:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:325:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/ai-analysis.ts:71:  const doc = content as { content?: unknown[] };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/ai-analysis.ts:79:      const n = node as { type?: string; content?: unknown[] };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/ai-analysis.ts:99:    return (node as { type?: string }).type === 'heading';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/ai-analysis.ts:150:2. **Conciseness (conciseness_score 0-1)**: Is the item stated concisely as a falsifiable deliverable? A score of 1.0 means it's a crisp 1-sentence deliverable. A score of 0.0 means it's a rambling multi-paragraph description.
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/ai-analysis.ts:296:    const result = JSON.parse(jsonStr) as PlanAnalysisResult;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/ai-analysis.ts:362:    const result = JSON.parse(jsonStr) as RetroAnalysisResult;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/invite-acceptance.ts:25: * 3. Marking invite as used
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/invite-acceptance.ts:98:  // Mark invite as used
+/Users/sheep/Desktop/Gauntlet/ship/api/src/db/seed.ts:128:    // Set dev user as super-admin and set their last workspace
+/Users/sheep/Desktop/Gauntlet/ship/api/src/db/seed.ts:133:    console.log('✅ Set dev@ship.local as super-admin');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/db/seed.ts:233:      `SELECT u.id, u.name, d.id as person_doc_id FROM users u
+/Users/sheep/Desktop/Gauntlet/ship/api/src/db/seed.ts:656:        `SELECT COALESCE(MAX(d.ticket_number), 0) as max_ticket
+/Users/sheep/Desktop/Gauntlet/ship/api/src/db/seed.ts:744:        // Find the sprint based on offset (same pattern as Ship Core issues)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents-visibility.test.ts:136:      // Create workspace-visible document as user1
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents-visibility.test.ts:155:      // Create private document as user1
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents-visibility.test.ts:173:      // Create private document as user1
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents-visibility.test.ts:191:      // Create private document as user1
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents-visibility.test.ts:210:      // Create private document as user1
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents-visibility.test.ts:229:      // Create private document as user1
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents-visibility.test.ts:247:      // Create private document as user1
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents-visibility.test.ts:265:      // Create private document as user1
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents-visibility.test.ts:406:      // Create workspace document as user1
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents-visibility.test.ts:427:      // Create document as user1
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/files.ts:172:    // Get raw body as buffer - handle various input types
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:19:                        (SELECT COUNT(*) FROM workspace_memberships wm WHERE wm.workspace_id = w.id) as member_count
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:345:              ) as workspaces
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:526:             u.email as actor_email, u.name as actor_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:527:             iu.email as impersonating_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:528:             w.name as workspace_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:540:      params.push(workspaceId as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:546:      params.push(userId as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:552:      params.push(action as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:557:    params.push(parseInt(limit as string), parseInt(offset as string));
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:593:// GET /api/admin/audit-logs/export - Export audit logs as CSV
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:599:      SELECT al.created_at, w.name as workspace_name, u.email as actor_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:600:             iu.email as impersonating_email, al.action, al.resource_type,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:613:      params.push(workspaceId as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:619:      params.push(new Date(startDate as string));
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:625:      params.push(new Date(endDate as string));
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:1468:         LOWER(u.email) as email_lower,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:1469:         (SELECT COUNT(*) FROM workspace_memberships wm WHERE wm.user_id = u.id) as membership_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:1470:         (SELECT COUNT(*) FROM sessions s WHERE s.user_id = u.id) as session_count
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:1481:         w.name as workspace_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:1497:      const userId = m.user_id as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:1512:      const emailLower = u.email_lower as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:1530:      isDuplicate: (emailCounts[row.email_lower as string] ?? 0) > 1,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:1738:  const id = req.params.id as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.test.ts:215:        `SELECT COALESCE(MAX(ticket_number), 0) + 1 as next_number
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/caia-auth.ts:10: * - No x509_subject_dn claim (CAIA acts as broker, doesn't expose certificate details)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/caia-auth.ts:327:    const caiaError = error as { message?: string };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/caia-auth.ts:388:            EXISTS(SELECT 1 FROM workspace_memberships wm WHERE wm.user_id = u.id) as has_membership
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/caia-auth.ts:414:    `SELECT wi.id, wi.workspace_id, w.name as workspace_name, wi.email, wi.role
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/caia-auth.ts:433:    `SELECT wi.id, wi.workspace_id, w.name as workspace_name, wi.email, wi.role
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/backlinks.ts:40:      `SELECT d.id, d.document_type, d.title, d.ticket_number, prog_da.related_id as program_id, d.properties,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/backlinks.ts:41:              p.properties->>'prefix' as program_prefix
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:19:    const searchQuery = (req.query.q as string) || '';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:33:         d.id::text as id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:34:         d.title as name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:35:         'person' as document_type
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:84:    const searchQuery = (req.query.q as string) || '';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:85:    const programId = req.query.program_id as string | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:88:    const limit = Math.min(parseInt(req.query.limit as string) || 10, 50);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:105:        prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:106:        d.properties->>'category' as category,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:107:        d.properties->'tags' as tags,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:108:        d.properties->>'source_prd' as source_prd,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:109:        d.properties->>'source_sprint_id' as source_sprint_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:112:        substring(d.content::text, 1, 500) as content_preview
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:73:             COALESCE((d.properties->>'owner_id')::uuid, d.created_by) as owner_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:74:             u.name as owner_name, u.email as owner_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:77:              WHERE i.document_type = 'issue') as issue_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:80:              WHERE s.document_type = 'sprint') as sprint_count
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:115:              COALESCE((d.properties->>'owner_id')::uuid, d.created_by) as owner_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:116:              u.name as owner_name, u.email as owner_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:119:               WHERE i.document_type = 'issue') as issue_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:122:               WHERE s.document_type = 'sprint') as sprint_count
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:298:              COALESCE((d.properties->>'owner_id')::uuid, d.created_by) as owner_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:299:              u.name as owner_name, u.email as owner_email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:382:              u.name as assignee_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:383:              CASE WHEN person_doc.archived_at IS NOT NULL THEN true ELSE false END as assignee_archived,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:384:              sprint_da.related_id as sprint_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:459:      `SELECT d.id, d.title, d.properties, $1::uuid as program_id, d.archived_at, d.created_at, d.updated_at,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:460:              (d.properties->>'owner_id')::uuid as owner_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:461:              u.name as owner_name, u.email as owner_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:464:               WHERE s.document_type = 'sprint') as sprint_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:467:               WHERE i.document_type = 'issue') as issue_count
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:547:      `SELECT d.id, d.title as name, d.properties,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:548:              u.id as owner_id, u.name as owner_name, u.email as owner_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:551:               WHERE i.document_type = 'issue') as issue_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:554:               WHERE i.document_type = 'issue' AND i.properties->>'state' = 'done') as completed_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:557:               WHERE i.document_type = 'issue' AND i.properties->>'state' IN ('in_progress', 'in_review')) as started_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:560:               WHERE i.document_type = 'issue') as total_estimate_hours,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:561:              (SELECT COUNT(*) > 0 FROM documents p WHERE p.parent_id = d.id AND p.document_type = 'weekly_plan') as has_plan,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:562:              (SELECT COUNT(*) > 0 FROM documents r WHERE r.parent_id = d.id AND r.document_type = 'weekly_retro') as has_retro,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:563:              (SELECT created_at FROM documents p WHERE p.parent_id = d.id AND p.document_type = 'weekly_plan' LIMIT 1) as plan_created_at,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:564:              (SELECT created_at FROM documents r WHERE r.parent_id = d.id AND r.document_type = 'weekly_retro' LIMIT 1) as retro_created_at
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:616:    const targetId = req.query.target_id as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:663:      `SELECT d.document_type, COUNT(*) as count
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:672:      `SELECT COUNT(*) as count FROM documents WHERE parent_id = $1`,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:868:              COALESCE((d.properties->>'owner_id')::uuid, d.created_by) as owner_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:869:              u.name as owner_name, u.email as owner_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:872:               WHERE i.document_type = 'issue') as issue_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:875:               WHERE s.document_type = 'sprint') as sprint_count
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/accountability.ts:49:        // Changes requested items have no due date but should show as "due today" urgency
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations-regression.test.ts:518:      // Mark child as done first
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/setup.ts:13:    const result = await pool.query('SELECT COUNT(*) as count FROM users');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/setup.ts:63:    const countResult = await pool.query('SELECT COUNT(*) as count FROM users');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/setup.ts:98:    // Add user to workspace as admin
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.test.ts:914:        `SELECT properties->'review_rating' as review_rating FROM documents WHERE id = $1`,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/openapi/schemas/index.ts:8:// Common schemas (must be first as others depend on these)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:91:              sprint_assoc.related_id as sprint_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:92:              sprint.title as sprint_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:93:              (sprint.properties->>'sprint_number')::int as sprint_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:94:              p.title as program_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:129:        // Future sprints stay as 'later'
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:150:              p.title as program_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:182:              END as inferred_status
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:207:      // 'planned' and 'backlog' stay as 'later'
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:223:              p.title as program_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:224:              (d.properties->>'sprint_number')::int as sprint_number
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:281:  const doc = content as { content?: unknown[] };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:289:      const n = node as { type?: string; attrs?: { checked?: boolean }; content?: unknown[] };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:378:         proj.id as project_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:379:         proj.title as project_title,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:380:         prog.title as program_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:397:    let plansResult = { rows: [] as { id: string; content: unknown; properties: Record<string, unknown> }[] };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:424:    let activityResult = { rows: [] as { id: string; title: string; ticket_number: number; state: string; updated_at: string; project_id: string }[] };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:428:                COALESCE(d.properties->>'state', 'backlog') as state,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:430:                proj_assoc.related_id as project_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:644:      const dateStr = d.toISOString().split('T')[0] as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:686:         proj.id as project_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:687:         proj.title as project_title,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:688:         prog.title as program_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:58:        .mockResolvedValueOnce({ rows: [{ id: sprintId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:60:        .mockResolvedValueOnce({ rows: [mockIteration] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:62:        .mockResolvedValueOnce({ rows: [{ id: 'user-123', name: 'Test User', email: 'test@example.com' }] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:105:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:125:        .mockResolvedValueOnce({ rows: [{ id: sprintId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:144:        } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:158:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:170:        .mockResolvedValueOnce({ rows: [{ id: 'sprint-123' }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:172:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:22:             (SELECT role FROM workspace_memberships WHERE workspace_id = $3 AND user_id = $2) = 'admin') as can_access
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:90:  plan: z.string().optional(), // Alias for hypothesis (frontend sends 'plan', stored as 'plan' in properties)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:117:      params.push(type as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:125:        params.push(parent_id as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:165:      SELECT d.id, d.title, d.document_type as original_type, d.ticket_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:168:             converted_doc.document_type as converted_type,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:169:             converted_doc.title as converted_title,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:170:             converted_doc.ticket_number as converted_ticket_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:171:             converter.name as converted_by_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:263:    // Return user_id as id so PersonCombobox can match correctly
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:267:        `SELECT (d.properties->>'user_id')::text as id, d.title as name, COALESCE(d.properties->>'email', u.email) as email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:279:    // Return user_id as id so Combobox can match correctly
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:282:        `SELECT u.id::text as id, d.title as name, COALESCE(d.properties->>'email', u.email) as email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:310:        `SELECT da.related_id as id, da.relationship_type as type,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:311:                d.title, (d.properties->>'color') as color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:370:// Get document content as TipTap JSON
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:383:               (SELECT role FROM workspace_memberships WHERE workspace_id = $3 AND user_id = $2) = 'admin') as can_access
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:715:    // Accept both 'hypothesis' (legacy) and 'plan' (current), store as 'plan'
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:761:            `SELECT COUNT(*) as count FROM documents d
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:817:          `SELECT COALESCE(MAX(ticket_number), 0) + 1 as next_number
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:828:      // (don't clear it - it serves as a historical reference)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:941:      const docProps = (existing.properties || {}) as Record<string, unknown>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:975:          const sprintProps = (sprint.properties || {}) as Record<string, unknown>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:977:          const approval = sprintProps[approvalKey] as { state?: string; approved_by?: string | null } | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:1053:    // Return user_id as id so PersonCombobox can match correctly
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:1057:        `SELECT (d.properties->>'user_id')::text as id, d.title as name, COALESCE(d.properties->>'email', u.email) as email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:1244:        `SELECT COALESCE(MAX(ticket_number), 0) + 1 as next_number
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:1426:        `SELECT COALESCE(MAX(ticket_number), 0) + 1 as next_number
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:62:    const { context_type, sprint_id, project_id } = req.query as unknown as ClaudeContextRequest;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:121:      s.id as sprint_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:122:      s.title as sprint_title,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:123:      s.properties->>'sprint_number' as sprint_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:124:      s.properties->>'status' as sprint_status,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:125:      s.properties->>'plan' as sprint_plan,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:126:      da_prog.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:127:      p.title as program_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:128:      p.content as program_content,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:129:      p.properties->>'description' as program_description,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:130:      p.properties->>'goals' as program_goals,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:131:      proj.id as project_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:132:      proj.title as project_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:133:      proj.properties->>'plan' as project_plan,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:134:      proj.properties->>'ice_impact' as ice_impact,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:135:      proj.properties->>'ice_confidence' as ice_confidence,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:136:      proj.properties->>'ice_ease' as ice_ease,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:137:      proj.properties->>'monetary_impact' as monetary_impact_expected
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:161:      d.properties->>'author_id' as author_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:162:      u.name as author_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:163:      u.email as author_email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:178:      d.properties->>'status' as status,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:179:      d.properties->>'priority' as priority,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:180:      d.properties->>'assignee_id' as assignee_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:250:      s.id as sprint_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:251:      s.title as sprint_title,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:252:      s.properties->>'sprint_number' as sprint_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:253:      s.properties->>'status' as sprint_status,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:254:      s.properties->>'plan' as sprint_plan,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:255:      da_prog.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:256:      p.title as program_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:257:      p.content as program_content,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:258:      p.properties->>'description' as program_description,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:259:      p.properties->>'goals' as program_goals,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:260:      proj.id as project_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:261:      proj.title as project_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:262:      proj.properties->>'plan' as project_plan,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:263:      proj.properties->>'ice_impact' as ice_impact,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:264:      proj.properties->>'ice_confidence' as ice_confidence,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:265:      proj.properties->>'ice_ease' as ice_ease,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:266:      proj.properties->>'monetary_impact' as monetary_impact_expected
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:290:      d.properties->>'author_id' as author_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:291:      u.name as author_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:292:      u.email as author_email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:306:      d.properties->>'status' as status,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:307:      d.properties->>'priority' as priority,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:308:      d.properties->>'added_mid_sprint' as added_mid_sprint,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:309:      d.properties->>'cancelled' as cancelled
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:331:      d.properties->>'plan_validated' as plan_validated,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:332:      d.properties->>'owner_id' as owner_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:392:      proj.id as project_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:393:      proj.title as project_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:394:      proj.properties->>'plan' as project_plan,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:395:      proj.properties->>'ice_impact' as ice_impact,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:396:      proj.properties->>'ice_confidence' as ice_confidence,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:397:      proj.properties->>'ice_ease' as ice_ease,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:398:      proj.properties->>'monetary_impact' as monetary_impact_expected,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:399:      proj.properties->>'status' as project_status,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:400:      proj.created_at as project_created_at,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:401:      da_prog.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:402:      p.title as program_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:403:      p.properties->>'description' as program_description,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:404:      p.properties->>'goals' as program_goals
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:426:      d.properties->>'status' as status,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:427:      d.properties->>'plan' as plan
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:442:        da.related_id as sprint_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:444:        d.properties->>'plan_validated' as plan_validated
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:459:        da.related_id as sprint_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:461:        u.name as author_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:480:      d.properties->>'status' as status,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:481:      d.properties->>'priority' as priority
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:501:      d.properties->>'plan_validated' as plan_validated,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:502:      d.properties->>'monetary_impact_actual' as monetary_impact_actual,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:503:      d.properties->>'success_criteria' as success_criteria,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:504:      d.properties->>'key_learnings' as key_learnings
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/invites.ts:19:              w.id as workspace_id, w.name as workspace_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/invites.ts:20:              u.name as invited_by_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/invites.ts:81:        // Mark invite as used since user is already a member
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/invites.ts:124:              w.name as workspace_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/invites.ts:181:        // User is already a member - mark invite as used to clean it up
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:44:    mockClient.query.mockResolvedValue({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:46:    vi.mocked(pool).connect = vi.fn().mockResolvedValue(mockClient) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:58:        .mockResolvedValueOnce({ rows: [{ id: issueId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:60:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:79:        .mockResolvedValueOnce({ rows: [{ id: issueId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:80:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:134:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:152:        .mockResolvedValueOnce({ rows: [{ id: issueId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:153:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:196:        .mockResolvedValueOnce({ rows: [{ id: issueId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:198:        .mockResolvedValueOnce({ rows: historyEntries } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:212:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:249:        .mockResolvedValueOnce({ rows: [existingIssue] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:251:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:253:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:255:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:257:        .mockResolvedValueOnce({ rows: [updatedRow] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:259:        .mockResolvedValueOnce({ rows: [updatedRow] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:261:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:266:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.ts:124:      SELECT i.*, u.name as author_name, u.email as author_email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin-credentials.ts:515:    const error = err as Error & { cause?: unknown; code?: string };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/openapi/schemas/weeks.ts:607:  description: 'Mark the sprint plan as approved by the accountable person. Optionally include a manager comment.',
+/Users/sheep/Desktop/Gauntlet/ship/api/src/openapi/schemas/weeks.ts:645:  description: 'Mark the sprint review as approved by the accountable person. Rating is required (1-5 OPM scale). Optional manager comment can be included.',
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/index.ts:170:    // The content column is kept in sync with yjs_state to serve as a fallback
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/index.ts:237:          // Mark this doc as freshly loaded from JSON - clients should clear their cache
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/index.ts:314:      // Pass ws as origin so broadcast excludes the sender
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/index.ts:405:               (SELECT role FROM workspace_memberships WHERE workspace_id = $3 AND user_id = $2) = 'admin') as can_access
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/index.ts:589:  // For events connections, send as plain JSON (they're dedicated for events)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/index.ts:616:      const clientIp = (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/index.ts:648:    const clientIp = (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/activity.ts:144:            SELECT da.document_id as id FROM document_associations da
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/circular-reference.test.ts:61:      // Both protections are in place - trigger runs first as BEFORE trigger
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/circular-reference.test.ts:88:      }, {} as Record<string, string | null>)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/circular-reference.test.ts:134:        const newId = insertResult.rows[0].id as string
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:24:    `SELECT owner_person.properties->>'reports_to' as reports_to
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:50:  const raw = (body as Record<string, unknown>).comment;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:78:    `SELECT properties->>'user_id' as user_id FROM documents WHERE id = $1`,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:91:    const userId = req.query.user_id as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:123:    const projectId = req.query.project_id as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:124:    const sprintNumber = parseInt(req.query.sprint_number as string, 10);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:156:// API accepts owner_id for backwards compatibility, stored internally as assignee_ids[0]
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:322:      `SELECT d.id, d.title, d.properties, prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:323:              p.title as program_name, p.properties->>'prefix' as program_prefix,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:324:              p.properties->>'accountable_id' as program_accountable_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:325:              (SELECT op.properties->>'reports_to' FROM documents op WHERE d.properties->>'owner_id' IS NOT NULL AND op.id = (d.properties->>'owner_id')::uuid AND op.document_type = 'person' AND op.workspace_id = d.workspace_id) as owner_reports_to,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:326:              $5::timestamp as workspace_sprint_start_date,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:327:              u.id as owner_id, u.name as owner_name, u.email as owner_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:330:               WHERE i.document_type = 'issue') as issue_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:333:               WHERE i.document_type = 'issue' AND i.properties->>'state' = 'done') as completed_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:336:               WHERE i.document_type = 'issue' AND i.properties->>'state' IN ('in_progress', 'in_review')) as started_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:337:              (SELECT COUNT(*) > 0 FROM documents pl WHERE pl.parent_id = d.id AND pl.document_type = 'weekly_plan') as has_plan,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:340:               WHERE rt.properties->>'outcome' IS NOT NULL) as has_retro,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:343:               WHERE rt.properties->>'outcome' IS NOT NULL LIMIT 1) as retro_outcome,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:346:               WHERE rt.properties->>'outcome' IS NOT NULL LIMIT 1) as retro_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:361:      status: 'active' as const,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:417:      `SELECT d.id, d.title, d.properties, prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:418:              p.title as program_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:419:              (d.properties->>'sprint_number')::int as sprint_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:424:                 AND pl.created_by = $2) as has_plan,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:429:                 AND rt.created_by = $2) as has_retro
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:628:        i.id as issue_id, i.title as issue_title, i.properties as issue_properties,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:629:        i.ticket_number, i.created_at as issue_created_at, i.updated_at as issue_updated_at,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:630:        s.id as sprint_id, s.title as sprint_name, s.properties as sprint_properties,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:631:        p.id as program_id, p.title as program_name, p.properties->>'prefix' as program_prefix,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:632:        u.name as assignee_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:633:        CASE WHEN person_doc.archived_at IS NOT NULL THEN true ELSE false END as assignee_archived
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:751:      `SELECT d.id, d.title, d.properties, prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:752:              p.title as program_name, p.properties->>'prefix' as program_prefix,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:753:              p.properties->>'accountable_id' as program_accountable_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:754:              (SELECT op.properties->>'reports_to' FROM documents op WHERE d.properties->>'owner_id' IS NOT NULL AND op.id = (d.properties->>'owner_id')::uuid AND op.document_type = 'person' AND op.workspace_id = d.workspace_id) as owner_reports_to,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:755:              w.sprint_start_date as workspace_sprint_start_date,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:756:              u.id as owner_id, u.name as owner_name, u.email as owner_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:759:               WHERE i.document_type = 'issue') as issue_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:762:               WHERE i.document_type = 'issue' AND i.properties->>'state' = 'done') as completed_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:765:               WHERE i.document_type = 'issue' AND i.properties->>'state' IN ('in_progress', 'in_review')) as started_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:766:              (SELECT COUNT(*) > 0 FROM documents pl WHERE pl.parent_id = d.id AND pl.document_type = 'weekly_plan') as has_plan,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:769:               WHERE rt.properties->>'outcome' IS NOT NULL) as has_retro,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:772:               WHERE rt.properties->>'outcome' IS NOT NULL LIMIT 1) as retro_outcome,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:775:               WHERE rt.properties->>'outcome' IS NOT NULL LIMIT 1) as retro_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:800:      const sprintId = id as string; // Safe: Express route param is always a string
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1036:      `SELECT d.id, d.properties, prog_da.related_id as program_id, w.sprint_start_date
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1085:      // Store as assignee_ids array (migration converted owner_id to assignee_ids)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1158:      `SELECT d.id, d.title, d.properties, prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1159:              p.title as program_name, p.properties->>'prefix' as program_prefix,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1160:              p.properties->>'accountable_id' as program_accountable_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1161:              (SELECT op.properties->>'reports_to' FROM documents op WHERE d.properties->>'owner_id' IS NOT NULL AND op.id = (d.properties->>'owner_id')::uuid AND op.document_type = 'person' AND op.workspace_id = d.workspace_id) as owner_reports_to,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1162:              w.sprint_start_date as workspace_sprint_start_date,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1163:              u.id as owner_id, u.name as owner_name, u.email as owner_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1166:               WHERE i.document_type = 'issue') as issue_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1169:               WHERE i.document_type = 'issue' AND i.properties->>'state' = 'done') as completed_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1172:               WHERE i.document_type = 'issue' AND i.properties->>'state' IN ('in_progress', 'in_review')) as started_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1173:              (SELECT COUNT(*) > 0 FROM documents pl WHERE pl.parent_id = d.id AND pl.document_type = 'weekly_plan') as has_plan,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1176:               WHERE rt.properties->>'outcome' IS NOT NULL) as has_retro,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1179:               WHERE rt.properties->>'outcome' IS NOT NULL LIMIT 1) as retro_outcome,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1182:               WHERE rt.properties->>'outcome' IS NOT NULL LIMIT 1) as retro_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1212:      `SELECT d.id, d.properties, prog_da.related_id as program_id, w.sprint_start_date
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1238:    const sprintId = id as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1256:    broadcastToUser(req.userId!, 'accountability:updated', { type: 'week_start', targetId: id as string });
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1260:      `SELECT d.id, d.title, d.properties, prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1261:              p.title as program_name, p.properties->>'prefix' as program_prefix,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1262:              p.properties->>'accountable_id' as program_accountable_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1263:              (SELECT op.properties->>'reports_to' FROM documents op WHERE d.properties->>'owner_id' IS NOT NULL AND op.id = (d.properties->>'owner_id')::uuid AND op.document_type = 'person' AND op.workspace_id = d.workspace_id) as owner_reports_to,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1264:              w.sprint_start_date as workspace_sprint_start_date,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1265:              u.id as owner_id, u.name as owner_name, u.email as owner_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1268:               WHERE i.document_type = 'issue') as issue_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1271:               WHERE i.document_type = 'issue' AND i.properties->>'state' = 'done') as completed_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1274:               WHERE i.document_type = 'issue' AND i.properties->>'state' IN ('in_progress', 'in_review')) as started_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1275:              (SELECT COUNT(*) > 0 FROM documents pl WHERE pl.parent_id = d.id AND pl.document_type = 'weekly_plan') as has_plan,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1278:               WHERE rt.properties->>'outcome' IS NOT NULL) as has_retro,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1281:               WHERE rt.properties->>'outcome' IS NOT NULL LIMIT 1) as retro_outcome,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1284:               WHERE rt.properties->>'outcome' IS NOT NULL LIMIT 1) as retro_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1440:        id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1452:          id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1463:      broadcastToUser(req.userId!, 'accountability:updated', { type: 'weekly_plan', targetId: id as string });
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1468:      `SELECT d.id, d.title, d.properties, prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1469:              p.title as program_name, p.properties->>'prefix' as program_prefix,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1470:              p.properties->>'accountable_id' as program_accountable_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1471:              (SELECT op.properties->>'reports_to' FROM documents op WHERE d.properties->>'owner_id' IS NOT NULL AND op.id = (d.properties->>'owner_id')::uuid AND op.document_type = 'person' AND op.workspace_id = d.workspace_id) as owner_reports_to,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1472:              w.sprint_start_date as workspace_sprint_start_date,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1473:              u.id as owner_id, u.name as owner_name, u.email as owner_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1476:               WHERE i.document_type = 'issue') as issue_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1479:               WHERE i.document_type = 'issue' AND i.properties->>'state' = 'done') as completed_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1482:               WHERE i.document_type = 'issue' AND i.properties->>'state' IN ('in_progress', 'in_review')) as started_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1483:              (SELECT COUNT(*) > 0 FROM documents pl WHERE pl.parent_id = d.id AND pl.document_type = 'weekly_plan') as has_plan,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1486:               WHERE rt.properties->>'outcome' IS NOT NULL) as has_retro,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1489:               WHERE rt.properties->>'outcome' IS NOT NULL LIMIT 1) as retro_outcome,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1492:               WHERE rt.properties->>'outcome' IS NOT NULL LIMIT 1) as retro_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1521:      `SELECT d.id, p.properties->>'prefix' as prefix FROM documents d
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1537:              u.name as assignee_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1538:              CASE WHEN person_doc.archived_at IS NOT NULL THEN true ELSE false END as assignee_archived
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1620:      `SELECT d.id, d.properties->>'sprint_number' as sprint_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1621:              w.sprint_start_date as workspace_sprint_start_date
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1653:      `SELECT d.id, COALESCE((d.properties->>'estimate')::numeric, 0) as estimate
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1740:        `SELECT COALESCE((properties->>'estimate')::numeric, 0) as estimate
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1858:              d.properties->>'author_id' as author_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1859:              u.name as author_name, u.email as author_email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1991:    broadcastToUser(userId, 'accountability:updated', { type: 'standup', targetId: id as string });
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2168:      `SELECT d.id, d.title, d.properties, prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2169:              p.title as program_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2190:              u.name as owner_name, u.email as owner_email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2348:    broadcastToUser(userId, 'accountability:updated', { type: 'weekly_review', targetId: id as string });
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2515:              u.name as owner_name, u.email as owner_email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2700:      `SELECT d.id, d.properties, d.properties->>'owner_id' as sprint_owner_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2701:              prog.properties->>'accountable_id' as program_accountable_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2719:    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2726:    const historyEntry = await getLatestDocumentFieldHistory(id as string, 'plan');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2759:        id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2769:      id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2793:      `SELECT d.id, d.properties, prog.properties->>'accountable_id' as program_accountable_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2808:    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2819:      id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2871:      `SELECT d.id, d.properties, d.properties->>'owner_id' as sprint_owner_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2872:              prog.properties->>'accountable_id' as program_accountable_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2890:    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2946:        id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2956:      id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2993:      `SELECT d.id, d.properties, d.properties->>'owner_id' as sprint_owner_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2994:              prog.properties->>'accountable_id' as program_accountable_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:3012:    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:3042:        `SELECT properties->>'user_id' as user_id FROM documents WHERE id = $1`,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:3049:          targetId: id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:3086:      `SELECT d.id, d.properties, d.properties->>'owner_id' as sprint_owner_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:3087:              prog.properties->>'accountable_id' as program_accountable_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:3105:    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:3134:        `SELECT properties->>'user_id' as user_id FROM documents WHERE id = $1`,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:3141:          targetId: id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/api-content-preservation.test.ts:286:    const documentTypes = ['wiki', 'issue', 'project', 'sprint', 'program'] as const
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/api-content-preservation.test.ts:399:            content: [{ type: 'text', text: 'Will be persisted as Yjs' }]
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/api-content-preservation.test.ts:441:      expect(convertedBack.content[0].content[0].text).toBe('Will be persisted as Yjs')
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/api-content-preservation.test.ts:550:    it('should handle content stored as JSON string', async () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/api-content-preservation.test.ts:551:      // When content comes as string (from API)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/api-content-preservation.test.ts:562:      // Simulate content being double-stringified or stored as string
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/api-content-preservation.test.ts:614:      // Get state as buffer
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:33:const validTypes = ['parent', 'project', 'sprint', 'program'] as const;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:37:  return typeof value === 'string' && validTypes.includes(value as RelationshipType);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:62:        d.title as related_title,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:63:        d.document_type as related_document_type
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:207:        d.title as document_title,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:208:        d.document_type as document_document_type
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:249:    // Programs are stored as documents with document_type = 'program', not a separate table
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:252:              prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:253:              prog.title as program_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:254:              prog.properties->>'color' as program_color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:275:          1 as depth
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:303:    // Get children (documents that have this document as parent)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:311:         WHERE da2.related_id = d.id AND da2.relationship_type = 'parent') as child_count
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:326:        da.relationship_type as type,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:330:        d.properties->>'color' as color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/feedback.ts:65:      `SELECT id, workspace_id, properties->>'prefix' as prefix FROM documents WHERE id = $1 AND document_type = 'program'`,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/feedback.ts:79:      `SELECT COALESCE(MAX(ticket_number), 0) + 1 as next_number
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/feedback.ts:123:    const programId = req.params.programId as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/feedback.ts:133:      `SELECT id, title as name, properties->>'prefix' as prefix, properties->>'color' as color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/feedback.ts:153:    const id = req.params.id as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/feedback.ts:164:              prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/feedback.ts:166:              p.title as program_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/feedback.ts:167:              p.properties->>'prefix' as program_prefix,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/feedback.ts:168:              p.properties->>'color' as program_color,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/feedback.ts:169:              creator.name as created_by_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:65:  const doc = content as { content?: unknown[] };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:73:      const n = node as { type?: string; content?: unknown[] };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:336:             p.title as person_name, pr.title as project_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:349:      params.push(person_id as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:354:      params.push(project_id as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:359:      params.push(parseInt(week_number as string, 10));
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:372:        document_type: 'weekly_plan' as const,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:428:              u.id as changed_by_id, u.name as changed_by_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:480:              p.title as person_name, pr.title as project_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:501:      document_type: 'weekly_plan' as const,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:655:        retroTemplate = buildRetroTemplateWithPlanItems(planItems, planResult.rows[0].id) as typeof WEEKLY_RETRO_TEMPLATE;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:731:             p.title as person_name, pr.title as project_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:744:      params.push(person_id as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:749:      params.push(project_id as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:754:      params.push(parseInt(week_number as string, 10));
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:767:        document_type: 'weekly_retro' as const,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:823:              u.id as changed_by_id, u.name as changed_by_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:875:              p.title as person_name, pr.title as project_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:896:      document_type: 'weekly_retro' as const,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:966:      `SELECT DISTINCT p.id as person_id, p.title as person_name, (s.properties->>'sprint_number')::int as week_number
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:992:      `SELECT (properties->>'person_id') as person_id, (properties->>'week_number')::int as week_number, id, content
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:1003:      `SELECT (properties->>'person_id') as person_id, (properties->>'week_number')::int as week_number, id, content
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:1015:      const n = node as { type?: string; text?: string; content?: unknown[] };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:1027:      const doc = content as { content?: unknown[] };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/collaboration.test.ts:372:                 (SELECT role FROM workspace_memberships WHERE workspace_id = $3 AND user_id = $2) = 'admin') as can_access
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/collaboration.test.ts:395:                 (SELECT role FROM workspace_memberships WHERE workspace_id = $3 AND user_id = $2) = 'admin') as can_access
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/collaboration.test.ts:408:      // Create private doc as user1
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/collaboration.test.ts:421:                 (SELECT role FROM workspace_memberships WHERE workspace_id = $3 AND user_id = $2) = 'admin') as can_access
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:55:    inferred_status: row.inferred_status as InferredProjectStatus || 'backlog',
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:316:    const sortField = (req.query.sort as string) || 'ice_score';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:317:    const sortDir = (req.query.dir as string) === 'asc' ? 'ASC' : 'DESC';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:386:      SELECT d.id, d.title, d.properties, prog_da.related_id as program_id, d.archived_at, d.created_at, d.updated_at,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:388:             (d.properties->>'owner_id')::uuid as owner_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:389:             u.name as owner_name, u.email as owner_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:392:              WHERE s.document_type = 'sprint') as sprint_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:395:              WHERE i.document_type = 'issue') as issue_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:396:             (${inferredStatusSubquery}) as inferred_status
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:429:    // Same inferred status subquery as list endpoint (allocation-based)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:465:      `SELECT d.id, d.title, d.properties, prog_da.related_id as program_id, d.archived_at, d.created_at, d.updated_at,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:467:              (d.properties->>'owner_id')::uuid as owner_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:468:              u.name as owner_name, u.email as owner_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:471:               WHERE s.document_type = 'sprint') as sprint_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:474:               WHERE i.document_type = 'issue') as issue_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:475:              (${inferredStatusSubquery}) as inferred_status
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:761:      broadcastToUser(userId, 'accountability:updated', { type: 'project_plan', targetId: id as string });
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:767:        id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:829:      `SELECT d.id, d.title, d.properties, prog_da.related_id as program_id, d.archived_at, d.created_at, d.updated_at,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:831:              (d.properties->>'owner_id')::uuid as owner_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:832:              u.name as owner_name, u.email as owner_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:835:               WHERE s.document_type = 'sprint') as sprint_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:838:               WHERE i.document_type = 'issue') as issue_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:839:              (${updateInferredStatusSubquery}) as inferred_status
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:927:      `SELECT d.id, d.title, d.properties->>'sprint_number' as sprint_number
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:937:      `SELECT d.id, d.title, d.properties->>'state' as state
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1052:    broadcastToUser(userId, 'accountability:updated', { type: 'project_retro', targetId: id as string });
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1057:        id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1157:              u.name as assignee_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1229:      `SELECT d.id, d.title, d.properties, prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1230:              p.title as program_name, p.properties->>'prefix' as program_prefix,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1231:              w.sprint_start_date as workspace_sprint_start_date,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1232:              proj.id as project_id, proj.title as project_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1233:              u.id as owner_id, u.name as owner_name, u.email as owner_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1236:               WHERE i.document_type = 'issue') as issue_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1239:               WHERE i.document_type = 'issue' AND i.properties->>'state' = 'done') as completed_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1242:               WHERE i.document_type = 'issue' AND i.properties->>'state' IN ('in_progress', 'in_review')) as started_count
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1288:      `SELECT d.id, d.title, d.properties, prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1289:              p.title as program_name, p.properties->>'prefix' as program_prefix,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1290:              w.sprint_start_date as workspace_sprint_start_date,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1291:              proj.id as project_id, proj.title as project_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1292:              u.id as owner_id, u.name as owner_name, u.email as owner_email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1295:               WHERE i.document_type = 'issue') as issue_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1298:               WHERE i.document_type = 'issue' AND i.properties->>'state' = 'done') as completed_count,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1301:               WHERE i.document_type = 'issue' AND i.properties->>'state' IN ('in_progress', 'in_review')) as started_count
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1340:      `SELECT d.id, prog_da.related_id as program_id, w.sprint_start_date
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1361:        `SELECT MAX((d.properties->>'sprint_number')::int) as max_sprint
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1576:          id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1641:    const historyEntry = await getLatestDocumentFieldHistory(id as string, 'plan');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1705:    const historyEntry = await getLatestDocumentFieldHistory(id as string, 'retro_content');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:59:          role: 'admin' as const, // Super-admins have admin access to all
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:247:              d.id as person_document_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:248:              false as is_archived
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:263:        `SELECT d.id as person_document_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:264:                d.properties->>'user_id' as user_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:266:                COALESCE(d.properties->>'email', u.email) as email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:267:                COALESCE(d.title, u.name) as name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:268:                true as is_archived
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:301:        role: null as unknown as string, // Archived users have no role
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:303:        joinedAt: null as unknown as string, // No membership join date
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:444:        `SELECT COUNT(*) as count FROM workspace_memberships
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:539:        `SELECT COUNT(*) as count FROM workspace_memberships
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:657:      // Re-create the membership as a regular member
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:700:              u.name as invited_by_name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:776:    // If so, directly add them as a member instead of creating a pending invite
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:878:          message: 'User added as member (existing account)',
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:920:    const personTitle = email.split('@')[0]; // Use email prefix as name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:1029:              u.email as actor_email, u.name as actor_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:1030:              iu.email as impersonating_email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:1037:      [workspaceId, parseInt(limit as string), parseInt(offset as string)]
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/comments.ts:25:      `SELECT c.*, u.name as author_name, u.email as author_email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.test.ts:867:      // Count associations after - should be same as before (1 program association)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/reports-to.test.ts:103:    // Create program with admin as accountable
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:30:         d.id as "personId",
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:31:         d.properties->>'user_id' as id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:32:         d.title as name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:33:         COALESCE(d.properties->>'email', u.email) as email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:34:         CASE WHEN d.archived_at IS NOT NULL THEN true ELSE false END as "isArchived",
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:35:         CASE WHEN d.properties->>'pending' = 'true' THEN true ELSE false END as "isPending",
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:36:         d.properties->>'reports_to' as "reportsTo"
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:59:    // pg driver may return DATE as a Date object with local timezone offset
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:65:      // Parse string as UTC midnight
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:80:      ? Math.max(1, parseInt(req.query.fromSprint as string, 10))
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:83:      ? parseInt(req.query.toSprint as string, 10)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:109:      `SELECT d.id, d.title as name, d.properties->>'start_date' as start_date, d.properties->>'end_date' as end_date,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:110:              prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:111:              p.title as program_name, p.properties->>'emoji' as program_emoji, p.properties->>'color' as program_color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:123:      `SELECT i.id, i.title, da_sprint.related_id as sprint_id, i.properties->>'assignee_id' as assignee_id, i.properties->>'state' as state, i.ticket_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:124:              s.properties->>'start_date' as sprint_start, s.properties->>'end_date' as sprint_end,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:125:              prog_da.related_id as program_id, p.title as program_name, p.properties->>'emoji' as program_emoji, p.properties->>'color' as program_color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:144:      // Parse issue's sprint start date as UTC midnight to match startDate
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:214:         proj.properties->>'color' as "color",
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:215:         prog_da.related_id as "programId",
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:216:         prog.title as "programName",
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:217:         prog.properties->>'emoji' as "programEmoji",
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:218:         prog.properties->>'color' as "programColor"
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:247:      `SELECT id, title as name, properties->>'emoji' as emoji, properties->>'color' as color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:277:         jsonb_array_elements_text(s.properties->'assignee_ids') as person_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:278:         (s.properties->>'sprint_number')::int as sprint_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:279:         s.properties->>'project_id' as project_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:280:         proj.title as project_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:281:         proj.properties->>'color' as project_color,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:282:         COALESCE(prog_da.related_id, sprint_prog_da.related_id) as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:283:         COALESCE(prog.title, sprint_prog.title) as program_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:284:         COALESCE(prog.properties->>'emoji', sprint_prog.properties->>'emoji') as program_emoji,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:285:         COALESCE(prog.properties->>'color', sprint_prog.properties->>'color') as program_color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:351:         i.properties->>'assignee_id' as assignee_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:352:         da_project.related_id as project_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:353:         proj.title as project_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:354:         proj.properties->>'color' as project_color,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:355:         proj_prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:356:         prog.title as program_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:357:         prog.properties->>'emoji' as program_emoji,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:358:         prog.properties->>'color' as program_color,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:359:         s.properties->>'start_date' as sprint_start
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:459:// POST /api/team/assign - Assign user as sprint owner for a program
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:514:        `SELECT d.id, prog_da.related_id as program_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:644:// DELETE /api/team/assign - Remove user as sprint owner
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:746:      `SELECT d.id, d.properties->>'user_id' as user_id, d.title as name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:747:              COALESCE(d.properties->>'email', u.email) as email,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:748:              CASE WHEN d.archived_at IS NOT NULL THEN true ELSE false END as "isArchived",
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:749:              CASE WHEN d.properties->>'pending' = 'true' THEN true ELSE false END as "isPending",
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:750:              d.properties->>'reports_to' as "reportsTo",
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:751:              d.properties->>'role' as role
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:830:         d.properties->>'user_id' as id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:831:         d.title as name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:844:         i.properties->>'assignee_id' as assignee_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:845:         da_sprint.related_id as sprint_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:846:         COALESCE((i.properties->>'estimate')::numeric, 0) as estimate,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:847:         i.properties->>'state' as state,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:848:         s.properties->>'sprint_number' as sprint_number
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:949:      `SELECT properties->>'user_id' as user_id
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1018:         COALESCE((i.properties->>'estimate')::numeric, 0) as estimate,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1019:         i.properties->>'state' as state,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1020:         s.properties->>'sprint_number' as sprint_number
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1139:      `SELECT id, title as name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1151:         prog.id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1152:         prog.title as program_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1153:         prog.properties->>'color' as program_color,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1154:         proj.id as project_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1155:         proj.title as project_title,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1156:         proj.properties->>'color' as project_color,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1157:         proj.archived_at as project_archived_at
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1172:         proj.id as project_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1173:         proj.title as project_title,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1174:         proj.properties->>'color' as project_color,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1175:         proj.archived_at as project_archived_at
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1191:         (properties->>'person_id') as person_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1192:         (properties->>'project_id') as project_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1193:         (properties->>'week_number')::int as week_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1207:         (properties->>'person_id') as person_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1208:         (properties->>'project_id') as project_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1209:         (properties->>'week_number')::int as week_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1332:    // Add unassigned projects as a pseudo-program
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1365:    const sprintCount = Math.min(parseInt(req.query.sprint_count as string, 10) || 5, 20);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1424:      `SELECT id, title as name, properties->>'reports_to' as "reportsTo"
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1436:         jsonb_array_elements_text(s.properties->'assignee_ids') as person_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1437:         (s.properties->>'sprint_number')::int as sprint_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1438:         s.id as sprint_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1439:         s.properties->>'project_id' as project_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1440:         s.properties->'plan_approval' as plan_approval,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1441:         s.properties->'review_approval' as review_approval,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1442:         s.properties->'review_rating' as review_rating,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1443:         proj.title as project_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1444:         prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1445:         prog.title as program_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1446:         prog.properties->>'color' as program_color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1461:         (properties->>'person_id') as person_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1462:         (properties->>'week_number')::int as week_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1475:         (properties->>'person_id') as person_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1476:         (properties->>'week_number')::int as week_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1672:      `SELECT id, title as name
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1683:      `SELECT id, title as name, properties->>'color' as color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1695:         jsonb_array_elements_text(s.properties->'assignee_ids') as person_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1696:         (s.properties->>'sprint_number')::int as sprint_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1697:         s.properties->>'project_id' as project_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1698:         s.properties->'plan_approval'->>'state' as plan_approval_state,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1699:         s.properties->'review_approval'->>'state' as review_approval_state,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1700:         proj.title as project_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1701:         proj.properties->>'color' as project_color,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1702:         prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1703:         prog.title as program_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1704:         prog.properties->>'color' as program_color
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1750:         i.properties->>'assignee_id' as assignee_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1751:         da_project.related_id as project_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1752:         proj.title as project_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1753:         proj.properties->>'color' as project_color,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1754:         proj_prog_da.related_id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1755:         prog.title as program_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1756:         prog.properties->>'color' as program_color,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1757:         s.properties->>'start_date' as sprint_start
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1841:         (properties->>'person_id') as person_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1842:         (properties->>'project_id') as project_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1843:         (properties->>'week_number')::int as week_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1857:         (properties->>'person_id') as person_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1858:         (properties->>'project_id') as project_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1859:         (properties->>'week_number')::int as week_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:2069:         d.properties->>'sprint_number' as sprint_number,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:2070:         d.properties->'plan_approval' as plan_approval,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:2071:         d.properties->'review_approval' as review_approval,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:2078:         ) as has_plan,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:2084:         ) as has_review
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:2121:         p.properties->>'color' as color,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:2122:         p.properties->>'emoji' as emoji,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:2123:         p.content as plan_content,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:2124:         p.properties->'plan_approval' as plan_approval,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:2125:         p.properties->'retro_approval' as retro_approval,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:2126:         prog.id as program_id,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:2127:         prog.title as program_name,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:2128:         prog.properties->>'color' as program_color,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:2129:         prog.properties->>'emoji' as program_emoji,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:2136:         ) as has_retro

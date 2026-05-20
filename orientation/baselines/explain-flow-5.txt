@@ -1,0 +1,26 @@
+# EXPLAIN ANALYZE — Flow 5 — Search mentions (slowest: ILIKE pattern over documents)
+# Captured: 2026-05-19 (Postgres on Docker, warm shared_buffers)
+# Methodology: psql EXPLAIN (ANALYZE, BUFFERS, VERBOSE) with realistic seed-data parameters
+#
+                                                                                                                            QUERY PLAN                                                                                                                             
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Limit  (cost=44.14..44.15 rows=6 width=62) (actual time=0.182..0.183 rows=9 loops=1)
+   Output: id, title, document_type, visibility, (CASE document_type WHEN 'issue'::document_type THEN 1 WHEN 'project'::document_type THEN 2 WHEN 'program'::document_type THEN 3 WHEN 'wiki'::document_type THEN 4 ELSE 5 END), updated_at
+   Buffers: shared hit=40
+   ->  Sort  (cost=44.14..44.15 rows=6 width=62) (actual time=0.181..0.182 rows=9 loops=1)
+         Output: id, title, document_type, visibility, (CASE document_type WHEN 'issue'::document_type THEN 1 WHEN 'project'::document_type THEN 2 WHEN 'program'::document_type THEN 3 WHEN 'wiki'::document_type THEN 4 ELSE 5 END), updated_at
+         Sort Key: (CASE documents.document_type WHEN 'issue'::document_type THEN 1 WHEN 'project'::document_type THEN 2 WHEN 'program'::document_type THEN 3 WHEN 'wiki'::document_type THEN 4 ELSE 5 END), documents.updated_at DESC
+         Sort Method: quicksort  Memory: 26kB
+         Buffers: shared hit=40
+         ->  Seq Scan on public.documents  (cost=0.00..44.06 rows=6 width=62) (actual time=0.009..0.163 rows=9 loops=1)
+               Output: id, title, document_type, visibility, CASE document_type WHEN 'issue'::document_type THEN 1 WHEN 'project'::document_type THEN 2 WHEN 'program'::document_type THEN 3 WHEN 'wiki'::document_type THEN 4 ELSE 5 END, updated_at
+               Filter: ((documents.deleted_at IS NULL) AND (documents.title ~~* '%test%'::text) AND (documents.workspace_id = '9dbdd448-5522-4fcf-854f-2c2f3736e323'::uuid) AND (documents.document_type = ANY ('{issue,project,program,wiki}'::document_type[])))
+               Rows Removed by Filter: 491
+               Buffers: shared hit=34
+ Query Identifier: -1413618058721544712
+ Planning:
+   Buffers: shared hit=327
+ Planning Time: 0.367 ms
+ Execution Time: 0.194 ms
+(18 rows)
+

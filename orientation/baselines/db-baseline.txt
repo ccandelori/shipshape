@@ -1,0 +1,130 @@
+# Taskmaster Task 5 / Category 4 DB Baseline
+
+Captured: 2026-05-19 (initial lower-bound walk) + 2026-05-19 19:55 CT (exact pg_stat_statements recapture)
+Database: Docker container `ship-postgres-1`, database `ship_dev`, Postgres 16
+Stack state: API on :3000, web on :5174, seed user `dev@ship.local` (super-admin)
+
+**Audit verdict: COMPLETE for Phase 1 measurement.** Per-flow query counts are now exact (via `pg_stat_statements`), and `EXPLAIN (ANALYZE, BUFFERS, VERBOSE)` plans exist for the slowest query in each flow. Lower-bound docker-log captures are kept for evidence of process but are no longer load-bearing.
+
+## Taskmaster acceptance check — what exists at the expected paths
+
+| Expected path | Exists | Source |
+|---|---|---|
+| `orientation/baselines/db-baseline.txt` | ✅ | this file |
+| `orientation/baselines/queries-flow-1.log` | ✅ | exact `pg_stat_statements` snapshot — Load main page (/my-week) |
+| `orientation/baselines/queries-flow-2.log` | ✅ | View a document |
+| `orientation/baselines/queries-flow-3.log` | ✅ | List issues |
+| `orientation/baselines/queries-flow-4.log` | ✅ | Sprint/team board |
+| `orientation/baselines/queries-flow-5.log` | ✅ | Search content |
+| `orientation/baselines/explain-flow-1.txt` | ✅ | EXPLAIN ANALYZE on the slowest query in Flow 1 |
+| `orientation/baselines/explain-flow-2.txt` | ✅ | Flow 2 slowest |
+| `orientation/baselines/explain-flow-3.txt` | ✅ | Flow 3 slowest |
+| `orientation/baselines/explain-flow-4.txt` | ✅ | Flow 4 slowest |
+| `orientation/baselines/explain-flow-5.txt` | ✅ | Flow 5 slowest |
+
+## Methodology — exact per-flow counts
+
+1. Enabled `pg_stat_statements` in the docker container: appended `shared_preload_libraries = 'pg_stat_statements'` and `pg_stat_statements.track = 'all'` to `/var/lib/postgresql/data/postgresql.conf`, then `docker restart ship-postgres-1`.
+2. `CREATE EXTENSION IF NOT EXISTS pg_stat_statements;`
+3. For each of the 5 flows:
+   - `SELECT pg_stat_statements_reset();`
+   - Hit the canonical API endpoints for that flow via curl with a session cookie.
+   - `sleep 0.3` to flush async writes.
+   - Snapshot: `SELECT calls, ROUND(total_exec_time::numeric, 3), ROUND(mean_exec_time::numeric, 3), rows, query FROM pg_stat_statements ORDER BY total_exec_time DESC;`
+4. Filtered out database admin/meta statements (`BEGIN`, `COMMIT`, `SET`, `SHOW`, `pg_stat_statements%`).
+5. For each flow's slowest query (first row of the snapshot), ran `EXPLAIN (ANALYZE, BUFFERS, VERBOSE)` with realistic seed-data parameters (workspace UUID `9dbdd448-…`, super-admin user UUID `e6596c5e-…`).
+
+## Exact per-flow query counts
+
+| # | Flow | Endpoints walked | Exact calls | Unique statements | Lower-bound (docker log) | Drop ratio |
+|---|---|---|---:|---:|---:|---:|
+| 1 | Load main page | `/api/auth/me`, `/api/dashboard/my-week`, `/api/dashboard/my-work`, `/api/standups?date=`, `/api/weekly-plans?date=` | **26** | 16 | 19 | docker dropped ~27% |
+| 2 | View a document | `/api/documents/<id>`, `/api/documents/<id>/content` | **7** | 5 | 4 | docker dropped ~43% |
+| 3 | List issues | `/api/issues` | **5** | 5 | 4 | docker dropped ~20% |
+| 4 | Sprint/team board | `/api/team/grid`, `/api/team/accountability`, `/api/team/projects`, `/api/team/people` | **21** | 11 | 10 | docker dropped ~52% |
+| 5 | Search content | `/api/search/mentions?q=test` | **5** | 5 | 7 ⚠ | original walk likely included keystroke retries; single-shot is 5 |
+
+**Methodology delta vs the original walk:** the prior summary reported "Flow 5: 7 queries" as a lower bound from docker. The single-shot exact replay here is 5. Either (a) the original session typed multiple keystrokes against the live mentions endpoint (incremental search), or (b) duplicate session lookups inflated the docker count. Phase 2 before/after should standardize on the single-shot definition used here.
+
+## N+1 / query-shape catalog (re-verified against source 2026-05-19)
+
+Genuine awaited-query loops or sequential query shapes that will multiply with
+workspace size:
+
+| File | Lines | Pattern | Severity |
+|---|---|---|---|
+| `api/src/services/accountability.ts` | 175-230 | `for (const sprint of activeSprintsResult.rows)` then two awaited standup queries per active sprint. | Critical |
+| `api/src/services/accountability.ts` | 262-319 | `for (const sprint of sprintsResult.rows)` with an awaited issue-count query per sprint. | Critical |
+| `api/src/services/accountability.ts` | 374-437 | `for (const allocation of allocations)` with awaited weekly_plan and weekly_retro lookups. | Critical |
+| `api/src/routes/team.ts` | 561-577 | Updates conflicting sprints one row at a time in `POST /api/team/assign`. | High |
+| `api/src/routes/issues.ts` | 627-653 | Association inserts and sprint-count checks fan out one row at a time on create. | Medium |
+| `api/src/routes/issues.ts` | 944-982 | Same association/count fan-out on patch. | Medium |
+| `api/src/routes/documents.ts` | 244-323 | Document view enrichment uses sequential dependent lookups after access checks. | Medium |
+| `api/src/routes/documents.ts` | 544-574 | Document associations are inserted one row at a time. | Medium |
+| `api/src/routes/programs.ts` | 814-826 | Program merge history inserts one row per moved child; cold path, but batchable. | Low |
+| `api/src/routes/caia-auth.ts` | 203-219 | Pending invites are accepted one at a time. Cold auth path, but multiplicative. | Low |
+| `api/src/middleware/visibility.ts` | 6-11, 30 | Workspace admin role lookup repeats across list endpoints. | Medium |
+
+**False positives removed during re-audit:**
+
+- `api/src/services/accountability.ts:473-504` — in-memory loop after one SQL query, not an N+1.
+- The previously-cited `admin.ts` loop — in-memory assembly, not a DB query loop.
+
+## Live indexes on `documents`
+
+13 indexes total: primary key + 10 scalar/partial btree indexes + 1 GIN index on `properties` + 1 dedicated expression index:
+
+```
+idx_documents_person_user_id ON ((properties->>'user_id')) WHERE document_type='person'
+```
+
+That's the only JSONB-path expression index in the schema.
+
+## Index gaps (Phase 2 candidates)
+
+High-value JSONB hot-path predicates with no expression index today:
+
+- `(properties->>'assignee_id')::uuid` — dashboard, issues list, team grid, program/admin filters
+- `properties->>'state'` — issue + dashboard filters
+- `(properties->>'owner_id')::uuid` — project, program, sprint ownership lookups
+- `(properties->>'sprint_number')::int` — week + team-board filters
+- `properties->>'priority'` — issue priority sort
+- `documents.title ILIKE '%q%'` — needs `pg_trgm` GIN/GIST (leading-wildcard ILIKE is not btree-sargable; explain-flow-5.txt confirms Seq Scan)
+
+## EXPLAIN ANALYZE highlights (full plans in `explain-flow-{1..5}.txt`)
+
+| Flow | Slowest statement signature | Plan shape | Execution | Buffers |
+|---|---|---|---:|---:|
+| 1 | `SELECT … FROM documents d LEFT JOIN documents p LEFT JOIN documents pr WHERE document_type='weekly_plan' ORDER BY week_number::int DESC` | Sort over 32 rows; two Hash Left Joins on JSONB-cast UUIDs | ~0.25 ms | shared hit=85 |
+| 2 | `SELECT … FROM sessions s JOIN users u WHERE s.id = $1` | Index Scan on `sessions_pkey` | <0.05 ms | shared hit=5 |
+| 3 | `SELECT … FROM documents d LEFT JOIN users u LEFT JOIN documents person_doc … ORDER BY CASE state` | Nested Loop + sort over 104 issues; CASE-priority sort prevents index-ordered scan | ~0.55 ms | shared hit=292 |
+| 4 | `SELECT … FROM documents i JOIN document_associations da_sprint JOIN documents s LEFT JOIN da prog LEFT JOIN documents p` | Hash Joins; **Seq Scan on `document_associations`** under the issue-sprint join | ~0.21 ms | shared hit=454 |
+| 5 | `SELECT … FROM documents WHERE title ILIKE '%test%' AND document_type IN (…)` | Seq Scan over all candidate docs (no trigram index); 491 of 500 rows removed by ILIKE | ~0.20 ms | shared hit=11 |
+
+## Caveats (carry forward to before/after work)
+
+- Warm shared_buffers — every plan reports `shared hit=N`, no disk reads.
+- Seed volume: 104 issues, 500 candidate docs in search. Production scale is unknown.
+- Localhost; planning time can equal execution time at small data volumes.
+- `application_name` on the API pg.Pool would help separate noise from app traffic — recommend setting `application_name = 'ship-api'` for future captures.
+
+## Recapture command (for Phase 2 before/after)
+
+```bash
+# pg_stat_statements is already enabled in the container (postgresql.conf appended
+# with shared_preload_libraries='pg_stat_statements'; restart-persistent).
+SESSION=$(grep session_id /tmp/ship-cookies.txt | awk '{print $7}')
+CONNECT=$(grep connect.sid /tmp/ship-cookies.txt | awk '{print $7}')
+COOKIE="session_id=$SESSION; connect.sid=$CONNECT"
+
+pgss_reset() { docker exec ship-postgres-1 psql -U ship -d ship_dev -c "SELECT pg_stat_statements_reset();" > /dev/null; }
+pgss_snap()  { docker exec ship-postgres-1 psql -U ship -d ship_dev -P pager=off -At -F $'\t' -c "
+  SELECT calls, ROUND(total_exec_time::numeric, 3), ROUND(mean_exec_time::numeric, 3), rows,
+         REGEXP_REPLACE(query, '[[:space:]]+', ' ', 'g')
+  FROM pg_stat_statements
+  WHERE query NOT LIKE '%pg_stat_statements%' AND query NOT IN ('BEGIN', 'COMMIT', 'ROLLBACK')
+    AND query NOT LIKE 'SET %' AND query NOT LIKE 'SHOW %'
+  ORDER BY total_exec_time DESC;"; }
+
+# Per flow: pgss_reset; <curl walk>; sleep 0.3; pgss_snap > queries-flow-N-after.log
+```

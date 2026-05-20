@@ -1,0 +1,29 @@
+Taskmaster Task 4 endpoint analysis
+Captured: 2026-05-19T21:44:16.958Z
+
+Selection method:
+Endpoints were selected from the audit trace/static-analysis work already recorded in orientation/audit-report.md: high-frequency authenticated routes used during app boot, dashboard load, sidebar/list refreshes, issue/project views, and week board views.
+
+Top 5 endpoints:
+1. GET /api/auth/me - Application boot and auth refresh
+2. GET /api/documents?type=wiki - Dashboard/sidebar wiki document list
+3. GET /api/issues - Issues list and issue tabs
+4. GET /api/projects - Project list and root layout project context
+5. GET /api/weeks - Dashboard week board and week overview tabs
+
+Raw benchmark files:
+- orientation/baselines/api-response-time/api-api_auth_me-c10.json
+- orientation/baselines/api-response-time/api-api_auth_me-c25.json
+- orientation/baselines/api-response-time/api-api_auth_me-c50.json
+- orientation/baselines/api-response-time/api-api_documents_type_wiki-c10.json
+- orientation/baselines/api-response-time/api-api_documents_type_wiki-c25.json
+- orientation/baselines/api-response-time/api-api_documents_type_wiki-c50.json
+- orientation/baselines/api-response-time/api-api_issues-c10.json
+- orientation/baselines/api-response-time/api-api_issues-c25.json
+- orientation/baselines/api-response-time/api-api_issues-c50.json
+- orientation/baselines/api-response-time/api-api_projects-c10.json
+- orientation/baselines/api-response-time/api-api_projects-c25.json
+- orientation/baselines/api-response-time/api-api_projects-c50.json
+- orientation/baselines/api-response-time/api-api_weeks-c10.json
+- orientation/baselines/api-response-time/api-api_weeks-c25.json
+- orientation/baselines/api-response-time/api-api_weeks-c50.json

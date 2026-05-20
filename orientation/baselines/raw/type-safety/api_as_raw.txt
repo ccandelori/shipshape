@@ -1,0 +1,69 @@
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/secrets-manager.ts:78:    const parsed = JSON.parse(response.SecretString) as Partial<CAIACredentials>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:108:    it('handles workspace start date as Date object', async () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/ai-analysis.ts:296:    const result = JSON.parse(jsonStr) as PlanAnalysisResult;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/ai-analysis.ts:362:    const result = JSON.parse(jsonStr) as RetroAnalysisResult;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/caia.ts:135:    const error = err as Error & { cause?: unknown; code?: string };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/caia.ts:249:    const error = err as Error & {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/caia.ts:294:    userInfoClaims = userInfoResponse as Record<string, unknown>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/caia.ts:327:    rawClaims: claims as Record<string, unknown>,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/caia.ts:366:    const error = err as Error & { cause?: unknown; code?: string };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:139:  return response.json() as Promise<OpenAPIObject>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:207:  return spec.components.schemas[schemaName] as SchemaObject | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:246:      (result.properties as Record<string, unknown>)[key] = openApiToJsonSchema(
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:247:        prop as SchemaObject | ReferenceObject,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:259:      schema.items as SchemaObject | ReferenceObject,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:282:          param.schema as SchemaObject | ReferenceObject,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:300:        .schema as SchemaObject | ReferenceObject,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:333:      const operation = pathItem[method] as OperationObject | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:434:    // Try to parse as JSON for structured error, fall back to text
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:487:        (args || {}) as Record<string, unknown>
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:17:  const req = { cookies } as unknown as Request;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:22:  } as unknown as Response;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:23:  const next = vi.fn() as NextFunction;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:288:      } as unknown as Request;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:292:      } as unknown as Response;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:293:      const next = vi.fn() as NextFunction;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:353:      } as unknown as Request;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:357:      } as unknown as Response;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:358:      const next = vi.fn() as NextFunction;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/index.ts:3:import * as Y from 'yjs';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/test/setup.ts:13:  // (audit_logs has AU-9 compliance triggers preventing DELETE)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/types/y-protocols.d.ts:2:  import * as Y from 'yjs';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/types/y-protocols.d.ts:20:  import * as Y from 'yjs';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/api-content-preservation.test.ts:2:import * as Y from 'yjs'
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/api-content-preservation.test.ts:399:            content: [{ type: 'text', text: 'Will be persisted as Yjs' }]
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/api-content-preservation.test.ts:441:      expect(convertedBack.content[0].content[0].text).toBe('Will be persisted as Yjs')
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/api-content-preservation.test.ts:550:    it('should handle content stored as JSON string', async () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/auth.ts:2:import type { Router as RouterType } from 'express';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/collaboration.test.ts:2:import * as Y from 'yjs'
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:2:import type { Router as RouterType } from 'express';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/invites.ts:2:import type { Router as RouterType } from 'express';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:55:    inferred_status: row.inferred_status as InferredProjectStatus || 'backlog',
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/setup.ts:2:import type { Router as RouterType } from 'express';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/api-tokens.ts:2:import type { Router as RouterType } from 'express';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin-credentials.ts:9:import type { Router as RouterType } from 'express';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin-credentials.ts:515:    const error = err as Error & { cause?: unknown; code?: string };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/db/seed.ts:301:    // Each project has ICE scores (Impact, Confidence, Ease) for prioritization (1-5 scale)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/db/seed.ts:744:        // Find the sprint based on offset (same pattern as Ship Core issues)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:8:import * as Y from 'yjs';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:2:import type { Router as RouterType } from 'express';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:593:// GET /api/admin/audit-logs/export - Export audit logs as CSV
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/transformIssueLinks.ts:209:  const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/transformIssueLinks.ts:253:    const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/caia-auth.ts:14:import type { Router as RouterType } from 'express';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:62:    const { context_type, sprint_id, project_id } = req.query as unknown as ClaudeContextRequest;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:370:// Get document content as TipTap JSON
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:941:      const docProps = (existing.properties || {}) as Record<string, unknown>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:975:          const sprintProps = (sprint.properties || {}) as Record<string, unknown>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/business-days.ts:23:  '2025-12-25', // Christmas Day
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/business-days.ts:37:  '2026-12-25', // Christmas Day
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/circular-reference.test.ts:61:      // Both protections are in place - trigger runs first as BEFORE trigger
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/circular-reference.test.ts:88:      }, {} as Record<string, string | null>)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:37:  return typeof value === 'string' && validTypes.includes(value as RelationshipType);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:72:  const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:127:  const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:177:  const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:227:  const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:65:      // Parse string as UTC midnight
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:144:      // Parse issue's sprint start date as UTC midnight to match startDate
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:50:  const raw = (body as Record<string, unknown>).comment;

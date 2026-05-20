@@ -1,0 +1,11 @@
+/Users/sheep/Desktop/Gauntlet/ship/e2e/mentions.spec.ts:206:    expect(popupBox!.y).toBeGreaterThan(0);
+/Users/sheep/Desktop/Gauntlet/ship/e2e/error-handling.spec.ts:237:    expect(bodyText!.length).toBeGreaterThan(0)
+/Users/sheep/Desktop/Gauntlet/ship/e2e/edge-cases.spec.ts:217:    expect(editorText!.length).toBeGreaterThan(10000)
+/Users/sheep/Desktop/Gauntlet/ship/e2e/session-timeout.spec.ts:1050:    expect(boundingBox!.width).toBeGreaterThan(0);
+/Users/sheep/Desktop/Gauntlet/ship/e2e/session-timeout.spec.ts:1051:    expect(boundingBox!.height).toBeGreaterThan(0);
+/Users/sheep/Desktop/Gauntlet/ship/e2e/session-timeout.spec.ts:1151:    const horizontalCenter = (viewport!.width - modalBox!.width) / 2;
+/Users/sheep/Desktop/Gauntlet/ship/e2e/session-timeout.spec.ts:1152:    const verticalCenter = (viewport!.height - modalBox!.height) / 2;
+/Users/sheep/Desktop/Gauntlet/ship/e2e/session-timeout.spec.ts:1153:    expect(Math.abs(modalBox!.x - horizontalCenter)).toBeLessThan(50);
+/Users/sheep/Desktop/Gauntlet/ship/e2e/session-timeout.spec.ts:1154:    expect(Math.abs(modalBox!.y - verticalCenter)).toBeLessThan(50);
+/Users/sheep/Desktop/Gauntlet/ship/e2e/accessibility-remediation.spec.ts:88:      expect(accessibleName!.length).toBeGreaterThan(2) // Not just empty or single char
+/Users/sheep/Desktop/Gauntlet/ship/e2e/accessibility-remediation.spec.ts:110:      expect(ariaLabel!.toLowerCase()).toContain('keyboard')

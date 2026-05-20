@@ -1,0 +1,462 @@
+{
+  "captured_at": "2026-05-19T21:44:16.958Z",
+  "environment": {
+    "api_url": "http://localhost:3000",
+    "database": "Docker postgres container ship-postgres-1 / ship_dev",
+    "seed_counts": {
+      "documents": 500,
+      "issues": 104,
+      "users": 20,
+      "sprints": 35,
+      "supplemental_benchmark_docs": 243
+    }
+  },
+  "tool": {
+    "name": "autocannon",
+    "version": "8.0.0",
+    "node": "24.10.0",
+    "duration_seconds_per_run": 30,
+    "concurrency_levels": [
+      10,
+      25,
+      50
+    ]
+  },
+  "percentile_note": "autocannon v8 JSON includes p50, p90, p97_5, and p99, but not p95. p95 is stored as null; p95_proxy_from_autocannon_p97_5 is the conservative percentile used for ranking.",
+  "endpoints": [
+    {
+      "name": "GET /api/auth/me",
+      "path": "/api/auth/me",
+      "method": "GET",
+      "user_flow": "Application boot and auth refresh",
+      "runs": [
+        {
+          "concurrency": 10,
+          "file": "orientation/baselines/api-response-time/api-api_auth_me-c10.json",
+          "url": "http://localhost:3000/api/auth/me",
+          "duration_seconds": 30.01,
+          "latency_ms": {
+            "p50": 2,
+            "p95": null,
+            "p95_proxy_from_autocannon_p97_5": 6,
+            "p99": 7,
+            "mean": 2.52,
+            "max": 29
+          },
+          "requests_per_second": 3309.8,
+          "total_requests": 99278,
+          "errors": 0,
+          "timeouts": 0,
+          "status_codes": {
+            "200": {
+              "count": 99278
+            }
+          }
+        },
+        {
+          "concurrency": 25,
+          "file": "orientation/baselines/api-response-time/api-api_auth_me-c25.json",
+          "url": "http://localhost:3000/api/auth/me",
+          "duration_seconds": 30.01,
+          "latency_ms": {
+            "p50": 7,
+            "p95": null,
+            "p95_proxy_from_autocannon_p97_5": 12,
+            "p99": 14,
+            "mean": 7.69,
+            "max": 30
+          },
+          "requests_per_second": 3054.6,
+          "total_requests": 91624,
+          "errors": 0,
+          "timeouts": 0,
+          "status_codes": {
+            "200": {
+              "count": 91624
+            }
+          }
+        },
+        {
+          "concurrency": 50,
+          "file": "orientation/baselines/api-response-time/api-api_auth_me-c50.json",
+          "url": "http://localhost:3000/api/auth/me",
+          "duration_seconds": 30.01,
+          "latency_ms": {
+            "p50": 15,
+            "p95": null,
+            "p95_proxy_from_autocannon_p97_5": 22,
+            "p99": 27,
+            "mean": 15.5,
+            "max": 53
+          },
+          "requests_per_second": 3125.54,
+          "total_requests": 93754,
+          "errors": 0,
+          "timeouts": 0,
+          "status_codes": {
+            "200": {
+              "count": 93754
+            }
+          }
+        }
+      ],
+      "hypotheses": [
+        "Runs session/user lookup plus auth middleware session validation on every request.",
+        "Authenticated requests update sessions.last_activity, adding a database write to a read path.",
+        "Workspace membership data is reloaded instead of being cached request-locally."
+      ]
+    },
+    {
+      "name": "GET /api/documents?type=wiki",
+      "path": "/api/documents?type=wiki",
+      "method": "GET",
+      "user_flow": "Dashboard/sidebar wiki document list",
+      "runs": [
+        {
+          "concurrency": 10,
+          "file": "orientation/baselines/api-response-time/api-api_documents_type_wiki-c10.json",
+          "url": "http://localhost:3000/api/documents?type=wiki",
+          "duration_seconds": 30.01,
+          "latency_ms": {
+            "p50": 10,
+            "p95": null,
+            "p95_proxy_from_autocannon_p97_5": 15,
+            "p99": 17,
+            "mean": 9.89,
+            "max": 45
+          },
+          "requests_per_second": 962.24,
+          "total_requests": 28867,
+          "errors": 0,
+          "timeouts": 0,
+          "status_codes": {
+            "200": {
+              "count": 28867
+            }
+          }
+        },
+        {
+          "concurrency": 25,
+          "file": "orientation/baselines/api-response-time/api-api_documents_type_wiki-c25.json",
+          "url": "http://localhost:3000/api/documents?type=wiki",
+          "duration_seconds": 30.01,
+          "latency_ms": {
+            "p50": 21,
+            "p95": null,
+            "p95_proxy_from_autocannon_p97_5": 29,
+            "p99": 34,
+            "mean": 22.05,
+            "max": 95
+          },
+          "requests_per_second": 1108.5,
+          "total_requests": 33255,
+          "errors": 0,
+          "timeouts": 0,
+          "status_codes": {
+            "200": {
+              "count": 33255
+            }
+          }
+        },
+        {
+          "concurrency": 50,
+          "file": "orientation/baselines/api-response-time/api-api_documents_type_wiki-c50.json",
+          "url": "http://localhost:3000/api/documents?type=wiki",
+          "duration_seconds": 30.01,
+          "latency_ms": {
+            "p50": 43,
+            "p95": null,
+            "p95_proxy_from_autocannon_p97_5": 50,
+            "p99": 56,
+            "mean": 43.23,
+            "max": 100
+          },
+          "requests_per_second": 1142.8,
+          "total_requests": 34284,
+          "errors": 0,
+          "timeouts": 0,
+          "status_codes": {
+            "200": {
+              "count": 34284
+            }
+          }
+        }
+      ],
+      "hypotheses": [
+        "Returns an unpaginated list; the supplemental audit seed raises wiki rows to 241.",
+        "Visibility checks and admin/membership lookups repeat work already done in auth middleware.",
+        "Document properties are JSONB and may become payload/serialization heavy as content grows."
+      ]
+    },
+    {
+      "name": "GET /api/issues",
+      "path": "/api/issues",
+      "method": "GET",
+      "user_flow": "Issues list and issue tabs",
+      "runs": [
+        {
+          "concurrency": 10,
+          "file": "orientation/baselines/api-response-time/api-api_issues-c10.json",
+          "url": "http://localhost:3000/api/issues",
+          "duration_seconds": 30.01,
+          "latency_ms": {
+            "p50": 7,
+            "p95": null,
+            "p95_proxy_from_autocannon_p97_5": 11,
+            "p99": 12,
+            "mean": 7.65,
+            "max": 35
+          },
+          "requests_per_second": 1226.7,
+          "total_requests": 36801,
+          "errors": 0,
+          "timeouts": 0,
+          "status_codes": {
+            "200": {
+              "count": 36801
+            }
+          }
+        },
+        {
+          "concurrency": 25,
+          "file": "orientation/baselines/api-response-time/api-api_issues-c25.json",
+          "url": "http://localhost:3000/api/issues",
+          "duration_seconds": 30.06,
+          "latency_ms": {
+            "p50": 22,
+            "p95": null,
+            "p95_proxy_from_autocannon_p97_5": 37,
+            "p99": 51,
+            "mean": 23.73,
+            "max": 508
+          },
+          "requests_per_second": 1032.94,
+          "total_requests": 30988,
+          "errors": 0,
+          "timeouts": 0,
+          "status_codes": {
+            "200": {
+              "count": 30988
+            }
+          }
+        },
+        {
+          "concurrency": 50,
+          "file": "orientation/baselines/api-response-time/api-api_issues-c50.json",
+          "url": "http://localhost:3000/api/issues",
+          "duration_seconds": 30.02,
+          "latency_ms": {
+            "p50": 45,
+            "p95": null,
+            "p95_proxy_from_autocannon_p97_5": 58,
+            "p99": 66,
+            "mean": 45.56,
+            "max": 97
+          },
+          "requests_per_second": 1085.04,
+          "total_requests": 32551,
+          "errors": 0,
+          "timeouts": 0,
+          "status_codes": {
+            "200": {
+              "count": 32551
+            }
+          }
+        }
+      ],
+      "hypotheses": [
+        "Sorts/filtering depend on JSONB properties such as state, priority, and assignee_id.",
+        "Joins user/person rows and then loads associations in a second batched query.",
+        "Visibility context repeats membership checks already covered by auth middleware."
+      ]
+    },
+    {
+      "name": "GET /api/projects",
+      "path": "/api/projects",
+      "method": "GET",
+      "user_flow": "Project list and root layout project context",
+      "runs": [
+        {
+          "concurrency": 10,
+          "file": "orientation/baselines/api-response-time/api-api_projects-c10.json",
+          "url": "http://localhost:3000/api/projects",
+          "duration_seconds": 30.01,
+          "latency_ms": {
+            "p50": 4,
+            "p95": null,
+            "p95_proxy_from_autocannon_p97_5": 8,
+            "p99": 9,
+            "mean": 4.41,
+            "max": 31
+          },
+          "requests_per_second": 2038.2,
+          "total_requests": 61140,
+          "errors": 0,
+          "timeouts": 0,
+          "status_codes": {
+            "200": {
+              "count": 61140
+            }
+          }
+        },
+        {
+          "concurrency": 25,
+          "file": "orientation/baselines/api-response-time/api-api_projects-c25.json",
+          "url": "http://localhost:3000/api/projects",
+          "duration_seconds": 30.01,
+          "latency_ms": {
+            "p50": 11,
+            "p95": null,
+            "p95_proxy_from_autocannon_p97_5": 17,
+            "p99": 20,
+            "mean": 11.53,
+            "max": 36
+          },
+          "requests_per_second": 2078.44,
+          "total_requests": 62342,
+          "errors": 0,
+          "timeouts": 0,
+          "status_codes": {
+            "200": {
+              "count": 62342
+            }
+          }
+        },
+        {
+          "concurrency": 50,
+          "file": "orientation/baselines/api-response-time/api-api_projects-c50.json",
+          "url": "http://localhost:3000/api/projects",
+          "duration_seconds": 30.01,
+          "latency_ms": {
+            "p50": 23,
+            "p95": null,
+            "p95_proxy_from_autocannon_p97_5": 34,
+            "p99": 37,
+            "mean": 23.82,
+            "max": 111
+          },
+          "requests_per_second": 2055.34,
+          "total_requests": 61653,
+          "errors": 0,
+          "timeouts": 0,
+          "status_codes": {
+            "200": {
+              "count": 61653
+            }
+          }
+        }
+      ],
+      "hypotheses": [
+        "Per-project correlated subqueries compute sprint_count, issue_count, and inferred status.",
+        "Status inference scans sprint/project associations and evaluates sprint dates per row.",
+        "Results are not cached even though project summaries are read frequently."
+      ]
+    },
+    {
+      "name": "GET /api/weeks",
+      "path": "/api/weeks",
+      "method": "GET",
+      "user_flow": "Dashboard week board and week overview tabs",
+      "runs": [
+        {
+          "concurrency": 10,
+          "file": "orientation/baselines/api-response-time/api-api_weeks-c10.json",
+          "url": "http://localhost:3000/api/weeks",
+          "duration_seconds": 30.01,
+          "latency_ms": {
+            "p50": 4,
+            "p95": null,
+            "p95_proxy_from_autocannon_p97_5": 8,
+            "p99": 10,
+            "mean": 4.45,
+            "max": 47
+          },
+          "requests_per_second": 2022.07,
+          "total_requests": 60655,
+          "errors": 0,
+          "timeouts": 0,
+          "status_codes": {
+            "200": {
+              "count": 60655
+            }
+          }
+        },
+        {
+          "concurrency": 25,
+          "file": "orientation/baselines/api-response-time/api-api_weeks-c25.json",
+          "url": "http://localhost:3000/api/weeks",
+          "duration_seconds": 30.01,
+          "latency_ms": {
+            "p50": 11,
+            "p95": null,
+            "p95_proxy_from_autocannon_p97_5": 18,
+            "p99": 20,
+            "mean": 11.71,
+            "max": 62
+          },
+          "requests_per_second": 2048.04,
+          "total_requests": 61433,
+          "errors": 0,
+          "timeouts": 0,
+          "status_codes": {
+            "200": {
+              "count": 61433
+            }
+          }
+        },
+        {
+          "concurrency": 50,
+          "file": "orientation/baselines/api-response-time/api-api_weeks-c50.json",
+          "url": "http://localhost:3000/api/weeks",
+          "duration_seconds": 30.01,
+          "latency_ms": {
+            "p50": 23,
+            "p95": null,
+            "p95_proxy_from_autocannon_p97_5": 31,
+            "p99": 36,
+            "mean": 23.62,
+            "max": 74
+          },
+          "requests_per_second": 2071.31,
+          "total_requests": 62132,
+          "errors": 0,
+          "timeouts": 0,
+          "status_codes": {
+            "200": {
+              "count": 62132
+            }
+          }
+        }
+      ],
+      "hypotheses": [
+        "Main query includes multiple correlated subqueries per week row for issue counts and plan/retro state.",
+        "Filters cast JSONB sprint_number to integer, which will need expression indexes at higher volume.",
+        "Owner/reporting data is resolved inside the SELECT rather than precomputed or joined once."
+      ]
+    }
+  ],
+  "summary": {
+    "total_runs": 15,
+    "total_errors": 0,
+    "total_timeouts": 0,
+    "slowest_by_p95_proxy": {
+      "endpoint": "GET /api/issues",
+      "concurrency": 50,
+      "p95_proxy_ms": 58,
+      "p99_ms": 66,
+      "requests_per_second": 1085.04
+    },
+    "slowest_by_p99": {
+      "endpoint": "GET /api/issues",
+      "concurrency": 50,
+      "p95_proxy_ms": 58,
+      "p99_ms": 66,
+      "requests_per_second": 1085.04
+    },
+    "recommended_phase_2_targets": [
+      "GET /api/issues: add expression indexes for hot JSONB properties, simplify priority sorting, and reduce repeated auth/visibility membership lookups.",
+      "GET /api/documents?type=wiki: add pagination or list-summary responses so large wiki payloads do not dominate list-mode navigation.",
+      "All authenticated routes: throttle sessions.last_activity writes instead of writing every request."
+    ]
+  }
+}
