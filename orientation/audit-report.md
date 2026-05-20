@@ -10,6 +10,7 @@
 | Final submission | Sunday, 2026-05-24 10:59 PM CT |
 | Last updated | 2026-05-20 |
 
+> **Paired deliverables.** The PDF brief includes an Appendix A ("Codebase Orientation Checklist") as a required part of the final submission: see `orientation/README.md` (855 lines, all 8 PDF sections complete).
 > **Full prose + methodology details:** `orientation/audit-report-detailed.md`. This document is the executive summary. Every claim links back to either an evidence file or a section of the detailed report.
 
 ---
@@ -101,7 +102,16 @@ Detailed methodology and evidence-table rows live in `audit-report-detailed.md`.
 
 **TL;DR.** All 5 hot endpoints clean. `/api/issues` slowest at 58 ms p97.5 at c=50. The dominant cross-cutting cost is `sessions.last_activity` writing on every request.
 
-**Headline:** **850,757 total requests / all 2xx / 0 errors** across 5 endpoints × c=10/25/50 × 30s. Slowest endpoint: `/api/issues` at **58 ms p97.5, 66 ms P99** under c=50.
+**Headline:** **850,757 total requests / all 2xx / 0 errors** across 5 endpoints × c=10/25/50 × 30s (autocannon). Slowest endpoint: `/api/issues` at **47 ms P95 / 51 ms P99** under c=50 (PRD-literal P95 captured via k6 on the slowest 2 endpoints; full table below).
+
+**PRD-literal P95 (k6, slowest 2 endpoints):**
+
+| Endpoint | c=10 P50 / P95 / P99 | c=25 P50 / P95 / P99 | c=50 P50 / P95 / P99 |
+|---|---|---|---|
+| `/api/issues` | 8.3 / **11.6** / 13.4 ms | 19.6 / **24.7** / 26.7 ms | 39.4 / **46.6** / 51.1 ms |
+| `/api/documents?type=wiki` | 9.8 / **13.5** / 15.6 ms | 22.9 / **28.3** / 30.8 ms | 45.4 / **53.0** / 56.4 ms |
+
+The remaining 3 endpoints (`/api/auth/me`, `/api/projects`, `/api/weeks`) carry autocannon p97.5 only — p97.5 is a strict upper bound on P95, and they're all faster than the slowest two by a wide margin, so the P95-not-P97.5 distinction doesn't change the ranking.
 
 **Top findings**
 
@@ -124,6 +134,18 @@ Detailed methodology and evidence-table rows live in `audit-report-detailed.md`.
 **TL;DR.** Exact per-flow query counts captured via `pg_stat_statements`. JSONB hot-path predicates run through GIN index instead of expression indexes; accountability service is the largest N+1 surface.
 
 **Headline:** Exact per-flow counts: **26 / 7 / 5 / 21 / 5** across the 5 PRD user flows. 5 EXPLAIN ANALYZE plans captured (one per flow's slowest query). Of the JSONB property expressions in route SQL, **only 1 hot path has a dedicated expression index** (person→user_id).
+
+**PDF-format deliverable table:**
+
+| User Flow | Total Queries | Slowest Query (ms) | N+1 Detected? |
+|---|---:|---:|---|
+| Load main page | 26 | 0.28 | **Yes** — accountability service N+1 (`services/accountability.ts:175–437`) |
+| View a document | 7 | 0.11 | No (sequential dependent queries; not a loop) |
+| List issues | 5 | 0.26 | No (single query, but post-filter scan: 92 of 104 rows filtered after index scan) |
+| Sprint/team board | 21 | 0.26 | **Yes** — per-row conflict-sprint UPDATE loop in `team.ts:561–577`; Seq Scan on `document_associations` |
+| Search content | 5 | 0.19 | No (single query, but Seq Scan: 491 of 500 rows filtered) |
+
+Slowest-query ms values are localhost warm-cache execution times (all `Buffers: shared hit`); production cold-cache will be materially slower. The shapes (Seq Scan, post-filter row counts, Memoize 0/139) are the load-bearing findings.
 
 **Top findings**
 
@@ -165,6 +187,16 @@ Detailed methodology and evidence-table rows live in `audit-report-detailed.md`.
 
 **Headline:** **1 console.error / 0 warnings / 0 page errors** across 11 walked routes (`normal-usage.mjs` Playwright walker; the 1 error is a structurally expected 401 on `/api/auth/me` at `/login`). **3 critical bugs live-confirmed** during the critical-review re-audit on 2026-05-20.
 
+**PDF-format deliverable table:**
+
+| Metric | Baseline |
+|---|---|
+| Console errors during normal usage | **1** (expected 401 at `/login`, no other errors across 11 routes) |
+| Unhandled promise rejections (server) | **0 observed during live runs.** Theoretical risk surface: **~30 handlers across 5 sampled route files lack outer try/catch** (weeks.ts 26/50 missing, dashboard.ts 3/6 missing, comments.ts 1/8 missing) — Express 4 propagates these as uncaught rejections to a global handler that doesn't exist (Cat 6 finding C-4). |
+| Network disconnect recovery | **Pass** — Yjs offline edits converged after reconnect; all three typed phrases present in the final body (live Playwright run) |
+| Missing error boundaries | **6+** top-level routes outside any React error boundary: `/login`, `/setup`, `/admin`, `/admin/workspaces/:id`, `/invite/:token`, `/feedback/:programId` |
+| Silent failures identified | **3** with live evidence — yjsToJson NULL persist (C-1), WS session expiry persists writes (C-2), 10 KB title silent autosave 400 (Scenario 6); plus the prod-error HTML response shape (C-4) |
+
 **Top findings (live-confirmed)** *(see Critical-findings table for full detail)*
 
 1. `yjsToJson()` silent NULL — see **C-1**.
@@ -185,7 +217,17 @@ Detailed methodology and evidence-table rows live in `audit-report-detailed.md`.
 
 **TL;DR.** Lighthouse + axe + keyboard + **real VoiceOver** on PRD-required routes. Lighthouse passes on most routes (lowest 0.96); axe deep-scan surfaces 4 rule families Lighthouse misses; VoiceOver transcript shows real macOS speech output on `/dashboard`, `/my-week`, and the wiki editor.
 
-**Headline:** **Lighthouse: 7 of 10 routes 1.00; lowest 0.96** (`/my-week`, `/documents/<issue>` — both color-contrast). **axe deep-scan: 4 critical + 5 serious across 8 authenticated routes** (workspace tree, TipTap drag-handle, listitem semantics, `/settings` role `<select>` lacks label, color-contrast).
+**Headline:** **Lighthouse: 7 of 10 routes 1.00; lowest 0.96** (`/my-week`, `/documents/<issue>` — both color-contrast). **axe deep-scan: 4 critical + 5 serious across 8 authenticated routes** (workspace tree, TipTap drag-handle, listitem semantics, `/settings` role `<select>` lacks label, color-contrast). **Keyboard navigation: Partial** (see PDF table below).
+
+**PDF-format deliverable table:**
+
+| Metric | Baseline |
+|---|---|
+| Lighthouse accessibility score (per page) | 7 of 10 routes 1.00; `/login` 0.98; `/my-week` 0.96; `/documents/<issue>` 0.96 |
+| Total Critical/Serious violations (axe) | **9** (4 Critical + 5 Serious) across 8 authenticated routes |
+| Keyboard navigation completeness | **Partial** — login + create-doc work for happy path, but: (a) editor body is unreachable via Tab from the title; (b) delete-document Radix dialog focus-trap fails (Tab escapes); (c) AccountabilityGrid `<div onClick>` cells unreachable (no `role="button"` / `tabIndex`); (d) login Tab cycle loses focus to BODY twice |
+| Color contrast failures | **9 nodes** on `/my-week` + 3 on issue editor (Tailwind opacity modifiers root cause: `text-muted/50` → 2.26:1, `bg-accent/20` → 2.55:1) |
+| Missing ARIA labels or roles | 3 custom modals (no `aria-labelledby`, no focus trap); ~10 placeholder-only inputs; `/settings` role `<select>` (Admin/Member) no label; workspace switcher single-letter button uses `title=` not `aria-label`; CommentDisplay reply inputs no label |
 
 **Top findings**
 
