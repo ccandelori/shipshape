@@ -1831,6 +1831,69 @@
         "complexity": 2,
         "recommendedSubtasks": 0,
         "expansionPrompt": "N/A — purely a merge-and-verify task"
+      },
+      {
+        "id": "26",
+        "title": "Codebase Orientation Checklist (PDF Appendix A)",
+        "description": "Produce the orientation deliverable the PDF brief's appendix calls out: a checked-off list covering setup notes, architecture diagram, request flow, data model, testing infrastructure, and deployment notes. These notes become part of the final submission alongside the audit report.",
+        "details": "The PDF brief includes an appendix orientation checklist that is supposed to be completed before any audit work begins and submitted as part of the final package. Taskmaster never had a dedicated task for it. The audit-doc recheck flagged this as a gap.\n\nThis task produces orientation/orientation-checklist.md with a checked-off list covering all six required topics. Each item must point at a tracked file in the repo — either existing or newly written — so a reviewer can verify the answer rather than taking it on faith.\n\nWhat to deliver (orientation/orientation-checklist.md):\n\n1. **Setup notes** — how to bring the project up on a fresh machine.\n   - Required: list of system prerequisites (Node version, pnpm version, docker, etc.).\n   - Required: exact commands to clone → install → seed → run.\n   - Required: how the dev script (scripts/dev.sh) auto-creates the DB and finds ports.\n   - Pointers: CLAUDE.md \"Commands\" section, scripts/dev.sh, docker-compose.yml.\n\n2. **Architecture diagram** — high-level view of the system.\n   - Required: an actual diagram artifact (ASCII tree, mermaid, or PNG/SVG) showing the monorepo packages (api, web, shared), the database, the WebSocket collaboration server, and the Yjs persistence loop.\n   - Pointer for words: orientation/deep-dives/unified-document-model.md, orientation/deep-dives/real-time-collaboration.md.\n   - If no diagram exists yet, produce one (preferred format: mermaid in a .md file so it renders on GitHub).\n\n3. **Request flow** — what happens between a click in the browser and a row update in postgres.\n   - Required: trace one representative request end-to-end (e.g. editing a document) including CSRF, session validation, route handler, DB query, WebSocket broadcast.\n   - Existing pointer: orientation/deep-dives/request-flow-and-auth.md. Confirm it's current and link from the checklist.\n\n4. **Data model** — the unified document model.\n   - Required: explain that everything is a row in `documents` with `document_type`, including how content (TipTap JSON), properties (per-type JSONB), and associations (junction table) fit together.\n   - Existing pointers: orientation/deep-dives/unified-document-model.md and unified-document-model-explained.md, docs/unified-document-model.md.\n\n5. **Testing infrastructure** — what tests exist and how to run them.\n   - Required: enumerate test types (api unit via vitest, web unit, E2E via playwright + /e2e-test-runner skill), where coverage lives, and how to run a single test.\n   - Required: link to orientation/baselines/test-coverage/ for the actual numbers.\n   - No existing deep-dive — write one if needed, or fold into the checklist itself.\n\n6. **Deployment notes** — how the app reaches production.\n   - Required: name the deploy targets (Elastic Beanstalk for API, S3/CloudFront for web), the scripts that drive them (scripts/deploy.sh, scripts/deploy-frontend.sh), the shadow/UAT environment, and the post-deploy verification steps (browser smoke test).\n   - Existing pointer: CLAUDE.md \"Deployment\" section. The checklist should also note any prod-deploy proof artifacts the final submission requires (cf. Task 22).\n\nFormat: a single orientation/orientation-checklist.md with one section per item, each ending with a [Done / In progress / Missing] tag and a file pointer. Strict rule: every claim must point at a tracked artifact. \"It's in our heads\" is not a complete entry.",
+        "testStrategy": "Verify: (1) orientation/orientation-checklist.md exists and contains a section for each of the six required topics (setup, architecture, request flow, data model, testing, deploy). (2) Every section ends with a status tag and at least one file pointer at a tracked artifact. (3) The architecture diagram is an actual diagram (mermaid block, ASCII tree, or image), not a prose paragraph. (4) The testing-infrastructure section names every test runner (vitest, playwright) and points at the coverage baselines. (5) The deployment section names both deploy scripts and the shadow/UAT distinction.",
+        "priority": "high",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Inventory existing orientation artifacts",
+            "description": "Build a single index of what's already on disk so the checklist can cite existing files instead of duplicating them.",
+            "dependencies": [],
+            "details": "List every file under orientation/deep-dives/, orientation/README.md, orientation/presearch.md, and docs/ that touches one of the six topics. Note which topic each covers and whether it's complete or partial. Output: a short scratch note (committable in this branch as orientation/_orientation-inventory.md) that the next subtasks consume.",
+            "status": "pending",
+            "testStrategy": "Verify orientation/_orientation-inventory.md exists and lists files grouped by orientation-checklist topic.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 2,
+            "title": "Produce an architecture diagram",
+            "description": "Mermaid (preferred) or ASCII tree showing the monorepo, DB, WebSocket layer, and Yjs persistence.",
+            "dependencies": [
+              1
+            ],
+            "details": "Add the diagram as orientation/architecture-diagram.md (mermaid in a code fence so GitHub renders it). Include: web (Vite + React + TipTap), api (Express + WebSocket), shared types, postgres, the collaboration WS route, and the Yjs binary state persistence path. Cite source files for each box.",
+            "status": "pending",
+            "testStrategy": "Verify orientation/architecture-diagram.md exists, contains a mermaid block or equivalent, and names all of: web, api, shared, postgres, /collaboration WS, Yjs persistence.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 3,
+            "title": "Write any missing topic deep-dives (testing, deploy)",
+            "description": "Topics 5 and 6 have no dedicated deep-dive yet. Either create them or fold full content into the checklist.",
+            "dependencies": [
+              1
+            ],
+            "details": "Testing infra deep-dive (or checklist section): test runners (vitest for api/web unit, playwright for E2E), where coverage is captured (orientation/baselines/test-coverage/), how to run a single test (`pnpm --filter @ship/api test -- path/to/file.test.ts`), the E2E test-runner skill convention, and the empty-test footgun guarded by scripts/check-empty-tests.sh.\nDeploy deep-dive (or checklist section): scripts/deploy.sh and scripts/deploy-frontend.sh, the shadow/UAT vs. prod distinction, the health-check URLs in CLAUDE.md, and the rule that browser verification is required after every deploy.",
+            "status": "pending",
+            "testStrategy": "Each topic has either a deep-dive file or a complete checklist section with the required content. A reviewer can identify the test runners and the deploy scripts without leaving the orientation/ directory.",
+            "parentId": "undefined"
+          },
+          {
+            "id": 4,
+            "title": "Assemble orientation/orientation-checklist.md",
+            "description": "Compose the final checklist with all six sections and the required pointers.",
+            "dependencies": [
+              1,
+              2,
+              3
+            ],
+            "details": "Create orientation/orientation-checklist.md. One section per topic: Setup notes, Architecture diagram, Request flow, Data model, Testing infrastructure, Deployment notes. Each section ends with [Done] / [In progress] / [Missing] and at least one file pointer at a tracked artifact in this repo. Cross-link to orientation/audit-report.md so the final submission package reads coherently.",
+            "status": "pending",
+            "testStrategy": "Verify the file exists, all six sections present in order, every section has at least one file pointer, no 'in our heads' answers.",
+            "parentId": "undefined"
+          }
+        ],
+        "complexity": 3,
+        "recommendedSubtasks": 4,
+        "expansionPrompt": "Inventory existing orientation artifacts → fill gaps (architecture diagram, testing infra, deploy notes) → assemble the consolidated checklist."
       }
     ],
     "metadata": {
