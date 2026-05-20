@@ -1,105 +1,142 @@
-# Cat 7 — VoiceOver baseline (2026-05-20)
+# Cat 7 — VoiceOver walk transcript (2026-05-20)
 
-**Captured:** 2026-05-20
-**Method:** Automated — `orientation/baselines/accessibility/voiceover-walk.mjs` drives Playwright (headed Chromium) to login and navigate; [guidepup](https://www.guidepup.dev/) starts VoiceOver and records the official macOS speech-log via `voiceOver.spokenPhraseLog()`. **Every "What VoiceOver said" line below is an actual VoiceOver utterance, not a proxy.**
-**Stack:** local dev — docker postgres, web preview on :4173 (production build) and web dev on :5173. Both runs preserved as raw artifacts (see "Raw runs" below).
+**Captured:** 2026-05-20T21:34:48.045Z
+**Driver:** `orientation/baselines/accessibility/voiceover-walk.mjs` — guidepup + Playwright (Chromium, headed)
+**Stack:** http://localhost:5173, docker postgres
 
-This document closes the PRD's Phase 1 Cat 7 baseline gap (the audit's "no real screen-reader transcript exists" finding). It curates the best phrases from two runs of the walker — see "Raw runs" for the unedited transcripts that back this summary.
+This is an actual VoiceOver spoken-phrase log (not a proxy). guidepup
+reads VO's speech-log facility, so every `phrase` below is what VO
+literally said as it walked the page with VO+→.
 
-## Raw runs
+## Routes covered
 
-| File | Stack | What it captured well | What it didn't |
-|---|---|---|---|
-| [`voiceover-results-2026-05-20-dev-stack.md`](./voiceover-results-2026-05-20-dev-stack.md) | dev (`pnpm dev`, :5173) | Full `/my-week` walk (30 meaningful phrases — headings, named buttons, sections). Properties sidebar of the document editor. | Editor body walk got snagged on the Tanstack-query-devtools floating widget (dev-mode only). |
-| [`voiceover-results-2026-05-20-preview.md`](./voiceover-results-2026-05-20-preview.md) | preview (`vite preview`, :4173, production build) | Document editor: clean properties-sidebar walk + editor body successfully focused via Playwright (VO announced "text entry area Start writing... Insertion at beginning of text"). | `/my-week` walk got stuck outside the web area (VO repeated "Ship \| Ship web content" 26 times without entering). |
+- **Dashboard (/dashboard) — PRD-literal** — `/dashboard`
+- **Default landing (/my-week)** — `/my-week`
+- **Document editor (wiki)** — `/documents/57895cfe-dcba-419a-8dbc-a919a846c0b7`
 
-The dev-stack run is authoritative for `/my-week`; the preview run is authoritative for the document editor. Both runs hit the same DB seed and the same code at commit `076a183`.
+## Dashboard (/dashboard) — PRD-literal (`/dashboard`)
 
-## Findings — `/my-week` (Dashboard)
+Step | What VoiceOver said
+---:|---
+1 | New Tab description, New tab button. You are currently on a button, inside of a group. To click this button, press Control-Option-Space. Press Control-Option-Command-Slash to bring up the more content menu. To exit this group, press Control-Option-Shift-Up Arrow.
+2 | Search tabs menu pop up pop up button. You are currently on a pop up button, inside of a group. To display a list of options, press Control-Option-Space. To exit this group, press Control-Option-Shift-Up Arrow.
+3 | toolbar item palette. You are currently on a toolbar item palette, inside of a group. To interact with the items on this toolbar, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.
+4 | Ship \| Ship web content. You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.
+5 | Ship \| Ship web content
+6 | Ship \| Ship web content
+7 | Ship \| Ship web content
+8 | Ship \| Ship web content
+9 | Ship \| Ship web content
+10 | Ship \| Ship web content
+11 | Ship \| Ship web content
+12 | Ship \| Ship web content
+13 | Ship \| Ship web content
+14 | Ship \| Ship web content
+15 | Ship \| Ship web content
+16 | Ship \| Ship web content
+17 | Ship \| Ship web content. Quick Note New Quick Note dialog. Google Chrome for Testing Ship \| Ship - Google Chrome for Testing window Ship \| Ship web content
+18 | Ship \| Ship web content. Music MiniPlayer window Lyrics button has keyboard focus. Google Chrome for Testing Ship \| Ship - Google Chrome for Testing window heading level 1 My Work
+19 | What you need to do right now. You are currently on a selectable text.
+20 | MON. You are currently on a selectable text.
+21 | Plan W14. You are currently on a selectable text.
+22 | Retro W13. You are currently on a selectable text.
+23 | TUE. You are currently on a selectable text.
+24 | WED. You are currently on a selectable text.
+25 | THU. You are currently on a selectable text.
+26 | Retro W14. You are currently on a text element.
+27 | FRI. You are currently on a selectable text.
+28 | SAT. You are currently on a selectable text.
+29 | SUN. You are currently on a selectable text.
+30 | You're in the zone. You are currently on a selectable text.
 
-Source: dev-stack run, steps 10–30.
+## Default landing (/my-week) (`/my-week`)
 
-### What VoiceOver announces correctly
+Step | What VoiceOver said
+---:|---
+1 | Ship \| Ship web content
+2 | Ship \| Ship web content
+3 | Ship \| Ship web content
+4 | Ship \| Ship web content
+5 | Ship \| Ship web content
+6 | Ship \| Ship web content
+7 | Ship \| Ship web content
+8 | Ship \| Ship web content
+9 | Ship \| Ship web content
+10 | Ship \| Ship web content
+11 | Ship \| Ship web content
+12 | Ship \| Ship web content
+13 | Ship \| Ship web content
+14 | Ship \| Ship web content
+15 | Ship \| Ship web content
+16 | Ship \| Ship web content
+17 | Ship \| Ship web content
+18 | Ship \| Ship web content
+19 | Ship \| Ship web content
+20 | Ship \| Ship web content
+21 | Ship \| Ship web content
+22 | Ship \| Ship web content
+23 | Ship \| Ship web content
+24 | Ship \| Ship web content
+25 | Ship \| Ship web content
+26 | Ship \| Ship web content
+27 | Ship \| Ship web content
+28 | Ship \| Ship web content
+29 | Ship \| Ship web content
+30 | Ship \| Ship web content
 
-| Element | VoiceOver utterance | Verdict |
-|---|---|---|
-| Page title | `main. You are currently on a heading level 1.` | ✅ H1 landmark present and announced |
-| Current/Previous-week navigation | `Previous week button, group` | ✅ Named button (verb-first) |
-| Date range header | `May 18 – May 24, 2026. You are currently on a selectable text.` | ✅ Plain-text date readable |
-| Next week button | `Next week button, group` | ✅ Named |
-| ASSIGNED PROJECTS section | `heading level 2 ASSIGNED PROJECTS` | ✅ Proper heading hierarchy |
-| Project link | `link Ship Core - Core Features Ship Core` | ✅ Link text describes destination |
-| WEEKLY PLAN section | `heading level 2 WEEKLY PLAN` | ✅ |
-| Plan link with content | `link Submitted 1. Refactor data access layer 2. ...` | ✅ Full plan content read |
-| WEEKLY RETRO section | `heading level 2 WEEKLY RETRO` | ✅ |
-| Create-retro CTA | `+ Create retro for this week button` | ✅ Named (includes leading "+" which a screen reader speaks as "plus") |
-| DAILY UPDATES section | `heading level 2 DAILY UPDATES` | ✅ |
-| Per-day write-update buttons | `Mon5/18 + Write update button, group` | ⚠️ Day-and-date jammed together ("Mon5/18") — see findings |
+## Document editor (wiki) (`/documents/57895cfe-dcba-419a-8dbc-a919a846c0b7`)
 
-### Findings — `/my-week`
+Step | What VoiceOver said
+---:|---
+1 | Drag to reorder block button. You are currently on a button. To click this button, press Control-Option-Space.
+2 | group. You are currently on a group. To interact with items in this group, press Control-Option-Shift-Down Arrow.
+3 | end of main. You are currently on a main, inside of web content. To exit this web area, press Control-Option-Shift-Up Arrow.
+4 | Document properties complementary. You are currently on a complementary, inside of web content.
+5 | Properties. You are currently on a selectable text.
+6 | Collapse sidebar button, group. You are currently on a button, group. To click this button, press Control-Option-Space. Press Control-Option-Command-Slash to bring up the more content menu.
+7 | Type. You are currently on a selectable text.
+8 | Wiki Document type menu pop up collapsed button. You are currently on a button. To display a list of options, press Control-Option-Space.
+9 | Maintainer. You are currently on a selectable text.
+10 | Select maintainer... dialog pop up collapsed button. You are currently on a button. To display a list of options, press Control-Option-Space.
+11 | Visibility. You are currently on a selectable text.
+12 | Workspace dimmed dialog pop up collapsed button. Only the document creator can change visibility You are currently on a button. This item is dimmed.
+13 | Created. You are currently on a selectable text.
+14 | May 19, 2026. You are currently on a selectable text.
+15 | Updated. You are currently on a selectable text.
+16 | May 20, 2026, 11:16 AM
+17 | heading level 3 Backlinks. You are currently on a heading level 3.
+18 | No backlinks. You are currently on a selectable text.
+19 | end of Document properties complementary. You are currently on a complementary, inside of web content. To exit this web area, press Control-Option-Shift-Up Arrow.
+20 | group. You are currently on a group, inside of web content. To interact with items in this group, press Control-Option-Shift-Down Arrow. To exit this web area, press Control-Option-Shift-Up Arrow.
+extra-marker | --- begin extra: focus editor body via Playwright, then type and capture echo ---
+extra | (playwright) editor body focused
+extra | group. You are currently on a group, inside of web content. To interact with items in this group, press Control-Option-Shift-Down Arrow. To exit this web area, press Control-Option-Shift-Up Arrow.
+extra | T. Recently?T. You are currently on a text area.
+extra | h. ?Th. Th. You are currently on a text area.
+extra | e. The. You are currently on a text area.
+extra | The. You are currently on a text area.
+extra | q. You are currently on a text area.
+extra | u. qu. You are currently on a text area.
+extra | i. qui. You are currently on a text area.
+extra | c. quic. You are currently on a text area.
+extra | k. quick. You are currently on a text area.
+extra | quick. You are currently on a text area.
+extra | b. You are currently on a text area.
+extra | r. br. You are currently on a text area.
+extra | o. bro. You are currently on a text area.
+extra | w. brow. You are currently on a text area.
+extra | n. brown. You are currently on a text area.
+extra | brown. You are currently on a text area.
+extra | f. You are currently on a text area.
+extra | o. fo. You are currently on a text area.
+extra | x. fox. You are currently on a text area.
+extra | .. You are currently on a text area.
+extra | . selected. You are currently on a text area.
+extra | x. You are currently on a text area.
+extra-marker | --- end extra: focus editor body via Playwright, then type and capture echo ---
 
-1. **`Mon5/18 + Write update button`** (and other per-day write-update buttons): VoiceOver runs the day abbreviation and date together with no whitespace. Listeners get "Monfivesixteen" instead of "Monday, May 18". → Phase 2 candidate: add a space or proper `aria-label="Monday, May 18 — Write update"`.
-2. **Per-day "Upcoming" labels** (Thu/Fri/Sat): announced as `Upcoming. You are currently on a selectable text.` with no association to which day. A user navigating linearly hears `Thu 5/21 ... Upcoming` and has to remember which day was last. → Phase 2 candidate: associate the status with the date via `aria-describedby` or restructure as `<button aria-label="Thursday, May 21 — upcoming, no update yet">`.
+## Notes
 
-## Findings — Document editor (wiki)
-
-Source: preview run, steps 1–20 and the `extra` block.
-
-### Properties sidebar
-
-| Element | VoiceOver utterance | Verdict |
-|---|---|---|
-| Properties landmark | `Document properties complementary. You are currently on a complementary, inside of web content.` | ✅ Proper landmark |
-| Section heading | `Properties. You are currently on a selectable text.` | ⚠️ Plain text — should be a heading (see findings) |
-| Collapse sidebar | `Collapse sidebar button, group` | ✅ Named |
-| Type field label | `Type. You are currently on a selectable text.` | ⚠️ Selectable text not associated with the control below it |
-| Type field control | `Wiki Document type menu pop up collapsed button` | ✅ Current value announced |
-| Maintainer field control | `Select maintainer... dialog pop up collapsed button` | ✅ Named |
-| Visibility (disabled) | `Workspace dimmed dialog pop up collapsed button. Only the document creator can change visibility You are currently on a button. This item is dimmed.` | ✅ Disabled state + reason announced |
-| Created date | `Created. ... May 19, 2026.` | ✅ |
-| Updated timestamp | `Updated. ... May 19, 2026, 10:20 PM` | ✅ |
-| Backlinks heading | `heading level 3 Backlinks` | ✅ Proper heading |
-
-### Editor body
-
-| Step | VoiceOver utterance | Notes |
-|---|---|---|
-| `(playwright) editor body focused` | `text entry area Start writing... Insertion at beginning of text. main. You are currently on a text area.` | ✅ Editor announces as a text area with placeholder + insertion point |
-| Typing echoes | `You are currently on a text area.` ×20 | ⚠️ See findings |
-
-### Findings — Document editor
-
-1. **"Properties" label is `<selectable text>`, not a heading.** Sidebar section names should be headings (or `aria-labelledby` on the landmark) so screen-reader users can jump to them with VO+H or rotor. → Phase 2 candidate.
-2. **Field-label/control association is ambiguous.** "Type", "Maintainer", "Visibility", "Created", "Updated" announce as `selectable text` separately from their controls. Screen-reader users hear two stops per field instead of one labeled control. → Phase 2 candidate: wrap each in a proper `<label>` or use `aria-labelledby` on the control.
-3. **Typing in the editor body does not produce per-character echoes** at default VoiceOver verbosity. VO only reports the current container (`text area`) on each keystroke. This is partly a VO setting (verbosity → typing echo) and partly a TipTap behavior — confirm whether ProseMirror is firing the input events VO needs to read keystrokes back. → Phase 2 candidate: test with VO verbosity set to "characters" and confirm; if still silent, investigate `aria-live` regions on the editor.
-4. **No editor-specific landmarks.** The transcript shows `end of main` immediately followed by `Document properties complementary` — there's no `<region>` or named landmark for the editor body, so a user using rotor → Landmarks gets one entry for the whole page. → Phase 2 candidate: add `aria-label="Document body"` or `<section aria-label="...">` around the ProseMirror.
-
-## Pass / fail summary (per PRD criteria)
-
-| Criterion | `/my-week` | Editor (wiki) |
-|---|---|---|
-| Navigation: every interactive control reachable via VO+→ or Tab | ✅ Pass | ✅ Pass (sidebar) / ⚠️ Editor body only reachable via Tab or Playwright-click, not via `next()` chain |
-| Labels: every focused element has a real name (not "button" alone) | ✅ Mostly pass — see findings #1, #2 on /my-week | ⚠️ Mixed — see findings #1, #2 on editor |
-| Focus order: logical reading order | ✅ Pass | ✅ Pass |
-| Editor interaction: typing/formatting announced | n/a | ⚠️ Partial — body focus announced, character echoes silent at default verbosity |
-| **Overall** | **PASS with 2 findings** | **PASS with 4 findings** |
-
-Both routes are operable with VoiceOver. The 6 findings above are Phase 2 candidates, not Phase 1 baseline failures.
-
-## How to reproduce
-
-```bash
-# Prereqs: docker compose up -d; pnpm dev (or pnpm --filter @ship/web preview)
-# macOS prereqs: iTerm has Accessibility + Automation permissions;
-#                "Allow VoiceOver to be controlled with AppleScript" enabled
-#                (the script sets this defaults key automatically).
-
-# Production-build capture (recommended — no dev widgets):
-pnpm --filter @ship/web preview        # in one terminal
-node orientation/baselines/accessibility/voiceover-walk.mjs
-
-# Dev-stack capture (includes HMR + devtools widgets):
-WEB=http://localhost:5173 node orientation/baselines/accessibility/voiceover-walk.mjs
-```
-
-Output goes to `voiceover-results-<YYYY-MM-DD>.{md,json}`. The script will refuse to start VoiceOver if AppleScript control isn't enabled and will tell you exactly which checkbox to tick.
+- Step labels `extra` denote scripted post-walk actions (e.g. typing into the editor body) included for editor-interaction coverage.
+- guidepup occasionally captures very long compound phrases when VO surfaces system context (e.g. iTerm window state). These appear as the first step of a route and can be safely ignored when assessing the route's own a11y.
+- For findings, scan for phrases that say `button` or `group` with NO descriptive name preceding them, or focus moves to elements VO can't name. Those are the Phase 2 candidates.

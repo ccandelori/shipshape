@@ -1,0 +1,558 @@
+{
+  "capturedAt": "2026-05-20T21:34:48.043Z",
+  "web": "http://localhost:5173",
+  "results": [
+    {
+      "slug": "dashboard",
+      "label": "Dashboard (/dashboard) — PRD-literal",
+      "path": "/dashboard",
+      "transcript": [
+        {
+          "step": 1,
+          "phrase": "New Tab description, New tab button. You are currently on a button, inside of a group. To click this button, press Control-Option-Space. Press Control-Option-Command-Slash to bring up the more content menu. To exit this group, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 2,
+          "phrase": "Search tabs menu pop up pop up button. You are currently on a pop up button, inside of a group. To display a list of options, press Control-Option-Space. To exit this group, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 3,
+          "phrase": "toolbar item palette. You are currently on a toolbar item palette, inside of a group. To interact with the items on this toolbar, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 4,
+          "phrase": "Ship | Ship web content. You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 5,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 6,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 7,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 8,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 9,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 10,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 11,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 12,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 13,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 14,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 15,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 16,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 17,
+          "phrase": "Ship | Ship web content. Quick Note New Quick Note dialog. Google Chrome for Testing Ship | Ship - Google Chrome for Testing window Ship | Ship web content"
+        },
+        {
+          "step": 18,
+          "phrase": "Ship | Ship web content. Music MiniPlayer window Lyrics button has keyboard focus. Google Chrome for Testing Ship | Ship - Google Chrome for Testing window heading level 1 My Work"
+        },
+        {
+          "step": 19,
+          "phrase": "What you need to do right now. You are currently on a selectable text."
+        },
+        {
+          "step": 20,
+          "phrase": "MON. You are currently on a selectable text."
+        },
+        {
+          "step": 21,
+          "phrase": "Plan W14. You are currently on a selectable text."
+        },
+        {
+          "step": 22,
+          "phrase": "Retro W13. You are currently on a selectable text."
+        },
+        {
+          "step": 23,
+          "phrase": "TUE. You are currently on a selectable text."
+        },
+        {
+          "step": 24,
+          "phrase": "WED. You are currently on a selectable text."
+        },
+        {
+          "step": 25,
+          "phrase": "THU. You are currently on a selectable text."
+        },
+        {
+          "step": 26,
+          "phrase": "Retro W14. You are currently on a text element."
+        },
+        {
+          "step": 27,
+          "phrase": "FRI. You are currently on a selectable text."
+        },
+        {
+          "step": 28,
+          "phrase": "SAT. You are currently on a selectable text."
+        },
+        {
+          "step": 29,
+          "phrase": "SUN. You are currently on a selectable text."
+        },
+        {
+          "step": 30,
+          "phrase": "You're in the zone. You are currently on a selectable text."
+        }
+      ]
+    },
+    {
+      "slug": "my-week",
+      "label": "Default landing (/my-week)",
+      "path": "/my-week",
+      "transcript": [
+        {
+          "step": 1,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 2,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 3,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 4,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 5,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 6,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 7,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 8,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 9,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 10,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 11,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 12,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 13,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 14,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 15,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 16,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 17,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 18,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 19,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 20,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 21,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 22,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 23,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 24,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 25,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 26,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 27,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 28,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 29,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 30,
+          "phrase": "Ship | Ship web content"
+        }
+      ]
+    },
+    {
+      "slug": "doc-editor-wiki",
+      "label": "Document editor (wiki)",
+      "path": "/documents/57895cfe-dcba-419a-8dbc-a919a846c0b7",
+      "transcript": [
+        {
+          "step": 1,
+          "phrase": "Drag to reorder block button. You are currently on a button. To click this button, press Control-Option-Space."
+        },
+        {
+          "step": 2,
+          "phrase": "group. You are currently on a group. To interact with items in this group, press Control-Option-Shift-Down Arrow."
+        },
+        {
+          "step": 3,
+          "phrase": "end of main. You are currently on a main, inside of web content. To exit this web area, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 4,
+          "phrase": "Document properties complementary. You are currently on a complementary, inside of web content."
+        },
+        {
+          "step": 5,
+          "phrase": "Properties. You are currently on a selectable text."
+        },
+        {
+          "step": 6,
+          "phrase": "Collapse sidebar button, group. You are currently on a button, group. To click this button, press Control-Option-Space. Press Control-Option-Command-Slash to bring up the more content menu."
+        },
+        {
+          "step": 7,
+          "phrase": "Type. You are currently on a selectable text."
+        },
+        {
+          "step": 8,
+          "phrase": "Wiki Document type menu pop up collapsed button. You are currently on a button. To display a list of options, press Control-Option-Space."
+        },
+        {
+          "step": 9,
+          "phrase": "Maintainer. You are currently on a selectable text."
+        },
+        {
+          "step": 10,
+          "phrase": "Select maintainer... dialog pop up collapsed button. You are currently on a button. To display a list of options, press Control-Option-Space."
+        },
+        {
+          "step": 11,
+          "phrase": "Visibility. You are currently on a selectable text."
+        },
+        {
+          "step": 12,
+          "phrase": "Workspace dimmed dialog pop up collapsed button. Only the document creator can change visibility You are currently on a button. This item is dimmed."
+        },
+        {
+          "step": 13,
+          "phrase": "Created. You are currently on a selectable text."
+        },
+        {
+          "step": 14,
+          "phrase": "May 19, 2026. You are currently on a selectable text."
+        },
+        {
+          "step": 15,
+          "phrase": "Updated. You are currently on a selectable text."
+        },
+        {
+          "step": 16,
+          "phrase": "May 20, 2026, 11:16 AM"
+        },
+        {
+          "step": 17,
+          "phrase": "heading level 3 Backlinks. You are currently on a heading level 3."
+        },
+        {
+          "step": 18,
+          "phrase": "No backlinks. You are currently on a selectable text."
+        },
+        {
+          "step": 19,
+          "phrase": "end of Document properties complementary. You are currently on a complementary, inside of web content. To exit this web area, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 20,
+          "phrase": "group. You are currently on a group, inside of web content. To interact with items in this group, press Control-Option-Shift-Down Arrow. To exit this web area, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": "extra-marker",
+          "phrase": "--- begin extra: focus editor body via Playwright, then type and capture echo ---"
+        },
+        {
+          "step": "extra",
+          "phrase": "(playwright) editor body focused"
+        },
+        {
+          "step": "extra",
+          "phrase": "group. You are currently on a group, inside of web content. To interact with items in this group, press Control-Option-Shift-Down Arrow. To exit this web area, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": "extra",
+          "phrase": "T. Recently?T. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "h. ?Th. Th. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "e. The. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "The. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "q. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "u. qu. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "i. qui. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "c. quic. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "k. quick. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "quick. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "b. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "r. br. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "o. bro. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "w. brow. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "n. brown. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "brown. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "f. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "o. fo. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "x. fox. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": ".. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": ". selected. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "x. You are currently on a text area."
+        },
+        {
+          "step": "extra-marker",
+          "phrase": "--- end extra: focus editor body via Playwright, then type and capture echo ---"
+        }
+      ]
+    }
+  ],
+  "fullSpokenLog": [
+    "iTerm2, Alert, Session ✳ Review next session documentation (node) #1: Claude needs your permission group To open the notifications menu, press Control-Option-N.",
+    "New Tab description, New tab button. You are currently on a button, inside of a group. To click this button, press Control-Option-Space. Press Control-Option-Command-Slash to bring up the more content menu. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "Search tabs menu pop up pop up button. You are currently on a pop up button, inside of a group. To display a list of options, press Control-Option-Space. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "toolbar item palette. You are currently on a toolbar item palette, inside of a group. To interact with the items on this toolbar, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "Ship | Ship web content. You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content. Quick Note New Quick Note dialog. Google Chrome for Testing Ship | Ship - Google Chrome for Testing window Ship | Ship web content",
+    "Ship | Ship web content. Music MiniPlayer window Lyrics button has keyboard focus. Google Chrome for Testing Ship | Ship - Google Chrome for Testing window heading level 1 My Work",
+    "What you need to do right now. You are currently on a selectable text.",
+    "MON. You are currently on a selectable text.",
+    "Plan W14. You are currently on a selectable text.",
+    "Retro W13. You are currently on a selectable text.",
+    "TUE. You are currently on a selectable text.",
+    "WED. You are currently on a selectable text.",
+    "THU. You are currently on a selectable text.",
+    "Retro W14. You are currently on a text element.",
+    "FRI. You are currently on a selectable text.",
+    "SAT. You are currently on a selectable text.",
+    "SUN. You are currently on a selectable text.",
+    "You're in the zone. You are currently on a selectable text.",
+    "You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship. You are currently on a text area.",
+    "Drag to reorder block button. You are currently on a button. To click this button, press Control-Option-Space.",
+    "group. You are currently on a group. To interact with items in this group, press Control-Option-Shift-Down Arrow.",
+    "end of main. You are currently on a main, inside of web content. To exit this web area, press Control-Option-Shift-Up Arrow.",
+    "Document properties complementary. You are currently on a complementary, inside of web content.",
+    "Properties. You are currently on a selectable text.",
+    "Collapse sidebar button, group. You are currently on a button, group. To click this button, press Control-Option-Space. Press Control-Option-Command-Slash to bring up the more content menu.",
+    "Type. You are currently on a selectable text.",
+    "Wiki Document type menu pop up collapsed button. You are currently on a button. To display a list of options, press Control-Option-Space.",
+    "Maintainer. You are currently on a selectable text.",
+    "Select maintainer... dialog pop up collapsed button. You are currently on a button. To display a list of options, press Control-Option-Space.",
+    "Visibility. You are currently on a selectable text.",
+    "Workspace dimmed dialog pop up collapsed button. Only the document creator can change visibility You are currently on a button. This item is dimmed.",
+    "Created. You are currently on a selectable text.",
+    "May 19, 2026. You are currently on a selectable text.",
+    "Updated. You are currently on a selectable text.",
+    "May 20, 2026, 11:16 AM",
+    "heading level 3 Backlinks. You are currently on a heading level 3.",
+    "No backlinks. You are currently on a selectable text.",
+    "end of Document properties complementary. You are currently on a complementary, inside of web content. To exit this web area, press Control-Option-Shift-Up Arrow.",
+    "group. You are currently on a group, inside of web content. To interact with items in this group, press Control-Option-Shift-Down Arrow. To exit this web area, press Control-Option-Shift-Up Arrow.",
+    "T. Recently?T. You are currently on a text area.",
+    "h. ?Th. Th. You are currently on a text area.",
+    "e. The. You are currently on a text area.",
+    "The. You are currently on a text area.",
+    "q. You are currently on a text area.",
+    "u. qu. You are currently on a text area.",
+    "i. qui. You are currently on a text area.",
+    "c. quic. You are currently on a text area.",
+    "k. quick. You are currently on a text area.",
+    "quick. You are currently on a text area.",
+    "b. You are currently on a text area.",
+    "r. br. You are currently on a text area.",
+    "o. bro. You are currently on a text area.",
+    "w. brow. You are currently on a text area.",
+    "n. brown. You are currently on a text area.",
+    "brown. You are currently on a text area.",
+    "f. You are currently on a text area.",
+    "o. fo. You are currently on a text area.",
+    "x. fox. You are currently on a text area.",
+    ".. You are currently on a text area.",
+    ". selected. You are currently on a text area.",
+    "x. You are currently on a text area."
+  ]
+}

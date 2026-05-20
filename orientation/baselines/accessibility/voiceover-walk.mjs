@@ -213,8 +213,13 @@ async function main() {
     await new Promise((r) => setTimeout(r, 2500));
 
     // 5. Walk the PRD-required routes.
+    //    PRD: "Test with VoiceOver (macOS) on the dashboard and a document edit page."
+    //    `/my-week` is the actual default landing (and the original audit's
+    //    interpretation of "dashboard"). `/dashboard` is the literal PRD path —
+    //    walked separately so the PRD-literal compliance gap is closed.
     const routes = [
-      { slug: 'my-week', label: 'Dashboard (/my-week)', path: '/my-week' },
+      { slug: 'dashboard', label: 'Dashboard (/dashboard) — PRD-literal', path: '/dashboard' },
+      { slug: 'my-week', label: 'Default landing (/my-week)', path: '/my-week' },
       {
         slug: 'doc-editor-wiki',
         label: 'Document editor (wiki)',
