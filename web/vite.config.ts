@@ -1,6 +1,7 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig, loadEnv, type PluginOption } from 'vite';
 import react from '@vitejs/plugin-react';
 import svgr from 'vite-plugin-svgr';
+import { visualizer } from 'rollup-plugin-visualizer';
 import { resolve } from 'path';
 import { readFileSync, existsSync } from 'fs';
 
@@ -43,6 +44,21 @@ export default defineConfig(({ mode }) => {
     },
   };
 
+  // Enable rollup-plugin-visualizer only when BUNDLE_ANALYZE=1 so normal
+  // builds aren't slowed. Output is emitted next to dist/ as stats.html
+  // and copied into orientation/baselines/bundle/ by the helper script.
+  const bundleAnalyzePlugins: PluginOption[] = process.env.BUNDLE_ANALYZE === '1'
+    ? [
+        visualizer({
+          filename: resolve(__dirname, 'dist/stats.html'),
+          template: 'treemap',
+          gzipSize: true,
+          brotliSize: true,
+          title: 'Ship web bundle — treemap',
+        }) as PluginOption,
+      ]
+    : [];
+
   return {
     plugins: [
       react(),
@@ -73,6 +89,7 @@ export default defineConfig(({ mode }) => {
           },
         },
       }),
+      ...bundleAnalyzePlugins,
     ],
     resolve: {
       alias: {

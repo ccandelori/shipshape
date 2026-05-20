@@ -1,0 +1,51 @@
+# Dependency-import usage check (web/package.json -> web/src/)
+# Count = number of files importing that exact package specifier.
+# Note: counts only direct `from 'pkg'` matches; sub-path imports (e.g.
+# 'tippy.js/dist/tippy.css') and CSS-only / asset-only uses are also flagged.
+# A 0 does NOT automatically mean removable — verify usage manually.
+
+  0 @tanstack/query-sync-storage-persister   <-- declared but NEVER imported; web/src/lib/queryClient.ts uses a hand-rolled IDB persister
+  0 @uswds/uswds                             <-- only referenced via `import.meta.glob('/node_modules/@uswds/uswds/dist/img/usa-icons/*.svg', ...)` in components/icons/uswds/Icon.tsx; the npm JS module is NOT in the bundle, only individual SVGs that are actually rendered
+  1 @dnd-kit/core                            (KanbanBoard.tsx, OrgChartPage.tsx)
+  1 @dnd-kit/sortable                        (KanbanBoard.tsx)
+  1 @dnd-kit/utilities                       (KanbanBoard.tsx)
+  1 @radix-ui/react-tooltip                  (ui/Tooltip.tsx)
+  1 @tanstack/react-query-devtools           (main.tsx — eagerly rendered in production)
+  1 clsx                                     (lib/cn.ts)
+  1 cmdk                                     (used via 6 combobox/command-palette files transitively; raw import count varies)
+  1 diff-match-patch                         (DiffViewer.tsx)
+  1 emoji-picker-react                       (EmojiPicker.tsx)
+  1 idb-keyval                               (lib/queryClient.ts)
+  1 lowlight                                 (Editor.tsx — uses `common` set => pulls ~37 highlight.js languages)
+  1 tailwind-merge                           (lib/cn.ts)
+  1 y-indexeddb                              (Editor.tsx)
+  1 y-websocket                              (Editor.tsx)
+  2 @radix-ui/react-popover                  (7 files actually)
+  2 @tanstack/react-query-persist-client     (main.tsx, queryClient.ts)
+  3 tippy.js                                 (Editor extensions: Mention, Emoji, SlashCommands)
+  6 cmdk                                     (combobox/CommandPalette family)
+  7 @radix-ui/react-dialog                   (modals/wizards)
+ 13 @ship/shared                             (workspace types)
+ 20+ @tiptap/*                               (Editor + editor/* extensions — ~20 packages, heavy)
+ 34 @tanstack/react-query                    (hooks + queries)
+ 54 react-router-dom                         (navigation everywhere)
+N/A react, react-dom, yjs                    (foundational; not counted)
+
+# Approx unpacked package size on disk (proxy for bundle weight; the bundler
+# tree-shakes, but for non-tree-shakable libs this is a useful upper bound):
+#   highlight.js:        9.1 MB  (lowlight `common` brings ~37 languages)
+#   @tiptap/* total:     7.5 MB  (~20 packages, plus prosemirror-* transitive)
+#   emoji-picker-react:  3.1 MB  (large default emoji JSON + flags)
+#   yjs:                 2.5 MB
+#   @dnd-kit/* total:    2.1 MB
+#   tippy.js:            2.1 MB
+#   @tanstack/* total:   2.0 MB  (incl. react-query, devtools, persist-client)
+#   y-indexeddb:         1.1 MB
+#   @radix-ui/* total:   388 KB
+#   lowlight (own code): 100 KB
+#   cmdk:                116 KB
+#   react-router-dom:     28 KB
+#
+# @uswds/uswds is 31 MB on disk but ONLY the resolved SVG files actually
+# imported via import.meta.glob end up in the bundle. The big package size
+# is NOT a bundle concern; design tokens/CSS are not imported.

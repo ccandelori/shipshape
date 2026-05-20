@@ -1,0 +1,65 @@
+### Static code-splitting analysis (since no dist could be produced)
+
+# Route-level code splitting in web/src/main.tsx?
+NO. All ~25 page components are statically imported at the top of main.tsx:
+    LoginPage, AppLayout, DocumentsPage, IssuesPage, ProgramsPage,
+    TeamModePage, TeamDirectoryPage, PersonEditorPage, FeedbackEditorPage,
+    PublicFeedbackPage, ProjectsPage, DashboardPage, MyWeekPage,
+    AdminDashboardPage, AdminWorkspaceDetailPage, WorkspaceSettingsPage,
+    ConvertedDocumentsPage, UnifiedDocumentPage, StatusOverviewPage,
+    ReviewsPage, OrgChartPage, InviteAcceptPage, SetupPage
+Result: every user (logged in or not) downloads code for every route on
+first visit, including admin and setup screens they may never reach.
+
+# Component-level React.lazy() usage?
+YES — exactly one place: web/src/lib/document-tabs.tsx (lines 52-66) lazy-loads
+13 per-document-type tabs (Project*Tab, Program*Tab, Week*Tab). These are
+consumed inside <UnifiedDocumentPage>, which itself is statically imported.
+Net effect: the *static* import graph of UnifiedDocumentPage is split, but the
+page wrapper is still on the initial route bundle.
+
+# Suspense boundaries?
+Two: UnifiedDocumentPage.tsx (wraps the lazy tabs) and components/icons/uswds/Icon.tsx
+(wraps async-resolved SVG components from import.meta.glob).
+
+# Manual chunks in vite.config.ts?
+NO. There is no build.rollupOptions.output.manualChunks. Rollup's automatic
+chunking will produce one entry chunk + one chunk per dynamic import +
+shared "common" chunks; no curated vendor split.
+
+# build.sourcemap?
+NOT set. Defaults to false in production. source-map-explorer would not be
+useful without enabling this.
+
+# Vite plugins
+- @vitejs/plugin-react (Babel-based, includes Fast Refresh code in dev only)
+- vite-plugin-svgr (transforms ?react-suffixed SVG imports into React components)
+
+# Editor.tsx (the heaviest single module)
+- Statically imports ~20 @tiptap/* packages
+- Statically imports lowlight with `common` => ~37 highlight.js languages
+- Statically imports yjs, y-websocket, y-indexeddb
+- Statically imports 'tippy.js/dist/tippy.css'
+- All editor extensions and the lowlight bundle are eager-loaded the moment
+  ANY page that uses <Editor> is reached. Several pages render Editor,
+  including MyWeekPage and UnifiedDocumentPage, so editor weight is almost
+  always on the critical path.
+
+# ReactQueryDevtools
+- main.tsx line 6: `import { ReactQueryDevtools } from '@tanstack/react-query-devtools';`
+- main.tsx line 265: `<ReactQueryDevtools initialIsOpen={false} />`
+- Not gated by `if (import.meta.env.DEV)` — it ships in production.
+
+# emoji-picker-react
+- Used only in components/EmojiPicker.tsx; not gated by lazy import; if any
+  parent component statically imports EmojiPicker, the picker + its emoji
+  data ship to all users immediately.
+
+# diff-match-patch
+- Used only in components/DiffViewer.tsx (a rarely-shown comparison UI),
+  but loaded statically.
+
+# @dnd-kit/*
+- Used only in KanbanBoard.tsx and OrgChartPage.tsx. Eager static imports
+  mean drag-and-drop code is downloaded even for users who never open a
+  Kanban board or the org chart.
