@@ -6,13 +6,13 @@
 
 ## Verdict
 
-The work is **not submission-ready against the PRD**, but Phase 1 baselines are now substantively complete pending merge of three open branches. See *Recheck — 2026-05-20 (second pass)* below.
+The work is **not submission-ready against the PRD** — Phase 2 improvements and the final-submission deliverables are still pending — but **Phase 1 baselines are now met on master**. See *Recheck — 2026-05-20 (second pass)* below.
 
 ## Recheck — 2026-05-20 (second pass)
 
-The four highest-priority Phase 1 corrections the original recheck called for are now done in code. None of this work modifies user-facing app behavior — it adds measurement scaffolding and reverts in-progress audit-period edits — but for transparency every change is documented here.
+The four highest-priority Phase 1 corrections the original recheck called for are done and merged to `master`. None of this work modifies user-facing app behavior — it adds measurement scaffolding and reverts in-progress audit-period edits — but for transparency every change is documented here.
 
-### Branches
+### Branches (merged into master via `--no-ff`)
 
 | Branch | Purpose |
 |---|---|
@@ -60,12 +60,12 @@ If a stricter reading of the rule is preferred, the alternative is to split this
 |---|---|---|
 | Orientation / PRD capture | Pass | Unchanged. |
 | Category 1: Type safety baseline | Pass with caveat | Unchanged. Caveat: `e2e/` excluded from workspace type-check. |
-| Category 2: Bundle baseline | Pass | Treemap is now regenerable via `orientation/baselines/bundle/regenerate.sh`. **Pending merge of `feat/phase2-cat-2-bundle`.** |
+| Category 2: Bundle baseline | Pass | Treemap is regenerable via `orientation/baselines/bundle/regenerate.sh`. Merged via merge commit. |
 | Category 3: API response baseline | Pass with caveat | Unchanged. Caveat: localhost autocannon percentile proxy. |
 | Category 4: DB query baseline | Pass | Unchanged. |
 | Category 5: Test coverage baseline | Pass with caveat | The audit-period test edits have been reverted on `master`. Remaining caveat: E2E summary JSONs are internally inconsistent — stdout logs remain authoritative. That inconsistency is an artifact problem, not a measurement problem, and is deferred to Phase 2. |
-| Category 6: Runtime/error baseline | Pass | Normal-usage console pass exists. **Pending merge of `feat/phase2-cat-6-runtime-errors`.** |
-| Category 7: Accessibility baseline | Pass | Real VoiceOver transcript exists. **Pending merge of `feat/phase2-cat-7-accessibility`.** |
+| Category 6: Runtime/error baseline | Pass | Normal-usage console pass exists on master (`orientation/baselines/runtime-errors/evidence/normal-usage-summary.md`). Merged via merge commit. |
+| Category 7: Accessibility baseline | Pass | Real VoiceOver transcript exists on master (`orientation/baselines/accessibility/voiceover-results-2026-05-20.md`). Merged via merge commit. |
 | Phase 2 improvements | Fail | Unchanged — pending. |
 | Per-category improvement docs | Fail | Unchanged — pending. |
 | Discovery write-up | Fail | Unchanged — pending. |
@@ -73,11 +73,11 @@ If a stricter reading of the rule is preferred, the alternative is to split this
 | Demo video / script | Fail | Unchanged — pending. |
 | Public deployment | Fail | Unchanged — pending. |
 | Social post | Fail | Unchanged — pending. |
-| Branch / commit hygiene | Partial | Three labeled feature branches now exist; previously work was all on `master`. Untracked dotfiles/coverage in working tree remain a hygiene item. |
+| Branch / commit hygiene | Partial | Three feature branches and seven `chore/taskmaster-*` branches landed on `master` via `--no-ff` merge commits. Untracked dotfiles/coverage in the working tree remain a hygiene item, and the Taskmaster-corrective branches still need their own merges. |
 
 ### What's still open
 
-- Merge the three feature branches into `master` (or whatever integration target you prefer) before final submission. Until then, anyone re-running the audit against `master` will still see the original Phase 1 gaps.
+- Land the `chore/taskmaster-*` branches (seven correction commits to `.taskmaster/tasks/tasks.json`) so Taskmaster's plan reflects the corrected baselines, the axe-fix target, and the new gate-repair + orientation-checklist tasks.
 - Phase 2 improvements (one per category) and their per-category before/after improvement docs.
 - Discovery write-up, AI cost analysis, demo video/script, public deployment, social post.
 - Final repository hygiene pass.
