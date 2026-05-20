@@ -36,6 +36,8 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",
+    "@guidepup/guidepup": "^0.24.1",
+    "@guidepup/playwright": "^0.15.0",
     "@playwright/test": "^1.57.0",
     "@testcontainers/postgresql": "^11.11.0",
     "@types/supertest": "^6.0.3",

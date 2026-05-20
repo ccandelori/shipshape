@@ -1,0 +1,400 @@
+{
+  "capturedAt": "2026-05-20T16:16:32.811Z",
+  "web": "http://localhost:4173",
+  "results": [
+    {
+      "slug": "my-week",
+      "label": "Dashboard (/my-week)",
+      "path": "/my-week",
+      "transcript": [
+        {
+          "step": 1,
+          "phrase": "New Tab description, New tab button. You are currently on a button, inside of a group. To click this button, press Control-Option-Space. Press Control-Option-Command-Slash to bring up the more content menu. To exit this group, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 2,
+          "phrase": "Search tabs menu pop up pop up button. You are currently on a pop up button, inside of a group. To display a list of options, press Control-Option-Space. To exit this group, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 3,
+          "phrase": "toolbar item palette. You are currently on a toolbar item palette, inside of a group. To interact with the items on this toolbar, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 4,
+          "phrase": "Ship | Ship web content. You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.. iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N."
+        },
+        {
+          "step": 5,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 6,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 7,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 8,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 9,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 10,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 11,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 12,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 13,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 14,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 15,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 16,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 17,
+          "phrase": "Ship | Ship web content. Slack, Gauntlet AI, cohort-main, Matt Hulme: @here Hey everyone my name is Matt Hulme, I was in Cohort 3 and now work at Gauntlet. I'm here to be a resource and help you however I can during your Cohort. I'll do rounds 3x a week. First round starts now! Excited to meet you all. group To open the notifications menu, press Control-Option-N."
+        },
+        {
+          "step": 18,
+          "phrase": "Ship | Ship web content. Notification Center window empty scroll area. Google Chrome for Testing Ship | Ship - Google Chrome for Testing window Ship | Ship web content"
+        },
+        {
+          "step": 19,
+          "phrase": "Ship | Ship web content. You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 20,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 21,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 22,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 23,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 24,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 25,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 26,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 27,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 28,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 29,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 30,
+          "phrase": "Ship | Ship web content"
+        }
+      ]
+    },
+    {
+      "slug": "doc-editor-wiki",
+      "label": "Document editor (wiki)",
+      "path": "/documents/57895cfe-dcba-419a-8dbc-a919a846c0b7",
+      "transcript": [
+        {
+          "step": 1,
+          "phrase": "Drag to reorder block button. You are currently on a button. To click this button, press Control-Option-Space."
+        },
+        {
+          "step": 2,
+          "phrase": "end of main. You are currently on a main, inside of web content. To exit this web area, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 3,
+          "phrase": "Document properties complementary. You are currently on a complementary, inside of web content."
+        },
+        {
+          "step": 4,
+          "phrase": "Properties. You are currently on a selectable text."
+        },
+        {
+          "step": 5,
+          "phrase": "Collapse sidebar button, group. You are currently on a button, group. To click this button, press Control-Option-Space. Press Control-Option-Command-Slash to bring up the more content menu."
+        },
+        {
+          "step": 6,
+          "phrase": "Type. You are currently on a selectable text."
+        },
+        {
+          "step": 7,
+          "phrase": "Wiki Document type menu pop up collapsed button. You are currently on a button. To display a list of options, press Control-Option-Space."
+        },
+        {
+          "step": 8,
+          "phrase": "Maintainer. You are currently on a selectable text."
+        },
+        {
+          "step": 9,
+          "phrase": "Select maintainer... dialog pop up collapsed button. You are currently on a button. To display a list of options, press Control-Option-Space."
+        },
+        {
+          "step": 10,
+          "phrase": "Visibility. You are currently on a selectable text."
+        },
+        {
+          "step": 11,
+          "phrase": "Workspace dimmed dialog pop up collapsed button. Only the document creator can change visibility You are currently on a button. This item is dimmed."
+        },
+        {
+          "step": 12,
+          "phrase": "Created. You are currently on a selectable text."
+        },
+        {
+          "step": 13,
+          "phrase": "May 19, 2026. You are currently on a selectable text."
+        },
+        {
+          "step": 14,
+          "phrase": "Updated. You are currently on a selectable text."
+        },
+        {
+          "step": 15,
+          "phrase": "May 19, 2026, 10:20 PM"
+        },
+        {
+          "step": 16,
+          "phrase": "heading level 3 Backlinks. You are currently on a heading level 3."
+        },
+        {
+          "step": 17,
+          "phrase": "No backlinks. You are currently on a selectable text."
+        },
+        {
+          "step": 18,
+          "phrase": "end of Document properties complementary. You are currently on a complementary, inside of web content. To exit this web area, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 19,
+          "phrase": "group. You are currently on a group, inside of web content. To interact with items in this group, press Control-Option-Shift-Down Arrow. To exit this web area, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 20,
+          "phrase": "group"
+        },
+        {
+          "step": "extra-marker",
+          "phrase": "--- begin extra: focus editor body via Playwright, then type and capture echo ---"
+        },
+        {
+          "step": "extra",
+          "phrase": "(playwright) editor body focused"
+        },
+        {
+          "step": "extra",
+          "phrase": "group"
+        },
+        {
+          "step": "extra",
+          "phrase": "text entry area Start writing... Insertion at beginning of text. main. You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a text area."
+        },
+        {
+          "step": "extra-marker",
+          "phrase": "--- end extra: focus editor body via Playwright, then type and capture echo ---"
+        }
+      ]
+    }
+  ],
+  "fullSpokenLog": [
+    "Google Chrome for Testing Documents | Ship - Google Chrome for Testing window Documents | Ship selected tab, group. You are currently on a selected tab, group, inside of a group. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "New Tab description, New tab button. You are currently on a button, inside of a group. To click this button, press Control-Option-Space. Press Control-Option-Command-Slash to bring up the more content menu. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "Search tabs menu pop up pop up button. You are currently on a pop up button, inside of a group. To display a list of options, press Control-Option-Space. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "toolbar item palette. You are currently on a toolbar item palette, inside of a group. To interact with the items on this toolbar, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "Ship | Ship web content. You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.. iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N.",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content. Slack, Gauntlet AI, cohort-main, Matt Hulme: @here Hey everyone my name is Matt Hulme, I was in Cohort 3 and now work at Gauntlet. I'm here to be a resource and help you however I can during your Cohort. I'll do rounds 3x a week. First round starts now! Excited to meet you all. group To open the notifications menu, press Control-Option-N.",
+    "Ship | Ship web content. Notification Center window empty scroll area. Google Chrome for Testing Ship | Ship - Google Chrome for Testing window Ship | Ship web content",
+    "Ship | Ship web content. You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "text entry area Start writing... Insertion at beginning of text. main. You are currently on a text area.",
+    "Drag to reorder block button. You are currently on a button. To click this button, press Control-Option-Space.",
+    "end of main. You are currently on a main, inside of web content. To exit this web area, press Control-Option-Shift-Up Arrow.",
+    "Document properties complementary. You are currently on a complementary, inside of web content.",
+    "Properties. You are currently on a selectable text.",
+    "Collapse sidebar button, group. You are currently on a button, group. To click this button, press Control-Option-Space. Press Control-Option-Command-Slash to bring up the more content menu.",
+    "Type. You are currently on a selectable text.",
+    "Wiki Document type menu pop up collapsed button. You are currently on a button. To display a list of options, press Control-Option-Space.",
+    "Maintainer. You are currently on a selectable text.",
+    "Select maintainer... dialog pop up collapsed button. You are currently on a button. To display a list of options, press Control-Option-Space.",
+    "Visibility. You are currently on a selectable text.",
+    "Workspace dimmed dialog pop up collapsed button. Only the document creator can change visibility You are currently on a button. This item is dimmed.",
+    "Created. You are currently on a selectable text.",
+    "May 19, 2026. You are currently on a selectable text.",
+    "Updated. You are currently on a selectable text.",
+    "May 19, 2026, 10:20 PM",
+    "heading level 3 Backlinks. You are currently on a heading level 3.",
+    "No backlinks. You are currently on a selectable text.",
+    "end of Document properties complementary. You are currently on a complementary, inside of web content. To exit this web area, press Control-Option-Shift-Up Arrow.",
+    "group. You are currently on a group, inside of web content. To interact with items in this group, press Control-Option-Shift-Down Arrow. To exit this web area, press Control-Option-Shift-Up Arrow.",
+    "group",
+    "text entry area Start writing... Insertion at beginning of text. main. You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area.",
+    "You are currently on a text area."
+  ]
+}

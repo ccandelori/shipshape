@@ -1,0 +1,442 @@
+{
+  "capturedAt": "2026-05-20T15:40:37.826Z",
+  "web": "http://localhost:5173",
+  "results": [
+    {
+      "slug": "my-week",
+      "label": "Dashboard (/my-week)",
+      "path": "/my-week",
+      "transcript": [
+        {
+          "step": 1,
+          "phrase": "New Tab description, New tab button. You are currently on a button, inside of a group. To click this button, press Control-Option-Space. Press Control-Option-Command-Slash to bring up the more content menu. To exit this group, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 2,
+          "phrase": "Search tabs menu pop up pop up button. You are currently on a pop up button, inside of a group. To display a list of options, press Control-Option-Space. To exit this group, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 3,
+          "phrase": "toolbar item palette. Slack, Gauntlet AI, #ai-first-methodologies, Reuben Brooks (C3): I put a blog post up on some recent work. I've been thinking a lot since Gauntlet last winter about backpressure and code fidelity in AI world. @Ash Tilawat recent work on spec-driven development has further sharpened my thinking on this too. Would love to get ya'lls feedback -- and certainly wouldn't mind a retweet / upvote on hackernews either. https://x.com/reubbr/status/2057119077848502704?s=20 group To open the notifications menu, press Control-Option-N.. Notification Center window empty scroll area. Google Chrome for Testing Ship | Ship - Google Chrome for Testing window toolbar item palette"
+        },
+        {
+          "step": 4,
+          "phrase": "Ship | Ship web content. You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 5,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 6,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 7,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 8,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 9,
+          "phrase": "Ship | Ship web content"
+        },
+        {
+          "step": 10,
+          "phrase": "Ship | Ship web content. main. You are currently on a heading level 1."
+        },
+        {
+          "step": 11,
+          "phrase": "Current. You are currently on a selectable text."
+        },
+        {
+          "step": 12,
+          "phrase": "Previous week button, group. You are currently on a button, group. To click this button, press Control-Option-Space."
+        },
+        {
+          "step": 13,
+          "phrase": "May 18 – May 24, 2026. You are currently on a selectable text.. Slack, Gauntlet AI, #social, Reuben Brooks (C3): tl;dr -- i put a blog post up -- would love feedback, and wouldn't say no to a retweet either :cheers: https://x.com/reubbr/status/2057119080851681648?s=20 group To open the notifications menu, press Control-Option-N.. Code README.md — ship window frame has keyboard focus. Google Chrome for Testing Ship | Ship. Google Chrome for Testing Ship | Ship - Google Chrome for Testing window May 18 – May 24, 2026"
+        },
+        {
+          "step": 14,
+          "phrase": "Next week button, group. You are currently on a button, group. To click this button, press Control-Option-Space."
+        },
+        {
+          "step": 15,
+          "phrase": "heading level 2 ASSIGNED PROJECTS. You are currently on a heading level 2."
+        },
+        {
+          "step": 16,
+          "phrase": "link Ship Core - Core Features Ship Core. You are currently on a link. To click this link, press Control-Option-Space."
+        },
+        {
+          "step": 17,
+          "phrase": "heading level 2 WEEKLY PLAN. You are currently on a heading level 2."
+        },
+        {
+          "step": 18,
+          "phrase": "link Submitted 1. Refactor data access layer 2. Implement caching strategy 3. Fix accessibility audit findings 4. Update CI/CD pipeline configuration"
+        },
+        {
+          "step": 19,
+          "phrase": "heading level 2 WEEKLY RETRO. You are currently on a heading level 2."
+        },
+        {
+          "step": 20,
+          "phrase": "+ Create retro for this week button. You are currently on a button. To click this button, press Control-Option-Space."
+        },
+        {
+          "step": 21,
+          "phrase": "heading level 2 DAILY UPDATES. You are currently on a heading level 2."
+        },
+        {
+          "step": 22,
+          "phrase": "Mon5/18 + Write update button, group. You are currently on a button, group. To click this button, press Control-Option-Space."
+        },
+        {
+          "step": 23,
+          "phrase": "Tue5/19 + Write update button, group. You are currently on a button, group. To click this button, press Control-Option-Space."
+        },
+        {
+          "step": 24,
+          "phrase": "Wed5/20 + Write update button, group. You are currently on a button, group. To click this button, press Control-Option-Space."
+        },
+        {
+          "step": 25,
+          "phrase": "Thu 5/21. You are currently on a text element."
+        },
+        {
+          "step": 26,
+          "phrase": "Upcoming. You are currently on a selectable text."
+        },
+        {
+          "step": 27,
+          "phrase": "Fri 5/22. You are currently on a text element."
+        },
+        {
+          "step": 28,
+          "phrase": "Upcoming. You are currently on a selectable text."
+        },
+        {
+          "step": 29,
+          "phrase": "Sat 5/23. You are currently on a text element."
+        },
+        {
+          "step": 30,
+          "phrase": "Upcoming. You are currently on a selectable text."
+        }
+      ]
+    },
+    {
+      "slug": "doc-editor-wiki",
+      "label": "Document editor (wiki)",
+      "path": "/documents/57895cfe-dcba-419a-8dbc-a919a846c0b7",
+      "transcript": [
+        {
+          "step": 1,
+          "phrase": "Drag to reorder block button. You are currently on a button. To click this button, press Control-Option-Space."
+        },
+        {
+          "step": 2,
+          "phrase": "group. You are currently on a group. To interact with items in this group, press Control-Option-Shift-Down Arrow."
+        },
+        {
+          "step": 3,
+          "phrase": "end of main. You are currently on a main, inside of web content. To exit this web area, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 4,
+          "phrase": "Document properties complementary. You are currently on a complementary, inside of web content."
+        },
+        {
+          "step": 5,
+          "phrase": "Properties. You are currently on a selectable text."
+        },
+        {
+          "step": 6,
+          "phrase": "Collapse sidebar button, group. You are currently on a button, group. To click this button, press Control-Option-Space. Press Control-Option-Command-Slash to bring up the more content menu."
+        },
+        {
+          "step": 7,
+          "phrase": "Type. You are currently on a selectable text."
+        },
+        {
+          "step": 8,
+          "phrase": "Wiki Document type menu pop up collapsed button. You are currently on a button. To display a list of options, press Control-Option-Space."
+        },
+        {
+          "step": 9,
+          "phrase": "Maintainer. You are currently on a selectable text."
+        },
+        {
+          "step": 10,
+          "phrase": "Select maintainer... dialog pop up collapsed button. You are currently on a button. To display a list of options, press Control-Option-Space."
+        },
+        {
+          "step": 11,
+          "phrase": "Visibility. You are currently on a selectable text."
+        },
+        {
+          "step": 12,
+          "phrase": "Workspace dimmed dialog pop up collapsed button. Only the document creator can change visibility You are currently on a button. This item is dimmed."
+        },
+        {
+          "step": 13,
+          "phrase": "Created. You are currently on a selectable text."
+        },
+        {
+          "step": 14,
+          "phrase": "May 19, 2026. You are currently on a selectable text."
+        },
+        {
+          "step": 15,
+          "phrase": "Updated. You are currently on a selectable text."
+        },
+        {
+          "step": 16,
+          "phrase": "May 19, 2026, 10:20 PM"
+        },
+        {
+          "step": 17,
+          "phrase": "heading level 3 Backlinks. You are currently on a heading level 3."
+        },
+        {
+          "step": 18,
+          "phrase": "No backlinks. You are currently on a selectable text."
+        },
+        {
+          "step": 19,
+          "phrase": "end of Document properties complementary. You are currently on a complementary, inside of web content. To exit this web area, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 20,
+          "phrase": "group. You are currently on a group, inside of web content. To interact with items in this group, press Control-Option-Shift-Down Arrow. To exit this web area, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 21,
+          "phrase": "Open Tanstack query devtools button, group. You are currently on a button, group, inside of web content. To click this button, press Control-Option-Space. To exit this web area, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": 22,
+          "phrase": "Open Tanstack query devtools button, group"
+        },
+        {
+          "step": 23,
+          "phrase": "Open Tanstack query devtools button, group"
+        },
+        {
+          "step": 24,
+          "phrase": "Open Tanstack query devtools button, group"
+        },
+        {
+          "step": 25,
+          "phrase": "Open Tanstack query devtools button, group"
+        },
+        {
+          "step": 26,
+          "phrase": "Open Tanstack query devtools button, group"
+        },
+        {
+          "step": 27,
+          "phrase": "Open Tanstack query devtools button, group"
+        },
+        {
+          "step": 28,
+          "phrase": "Open Tanstack query devtools button, group"
+        },
+        {
+          "step": 29,
+          "phrase": "Open Tanstack query devtools button, group"
+        },
+        {
+          "step": 30,
+          "phrase": "Open Tanstack query devtools button, group"
+        },
+        {
+          "step": "extra-marker",
+          "phrase": "--- begin extra: type a sentence in the editor body and listen for echoes ---"
+        },
+        {
+          "step": "extra",
+          "phrase": "Open Tanstack query devtools button, group"
+        },
+        {
+          "step": "extra",
+          "phrase": "Open Tanstack query devtools button, group"
+        },
+        {
+          "step": "extra",
+          "phrase": "Open Tanstack query devtools button, group"
+        },
+        {
+          "step": "extra",
+          "phrase": "Close tanstack query devtools button, group Tanstack query devtools complementary"
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a button, group. To click this button, press Control-Option-Space."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a button, group. To click this button, press Control-Option-Space."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a button, group. To click this button, press Control-Option-Space."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a button, group. To click this button, press Control-Option-Space."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a button, group. To click this button, press Control-Option-Space."
+        },
+        {
+          "step": "extra",
+          "phrase": "Ship | Ship web content. You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow."
+        },
+        {
+          "step": "extra",
+          "phrase": "You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.. iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N."
+        },
+        {
+          "step": "extra",
+          "phrase": "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N."
+        },
+        {
+          "step": "extra",
+          "phrase": "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N."
+        },
+        {
+          "step": "extra",
+          "phrase": "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N."
+        },
+        {
+          "step": "extra",
+          "phrase": "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N."
+        },
+        {
+          "step": "extra",
+          "phrase": "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N."
+        },
+        {
+          "step": "extra",
+          "phrase": "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N."
+        },
+        {
+          "step": "extra",
+          "phrase": "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N."
+        },
+        {
+          "step": "extra",
+          "phrase": "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N."
+        },
+        {
+          "step": "extra",
+          "phrase": "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N."
+        },
+        {
+          "step": "extra-marker",
+          "phrase": "--- end extra: type a sentence in the editor body and listen for echoes ---"
+        }
+      ]
+    }
+  ],
+  "fullSpokenLog": [
+    "Google Chrome for Testing Documents | Ship - Google Chrome for Testing window Documents | Ship selected tab, group. You are currently on a selected tab, group, inside of a group. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "New Tab description, New tab button. You are currently on a button, inside of a group. To click this button, press Control-Option-Space. Press Control-Option-Command-Slash to bring up the more content menu. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "Search tabs menu pop up pop up button. You are currently on a pop up button, inside of a group. To display a list of options, press Control-Option-Space. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "toolbar item palette. Slack, Gauntlet AI, #ai-first-methodologies, Reuben Brooks (C3): I put a blog post up on some recent work. I've been thinking a lot since Gauntlet last winter about backpressure and code fidelity in AI world. @Ash Tilawat recent work on spec-driven development has further sharpened my thinking on this too. Would love to get ya'lls feedback -- and certainly wouldn't mind a retweet / upvote on hackernews either. https://x.com/reubbr/status/2057119077848502704?s=20 group To open the notifications menu, press Control-Option-N.. Notification Center window empty scroll area. Google Chrome for Testing Ship | Ship - Google Chrome for Testing window toolbar item palette",
+    "Ship | Ship web content. You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content",
+    "Ship | Ship web content. main. You are currently on a heading level 1.",
+    "Current. You are currently on a selectable text.",
+    "Previous week button, group. You are currently on a button, group. To click this button, press Control-Option-Space.",
+    "May 18 – May 24, 2026. You are currently on a selectable text.. Slack, Gauntlet AI, #social, Reuben Brooks (C3): tl;dr -- i put a blog post up -- would love feedback, and wouldn't say no to a retweet either :cheers: https://x.com/reubbr/status/2057119080851681648?s=20 group To open the notifications menu, press Control-Option-N.. Code README.md — ship window frame has keyboard focus. Google Chrome for Testing Ship | Ship. Google Chrome for Testing Ship | Ship - Google Chrome for Testing window May 18 – May 24, 2026",
+    "Next week button, group. You are currently on a button, group. To click this button, press Control-Option-Space.",
+    "heading level 2 ASSIGNED PROJECTS. You are currently on a heading level 2.",
+    "link Ship Core - Core Features Ship Core. You are currently on a link. To click this link, press Control-Option-Space.",
+    "heading level 2 WEEKLY PLAN. You are currently on a heading level 2.",
+    "link Submitted 1. Refactor data access layer 2. Implement caching strategy 3. Fix accessibility audit findings 4. Update CI/CD pipeline configuration",
+    "heading level 2 WEEKLY RETRO. You are currently on a heading level 2.",
+    "+ Create retro for this week button. You are currently on a button. To click this button, press Control-Option-Space.",
+    "heading level 2 DAILY UPDATES. You are currently on a heading level 2.",
+    "Mon5/18 + Write update button, group. You are currently on a button, group. To click this button, press Control-Option-Space.",
+    "Tue5/19 + Write update button, group. You are currently on a button, group. To click this button, press Control-Option-Space.",
+    "Wed5/20 + Write update button, group. You are currently on a button, group. To click this button, press Control-Option-Space.",
+    "Thu 5/21. You are currently on a text element.",
+    "Upcoming. You are currently on a selectable text.",
+    "Fri 5/22. You are currently on a text element.",
+    "Upcoming. You are currently on a selectable text.",
+    "Sat 5/23. You are currently on a text element.",
+    "Upcoming. You are currently on a selectable text.",
+    "Ship. You are currently on a text area.",
+    "Drag to reorder block button. You are currently on a button. To click this button, press Control-Option-Space.",
+    "group. You are currently on a group. To interact with items in this group, press Control-Option-Shift-Down Arrow.",
+    "end of main. You are currently on a main, inside of web content. To exit this web area, press Control-Option-Shift-Up Arrow.",
+    "Document properties complementary. You are currently on a complementary, inside of web content.",
+    "Properties. You are currently on a selectable text.",
+    "Collapse sidebar button, group. You are currently on a button, group. To click this button, press Control-Option-Space. Press Control-Option-Command-Slash to bring up the more content menu.",
+    "Type. You are currently on a selectable text.",
+    "Wiki Document type menu pop up collapsed button. You are currently on a button. To display a list of options, press Control-Option-Space.",
+    "Maintainer. You are currently on a selectable text.",
+    "Select maintainer... dialog pop up collapsed button. You are currently on a button. To display a list of options, press Control-Option-Space.",
+    "Visibility. You are currently on a selectable text.",
+    "Workspace dimmed dialog pop up collapsed button. Only the document creator can change visibility You are currently on a button. This item is dimmed.",
+    "Created. You are currently on a selectable text.",
+    "May 19, 2026. You are currently on a selectable text.",
+    "Updated. You are currently on a selectable text.",
+    "May 19, 2026, 10:20 PM",
+    "heading level 3 Backlinks. You are currently on a heading level 3.",
+    "No backlinks. You are currently on a selectable text.",
+    "end of Document properties complementary. You are currently on a complementary, inside of web content. To exit this web area, press Control-Option-Shift-Up Arrow.",
+    "group. You are currently on a group, inside of web content. To interact with items in this group, press Control-Option-Shift-Down Arrow. To exit this web area, press Control-Option-Shift-Up Arrow.",
+    "Open Tanstack query devtools button, group. You are currently on a button, group, inside of web content. To click this button, press Control-Option-Space. To exit this web area, press Control-Option-Shift-Up Arrow.",
+    "Open Tanstack query devtools button, group",
+    "Open Tanstack query devtools button, group",
+    "Open Tanstack query devtools button, group",
+    "Open Tanstack query devtools button, group",
+    "Open Tanstack query devtools button, group",
+    "Open Tanstack query devtools button, group",
+    "Open Tanstack query devtools button, group",
+    "Open Tanstack query devtools button, group",
+    "Open Tanstack query devtools button, group",
+    "Open Tanstack query devtools button, group",
+    "Open Tanstack query devtools button, group",
+    "Open Tanstack query devtools button, group",
+    "Close tanstack query devtools button, group Tanstack query devtools complementary",
+    "You are currently on a button, group. To click this button, press Control-Option-Space.",
+    "You are currently on a button, group. To click this button, press Control-Option-Space.",
+    "You are currently on a button, group. To click this button, press Control-Option-Space.",
+    "You are currently on a button, group. To click this button, press Control-Option-Space.",
+    "You are currently on a button, group. To click this button, press Control-Option-Space.",
+    "Ship | Ship web content. You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.",
+    "You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.. iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N.",
+    "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N.",
+    "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N.",
+    "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N.",
+    "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N.",
+    "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N.",
+    "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N.",
+    "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N.",
+    "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N.",
+    "iTerm2, Alert, Session ✳ Review PRD compliance audit document (node) #1: Claude is waiting for your input group To open the notifications menu, press Control-Option-N."
+  ]
+}
