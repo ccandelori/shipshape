@@ -1,0 +1,40 @@
+# EXPLAIN ANALYZE — Flow 2 — View document (slowest: session lookup)
+# Captured: 2026-05-19 (Postgres on Docker, warm shared_buffers)
+# Methodology: psql EXPLAIN (ANALYZE, BUFFERS, VERBOSE) with realistic seed-data parameters
+#
+                                                                                        QUERY PLAN                                                                                        
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ Hash Join  (cost=10.76..12.08 rows=1 width=122) (actual time=0.088..0.090 rows=1 loops=1)
+   Output: s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at, u.is_super_admin
+   Inner Unique: true
+   Hash Cond: (u.id = s.user_id)
+   Buffers: shared hit=4 read=2 dirtied=1
+   InitPlan 1 (returns $0)
+     ->  Limit  (cost=0.13..2.60 rows=1 width=65) (actual time=0.064..0.064 rows=1 loops=1)
+           Output: sessions.id
+           Buffers: shared hit=1 read=2 dirtied=1
+           ->  Index Only Scan using sessions_pkey on public.sessions  (cost=0.13..12.46 rows=5 width=65) (actual time=0.064..0.064 rows=1 loops=1)
+                 Output: sessions.id
+                 Heap Fetches: 1
+                 Buffers: shared hit=1 read=2 dirtied=1
+   ->  Seq Scan on public.users u  (cost=0.00..1.24 rows=24 width=17) (actual time=0.002..0.003 rows=20 loops=1)
+         Output: u.id, u.email, u.password_hash, u.name, u.is_super_admin, u.last_workspace_id, u.x509_subject_dn, u.piv_first_login_at, u.last_auth_provider, u.created_at, u.updated_at
+         Buffers: shared hit=1
+   ->  Hash  (cost=8.15..8.15 rows=1 width=121) (actual time=0.077..0.077 rows=1 loops=1)
+         Output: s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at
+         Buckets: 1024  Batches: 1  Memory Usage: 9kB
+         Buffers: shared hit=3 read=2 dirtied=1
+         ->  Bitmap Heap Scan on public.sessions s  (cost=4.14..8.15 rows=1 width=121) (actual time=0.073..0.073 rows=1 loops=1)
+               Output: s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at
+               Recheck Cond: (s.id = $0)
+               Heap Blocks: exact=1
+               Buffers: shared hit=3 read=2 dirtied=1
+               ->  Bitmap Index Scan on sessions_pkey  (cost=0.00..4.14 rows=1 width=0) (actual time=0.070..0.070 rows=1 loops=1)
+                     Index Cond: (s.id = $0)
+                     Buffers: shared hit=2 read=2 dirtied=1
+ Query Identifier: -7576560039120841269
+ Planning:
+   Buffers: shared hit=394
+ Planning Time: 0.369 ms
+ Execution Time: 0.111 ms
+(33 rows)

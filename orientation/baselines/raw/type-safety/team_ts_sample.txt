@@ -1,0 +1,144 @@
+30:         d.id as "personId",
+31:         d.properties->>'user_id' as id,
+32:         d.title as name,
+33:         COALESCE(d.properties->>'email', u.email) as email,
+34:         CASE WHEN d.archived_at IS NOT NULL THEN true ELSE false END as "isArchived",
+35:         CASE WHEN d.properties->>'pending' = 'true' THEN true ELSE false END as "isPending",
+36:         d.properties->>'reports_to' as "reportsTo"
+59:    // pg driver may return DATE as a Date object with local timezone offset
+65:      // Parse string as UTC midnight
+80:      ? Math.max(1, parseInt(req.query.fromSprint as string, 10))
+83:      ? parseInt(req.query.toSprint as string, 10)
+109:      `SELECT d.id, d.title as name, d.properties->>'start_date' as start_date, d.properties->>'end_date' as end_date,
+110:              prog_da.related_id as program_id,
+111:              p.title as program_name, p.properties->>'emoji' as program_emoji, p.properties->>'color' as program_color
+123:      `SELECT i.id, i.title, da_sprint.related_id as sprint_id, i.properties->>'assignee_id' as assignee_id, i.properties->>'state' as state, i.ticket_number,
+124:              s.properties->>'start_date' as sprint_start, s.properties->>'end_date' as sprint_end,
+125:              prog_da.related_id as program_id, p.title as program_name, p.properties->>'emoji' as program_emoji, p.properties->>'color' as program_color
+144:      // Parse issue's sprint start date as UTC midnight to match startDate
+214:         proj.properties->>'color' as "color",
+215:         prog_da.related_id as "programId",
+216:         prog.title as "programName",
+217:         prog.properties->>'emoji' as "programEmoji",
+218:         prog.properties->>'color' as "programColor"
+247:      `SELECT id, title as name, properties->>'emoji' as emoji, properties->>'color' as color
+277:         jsonb_array_elements_text(s.properties->'assignee_ids') as person_id,
+278:         (s.properties->>'sprint_number')::int as sprint_number,
+279:         s.properties->>'project_id' as project_id,
+280:         proj.title as project_name,
+281:         proj.properties->>'color' as project_color,
+282:         COALESCE(prog_da.related_id, sprint_prog_da.related_id) as program_id,
+283:         COALESCE(prog.title, sprint_prog.title) as program_name,
+284:         COALESCE(prog.properties->>'emoji', sprint_prog.properties->>'emoji') as program_emoji,
+285:         COALESCE(prog.properties->>'color', sprint_prog.properties->>'color') as program_color
+351:         i.properties->>'assignee_id' as assignee_id,
+352:         da_project.related_id as project_id,
+353:         proj.title as project_name,
+354:         proj.properties->>'color' as project_color,
+355:         proj_prog_da.related_id as program_id,
+356:         prog.title as program_name,
+357:         prog.properties->>'emoji' as program_emoji,
+358:         prog.properties->>'color' as program_color,
+359:         s.properties->>'start_date' as sprint_start
+459:// POST /api/team/assign - Assign user as sprint owner for a program
+493:      // If userId was provided instead of personId, look up the person doc ID
+514:        `SELECT d.id, prog_da.related_id as program_id
+644:// DELETE /api/team/assign - Remove user as sprint owner
+675:      // If userId was provided instead of personId, look up the person doc ID
+746:      `SELECT d.id, d.properties->>'user_id' as user_id, d.title as name,
+747:              COALESCE(d.properties->>'email', u.email) as email,
+748:              CASE WHEN d.archived_at IS NOT NULL THEN true ELSE false END as "isArchived",
+749:              CASE WHEN d.properties->>'pending' = 'true' THEN true ELSE false END as "isPending",
+750:              d.properties->>'reports_to' as "reportsTo",
+751:              d.properties->>'role' as role
+830:         d.properties->>'user_id' as id,
+831:         d.title as name
+844:         i.properties->>'assignee_id' as assignee_id,
+845:         da_sprint.related_id as sprint_id,
+846:         COALESCE((i.properties->>'estimate')::numeric, 0) as estimate,
+847:         i.properties->>'state' as state,
+848:         s.properties->>'sprint_number' as sprint_number
+949:      `SELECT properties->>'user_id' as user_id
+1018:         COALESCE((i.properties->>'estimate')::numeric, 0) as estimate,
+1019:         i.properties->>'state' as state,
+1020:         s.properties->>'sprint_number' as sprint_number
+1139:      `SELECT id, title as name
+1151:         prog.id as program_id,
+1152:         prog.title as program_name,
+1153:         prog.properties->>'color' as program_color,
+1154:         proj.id as project_id,
+1155:         proj.title as project_title,
+1156:         proj.properties->>'color' as project_color,
+1157:         proj.archived_at as project_archived_at
+1172:         proj.id as project_id,
+1173:         proj.title as project_title,
+1174:         proj.properties->>'color' as project_color,
+1175:         proj.archived_at as project_archived_at
+1191:         (properties->>'person_id') as person_id,
+1192:         (properties->>'project_id') as project_id,
+1193:         (properties->>'week_number')::int as week_number,
+1207:         (properties->>'person_id') as person_id,
+1208:         (properties->>'project_id') as project_id,
+1209:         (properties->>'week_number')::int as week_number,
+1332:    // Add unassigned projects as a pseudo-program
+1365:    const sprintCount = Math.min(parseInt(req.query.sprint_count as string, 10) || 5, 20);
+1424:      `SELECT id, title as name, properties->>'reports_to' as "reportsTo"
+1436:         jsonb_array_elements_text(s.properties->'assignee_ids') as person_id,
+1437:         (s.properties->>'sprint_number')::int as sprint_number,
+1438:         s.id as sprint_id,
+1439:         s.properties->>'project_id' as project_id,
+1440:         s.properties->'plan_approval' as plan_approval,
+1441:         s.properties->'review_approval' as review_approval,
+1442:         s.properties->'review_rating' as review_rating,
+1443:         proj.title as project_name,
+1444:         prog_da.related_id as program_id,
+1445:         prog.title as program_name,
+1446:         prog.properties->>'color' as program_color
+1461:         (properties->>'person_id') as person_id,
+1462:         (properties->>'week_number')::int as week_number,
+1475:         (properties->>'person_id') as person_id,
+1476:         (properties->>'week_number')::int as week_number,
+1672:      `SELECT id, title as name
+1683:      `SELECT id, title as name, properties->>'color' as color
+1695:         jsonb_array_elements_text(s.properties->'assignee_ids') as person_id,
+1696:         (s.properties->>'sprint_number')::int as sprint_number,
+1697:         s.properties->>'project_id' as project_id,
+1698:         s.properties->'plan_approval'->>'state' as plan_approval_state,
+1699:         s.properties->'review_approval'->>'state' as review_approval_state,
+1700:         proj.title as project_name,
+1701:         proj.properties->>'color' as project_color,
+1702:         prog_da.related_id as program_id,
+1703:         prog.title as program_name,
+1704:         prog.properties->>'color' as program_color
+1750:         i.properties->>'assignee_id' as assignee_id,
+1751:         da_project.related_id as project_id,
+1752:         proj.title as project_name,
+1753:         proj.properties->>'color' as project_color,
+1754:         proj_prog_da.related_id as program_id,
+1755:         prog.title as program_name,
+1756:         prog.properties->>'color' as program_color,
+1757:         s.properties->>'start_date' as sprint_start
+1841:         (properties->>'person_id') as person_id,
+1842:         (properties->>'project_id') as project_id,
+1843:         (properties->>'week_number')::int as week_number,
+1857:         (properties->>'person_id') as person_id,
+1858:         (properties->>'project_id') as project_id,
+1859:         (properties->>'week_number')::int as week_number,
+2069:         d.properties->>'sprint_number' as sprint_number,
+2070:         d.properties->'plan_approval' as plan_approval,
+2071:         d.properties->'review_approval' as review_approval,
+2078:         ) as has_plan,
+2084:         ) as has_review
+2121:         p.properties->>'color' as color,
+2122:         p.properties->>'emoji' as emoji,
+2123:         p.content as plan_content,
+2124:         p.properties->'plan_approval' as plan_approval,
+2125:         p.properties->'retro_approval' as retro_approval,
+2126:         prog.id as program_id,
+2127:         prog.title as program_name,
+2128:         prog.properties->>'color' as program_color,
+2129:         prog.properties->>'emoji' as program_emoji,
+2136:         ) as has_retro
+2154:      // Check if project has plan (non-empty content)
+2160:        // Check if content has any text
+2162:          hasPlan = JSON.stringify(content.content).length > 50; // Reasonable threshold for "has content"

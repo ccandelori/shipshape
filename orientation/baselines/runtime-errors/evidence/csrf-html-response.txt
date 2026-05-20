@@ -1,0 +1,42 @@
+=== Scenario 4: CSRF rejection content-type ===
+
+Request: POST /api/auth/login with NO CSRF token (and fresh cookies)
+
+--- Response (no X-CSRF-Token header) ---
+HTTP/1.1 403 Forbidden
+Content-Security-Policy: default-src 'none'
+Cross-Origin-Opener-Policy: same-origin
+Cross-Origin-Resource-Policy: cross-origin
+Origin-Agent-Cluster: ?1
+Referrer-Policy: no-referrer
+Strict-Transport-Security: max-age=31536000; includeSubDomains; preload
+X-Content-Type-Options: nosniff
+X-DNS-Prefetch-Control: off
+X-Download-Options: noopen
+X-Frame-Options: SAMEORIGIN
+X-Permitted-Cross-Domain-Policies: none
+X-XSS-Protection: 0
+RateLimit-Policy: 5;w=900
+RateLimit-Limit: 5
+RateLimit-Remaining: 4
+RateLimit-Reset: 900
+Access-Control-Allow-Origin: http://localhost:5174
+Vary: Origin
+Access-Control-Allow-Credentials: true
+Content-Type: text/html; charset=utf-8
+Content-Length: 678
+Date: Wed, 20 May 2026 00:26:11 GMT
+Connection: keep-alive
+Keep-Alive: timeout=65
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Error</title>
+</head>
+<body>
+<pre>ForbiddenError: invalid csrf token<br> &nbsp; &nbsp;at csrfSync (file:///Users/sheep/Desktop/Gauntlet/ship/node_modules/.pnpm/csrf-sync@4.2.1/node_modules/csrf-sync/lib/index.js:22:33)<br> &nbsp; &nbsp;at &lt;anonymous&gt; (/Users/sheep/Desktop/Gauntlet/ship/api/src/app.ts:47:55)<br> &nbsp; &nbsp;at ModuleJob.run (node:internal/modules/esm/module_job:377:25)<br> &nbsp; &nbsp;at async onImport.tracePromise.__proto__ (node:internal/modules/esm/loader:691:26)<br> &nbsp; &nbsp;at async main (/Users/sheep/Desktop/Gauntlet/ship/api/src/index.ts:21:25)</pre>
+</body>
+</html>
+

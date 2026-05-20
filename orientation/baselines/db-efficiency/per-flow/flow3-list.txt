@@ -1,0 +1,4 @@
+  0.314ms	(prepared stmt — SQL same as prior)
+  0.287ms	(prepared stmt — SQL same as prior)
+  0.116ms	(prepared stmt — SQL same as prior)
+  0.062ms	SELECT s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at, u.is_super_admin FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.id = $1

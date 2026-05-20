@@ -1,0 +1,276 @@
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:38:    // Default fallback: return empty rows for any unmocked query calls
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:40:    vi.mocked(pool.query).mockResolvedValue({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:55:      } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:59:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:75:      .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:77:      .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:79:      .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:81:      .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:86:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:111:        .mockResolvedValueOnce({ rows: [{ sprint_start_date: startDate }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:112:        .mockResolvedValueOnce({ rows: [{ id: personId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:113:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:114:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:115:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:116:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:124:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:125:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:126:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:127:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:155:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:176:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:212:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:239:        .mockResolvedValueOnce({ rows: [{ id: 'plan-1', content: { type: 'doc', content: [{ type: 'text', text: 'My plan' }] } }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:241:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:262:        .mockResolvedValueOnce({ rows: [{ id: 'plan-1', content: { type: 'doc', content: [{ type: 'text', text: 'My plan' }] } }] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:284:        .mockResolvedValueOnce({ rows: [{ id: 'plan-1', content: { type: 'doc', content: [{ type: 'text', text: 'My plan' }] } }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:286:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:318:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:320:        .mockResolvedValueOnce({ rows: [{ id: 'plan-1', content: { type: 'doc', content: [{ type: 'text', text: 'done' }] } }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:322:        .mockResolvedValueOnce({ rows: [{ id: 'retro-1', content: { type: 'doc', content: [{ type: 'text', text: 'done' }] } }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:324:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:326:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:355:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/invite-acceptance.ts:104:  // Defensive cleanup: Archive any other pending person docs for this email
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/index.ts:262:  doc.on('update', (update: Uint8Array, origin: any) => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/index.ts:424: * we need to disconnect any users who no longer have access.
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/index.ts:463:    // Close any active connections with "content updated" code
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/index.ts:479:    // Clear any pending saves
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/index.ts:554:    return; // All workspace members can access, no need to disconnect anyone
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:24:function extractTextWithMarks(element: Y.XmlElement, inheritedMarks: any[] = []): any[] {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:29:  const mark: any = { type: nodeName };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:35:  const result: any[] = [];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:62:export function yjsToJson(fragment: Y.XmlFragment): any {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:63:  const content: any[] = [];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:79:        const node: any = { type: item.nodeName };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:115:function yjsElementToJson(element: Y.XmlElement): any[] {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:116:  const content: any[] = [];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:130:        const node: any = { type: item.nodeName };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:164:export function jsonToYjs(doc: Y.Doc, fragment: Y.XmlFragment, content: any) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:175:          const attrs: Record<string, any> = {};
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:203:function jsonToYjsChildren(doc: Y.Doc, parent: Y.XmlElement, children: any[]) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:210:        const attrs: Record<string, any> = {};
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:235:export function loadContentFromYjsState(yjsState: Buffer): any | null {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/collaboration.test.ts:717:      } catch (error: any) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/types/y-protocols.d.ts:9:  export function readSyncStep2(decoder: decoding.Decoder, doc: Y.Doc, transactionOrigin?: any): void;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/types/y-protocols.d.ts:14:    transactionOrigin: any
+/Users/sheep/Desktop/Gauntlet/ship/api/src/types/y-protocols.d.ts:25:    states: Map<number, Record<string, any>>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/types/y-protocols.d.ts:27:    getStates(): Map<number, Record<string, any>>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/types/y-protocols.d.ts:28:    getLocalState(): Record<string, any> | null;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/types/y-protocols.d.ts:29:    setLocalState(state: Record<string, any> | null): void;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/types/y-protocols.d.ts:30:    setLocalStateField(field: string, value: any): void;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/types/y-protocols.d.ts:31:    on(event: string, callback: (...args: any[]) => void): void;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/types/y-protocols.d.ts:32:    off(event: string, callback: (...args: any[]) => void): void;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/types/y-protocols.d.ts:37:  export function applyAwarenessUpdate(awareness: Awareness, update: Uint8Array, origin: any): void;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/types/y-protocols.d.ts:38:  export function removeAwarenessStates(awareness: Awareness, clients: number[], origin: any): void;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/standups.ts:255:    // Check if user has any issues assigned to them in active sprints (current sprint number)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/standups.ts:382:    const values: any[] = [];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:53: * Check if a node is any H2 heading
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:35:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:37:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:70:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:72:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:102:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:104:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:138:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:140:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:144:      expect(nodes.some((n: any) => n.text === '#10' && n.marks)).toBe(true);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:145:      expect(nodes.some((n: any) => n.text === '#20' && n.marks)).toBe(true);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:146:      expect(nodes.some((n: any) => n.text === 'issue #30' && n.marks)).toBe(true);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:162:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:185:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:189:      const queryArgs = vi.mocked(pool.query).mock.calls[0]![1] as any[];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:218:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:220:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:248:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:250:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:273:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:275:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:280:      const link50 = nodes.find((n: any) => n.text === '#50');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:284:      const text999 = nodes.find((n: any) => n.text === '#999');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:362:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:364:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:367:      const link = paragraph.content.find((n: any) => n.text === '#25');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:390:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:392:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:395:      const link = paragraph.content.find((n: any) => n.text === 'issue #77');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:429:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:455:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:479:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:481:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:506:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:508:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:513:      expect(nodes.some((n: any) => n.text === 'Issue #5' && n.marks)).toBe(true);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:514:      expect(nodes.some((n: any) => n.text === 'ISSUE #6' && n.marks)).toBe(true);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:552:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:48:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [], rowCount: 0 } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:72:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:73:        .mockResolvedValueOnce({ rows: [{ id: 'membership-1' }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:74:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:98:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:124:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:151:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:152:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:176:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:177:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:203:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:204:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:242:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:243:        .mockResolvedValueOnce({ rows: [{ id: 'membership-1' }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:244:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:272:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:273:        .mockResolvedValueOnce({ rows: [{ id: 'membership-1' }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:274:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:309:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:311:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:324:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:340:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any); // No results means revoked/expired
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:368:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:369:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/backlinks.ts:126:      // Insert new links (if any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:82:function extractIssueFromRow(row: any) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:155:      params.push(states as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:708:    const values: any[] = [];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:730:      // Check if this issue has any children via junction table
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:1210:        const values: any[] = [validIds, workspaceId];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:1033:      // Remove template heading texts to see if anything user-written remains
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:1039:      // If there's any non-whitespace text left, the user has added content
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/caia-auth.ts:200:      // Existing user - process any pending invites to other workspaces
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/caia-auth.ts:228:    // Session fixation prevention: delete any existing session
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/caia-auth.ts:303:    // Set session cookie (always secure - OAuth flow requires HTTPS anyway)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/comments.ts:158:    // Content edits require author ownership; resolving is allowed by any workspace member
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/auth.ts:135:          message: 'You do not have access to any workspaces',
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/auth.ts:141:    // Session fixation prevention: Delete any existing session from this request
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/auth.ts:182:    const pendingAccountabilityItems: any[] = [];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/auth.ts:312:    const pendingAccountabilityItems: any[] = [];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.test.ts:483:    // Clean up any documents from previous tests
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:816:        // Archive any OTHER pending person docs for same email (defensive cleanup)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:838:        // Archive any orphaned pending person docs for this email (defensive cleanup)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:850:      // Cancel any active invites for this email since user is being added directly
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/auth.test.ts:294:      // Session should be auto-deleted by middleware, but cleanup anyway
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:14:  authMiddleware: (req: any, res: any, next: any) => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:51:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:59:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:88:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:94:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:121:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:126:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:151:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:154:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:186:        } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:204:        } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:241:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:244:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:272:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:278:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:303:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:306:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:330:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:333:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:355:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:358:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/backlinks.test.ts:82:    // Clean up any existing documents and links
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/backlinks.test.ts:135:      const ids = response.body.map((b: any) => b.id);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations-regression.test.ts:204:      const projectAssoc = response.body.belongs_to.find((b: any) => b.type === 'project')
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations-regression.test.ts:205:      const sprintAssoc = response.body.belongs_to.find((b: any) => b.type === 'sprint')
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations-regression.test.ts:323:      const projectAssocs = response.body.belongs_to.filter((b: any) => b.type === 'project')
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations-regression.test.ts:326:      const projectIds = projectAssocs.map((p: any) => p.id).sort()
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations-regression.test.ts:346:      const issueIds = response.body.map((i: any) => i.id)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations-regression.test.ts:435:      const testIssue = issueList.find((i: any) => i.id === testIssueId)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:18:function extractProjectFromRow(row: any) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:123:async function generatePrefilledRetroContent(projectData: any, sprints: any[], issues: any[]) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:132:  const content: any = {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:230:  // Add active issues section if any remain
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:246:  // Add cancelled issues section if any
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:631:    const values: any[] = [];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:777:      // First delete any existing program association
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:959:          completed: issuesResult.rows.filter((i: any) => i.state === 'done').length,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:960:          cancelled: issuesResult.rows.filter((i: any) => i.state === 'cancelled').length,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:961:          active: issuesResult.rows.filter((i: any) => !['done', 'cancelled'].includes(i.state)).length,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:983:          completed: issuesResult.rows.filter((i: any) => i.state === 'done').length,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:984:          cancelled: issuesResult.rows.filter((i: any) => i.state === 'cancelled').length,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:985:          active: issuesResult.rows.filter((i: any) => !['done', 'cancelled'].includes(i.state)).length,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1038:    const values: any[] = [JSON.stringify(newProps)];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1102:function extractSprintFromRow(row: any) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1541:    // If any retro fields changed and was previously approved, transition to 'changed_since_approved'
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1557:    const values: any[] = [JSON.stringify(newProps)];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:18:): Promise<{ canAccess: boolean; doc: any | null }> {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:648:    const values: any[] = [];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:736:    // Content is source of truth: extracted values override any manually set hypothesis/success_criteria/vision/goals
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents-visibility.test.ts:246:    it('allows admin to access any private doc', async () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents-visibility.test.ts:426:    it('allows admin to change any document visibility', async () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:326:  // Get existing review if any via junction table
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:496:  // Get existing retro if any via junction table
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:588:  questions.push('Are there any blockers preventing progress on your issues?');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:589:  questions.push('Do you need help from anyone to complete your current work?');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:44:    mockClient.query.mockResolvedValue({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:46:    vi.mocked(pool).connect = vi.fn().mockResolvedValue(mockClient) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:58:        .mockResolvedValueOnce({ rows: [{ id: issueId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:60:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:79:        .mockResolvedValueOnce({ rows: [{ id: issueId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:80:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:134:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:152:        .mockResolvedValueOnce({ rows: [{ id: issueId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:153:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:196:        .mockResolvedValueOnce({ rows: [{ id: issueId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:198:        .mockResolvedValueOnce({ rows: historyEntries } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:212:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:249:        .mockResolvedValueOnce({ rows: [existingIssue] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:251:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:253:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:255:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:257:        .mockResolvedValueOnce({ rows: [updatedRow] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:259:        .mockResolvedValueOnce({ rows: [updatedRow] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:261:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:266:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:186:function extractSprintFromRow(row: any) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:609:    const params: any[] = [workspaceId, targetSprintNumber, userId, isAdmin];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:667:      issues: any[];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:712:      sum + g.issues.filter((i: any) => i.state === 'done').length, 0);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:714:      sum + g.issues.filter((i: any) => i.state === 'in_progress' || i.state === 'in_review').length, 0);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1053:    const values: any[] = [];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1793:function formatStandupResponse(row: any) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2022:async function generatePrefilledReviewContent(sprintData: any, issues: any[]) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2047:  const content: any = {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2429:    const values: any[] = [];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:72:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: mockProjects } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:91:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:105:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:133:        .mockResolvedValueOnce({ rows: [mockProject] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:162:        .mockResolvedValueOnce({ rows: [mockProject] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:164:        .mockResolvedValueOnce({ rows: [{ id: ownerId, name: 'Test Owner', email: 'owner@example.com' }] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:196:        .mockResolvedValueOnce({ rows: [mockProject] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:239:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [mockProject] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:249:            vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:281:        .mockResolvedValueOnce({ rows: [existingProject] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:283:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:285:        .mockResolvedValueOnce({ rows: [updatedProject] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:298:            vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:313:        .mockResolvedValueOnce({ rows: [{ id: 'project-123' }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:315:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:317:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:325:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/setup.ts:62:    // Check if any users exist - this is the critical security check
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.test.ts:230:    const learning = res.body.learnings.find((l: any) => l.id === learningDocId);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.test.ts:251:    const learning = res.body.learnings.find((l: any) => l.id === learningDocId);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.test.ts:264:    const regularDoc = res.body.learnings.find((l: any) => l.id === regularWikiId);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/feedback.ts:27:function extractFeedbackFromRow(row: any, programPrefix?: string | null) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:559:    // Enforce one allocation per person per week: remove from any OTHER project's sprint
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:2160:        // Check if content has any text
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin-credentials.ts:501:  // Validate issuer discovery before saving (but save anyway with warning if it fails)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin-credentials.ts:517:    console.error('[AdminCredentials] Validation FAILED (will save anyway):');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/openapi/schemas/programs.ts:324:  description: 'Returns counts of entities that will be moved from source to target program, plus any conflicts.',
+/Users/sheep/Desktop/Gauntlet/ship/api/src/openapi/schemas/documents.ts:171:  description: 'Create a new document of any type.',
+/Users/sheep/Desktop/Gauntlet/ship/api/src/openapi/schemas/accountability.ts:64:    description: 'True if any item has days_overdue > 0',
+/Users/sheep/Desktop/Gauntlet/ship/api/src/openapi/schemas/accountability.ts:67:    description: 'True if any item has days_overdue === 0',
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:58:        .mockResolvedValueOnce({ rows: [{ id: sprintId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:60:        .mockResolvedValueOnce({ rows: [mockIteration] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:62:        .mockResolvedValueOnce({ rows: [{ id: 'user-123', name: 'Test User', email: 'test@example.com' }] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:105:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:125:        .mockResolvedValueOnce({ rows: [{ id: sprintId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:144:        } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:158:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:170:        .mockResolvedValueOnce({ rows: [{ id: 'sprint-123' }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:172:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:12:function extractProgramFromRow(row: any) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:226:    const values: any[] = [];

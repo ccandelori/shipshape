@@ -1,0 +1,1 @@
+/Users/sheep/Desktop/Gauntlet/ship/shared/src/types/document.ts:337: * Returns null if any value is null (unset).

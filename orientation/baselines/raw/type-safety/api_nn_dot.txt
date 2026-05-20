@@ -1,0 +1,7 @@
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/document-crud.ts:172:    associationsMap.get(docId)!.push({
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:590:    const workspaceIdHex = req.workspaceId!.replace(/-/g, '').substring(0, 15);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:987:      peopleMap.get(row.person_id)!.allocatedWeeks.add(row.week_number);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:1501:      membershipsByUser[userId]!.push({
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1284:        programsMap.get(row.program_id)!.projects.set(row.project_id, {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1985:        programGroups.get(programId)!.people.push(personData);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1988:        programGroups.get('unassigned')!.people.push(personData);

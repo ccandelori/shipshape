@@ -1,0 +1,23 @@
+Taskmaster Task 4 load-testing setup
+Captured: 2026-05-19T21:44:16.958Z
+
+Tool:
+- autocannon v8.0.0 installed as a root workspace dev dependency (`pnpm add -D -w autocannon`).
+- Verification command: `pnpm exec autocannon --version`.
+- node v24.10.0
+
+Invocation:
+- SESSION_COOKIE=<session_id> DURATION=30 bash orientation/baselines/api-response-time/benchmark-script.sh
+
+Authentication:
+- GET /api/csrf-token to obtain CSRF token and connect.sid cookie.
+- POST /api/auth/login with dev@ship.local / admin123 and x-csrf-token header.
+- Exported the resulting session_id as SESSION_COOKIE.
+
+Environment:
+- API: http://localhost:3000
+- Database: Docker container ship-postgres-1, database ship_dev
+- Seed verification: orientation/baselines/db-seed-verification.txt
+
+Rate limiting:
+- The worktree already contained an X-Bench: 1 rate-limit bypass in api/src/app.ts before this extraction step. The benchmark script sends X-Bench: 1 so results measure route/database behavior instead of 429 responses.

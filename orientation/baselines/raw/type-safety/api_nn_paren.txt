@@ -1,0 +1,13 @@
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:1420:    await logDocumentChange(id!, 'state', 'triage', 'backlog', req.userId!);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:1632:    await logDocumentChange(id!, 'state', 'triage', 'cancelled', req.userId!);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:90:    if (isHypothesisHeading(nodes[i]!)) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:101:    if (isH2Heading(nodes[i]!)) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:150:    if (isH2Heading(nodes[i]!)) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:200:    if (isH2Heading(nodes[i]!)) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:250:    if (isH2Heading(nodes[i]!)) {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/index.ts:263:    schedulePersist(docName, doc!);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:1314:    // Return the updated document (same ID!)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:1480:    // Return the restored document (same ID!)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/db/seed.ts:1159:                  JSON.stringify(makePlanContent(planContentPools[contentIdx]!)),
+/Users/sheep/Desktop/Gauntlet/ship/api/src/db/seed.ts:1189:                  JSON.stringify(makeRetroContent(retroContentPools[contentIdx]!)),
+/Users/sheep/Desktop/Gauntlet/ship/api/src/db/seed.ts:1221:                JSON.stringify(makePlanContent(planContentPools[contentIdx]!)),

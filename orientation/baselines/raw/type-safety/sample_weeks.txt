@@ -1,0 +1,25 @@
+50:  const raw = (body as Record<string, unknown>).comment;
+91:    const userId = req.query.user_id as string;
+123:    const projectId = req.query.project_id as string;
+124:    const sprintNumber = parseInt(req.query.sprint_number as string, 10);
+800:      const sprintId = id as string; // Safe: Express route param is always a string
+1238:    const sprintId = id as string;
+1256:    broadcastToUser(req.userId!, 'accountability:updated', { type: 'week_start', targetId: id as string });
+1440:        id as string,
+1452:          id as string,
+1463:      broadcastToUser(req.userId!, 'accountability:updated', { type: 'weekly_plan', targetId: id as string });
+1991:    broadcastToUser(userId, 'accountability:updated', { type: 'standup', targetId: id as string });
+2348:    broadcastToUser(userId, 'accountability:updated', { type: 'weekly_review', targetId: id as string });
+2719:    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+2726:    const historyEntry = await getLatestDocumentFieldHistory(id as string, 'plan');
+2759:        id as string,
+2769:      id as string,
+2808:    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+2819:      id as string,
+2890:    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+2946:        id as string,
+2956:      id as string,
+3012:    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+3049:          targetId: id as string,
+3105:    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+3141:          targetId: id as string,

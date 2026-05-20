@@ -1,0 +1,5 @@
+/Users/sheep/Desktop/Gauntlet/ship/e2e/accessibility-remediation.spec.ts:955:      await page.goto(childHref!)
+/Users/sheep/Desktop/Gauntlet/ship/e2e/backlinks.spec.ts:286:    expect(page.url()).toContain(docNUrl.split('/').pop()!)
+/Users/sheep/Desktop/Gauntlet/ship/e2e/drag-handle.spec.ts:527:              proseMirror.appendChild(tempDiv.firstChild!)
+/Users/sheep/Desktop/Gauntlet/ship/e2e/check-aria.spec.ts:72:    await page.goto(childHref!);
+/Users/sheep/Desktop/Gauntlet/ship/e2e/images.spec.ts:287:          const request = indexedDB.open(uploadDb.name!);

@@ -1,0 +1,1 @@
+/Users/sheep/Desktop/Gauntlet/ship/web/src/components/UnifiedEditor.tsx:347:    if (!['wiki', 'issue', 'project', 'sprint', 'program', 'weekly_plan', 'weekly_retro'].includes(document.document_type)) {

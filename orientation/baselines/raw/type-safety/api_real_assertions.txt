@@ -1,0 +1,288 @@
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/secrets-manager.ts:78:    const parsed = JSON.parse(response.SecretString) as Partial<CAIACredentials>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/app.ts:48:  getTokenFromRequest: (req) => req.headers['x-csrf-token'] as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/app.ts:102:      const viaHeader = req.headers['via'] as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:139:  return response.json() as Promise<OpenAPIObject>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:207:  return spec.components.schemas[schemaName] as SchemaObject | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:246:      (result.properties as Record<string, unknown>)[key] = openApiToJsonSchema(
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:247:        prop as SchemaObject | ReferenceObject,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:259:      schema.items as SchemaObject | ReferenceObject,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:282:          param.schema as SchemaObject | ReferenceObject,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:300:        .schema as SchemaObject | ReferenceObject,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:333:      const operation = pathItem[method] as OperationObject | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:434:    // Try to parse as JSON for structured error, fall back to text
+/Users/sheep/Desktop/Gauntlet/ship/api/src/mcp/server.ts:487:        (args || {}) as Record<string, unknown>
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:40:    vi.mocked(pool.query).mockResolvedValue({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:55:      } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:59:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:75:      .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:77:      .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:79:      .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:81:      .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:86:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:108:    it('handles workspace start date as Date object', async () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:111:        .mockResolvedValueOnce({ rows: [{ sprint_start_date: startDate }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:112:        .mockResolvedValueOnce({ rows: [{ id: personId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:113:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:114:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:115:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:116:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:122:    it('handles workspace start date as string', async () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:124:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:125:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:126:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:127:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:155:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:176:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:212:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:239:        .mockResolvedValueOnce({ rows: [{ id: 'plan-1', content: { type: 'doc', content: [{ type: 'text', text: 'My plan' }] } }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:241:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:262:        .mockResolvedValueOnce({ rows: [{ id: 'plan-1', content: { type: 'doc', content: [{ type: 'text', text: 'My plan' }] } }] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:284:        .mockResolvedValueOnce({ rows: [{ id: 'plan-1', content: { type: 'doc', content: [{ type: 'text', text: 'My plan' }] } }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:286:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:318:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:320:        .mockResolvedValueOnce({ rows: [{ id: 'plan-1', content: { type: 'doc', content: [{ type: 'text', text: 'done' }] } }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:322:        .mockResolvedValueOnce({ rows: [{ id: 'retro-1', content: { type: 'doc', content: [{ type: 'text', text: 'done' }] } }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:324:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:326:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/accountability.test.ts:355:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:188:            element.setAttribute(key, value as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/yjsConverter.ts:221:          element.setAttribute(key, value as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/caia.ts:135:    const error = err as Error & { cause?: unknown; code?: string };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/caia.ts:249:    const error = err as Error & {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/caia.ts:294:    userInfoClaims = userInfoResponse as Record<string, unknown>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/caia.ts:327:    rawClaims: claims as Record<string, unknown>,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/caia.ts:366:    const error = err as Error & { cause?: unknown; code?: string };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:35:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:37:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:70:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:72:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:102:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:104:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:138:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:140:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:162:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:185:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:189:      const queryArgs = vi.mocked(pool.query).mock.calls[0]![1] as any[];
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:218:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:220:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:248:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:250:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:273:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:275:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:362:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:364:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:390:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:392:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:429:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:455:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:479:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:481:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:506:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:508:      const result = await transformIssueLinks(content, workspaceId) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/transformIssueLinks.test.ts:552:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/standups.ts:178:      [workspaceId, userId, date_from as string, date_to as string]
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:51:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:59:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:88:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:94:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:121:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:126:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:151:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:154:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:186:        } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:204:        } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:241:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:244:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:272:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:278:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:303:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:306:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:312:        const activityQuery = vi.mocked(pool.query).mock.calls[1]![0] as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:330:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:333:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:339:        const activityQuery = vi.mocked(pool.query).mock.calls[1]![0] as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:355:          } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:358:          } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/activity.test.ts:364:        const activityQuery = vi.mocked(pool.query).mock.calls[1]![0] as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:17:  const req = { cookies } as unknown as Request;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:22:  } as unknown as Response;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:23:  const next = vi.fn() as NextFunction;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:48:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [], rowCount: 0 } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:72:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:73:        .mockResolvedValueOnce({ rows: [{ id: 'membership-1' }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:74:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:98:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:124:      } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:151:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:152:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:176:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:177:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:203:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:204:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:242:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:243:        .mockResolvedValueOnce({ rows: [{ id: 'membership-1' }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:244:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:272:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:273:        .mockResolvedValueOnce({ rows: [{ id: 'membership-1' }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:274:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:288:      } as unknown as Request;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:292:      } as unknown as Response;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:293:      const next = vi.fn() as NextFunction;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:309:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:311:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:324:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:340:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any); // No results means revoked/expired
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:353:      } as unknown as Request;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:357:      } as unknown as Response;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:358:      const next = vi.fn() as NextFunction;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:368:        } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/__tests__/auth.test.ts:369:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/transformIssueLinks.ts:209:  const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/transformIssueLinks.ts:253:    const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:148:      params.push(source as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:153:      const states = (state as string).split(',');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:155:      params.push(states as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:160:      params.push(priority as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:168:        params.push(assignee_id as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:178:      params.push(program_id as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues.ts:187:      params.push(sprint_id as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:72:  const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:127:  const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:177:  const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/utils/extractHypothesis.ts:227:  const doc = content as TipTapDoc;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:72:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: mockProjects } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:91:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:105:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:133:        .mockResolvedValueOnce({ rows: [mockProject] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:162:        .mockResolvedValueOnce({ rows: [mockProject] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:164:        .mockResolvedValueOnce({ rows: [{ id: ownerId, name: 'Test Owner', email: 'owner@example.com' }] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:196:        .mockResolvedValueOnce({ rows: [mockProject] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:239:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [mockProject] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:249:            vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:281:        .mockResolvedValueOnce({ rows: [existingProject] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:283:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:285:        .mockResolvedValueOnce({ rows: [updatedProject] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:298:            vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:313:        .mockResolvedValueOnce({ rows: [{ id: 'project-123' }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:315:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:317:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.test.ts:325:      vi.mocked(pool.query).mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/ai-analysis.ts:296:    const result = JSON.parse(jsonStr) as PlanAnalysisResult;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/services/ai-analysis.ts:362:    const result = JSON.parse(jsonStr) as RetroAnalysisResult;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/db/seed.ts:744:        // Find the sprint based on offset (same pattern as Ship Core issues)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:540:      params.push(workspaceId as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:546:      params.push(userId as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:552:      params.push(action as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:557:    params.push(parseInt(limit as string), parseInt(offset as string));
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:593:// GET /api/admin/audit-logs/export - Export audit logs as CSV
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:613:      params.push(workspaceId as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:619:      params.push(new Date(startDate as string));
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:625:      params.push(new Date(endDate as string));
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:1497:      const userId = m.user_id as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:1512:      const emailLower = u.email_lower as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:1530:      isDuplicate: (emailCounts[row.email_lower as string] ?? 0) > 1,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin.ts:1738:  const id = req.params.id as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:19:    const searchQuery = (req.query.q as string) || '';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:84:    const searchQuery = (req.query.q as string) || '';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:85:    const programId = req.query.program_id as string | undefined;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/search.ts:88:    const limit = Math.min(parseInt(req.query.limit as string) || 10, 50);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/programs.ts:616:    const targetId = req.query.target_id as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/dashboard.ts:644:      const dateStr = d.toISOString().split('T')[0] as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:58:        .mockResolvedValueOnce({ rows: [{ id: sprintId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:60:        .mockResolvedValueOnce({ rows: [mockIteration] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:62:        .mockResolvedValueOnce({ rows: [{ id: 'user-123', name: 'Test User', email: 'test@example.com' }] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:105:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:125:        .mockResolvedValueOnce({ rows: [{ id: sprintId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:144:        } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:158:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:170:        .mockResolvedValueOnce({ rows: [{ id: 'sprint-123' }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/iterations.test.ts:172:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:117:      params.push(type as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:125:        params.push(parent_id as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:370:// Get document content as TipTap JSON
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:941:      const docProps = (existing.properties || {}) as Record<string, unknown>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/documents.ts:975:          const sprintProps = (sprint.properties || {}) as Record<string, unknown>;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/claude.ts:62:    const { context_type, sprint_id, project_id } = req.query as unknown as ClaudeContextRequest;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:44:    mockClient.query.mockResolvedValue({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:46:    vi.mocked(pool).connect = vi.fn().mockResolvedValue(mockClient) as any;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:58:        .mockResolvedValueOnce({ rows: [{ id: issueId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:60:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:79:        .mockResolvedValueOnce({ rows: [{ id: issueId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:80:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:134:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:152:        .mockResolvedValueOnce({ rows: [{ id: issueId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:153:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:196:        .mockResolvedValueOnce({ rows: [{ id: issueId }] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:198:        .mockResolvedValueOnce({ rows: historyEntries } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:212:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:249:        .mockResolvedValueOnce({ rows: [existingIssue] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:251:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:253:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:255:        .mockResolvedValueOnce({ rows: [] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:257:        .mockResolvedValueOnce({ rows: [updatedRow] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:259:        .mockResolvedValueOnce({ rows: [updatedRow] } as any)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:261:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/issues-history.test.ts:266:        .mockResolvedValueOnce({ rows: [] } as any);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/admin-credentials.ts:515:    const error = err as Error & { cause?: unknown; code?: string };
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/index.ts:616:      const clientIp = (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/index.ts:648:    const clientIp = (request.headers['x-forwarded-for'] as string)?.split(',')[0]?.trim() ||
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/circular-reference.test.ts:61:      // Both protections are in place - trigger runs first as BEFORE trigger
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/circular-reference.test.ts:88:      }, {} as Record<string, string | null>)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/circular-reference.test.ts:134:        const newId = insertResult.rows[0].id as string
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:50:  const raw = (body as Record<string, unknown>).comment;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:91:    const userId = req.query.user_id as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:123:    const projectId = req.query.project_id as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:124:    const sprintNumber = parseInt(req.query.sprint_number as string, 10);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:800:      const sprintId = id as string; // Safe: Express route param is always a string
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1238:    const sprintId = id as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1256:    broadcastToUser(req.userId!, 'accountability:updated', { type: 'week_start', targetId: id as string });
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1440:        id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1452:          id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1463:      broadcastToUser(req.userId!, 'accountability:updated', { type: 'weekly_plan', targetId: id as string });
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:1991:    broadcastToUser(userId, 'accountability:updated', { type: 'standup', targetId: id as string });
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2348:    broadcastToUser(userId, 'accountability:updated', { type: 'weekly_review', targetId: id as string });
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2719:    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2726:    const historyEntry = await getLatestDocumentFieldHistory(id as string, 'plan');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2759:        id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2769:      id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2808:    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2819:      id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2890:    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2946:        id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:2956:      id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:3012:    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:3049:          targetId: id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:3105:    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weeks.ts:3141:          targetId: id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/api-content-preservation.test.ts:399:            content: [{ type: 'text', text: 'Will be persisted as Yjs' }]
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/api-content-preservation.test.ts:441:      expect(convertedBack.content[0].content[0].text).toBe('Will be persisted as Yjs')
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/api-content-preservation.test.ts:550:    it('should handle content stored as JSON string', async () => {
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/api-content-preservation.test.ts:551:      // When content comes as string (from API)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/collaboration/__tests__/api-content-preservation.test.ts:562:      // Simulate content being double-stringified or stored as string
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/associations.ts:37:  return typeof value === 'string' && validTypes.includes(value as RelationshipType);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/feedback.ts:123:    const programId = req.params.programId as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/feedback.ts:153:    const id = req.params.id as string;
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:349:      params.push(person_id as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:354:      params.push(project_id as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:359:      params.push(parseInt(week_number as string, 10));
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:744:      params.push(person_id as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:749:      params.push(project_id as string);
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/weekly-plans.ts:754:      params.push(parseInt(week_number as string, 10));
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:55:    inferred_status: row.inferred_status as InferredProjectStatus || 'backlog',
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:316:    const sortField = (req.query.sort as string) || 'ice_score';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:317:    const sortDir = (req.query.dir as string) === 'asc' ? 'ASC' : 'DESC';
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:761:      broadcastToUser(userId, 'accountability:updated', { type: 'project_plan', targetId: id as string });
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:767:        id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1052:    broadcastToUser(userId, 'accountability:updated', { type: 'project_retro', targetId: id as string });
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1057:        id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1576:          id as string,
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1641:    const historyEntry = await getLatestDocumentFieldHistory(id as string, 'plan');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/projects.ts:1705:    const historyEntry = await getLatestDocumentFieldHistory(id as string, 'retro_content');
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:301:        role: null as unknown as string, // Archived users have no role
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:303:        joinedAt: null as unknown as string, // No membership join date
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/workspaces.ts:1037:      [workspaceId, parseInt(limit as string), parseInt(offset as string)]
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:65:      // Parse string as UTC midnight
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:80:      ? Math.max(1, parseInt(req.query.fromSprint as string, 10))
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:83:      ? parseInt(req.query.toSprint as string, 10)
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:144:      // Parse issue's sprint start date as UTC midnight to match startDate
+/Users/sheep/Desktop/Gauntlet/ship/api/src/routes/team.ts:1365:    const sprintCount = Math.min(parseInt(req.query.sprint_count as string, 10) || 5, 20);

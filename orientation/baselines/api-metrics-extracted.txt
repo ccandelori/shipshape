@@ -1,0 +1,32 @@
+Taskmaster Task 4 API response-time metrics
+Captured: 2026-05-19T21:44:16.958Z
+
+P95 note:
+autocannon v8.0.0 JSON does not emit a native p95 field. The P95* column below is autocannon p97_5, used as a conservative p95 proxy. Raw JSON files preserve the original p97_5 field.
+
+Endpoint | C | P50 ms | P95* ms | P99 ms | Mean ms | RPS | Requests | Errors | Timeouts
+--- | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---:
+GET /api/auth/me | 10 | 2 | 6 | 7 | 2.52 | 3309.8 | 99278 | 0 | 0
+GET /api/auth/me | 25 | 7 | 12 | 14 | 7.69 | 3054.6 | 91624 | 0 | 0
+GET /api/auth/me | 50 | 15 | 22 | 27 | 15.5 | 3125.54 | 93754 | 0 | 0
+GET /api/documents?type=wiki | 10 | 10 | 15 | 17 | 9.89 | 962.24 | 28867 | 0 | 0
+GET /api/documents?type=wiki | 25 | 21 | 29 | 34 | 22.05 | 1108.5 | 33255 | 0 | 0
+GET /api/documents?type=wiki | 50 | 43 | 50 | 56 | 43.23 | 1142.8 | 34284 | 0 | 0
+GET /api/issues | 10 | 7 | 11 | 12 | 7.65 | 1226.7 | 36801 | 0 | 0
+GET /api/issues | 25 | 22 | 37 | 51 | 23.73 | 1032.94 | 30988 | 0 | 0
+GET /api/issues | 50 | 45 | 58 | 66 | 45.56 | 1085.04 | 32551 | 0 | 0
+GET /api/projects | 10 | 4 | 8 | 9 | 4.41 | 2038.2 | 61140 | 0 | 0
+GET /api/projects | 25 | 11 | 17 | 20 | 11.53 | 2078.44 | 62342 | 0 | 0
+GET /api/projects | 50 | 23 | 34 | 37 | 23.82 | 2055.34 | 61653 | 0 | 0
+GET /api/weeks | 10 | 4 | 8 | 10 | 4.45 | 2022.07 | 60655 | 0 | 0
+GET /api/weeks | 25 | 11 | 18 | 20 | 11.71 | 2048.04 | 61433 | 0 | 0
+GET /api/weeks | 50 | 23 | 31 | 36 | 23.62 | 2071.31 | 62132 | 0 | 0
+
+Slowest by P95* proxy:
+GET /api/issues @ c=50: 58 ms P95*, 66 ms P99, 1085.04 rps
+
+Slowest by P99:
+GET /api/issues @ c=50: 66 ms P99, 58 ms P95*, 1085.04 rps
+
+Errors: 0
+Timeouts: 0

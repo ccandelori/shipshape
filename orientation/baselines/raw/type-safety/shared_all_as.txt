@@ -1,0 +1,5 @@
+/Users/sheep/Desktop/Gauntlet/ship/shared/src/constants.ts:12:} as const;
+/Users/sheep/Desktop/Gauntlet/ship/shared/src/constants.ts:23:} as const;
+/Users/sheep/Desktop/Gauntlet/ship/shared/src/types/document.ts:192:  week_number: number;     // REQUIRED - week number (same as sprint_number concept)
+/Users/sheep/Desktop/Gauntlet/ship/shared/src/types/document.ts:201:  week_number: number;     // REQUIRED - week number (same as sprint_number concept)
+/Users/sheep/Desktop/Gauntlet/ship/shared/src/types/document.ts:319:// Default project properties - ICE and owner start as null (not yet set)

@@ -1,0 +1,24 @@
+Taskmaster Task 5 / Category 4 query-flow summary
+Captured: 2026-05-19
+Database: Docker container ship-postgres-1, database ship_dev
+
+Important caveat:
+The per-flow log files are diagnostic lower bounds, not exact query counts.
+The capture contains duplicate per-flow files with different counts because
+some files include prepared-statement duration lines while others only include
+visible statement text. Use pg_stat_statements reset per flow, or request-scoped
+API query counting, before using query counts as a Phase 2 before/after metric.
+
+Flow                         Static expectation                Log lower bound       Slowest logged
+Load main page               ~14-20 + action-items fan-out      19 queries            0.606 ms
+View a document              4-7 queries                        4 queries             0.359 ms
+List issues                  4-6 queries                        4 queries             0.314 ms
+Sprint/team board            4-6 route queries                  10 queries            0.369 ms
+Search content               3-7 queries                        7 queries             0.486 ms
+Action items                 O(sprints + allocations)           not isolated          static only
+
+Live EXPLAIN files are more reliable than log counts:
+- explain-dashboard-issues.txt: scans all 104 issues, removes 92 after JSONB filters, execution 0.149 ms.
+- explain-issues.txt: scans/sorts all 104 issues, planning 2.010 ms, execution 0.545 ms.
+- explain-projects.txt: correlated project subplans; Memoize 0 hits / 139 misses / 134 evictions, execution 0.742 ms.
+- explain-search.txt: Seq Scan over 500 docs for ILIKE '%test%', removes 491 rows, execution 0.604 ms.
