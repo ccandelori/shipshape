@@ -1,0 +1,54 @@
+{
+  "capturedAt": "2026-05-20T03:14:07.527Z",
+  "route": "/projects",
+  "url": "http://localhost:5174/projects",
+  "tags": [
+    "wcag2a",
+    "wcag2aa",
+    "wcag21a",
+    "wcag21aa",
+    "section508"
+  ],
+  "counts": {
+    "critical": 0,
+    "serious": 1,
+    "moderate": 0,
+    "minor": 0
+  },
+  "violationsTotal": 1,
+  "violations": [
+    {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.11/color-contrast?application=playwright",
+      "nodes": 14,
+      "sample": [
+        {
+          "target": [
+            "#filter-planned > .bg-muted\\/30.ml-1.px-1\\.5"
+          ],
+          "html": "<span class=\"ml-1 rounded-full px-1.5 py-0.5 text-xs font-medium bg-muted/30 text-muted\">10</span>",
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 3.65 (foreground color: #8a8a8a, background color: #333333, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+        },
+        {
+          "target": [
+            ".border-border\\/50[data-focused=\"false\"][role=\"row\"]:nth-child(1) > .text-center.font-medium.px-4 > .bg-accent\\/20.text-accent.whitespace-nowrap"
+          ],
+          "html": "<span class=\"inline-flex items-center justify-center rounded bg-accent/20 px-2 py-0.5 text-accent whitespace-nowrap\">80</span>",
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.55 (foreground color: #005ea2, background color: #0a1d2b, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+        },
+        {
+          "target": [
+            ".border-border\\/50[data-focused=\"false\"][role=\"row\"]:nth-child(2) > .text-center.font-medium.px-4 > .bg-accent\\/20.text-accent.whitespace-nowrap"
+          ],
+          "html": "<span class=\"inline-flex items-center justify-center rounded bg-accent/20 px-2 py-0.5 text-accent whitespace-nowrap\">80</span>",
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.55 (foreground color: #005ea2, background color: #0a1d2b, font size: 10.5pt (14px), font weight: normal). Expected contrast ratio of 4.5:1"
+        }
+      ]
+    }
+  ],
+  "passes": 25,
+  "incomplete": 2,
+  "inapplicable": 36
+}
