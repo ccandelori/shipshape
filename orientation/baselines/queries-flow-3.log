@@ -1,0 +1,9 @@
+# Flow: List issues (/issues)
+# Captured: 2026-05-19 via pg_stat_statements (exact counts; no buffer drops)
+# Endpoints walked: issues (default filters)
+# Format: calls<TAB>total_ms<TAB>mean_ms<TAB>rows<TAB>SQL
+1	0.247	0.247	104	SELECT d.id, d.title, d.properties, d.ticket_number, d.content, d.created_at, d.updated_at, d.created_by, d.started_at, d.completed_at, d.cancelled_at, d.reopened_at, d.converted_from_id, u.name as assignee_name, CASE WHEN person_doc.archived_at IS NOT NULL THEN $4 ELSE $5 END as assignee_archived FROM documents d LEFT JOIN users u ON (d.properties->>$6)::uuid = u.id LEFT JOIN documents person_doc ON person_doc.workspace_id = d.workspace_id AND person_doc.document_type = $7 AND person_doc.properties->>$8 = d.properties->>$9 WHERE d.workspace_id = $1 AND d.document_type = $10 AND (d.visibility = $11 OR d.created_by = $2 OR $3 = $12) AND d.archived_at IS NULL AND d.deleted_at IS NULL ORDER BY CASE d.properties->>$13 WHEN $14 THEN $15 WHEN $16 THEN $17 WHEN $18 THEN $19 WHEN $20 THEN $21 ELSE $22 END, d.updated_at DESC
+1	0.239	0.239	295	SELECT da.document_id, da.related_id as id, da.relationship_type as type, d.title, d.properties->>$2 as color FROM document_associations da LEFT JOIN documents d ON da.related_id = d.id WHERE da.document_id = ANY($1) ORDER BY da.document_id, da.relationship_type, da.created_at
+1	0.024	0.024	1	SELECT s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at, u.is_super_admin FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.id = $1
+1	0.020	0.020	1	UPDATE sessions SET last_activity = $1 WHERE id = $2
+1	0.005	0.005	1	SELECT role FROM workspace_memberships WHERE workspace_id = $1 AND user_id = $2

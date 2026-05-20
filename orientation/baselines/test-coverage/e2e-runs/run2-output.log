@@ -1,0 +1,1797 @@
+
+> ship@0.0.0 test:e2e /Users/sheep/Desktop/Gauntlet/ship
+> playwright test
+
+
+[Memory] Total: 32.0GB, Available: 0.5GB
+
+Building API for tests...
+
+> ship@0.0.0 build:api /Users/sheep/Desktop/Gauntlet/ship
+> pnpm run build:shared && pnpm --filter @ship/api build
+
+
+> ship@0.0.0 build:shared /Users/sheep/Desktop/Gauntlet/ship
+> pnpm --filter @ship/shared build
+
+
+> @ship/shared@0.0.0 build /Users/sheep/Desktop/Gauntlet/ship/shared
+> tsc
+
+
+> @ship/api@0.0.0 build /Users/sheep/Desktop/Gauntlet/ship/api
+> tsc && cp src/db/schema.sql dist/db/schema.sql && cp -r src/db/migrations dist/db/migrations
+
+✓ API build complete
+
+Building Web for tests (enables lightweight preview servers)...
+
+> ship@0.0.0 build:web /Users/sheep/Desktop/Gauntlet/ship
+> pnpm run build:shared && pnpm --filter @ship/web build
+
+
+> ship@0.0.0 build:shared /Users/sheep/Desktop/Gauntlet/ship
+> pnpm --filter @ship/shared build
+
+
+> @ship/shared@0.0.0 build /Users/sheep/Desktop/Gauntlet/ship/shared
+> tsc
+
+
+> @ship/web@0.0.0 build /Users/sheep/Desktop/Gauntlet/ship/web
+> tsc && VITE_API_URL= vite build
+
+vite v6.4.1 building for production...
+transforming...
+✓ 980 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                                          4.55 kB │ gzip:   1.16 kB
+dist/assets/index-DJeYp5na.css                          66.51 kB │ gzip:  12.93 kB
+dist/assets/WeekStandupsTab-h5P0rMz3.js                  0.16 kB │ gzip:   0.15 kB │ map:     0.80 kB
+dist/assets/arrow_drop_down-Dm9u6Qoh.js                  0.22 kB │ gzip:   0.20 kB │ map:     0.77 kB
+dist/assets/arrow_drop_up-Btu8Dqcs.js                    0.22 kB │ gzip:   0.20 kB │ map:     0.76 kB
+dist/assets/remove-C7rGvU6r.js                           0.22 kB │ gzip:   0.20 kB │ map:     0.73 kB
+dist/assets/drag_handle-rN68K5SD.js                      0.24 kB │ gzip:   0.21 kB │ map:     0.77 kB
+dist/assets/fast_rewind-BtLA4unE.js                      0.24 kB │ gzip:   0.21 kB │ map:     0.77 kB
+dist/assets/fast_forward-aXELhNiS.js                     0.24 kB │ gzip:   0.21 kB │ map:     0.78 kB
+dist/assets/add-DQatKLWt.js                              0.24 kB │ gzip:   0.22 kB │ map:     0.74 kB
+dist/assets/file_download-Dy4mNvcp.js                    0.24 kB │ gzip:   0.22 kB │ map:     0.79 kB
+dist/assets/home-Ck4-pku7.js                             0.24 kB │ gzip:   0.22 kB │ map:     0.74 kB
+dist/assets/flag-CVbZL3GR.js                             0.24 kB │ gzip:   0.22 kB │ map:     0.74 kB
+dist/assets/file_upload-czxDu4g3.js                      0.25 kB │ gzip:   0.22 kB │ map:     0.78 kB
+dist/assets/send-Dh-cmkWC.js                             0.25 kB │ gzip:   0.21 kB │ map:     0.74 kB
+dist/assets/menu-C2JEj_M1.js                             0.25 kB │ gzip:   0.22 kB │ map:     0.75 kB
+dist/assets/filter_list-CR0qUxF6.js                      0.25 kB │ gzip:   0.22 kB │ map:     0.78 kB
+dist/assets/format_quote-BttxLWaW.js                     0.25 kB │ gzip:   0.22 kB │ map:     0.79 kB
+dist/assets/format_size-gpGajeeL.js                      0.25 kB │ gzip:   0.22 kB │ map:     0.78 kB
+dist/assets/near_me-BLzX-liO.js                          0.25 kB │ gzip:   0.22 kB │ map:     0.76 kB
+dist/assets/warning-DH8hp72X.js                          0.25 kB │ gzip:   0.21 kB │ map:     0.76 kB
+dist/assets/expand_more-4pl8zTX_.js                      0.25 kB │ gzip:   0.22 kB │ map:     0.78 kB
+dist/assets/text_fields-CuLS0EZ0.js                      0.25 kB │ gzip:   0.22 kB │ map:     0.78 kB
+dist/assets/expand_less-CEGF6Nxs.js                      0.25 kB │ gzip:   0.22 kB │ map:     0.79 kB
+dist/assets/navigate_before-CMypJ-vt.js                  0.25 kB │ gzip:   0.22 kB │ map:     0.81 kB
+dist/assets/navigate_next-D2UPtzLi.js                    0.25 kB │ gzip:   0.22 kB │ map:     0.80 kB
+dist/assets/check-BMQn0V7V.js                            0.26 kB │ gzip:   0.22 kB │ map:     0.76 kB
+dist/assets/park-DPWv7UeN.js                             0.26 kB │ gzip:   0.23 kB │ map:     0.76 kB
+dist/assets/arrow_upward-q8kwAutQ.js                     0.26 kB │ gzip:   0.23 kB │ map:     0.80 kB
+dist/assets/arrow_forward-DgdrzfHj.js                    0.26 kB │ gzip:   0.23 kB │ map:     0.81 kB
+dist/assets/arrow_back-BFZI7LsT.js                       0.27 kB │ gzip:   0.23 kB │ map:     0.79 kB
+dist/assets/arrow_downward-C_IsuboL.js                   0.27 kB │ gzip:   0.23 kB │ map:     0.81 kB
+dist/assets/bookmark-DgBmF98Q.js                         0.27 kB │ gzip:   0.23 kB │ map:     0.79 kB
+dist/assets/first_page-CfGU8o_b.js                       0.27 kB │ gzip:   0.23 kB │ map:     0.79 kB
+dist/assets/last_page-DixVjQ6h.js                        0.27 kB │ gzip:   0.23 kB │ map:     0.79 kB
+dist/assets/priority_high-Bu4R41OZ.js                    0.27 kB │ gzip:   0.22 kB │ map:     0.91 kB
+dist/assets/shield-BzSljC72.js                           0.27 kB │ gzip:   0.23 kB │ map:     0.78 kB
+dist/assets/school-B8PXGaqN.js                           0.27 kB │ gzip:   0.23 kB │ map:     0.78 kB
+dist/assets/store-dMSZI7cU.js                            0.28 kB │ gzip:   0.24 kB │ map:     0.78 kB
+dist/assets/account_balance-BfXZEago.js                  0.28 kB │ gzip:   0.24 kB │ map:     0.83 kB
+dist/assets/trending_down-DiFf-vUn.js                    0.28 kB │ gzip:   0.23 kB │ map:     0.82 kB
+dist/assets/trending_up-p492Cdba.js                      0.28 kB │ gzip:   0.24 kB │ map:     0.81 kB
+dist/assets/delete-53RKm96V.js                           0.28 kB │ gzip:   0.24 kB │ map:     0.79 kB
+dist/assets/code-B8RyNnX1.js                             0.28 kB │ gzip:   0.23 kB │ map:     0.78 kB
+dist/assets/list-COWLIR0b.js                             0.28 kB │ gzip:   0.23 kB │ map:     0.78 kB
+dist/assets/remove_circle-S0ChXBj4.js                    0.29 kB │ gzip:   0.24 kB │ map:     0.83 kB
+dist/assets/statusColors-CQb8KAr2.js                     0.29 kB │ gzip:   0.17 kB │ map:     1.52 kB
+dist/assets/navigate_far_before-BfwBh4xw.js              0.29 kB │ gzip:   0.23 kB │ map:     0.86 kB
+dist/assets/folder-D5np0XFh.js                           0.29 kB │ gzip:   0.24 kB │ map:     0.80 kB
+dist/assets/local_parking-Cg594FmP.js                    0.29 kB │ gzip:   0.25 kB │ map:     0.84 kB
+dist/assets/check_box_outline_blank-CbmQpz2J.js          0.30 kB │ gzip:   0.24 kB │ map:     0.88 kB
+dist/assets/star-lS8glC0H.js                             0.30 kB │ gzip:   0.25 kB │ map:     0.80 kB
+dist/assets/navigate_far_next-DiaEjbWB.js                0.30 kB │ gzip:   0.24 kB │ map:     0.86 kB
+dist/assets/error-DUOpYn6d.js                            0.30 kB │ gzip:   0.24 kB │ map:     0.80 kB
+dist/assets/info-Donxhe_K.js                             0.30 kB │ gzip:   0.24 kB │ map:     0.80 kB
+dist/assets/add_circle-NFAFUpBX.js                       0.31 kB │ gzip:   0.25 kB │ map:     0.83 kB
+dist/assets/announcement-CJS_maiX.js                     0.31 kB │ gzip:   0.25 kB │ map:     0.85 kB
+dist/assets/local_pharmacy-DbZGunf_.js                   0.31 kB │ gzip:   0.26 kB │ map:     0.85 kB
+dist/assets/chevron_left-DxO3-1ca.js                     0.31 kB │ gzip:   0.24 kB │ map:     0.94 kB
+dist/assets/close-Dajt8gjn.js                            0.31 kB │ gzip:   0.24 kB │ map:     0.81 kB
+dist/assets/chevron_right-Bj8BzsDU.js                    0.31 kB │ gzip:   0.25 kB │ map:     0.94 kB
+dist/assets/login-pLvGguUs.js                            0.31 kB │ gzip:   0.25 kB │ map:     0.81 kB
+dist/assets/unfold_more-BqT8U90i.js                      0.31 kB │ gzip:   0.25 kB │ map:     0.84 kB
+dist/assets/folder_open-BsBmZVAr.js                      0.31 kB │ gzip:   0.25 kB │ map:     0.84 kB
+dist/assets/hospital-B2HZTL94.js                         0.31 kB │ gzip:   0.24 kB │ map:     0.83 kB
+dist/assets/verified_user-DuUTYv23.js                    0.31 kB │ gzip:   0.26 kB │ map:     0.85 kB
+dist/assets/mail-DbzcsQyM.js                             0.31 kB │ gzip:   0.26 kB │ map:     0.81 kB
+dist/assets/unfold_less-D3BCL4lF.js                      0.31 kB │ gzip:   0.25 kB │ map:     0.85 kB
+dist/assets/calendar_today-tb-cqc3m.js                   0.31 kB │ gzip:   0.26 kB │ map:     0.86 kB
+dist/assets/logout-B-IBGFMc.js                           0.32 kB │ gzip:   0.26 kB │ map:     0.82 kB
+dist/assets/person-atc284cN.js                           0.32 kB │ gzip:   0.25 kB │ map:     0.82 kB
+dist/assets/chat-D6PRDl91.js                             0.32 kB │ gzip:   0.26 kB │ map:     0.82 kB
+dist/assets/comment-Zgbo_GyX.js                          0.32 kB │ gzip:   0.26 kB │ map:     0.83 kB
+dist/assets/hotel-DLKl_NP8.js                            0.32 kB │ gzip:   0.26 kB │ map:     0.82 kB
+dist/assets/check_circle-DWqkc1Jr.js                     0.32 kB │ gzip:   0.25 kB │ map:     0.86 kB
+dist/assets/image-CSk76MnY.js                            0.32 kB │ gzip:   0.26 kB │ map:     0.82 kB
+dist/assets/local_cafe-DPqRMZqe.js                       0.32 kB │ gzip:   0.26 kB │ map:     0.85 kB
+dist/assets/save_alt-D8Qbt-HK.js                         0.32 kB │ gzip:   0.26 kB │ map:     0.84 kB
+dist/assets/flight-Dij5iRAL.js                           0.32 kB │ gzip:   0.26 kB │ map:     0.83 kB
+dist/assets/location_on-BJ5p-Wmb.js                      0.32 kB │ gzip:   0.25 kB │ map:     0.85 kB
+dist/assets/assessment-BhjkYiFp.js                       0.32 kB │ gzip:   0.26 kB │ map:     0.85 kB
+dist/assets/clothes-D_itCinx.js                          0.32 kB │ gzip:   0.26 kB │ map:     0.84 kB
+dist/assets/mail_outline-5JnxU9pF.js                     0.32 kB │ gzip:   0.26 kB │ map:     0.86 kB
+dist/assets/security-CqH8CDqW.js                         0.32 kB │ gzip:   0.27 kB │ map:     0.84 kB
+dist/assets/sort_arrow-CEbGkvyS.js                       0.32 kB │ gzip:   0.26 kB │ map:     0.85 kB
+dist/assets/local_hospital-CowkJhbC.js                   0.32 kB │ gzip:   0.26 kB │ map:     0.87 kB
+dist/assets/grid_view-7dxJ-BlF.js                        0.32 kB │ gzip:   0.25 kB │ map:     0.86 kB
+dist/assets/credit_card-Dk1kmWsS.js                      0.33 kB │ gzip:   0.26 kB │ map:     0.86 kB
+dist/assets/topic-DTpNmBRn.js                            0.33 kB │ gzip:   0.26 kB │ map:     0.83 kB
+dist/assets/camping-jJuQ2UPD.js                          0.33 kB │ gzip:   0.27 kB │ map:     0.85 kB
+dist/assets/backpack-BCEIBCdC.js                         0.33 kB │ gzip:   0.27 kB │ map:     0.85 kB
+dist/assets/content_copy-CqD8MUUe.js                     0.33 kB │ gzip:   0.26 kB │ map:     0.87 kB
+dist/assets/label-CousILLk.js                            0.33 kB │ gzip:   0.26 kB │ map:     0.83 kB
+dist/assets/launch-mnQK-mit.js                           0.33 kB │ gzip:   0.27 kB │ map:     0.84 kB
+dist/assets/forum-kxKidfRv.js                            0.33 kB │ gzip:   0.26 kB │ map:     0.83 kB
+dist/assets/radio_button_unchecked-D6WVGDNd.js           0.33 kB │ gzip:   0.25 kB │ map:     0.91 kB
+dist/assets/event-CnRS-Ngx.js                            0.33 kB │ gzip:   0.27 kB │ map:     0.84 kB
+dist/assets/toggle_on-RRkPqLWG.js                        0.33 kB │ gzip:   0.25 kB │ map:     0.86 kB
+dist/assets/edit-bwGMOmX_.js                             0.34 kB │ gzip:   0.26 kB │ map:     0.83 kB
+dist/assets/hourglass_empty-33WOyinj.js                  0.34 kB │ gzip:   0.27 kB │ map:     0.89 kB
+dist/assets/toggle_off-Dj_O6rAt.js                       0.34 kB │ gzip:   0.26 kB │ map:     0.86 kB
+dist/assets/restaurant-DZlnO3E-.js                       0.34 kB │ gzip:   0.28 kB │ map:     0.87 kB
+dist/assets/spellcheck-D19M1AQ3.js                       0.34 kB │ gzip:   0.28 kB │ map:     0.87 kB
+dist/assets/star_half-p76AfoEl.js                        0.34 kB │ gzip:   0.28 kB │ map:     0.86 kB
+dist/assets/filter_alt-B2s3pMWl.js                       0.35 kB │ gzip:   0.28 kB │ map:     0.87 kB
+dist/assets/print-TR7x-ylJ.js                            0.35 kB │ gzip:   0.27 kB │ map:     0.85 kB
+dist/assets/undo-Cdy0m53z.js                             0.35 kB │ gzip:   0.28 kB │ map:     0.85 kB
+dist/assets/more_vert-DOJYb_c4.js                        0.35 kB │ gzip:   0.24 kB │ map:     0.87 kB
+dist/assets/local_police-DswXhLos.js                     0.35 kB │ gzip:   0.28 kB │ map:     0.89 kB
+dist/assets/location_city-CZIUiZOw.js                    0.35 kB │ gzip:   0.25 kB │ map:     0.89 kB
+dist/assets/more_horiz-7dC_Qpan.js                       0.35 kB │ gzip:   0.23 kB │ map:     0.88 kB
+dist/assets/report-Caiu-_mH.js                           0.35 kB │ gzip:   0.27 kB │ map:     0.86 kB
+dist/assets/accessibility_new-Baub2BCa.js                0.36 kB │ gzip:   0.28 kB │ map:     0.92 kB
+dist/assets/cloud-B6Dy287k.js                            0.36 kB │ gzip:   0.28 kB │ map:     0.86 kB
+dist/assets/work-BCx6cK6k.js                             0.36 kB │ gzip:   0.27 kB │ map:     0.86 kB
+dist/assets/science-CZMbiLpN.js                          0.36 kB │ gzip:   0.28 kB │ map:     0.87 kB
+dist/assets/push_pin-CTvwRqdB.js                         0.36 kB │ gzip:   0.28 kB │ map:     0.89 kB
+dist/assets/notifications-GFmyYzVL.js                    0.36 kB │ gzip:   0.28 kB │ map:     0.91 kB
+dist/assets/add_circle_outline-CKUMekAK.js               0.36 kB │ gzip:   0.27 kB │ map:     0.93 kB
+dist/assets/lightbulb-DdXV08s0.js                        0.36 kB │ gzip:   0.27 kB │ map:     0.89 kB
+dist/assets/upload_file-jPoCjOMo.js                      0.36 kB │ gzip:   0.29 kB │ map:     0.90 kB
+dist/assets/wifi-DZSH-xkh.js                             0.37 kB │ gzip:   0.27 kB │ map:     0.87 kB
+dist/assets/deck-Duui4_FH.js                             0.37 kB │ gzip:   0.28 kB │ map:     0.94 kB
+dist/assets/device_thermostat-B91z9YEw.js                0.37 kB │ gzip:   0.28 kB │ map:     0.93 kB
+dist/assets/medical_services-C1jsjE9w.js                 0.37 kB │ gzip:   0.27 kB │ map:     0.93 kB
+dist/assets/favorite-Cbu_QBDC.js                         0.37 kB │ gzip:   0.29 kB │ map:     0.89 kB
+dist/assets/cancel--EhkhnRF.js                           0.37 kB │ gzip:   0.27 kB │ map:     0.88 kB
+dist/assets/error_outline-Bendfws0.js                    0.37 kB │ gzip:   0.28 kB │ map:     0.92 kB
+dist/assets/timer-D11CwwpU.js                            0.37 kB │ gzip:   0.29 kB │ map:     0.88 kB
+dist/assets/build-BkYEYro7.js                            0.37 kB │ gzip:   0.28 kB │ map:     0.88 kB
+dist/assets/check_circle_outline-SHGmeMG0.js             0.38 kB │ gzip:   0.28 kB │ map:     0.95 kB
+dist/assets/local_library-D20bFR_l.js                    0.38 kB │ gzip:   0.28 kB │ map:     0.92 kB
+dist/assets/map-BhM1F9A_.js                              0.38 kB │ gzip:   0.29 kB │ map:     0.88 kB
+dist/assets/star_outline-BY9Kim02.js                     0.38 kB │ gzip:   0.29 kB │ map:     0.92 kB
+dist/assets/x-BhR1uiqu.js                                0.39 kB │ gzip:   0.31 kB │ map:     0.87 kB
+dist/assets/tornado-z4JoSpxC.js                          0.40 kB │ gzip:   0.31 kB │ map:     0.91 kB
+dist/assets/directions-9yiqBlH0.js                       0.40 kB │ gzip:   0.29 kB │ map:     0.93 kB
+dist/assets/military_tech-ChZ18ppL.js                    0.40 kB │ gzip:   0.30 kB │ map:     0.94 kB
+dist/assets/search-DEo1izxk.js                           0.40 kB │ gzip:   0.29 kB │ map:     0.91 kB
+dist/assets/contact_page-DDa6CAtI.js                     0.40 kB │ gzip:   0.30 kB │ map:     0.94 kB
+dist/assets/rss_feed-U-u7kxD8.js                         0.40 kB │ gzip:   0.29 kB │ map:     1.02 kB
+dist/assets/history-DOVxhl29.js                          0.40 kB │ gzip:   0.31 kB │ map:     0.92 kB
+dist/assets/photo_camera-Dg4GFsc0.js                     0.40 kB │ gzip:   0.30 kB │ map:     1.05 kB
+dist/assets/notifications_none-DxdIaFQO.js               0.41 kB │ gzip:   0.31 kB │ map:     0.97 kB
+dist/assets/zoom_out_map-D-GFdnIV.js                     0.41 kB │ gzip:   0.29 kB │ map:     0.94 kB
+dist/assets/attach_file-DRIjfP3v.js                      0.41 kB │ gzip:   0.30 kB │ map:     0.94 kB
+dist/assets/info_outline-RCHc9rQS.js                     0.41 kB │ gzip:   0.29 kB │ map:     1.04 kB
+dist/assets/zoom_out-BEBAvZHb.js                         0.41 kB │ gzip:   0.30 kB │ map:     0.93 kB
+dist/assets/directions_walk-DO6sko0m.js                  0.41 kB │ gzip:   0.31 kB │ map:     0.96 kB
+dist/assets/visibility-C7M96WfC.js                       0.41 kB │ gzip:   0.29 kB │ map:     0.94 kB
+dist/assets/link-DL2nfTzE.js                             0.42 kB │ gzip:   0.30 kB │ map:     0.91 kB
+dist/assets/ProjectIssuesTab-BPkbt8_8.js                 0.42 kB │ gzip:   0.30 kB │ map:     1.57 kB
+dist/assets/eco-BYN8wbqm.js                              0.42 kB │ gzip:   0.31 kB │ map:     1.00 kB
+dist/assets/api-B0-oVrSR.js                              0.42 kB │ gzip:   0.27 kB │ map:     0.91 kB
+dist/assets/schedule-CWVZaYX1.js                         0.42 kB │ gzip:   0.30 kB │ map:     1.01 kB
+dist/assets/loop-BhUY8W-o.js                             0.42 kB │ gzip:   0.30 kB │ map:     0.92 kB
+dist/assets/lock-oR4-oWpr.js                             0.42 kB │ gzip:   0.30 kB │ map:     0.92 kB
+dist/assets/keyboard-CwiC1UUJ.js                         0.42 kB │ gzip:   0.30 kB │ map:     0.94 kB
+dist/assets/facebook-BbM8zvg9.js                         0.42 kB │ gzip:   0.32 kB │ map:     1.04 kB
+dist/assets/rain-ik4h4VDV.js                             0.43 kB │ gzip:   0.29 kB │ map:     0.93 kB
+dist/assets/alarm-DzWwQ3nQ.js                            0.43 kB │ gzip:   0.31 kB │ map:     0.93 kB
+dist/assets/lock_open-BMojMrqE.js                        0.43 kB │ gzip:   0.30 kB │ map:     0.95 kB
+dist/assets/account_circle-CA4EPb_8.js                   0.43 kB │ gzip:   0.31 kB │ map:     0.98 kB
+dist/assets/autorenew-j_1Z-kOm.js                        0.43 kB │ gzip:   0.32 kB │ map:     0.96 kB
+dist/assets/highlight_off-Cv6CLx-l.js                    0.43 kB │ gzip:   0.29 kB │ map:     0.97 kB
+dist/assets/do_not_disturb-dtD31CXp.js                   0.43 kB │ gzip:   0.31 kB │ map:     0.98 kB
+dist/assets/phone-BhPsOZ14.js                            0.44 kB │ gzip:   0.31 kB │ map:     0.94 kB
+dist/assets/verified-DWtvI9Fr.js                         0.44 kB │ gzip:   0.32 kB │ map:     0.96 kB
+dist/assets/local_offer-CH3ckenN.js                      0.44 kB │ gzip:   0.32 kB │ map:     0.98 kB
+dist/assets/checkroom-tkAxkaWE.js                        0.45 kB │ gzip:   0.32 kB │ map:     0.97 kB
+dist/assets/help_outline-B-z1vHWh.js                     0.45 kB │ gzip:   0.32 kB │ map:     0.98 kB
+dist/assets/severe_weather-C-g2jcsl.js                   0.45 kB │ gzip:   0.31 kB │ map:     1.16 kB
+dist/assets/emoji_events-twzqLu96.js                     0.45 kB │ gzip:   0.33 kB │ map:     0.98 kB
+dist/assets/file_present-De7ra2O7.js                     0.45 kB │ gzip:   0.33 kB │ map:     0.99 kB
+dist/assets/thumb_down_alt-B54Pet9c.js                   0.45 kB │ gzip:   0.34 kB │ map:     1.00 kB
+dist/assets/account_box-v2uK179S.js                      0.46 kB │ gzip:   0.33 kB │ map:     0.99 kB
+dist/assets/thumb_up_alt-Dw-0vOZT.js                     0.46 kB │ gzip:   0.34 kB │ map:     0.99 kB
+dist/assets/zoom_in-DH9KY9Fy.js                          0.46 kB │ gzip:   0.32 kB │ map:     1.05 kB
+dist/assets/identification-DqEEaHMG.js                   0.47 kB │ gzip:   0.31 kB │ map:     1.19 kB
+dist/assets/shopping_basket-511-e5LC.js                  0.47 kB │ gzip:   0.34 kB │ map:     1.02 kB
+dist/assets/help-CImS1vTK.js                             0.47 kB │ gzip:   0.34 kB │ map:     0.97 kB
+dist/assets/my_location-D6NVbRbR.js                      0.47 kB │ gzip:   0.30 kB │ map:     1.01 kB
+dist/assets/translate-Bx73jumd.js                        0.48 kB │ gzip:   0.36 kB │ map:     1.00 kB
+dist/assets/people-DaCyaYLS.js                           0.48 kB │ gzip:   0.31 kB │ map:     0.99 kB
+dist/assets/update-Dk_8EKBY.js                           0.48 kB │ gzip:   0.35 kB │ map:     0.99 kB
+dist/assets/closed_caption-C8Midqa3.js                   0.48 kB │ gzip:   0.31 kB │ map:     1.03 kB
+dist/assets/sentiment_neutral--hqLTlxi.js                0.49 kB │ gzip:   0.31 kB │ map:     1.31 kB
+dist/assets/lock_outline-C1hufvo4.js                     0.49 kB │ gzip:   0.33 kB │ map:     1.12 kB
+dist/assets/public-A9LdjJc8.js                           0.50 kB │ gzip:   0.36 kB │ map:     1.01 kB
+dist/assets/safety_divider-BUJpk4Bb.js                   0.50 kB │ gzip:   0.29 kB │ map:     1.05 kB
+dist/assets/local_grocery_store-BGwQP8Yb.js              0.51 kB │ gzip:   0.35 kB │ map:     1.08 kB
+dist/assets/accessible_forward-DNeBYZAs.js               0.51 kB │ gzip:   0.36 kB │ map:     1.19 kB
+dist/assets/group_add-BPA335ao.js                        0.51 kB │ gzip:   0.37 kB │ map:     1.04 kB
+dist/assets/hurricane-BvRjAmeq.js                        0.52 kB │ gzip:   0.33 kB │ map:     1.05 kB
+dist/assets/link_off-DzZUOF_g.js                         0.52 kB │ gzip:   0.37 kB │ map:     1.04 kB
+dist/assets/local_laundry_service-ClfFgJ1v.js            0.52 kB │ gzip:   0.32 kB │ map:     1.10 kB
+dist/assets/social_distance-Dt9ViVZ9.js                  0.52 kB │ gzip:   0.33 kB │ map:     1.07 kB
+dist/assets/directions_bus-BedtQmQ1.js                   0.53 kB │ gzip:   0.34 kB │ map:     1.08 kB
+dist/assets/volume_off-CVC2ozq3.js                       0.53 kB │ gzip:   0.38 kB │ map:     1.06 kB
+dist/assets/directions_car-Ke-OwgFN.js                   0.53 kB │ gzip:   0.34 kB │ map:     1.08 kB
+dist/assets/lightbulb_outline-vVlouekF.js                0.53 kB │ gzip:   0.36 kB │ map:     1.19 kB
+dist/assets/notifications_off-Bz2cnpTa.js                0.53 kB │ gzip:   0.37 kB │ map:     1.10 kB
+dist/assets/local_gas_station-Dq1hxk2G.js                0.54 kB │ gzip:   0.36 kB │ map:     1.10 kB
+dist/assets/local_taxi-Bgg90PH3.js                       0.54 kB │ gzip:   0.35 kB │ map:     1.07 kB
+dist/assets/alternate_email-DXU-2_Yk.js                  0.54 kB │ gzip:   0.36 kB │ map:     1.10 kB
+dist/assets/flickr-BIru31CJ.js                           0.54 kB │ gzip:   0.30 kB │ map:     1.05 kB
+dist/assets/favorite_border-CN4d0Mq3.js                  0.55 kB │ gzip:   0.38 kB │ map:     1.10 kB
+dist/assets/fax-TRibw793.js                              0.55 kB │ gzip:   0.30 kB │ map:     1.04 kB
+dist/assets/sanitizer-B-eCfZm_.js                        0.55 kB │ gzip:   0.38 kB │ map:     1.07 kB
+dist/assets/campaign-BUB6Zie2.js                         0.55 kB │ gzip:   0.38 kB │ map:     1.07 kB
+dist/assets/attach_money-CpB5Gj4K.js                     0.55 kB │ gzip:   0.38 kB │ map:     1.09 kB
+dist/assets/sentiment_very_dissatisfied-PnqoP4Vn.js      0.55 kB │ gzip:   0.35 kB │ map:     1.34 kB
+dist/assets/electrical_services-Wojh_3n4.js              0.56 kB │ gzip:   0.36 kB │ map:     1.20 kB
+dist/assets/share-HFgIagqz.js                            0.56 kB │ gzip:   0.37 kB │ map:     1.06 kB
+dist/assets/bedding-ye_8onRP.js                          0.56 kB │ gzip:   0.32 kB │ map:     1.07 kB
+dist/assets/bug_report-CB6ncxHh.js                       0.56 kB │ gzip:   0.39 kB │ map:     1.09 kB
+dist/assets/ProgramIssuesTab-f0wp_SPx.js                 0.56 kB │ gzip:   0.39 kB │ map:     2.47 kB
+dist/assets/youtube-CpgsWLAc.js                          0.57 kB │ gzip:   0.34 kB │ map:     1.08 kB
+dist/assets/notifications_active-DIfsp7kP.js             0.57 kB │ gzip:   0.40 kB │ map:     1.15 kB
+dist/assets/sentiment_satisfied-CDZKI9_Z.js              0.58 kB │ gzip:   0.36 kB │ map:     1.33 kB
+dist/assets/connect_without_contact-US4kXaoY.js          0.59 kB │ gzip:   0.39 kB │ map:     1.18 kB
+dist/assets/sentiment_dissatisfied-Dfz8tBZg.js           0.59 kB │ gzip:   0.37 kB │ map:     1.36 kB
+dist/assets/local_fire_department-PwAOT_KD.js            0.60 kB │ gzip:   0.40 kB │ map:     1.25 kB
+dist/assets/clean_hands-HkajWuYM.js                      0.60 kB │ gzip:   0.41 kB │ map:     1.13 kB
+dist/assets/construction-Bh6BJgoZ.js                     0.61 kB │ gzip:   0.40 kB │ map:     1.15 kB
+dist/assets/bathtub-Ck_HwNh6.js                          0.61 kB │ gzip:   0.41 kB │ map:     1.23 kB
+dist/assets/construction_worker-D34DhBt-.js              0.62 kB │ gzip:   0.42 kB │ map:     1.29 kB
+dist/assets/support_agent-W3kFlVuu.js                    0.64 kB │ gzip:   0.41 kB │ map:     1.44 kB
+dist/assets/support-ajQla38X.js                          0.64 kB │ gzip:   0.38 kB │ map:     1.16 kB
+dist/assets/sentiment_satisfied_alt-BbUZ6exx.js          0.65 kB │ gzip:   0.36 kB │ map:     1.62 kB
+dist/assets/wash-DHJBnn0x.js                             0.66 kB │ gzip:   0.38 kB │ map:     1.16 kB
+dist/assets/linkedin-BPsPDDse.js                         0.67 kB │ gzip:   0.41 kB │ map:     1.19 kB
+dist/assets/directions_bike-Co0c_2F2.js                  0.68 kB │ gzip:   0.37 kB │ map:     1.24 kB
+dist/assets/insights-O5wi3ghY.js                         0.69 kB │ gzip:   0.42 kB │ map:     1.28 kB
+dist/assets/github-CGf-Xc4s.js                           0.69 kB │ gzip:   0.43 kB │ map:     1.21 kB
+dist/assets/visibility_off-BKhtJZGz.js                   0.69 kB │ gzip:   0.45 kB │ map:     1.24 kB
+dist/assets/hearing-AKvQ8c7c.js                          0.69 kB │ gzip:   0.45 kB │ map:     1.21 kB
+dist/assets/groups-Bnu-6EBM.js                           0.70 kB │ gzip:   0.43 kB │ map:     1.21 kB
+dist/assets/twitter-C3L-ApVA.js                          0.72 kB │ gzip:   0.45 kB │ map:     1.24 kB
+dist/assets/snow-C7n2tUDm.js                             0.74 kB │ gzip:   0.42 kB │ map:     1.24 kB
+dist/assets/pets-B9vBY1ze.js                             0.76 kB │ gzip:   0.41 kB │ map:     1.64 kB
+dist/assets/do_not_touch-CvpB5HoY.js                     0.81 kB │ gzip:   0.42 kB │ map:     1.35 kB
+dist/assets/flooding-C7huXCTi.js                         0.81 kB │ gzip:   0.41 kB │ map:     1.34 kB
+dist/assets/masks-HmhP3t8r.js                            0.82 kB │ gzip:   0.51 kB │ map:     1.33 kB
+dist/assets/soap-BHt5W93Q.js                             0.83 kB │ gzip:   0.46 kB │ map:     1.33 kB
+dist/assets/settings-CmmeQHes.js                         0.89 kB │ gzip:   0.50 kB │ map:     1.41 kB
+dist/assets/reduce_capacity-P---9WKJ.js                  0.94 kB │ gzip:   0.44 kB │ map:     1.49 kB
+dist/assets/language-xZHcYWXG.js                         0.94 kB │ gzip:   0.55 kB │ map:     1.47 kB
+dist/assets/WeekIssuesTab-D4BLXISm.js                    1.32 kB │ gzip:   0.74 kB │ map:     3.78 kB
+dist/assets/coronavirus-CzmE_Rfs.js                      1.62 kB │ gzip:   0.65 kB │ map:     2.16 kB
+dist/assets/instagram-CkSGsMT0.js                        1.67 kB │ gzip:   0.78 kB │ map:     2.20 kB
+dist/assets/ProgramOverviewTab-CysaNSnp.js               1.74 kB │ gzip:   0.83 kB │ map:     7.40 kB
+dist/assets/fingerprint-DETfo2gZ.js                      1.80 kB │ gzip:   0.95 kB │ map:     2.34 kB
+dist/assets/WeekOverviewTab-BkUUf8Qc.js                  1.89 kB │ gzip:   0.91 kB │ map:     8.39 kB
+dist/assets/WeekPlanningTab-DWsXI-LK.js                  2.99 kB │ gzip:   1.48 kB │ map:     9.03 kB
+dist/assets/ProjectDetailsTab-gSyN3jFM.js                3.60 kB │ gzip:   1.47 kB │ map:    15.03 kB
+dist/assets/ProgramProjectsTab-eNNvrO8g.js               4.40 kB │ gzip:   1.54 kB │ map:    10.19 kB
+dist/assets/ProjectWeeksTab-oE3MioHn.js                  6.65 kB │ gzip:   2.30 kB │ map:    19.44 kB
+dist/assets/ProjectRetroTab-BV2rvgoM.js                  9.04 kB │ gzip:   2.40 kB │ map:    23.90 kB
+dist/assets/StandupFeed-BjJLDai5.js                      9.65 kB │ gzip:   2.88 kB │ map:    24.17 kB
+dist/assets/WeekReviewTab-DmxN07T1.js                   12.64 kB │ gzip:   3.67 kB │ map:    37.54 kB
+dist/assets/ProgramWeeksTab-BzbUWlt4.js                 16.76 kB │ gzip:   5.52 kB │ map:    55.50 kB
+dist/assets/index-C2vAyoQ1.js                        2,073.70 kB │ gzip: 587.59 kB │ map: 8,003.94 kB
+✓ built in 3.28s
+✓ Web build complete
+
+✓ Global setup complete. Starting tests...
+
+
+Running 869 tests using 8 workers
+
+
+
+
+
+[1A[2K[1/869] [chromium] › e2e/accessibility-remediation.spec.ts:51:9 › Phase 1: Critical Violations › 1.1 Color-Only State Indicators (WCAG 1.4.1) › status indicators have icons not just colors
+
+[1A[2K[2/869] [chromium] › e2e/accessibility-remediation.spec.ts:182:9 › Phase 1: Critical Violations › 1.5 Focus Indicators (WCAG 2.4.7) › focus indicators are visible with sufficient contrast
+[1A[2K[3/869] [chromium] › e2e/accessibility-remediation.spec.ts:145:9 › Phase 1: Critical Violations › 1.4 Combobox ARIA Attributes (WCAG 4.1.2) › combobox has required ARIA attributes
+
+[1A[2K[4/869] [chromium] › e2e/accessibility-remediation.spec.ts:208:9 › Phase 1: Critical Violations › 1.6 Skip Navigation Links (WCAG 2.4.1) › skip links exist and become visible on focus
+[1A[2K[5/869] [chromium] › e2e/accessibility-remediation.spec.ts:71:9 › Phase 1: Critical Violations › 1.1 Color-Only State Indicators (WCAG 1.4.1) › screen readers can identify issue state without color
+
+
+[1A[2K[6/869] [chromium] › e2e/accessibility-remediation.spec.ts:93:9 › Phase 1: Critical Violations › 1.2 Keyboard Navigation for Drag-and-Drop (WCAG 2.1.1) › kanban board has keyboard instructions
+[1A[2K[7/869] [chromium] › e2e/accessibility-remediation.spec.ts:228:9 › Phase 1: Critical Violations › 1.6 Skip Navigation Links (WCAG 2.4.1) › skip link targets exist and work
+[1A[2K[8/869] [chromium] › e2e/accessibility-remediation.spec.ts:116:9 › Phase 1: Critical Violations › 1.3 Status Messages Announced (WCAG 4.1.3) › sync status has aria-live region
+[1A[2K[9/869] [chromium] › e2e/accessibility-remediation.spec.ts:262:9 › Phase 1: Critical Violations › 1.7 SVG Icon Accessibility (WCAG 4.1.2) › decorative icons are hidden from screen readers
+[1A[2K[10/869] [chromium] › e2e/accessibility-remediation.spec.ts:283:9 › Phase 1: Critical Violations › 1.8 Form Error Identification (WCAG 3.3.1) › form errors have aria-describedby linking to error message
+[1A[2K[11/869] [chromium] › e2e/accessibility-remediation.spec.ts:311:9 › Phase 1: Critical Violations › 1.8 Form Error Identification (WCAG 3.3.1) › form errors are associated with specific fields
+[1A[2K[12/869] [chromium] › e2e/accessibility-remediation.spec.ts:333:9 › Phase 1: Critical Violations › 1.9 Focus Not Obscured (WCAG 2.4.11) › focused elements are not hidden by overlays
+[1A[2K[13/869] [chromium] › e2e/accessibility-remediation.spec.ts:358:9 › Phase 1: Critical Violations › 1.10 Image Alt Text (WCAG 1.1.1) › images have alt attributes
+[1A[2K[14/869] [chromium] › e2e/accessibility-remediation.spec.ts:376:9 › Phase 1: Critical Violations › 1.11 Page Heading Structure (WCAG 2.4.6) › login page has descriptive h1
+[1A[2K[15/869] [chromium] › e2e/accessibility-remediation.spec.ts:386:9 › Phase 1: Critical Violations › 1.11 Page Heading Structure (WCAG 2.4.6) › pages have logical heading hierarchy
+[1A[2K[16/869] [chromium] › e2e/accessibility-remediation.spec.ts:409:9 › Phase 1: Critical Violations › 1.12 Hover Controls on Focus (WCAG 1.4.13) › controls shown on hover are also shown on focus
+[1A[2K[17/869] [chromium] › e2e/accessibility-remediation.spec.ts:467:9 › Phase 2: Serious Violations › 2.1 Command Palette Modal (WCAG 4.1.2) › command palette opens and has proper dialog role
+[1A[2K[18/869] [chromium] › e2e/accessibility-remediation.spec.ts:492:9 › Phase 2: Serious Violations › 2.1 Command Palette Modal (WCAG 4.1.2) › command palette traps focus
+[1A[2K[19/869] [chromium] › e2e/accessibility-remediation.spec.ts:523:9 › Phase 2: Serious Violations › 2.2 Target Size Minimum (WCAG 2.5.8) › interactive elements meet 24px minimum target size
+[1A[2K[20/869] [chromium] › e2e/accessibility-remediation.spec.ts:549:9 › Phase 2: Serious Violations › 2.3 Link Purpose (WCAG 2.4.4) › links have accessible names describing destination
+[1A[2K[21/869] [chromium] › e2e/accessibility-remediation.spec.ts:571:9 › Phase 2: Serious Violations › 2.4 Labels and Instructions (WCAG 3.3.2) › form inputs have visible labels
+[1A[2K[22/869] [chromium] › e2e/accessibility-remediation.spec.ts:595:9 › Phase 2: Serious Violations › 2.5 Select Label Association (WCAG 1.3.1) › select elements have associated labels
+[1A[2K[23/869] [chromium] › e2e/accessibility-remediation.spec.ts:624:9 › Phase 2: Serious Violations › 2.6 Tab Component ARIA (WCAG 4.1.2) › tab components have proper ARIA roles
+[1A[2K[24/869] [chromium] › e2e/accessibility-remediation.spec.ts:672:9 › Phase 2: Serious Violations › 2.7 Auto-save Notification (WCAG 3.2.2) › auto-save has status announcement
+[1A[2K[25/869] [chromium] › e2e/accessibility-remediation.spec.ts:695:9 › Phase 2: Serious Violations › 2.8 Keyboard Escape from Resize (WCAG 2.1.2) › Escape key deselects image in editor
+[1A[2K[26/869] [chromium] › e2e/accessibility-remediation.spec.ts:738:9 › Phase 2: Serious Violations › 2.9 Color Contrast (WCAG 1.4.3) › no color contrast violations on main pages
+[1A[2K[27/869] [chromium] › e2e/accessibility-remediation.spec.ts:756:9 › Phase 2: Serious Violations › 2.10 Error Suggestions (WCAG 3.3.3) › login errors provide recovery suggestions
+[1A[2K[28/869] [chromium] › e2e/accessibility-remediation.spec.ts:775:9 › Phase 2: Serious Violations › 2.11 Landmark Regions (WCAG 1.3.6) › page has proper landmark structure matching 4-panel layout
+[1A[2K[29/869] [chromium] › e2e/accessibility-remediation.spec.ts:806:9 › Phase 2: Serious Violations › 2.11 Landmark Regions (WCAG 1.3.6) › landmarks appear in correct DOM order for screen readers
+[1A[2K[30/869] [chromium] › e2e/accessibility-remediation.spec.ts:846:9 › Phase 2: Serious Violations › 2.12 Properties Sidebar Audit › properties sidebar forms have proper labels
+[1A[2K[31/869] [chromium] › e2e/accessibility-remediation.spec.ts:889:9 › Phase 2: Serious Violations › 2.12 Properties Sidebar Audit › properties sidebar works with keyboard only
+[1A[2K[32/869] [chromium] › e2e/accessibility-remediation.spec.ts:922:9 › Phase 2: Serious Violations › 2.13 Auto-Expand Tree to Current Document › navigating to nested document auto-expands tree ancestors
+[1A[2K[33/869] [chromium] › e2e/accessibility-remediation.spec.ts:969:9 › Phase 2: Serious Violations › 2.13 Auto-Expand Tree to Current Document › current document is visually highlighted in tree
+[1A[2K[34/869] [chromium] › e2e/accessibility-remediation.spec.ts:998:9 › Phase 2: Serious Violations › 2.14-2.18 Additional Serious Fixes › issue lists use semantic list markup
+[1A[2K[35/869] [chromium] › e2e/accessibility-remediation.spec.ts:1032:9 › Phase 2: Serious Violations › 2.14-2.18 Additional Serious Fixes › loading indicators have aria-live
+[1A[2K[36/869] [chromium] › e2e/accessibility-remediation.spec.ts:1048:9 › Phase 2: Serious Violations › 2.14-2.18 Additional Serious Fixes › document tree updates are announced
+[1A[2K[37/869] [chromium] › e2e/accessibility-remediation.spec.ts:1076:9 › Phase 2: Serious Violations › 2.14-2.18 Additional Serious Fixes › related form fields are grouped with fieldset
+[1A[2K[38/869] [chromium] › e2e/accessibility-remediation.spec.ts:1102:9 › Phase 2: Serious Violations › 2.14-2.18 Additional Serious Fixes › dialogs have close instructions
+[1A[2K[39/869] [chromium] › e2e/accessibility-remediation.spec.ts:1132:9 › Phase 3: Moderate Violations › 3.1 Section Headings (WCAG 2.4.10) › major sections have headings
+[1A[2K[40/869] [chromium] › e2e/accessibility-remediation.spec.ts:1156:9 › Phase 3: Moderate Violations › 3.2 Input Purpose (WCAG 1.3.5) › login form inputs have appropriate autocomplete attributes
+[1A[2K[41/869] [chromium] › e2e/accessibility-remediation.spec.ts:1180:9 › Phase 3: Moderate Violations › 3.3 Page Titles (WCAG 2.4.2) › each page has a descriptive title
+[1A[2K[42/869] [chromium] › e2e/accessibility-remediation.spec.ts:1194:9 › Phase 3: Moderate Violations › 3.4 Text Spacing (WCAG 1.4.12) › content remains readable with increased text spacing
+[1A[2K[43/869] [chromium] › e2e/accessibility-remediation.spec.ts:1235:9 › Phase 3: Moderate Violations › 3.5-3.11 Additional Moderate Fixes › no nested interactive elements
+[1A[2K[44/869] [chromium] › e2e/accessibility-remediation.spec.ts:1244:9 › Phase 3: Moderate Violations › 3.5-3.11 Additional Moderate Fixes › html element has lang attribute
+[1A[2K[45/869] [chromium] › e2e/accessibility-remediation.spec.ts:1252:9 › Phase 3: Moderate Violations › 3.5-3.11 Additional Moderate Fixes › no empty buttons or links
+[1A[2K[46/869] [chromium] › e2e/accessibility-remediation.spec.ts:1270:9 › Phase 3: Moderate Violations › 3.5-3.11 Additional Moderate Fixes › tooltips shown on hover also appear on focus
+[1A[2K[47/869] [chromium] › e2e/accessibility-remediation.spec.ts:1308:9 › Phase 3: Moderate Violations › 3.5-3.11 Additional Moderate Fixes › images do not have redundant alt text
+[1A[2K[48/869] [chromium] › e2e/accessibility-remediation.spec.ts:1334:9 › Phase 3: Moderate Violations › 3.5-3.11 Additional Moderate Fixes › focus maintained during sidebar transitions
+[1A[2K[49/869] [chromium] › e2e/accessibility-remediation.spec.ts:1362:9 › Phase 3: Moderate Violations › 3.5-3.11 Additional Moderate Fixes › content works in portrait and landscape orientations
+[1A[2K[50/869] [chromium] › e2e/accessibility-remediation.spec.ts:1398:9 › Phase 4: Minor Violations › 4.1 Language of Code Blocks (WCAG 3.1.2) › code blocks have language indication
+[1A[2K[51/869] [chromium] › e2e/accessibility-remediation.spec.ts:1419:9 › Phase 4: Minor Violations › 4.2-4.5 Additional Minor Fixes › abbreviations have expansion
+[1A[2K[52/869] [chromium] › e2e/accessibility-remediation.spec.ts:1434:9 › Phase 4: Minor Violations › 4.2-4.5 Additional Minor Fixes › navigation order is consistent
+[1A[2K[53/869] [chromium] › e2e/accessibility-remediation.spec.ts:1458:9 › Phase 4: Minor Violations › 4.2-4.5 Additional Minor Fixes › no redundant title and aria-label pairs
+[1A[2K[54/869] [chromium] › e2e/accessibility-remediation.spec.ts:1477:9 › Phase 4: Minor Violations › 4.2-4.5 Additional Minor Fixes › form fields have contextual help where needed
+[1A[2K[55/869] [chromium] › e2e/accessibility-remediation.spec.ts:1518:7 › Automated axe-core Full Scan › login page has no WCAG 2.2 AA violations
+[1A[2K[56/869] [chromium] › e2e/accessibility-remediation.spec.ts:1533:7 › Automated axe-core Full Scan › documents page has no WCAG 2.2 AA violations
+[1A[2K[57/869] [chromium] › e2e/accessibility-remediation.spec.ts:1549:7 › Automated axe-core Full Scan › issues page has no WCAG 2.2 AA violations
+[1A[2K[58/869] [chromium] › e2e/accessibility.spec.ts:14:7 › Accessibility - axe-core audit › login page has no critical accessibility violations
+[1A[2K[59/869] [chromium] › e2e/accessibility.spec.ts:34:7 › Accessibility - axe-core audit › main app shell has no critical accessibility violations
+[1A[2K[60/869] [chromium] › e2e/accessibility.spec.ts:53:7 › Accessibility - axe-core audit › docs mode has no critical accessibility violations
+[1A[2K[61/869] [chromium] › e2e/accessibility.spec.ts:80:7 › Accessibility - axe-core audit › programs mode has no critical accessibility violations
+[1A[2K[62/869] [chromium] › e2e/accessibility.spec.ts:108:7 › Accessibility - Keyboard Navigation › can navigate login form with keyboard only
+[1A[2K[63/869] [chromium] › e2e/accessibility.spec.ts:148:7 › Accessibility - Keyboard Navigation › can navigate main app with keyboard - full flow from login to create issue
+[1A[2K[64/869] [chromium] › e2e/accessibility.spec.ts:175:7 › Accessibility - Keyboard Navigation › focus is visible on all interactive elements
+[1A[2K[65/869] [chromium] › e2e/accessibility.spec.ts:196:7 › Accessibility - Keyboard Navigation › tab order is logical on login page
+[1A[2K[66/869] [chromium] › e2e/accessibility.spec.ts:213:7 › Accessibility - Screen Reader Announcements › login errors are announced via aria-live or role=alert
+[1A[2K[67/869] [chromium] › e2e/accessibility.spec.ts:232:7 › Accessibility - Screen Reader Announcements › form fields have accessible labels
+[1A[2K[68/869] [chromium] › e2e/accessibility.spec.ts:257:7 › Accessibility - Loading States › login button shows loading state during submission
+[1A[2K[69/869] [chromium] › e2e/accountability-banner-urgency.spec.ts:23:7 › Accountability Banner Urgency › API response includes has_overdue and has_due_today flags
+[1A[2K[70/869] [chromium] › e2e/accountability-banner-urgency.spec.ts:38:7 › Accountability Banner Urgency › banner is red when overdue items exist
+[1A[2K[71/869] [chromium] › e2e/accountability-banner-urgency.spec.ts:63:7 › Accountability Banner Urgency › urgency flags correctly reflect item days_overdue values
+[1A[2K[72/869] [chromium] › e2e/accountability-banner-urgency.spec.ts:85:7 › Accountability Banner Urgency › clicking banner opens the action items modal
+[1A[2K[73/869] [chromium] › e2e/accountability-owner-change.spec.ts:26:7 › Accountability Owner Change › sprint owner change immediately removes action items from inference
+[1A[2K[74/869] [chromium] › e2e/accountability-owner-change.spec.ts:102:7 › Accountability Owner Change › action items API returns valid response shape
+[1A[2K[75/869] [chromium] › e2e/accountability-standup.spec.ts:33:7 › Standup Accountability Flow › standup action items respect business day rules
+[1A[2K[76/869] [chromium] › e2e/accountability-standup.spec.ts:113:7 › Standup Accountability Flow › creating standup removes action item on business days
+[1A[2K[77/869] [chromium] › e2e/accountability-standup.spec.ts:218:7 › Standup Accountability Flow › user without assigned issues does not see standup action item
+[1A[2K[78/869] [chromium] › e2e/accountability-week.spec.ts:24:7 › Week Accountability Flow › allocated person without weekly_plan shows action item, creating plan removes it
+[1A[2K[79/869] [chromium] › e2e/accountability-week.spec.ts:122:7 › Week Accountability Flow › sprint not started shows action item, starting sprint removes it
+[1A[2K[80/869] [chromium] › e2e/accountability-week.spec.ts:200:7 › Week Accountability Flow › sprint without issues shows action item, adding issue removes it
+[1A[2K[81/869] [chromium] › e2e/accountability-week.spec.ts:280:7 › Week Accountability Flow › sprint in future does not show action items
+[1A[2K[82/869] [chromium] › e2e/admin-workspace-members.spec.ts:18:7 › Admin Workspace Detail Page › can navigate to workspace detail by clicking workspace name
+[1A[2K[83/869] [chromium] › e2e/admin-workspace-members.spec.ts:31:7 › Admin Workspace Detail Page › workspace detail page shows members table
+[1A[2K[84/869] [chromium] › e2e/admin-workspace-members.spec.ts:42:7 › Admin Workspace Detail Page › workspace detail page shows pending invites section
+[1A[2K[85/869] [chromium] › e2e/admin-workspace-members.spec.ts:50:7 › Admin Workspace Detail Page › workspace detail page shows add existing user section
+[1A[2K[86/869] [chromium] › e2e/admin-workspace-members.spec.ts:60:7 › Admin Workspace Detail Page › workspace detail page shows invite form
+[1A[2K[87/869] [chromium] › e2e/admin-workspace-members.spec.ts:70:7 › Admin Workspace Detail Page › back button returns to admin dashboard
+[1A[2K[88/869] [chromium] › e2e/admin-workspace-members.spec.ts:87:7 › Admin Workspace Member Management › can change member role
+[1A[2K[89/869] [chromium] › e2e/admin-workspace-members.spec.ts:106:7 › Admin Workspace Member Management › can send invite to new email
+[1A[2K[90/869] [chromium] › e2e/admin-workspace-members.spec.ts:121:7 › Admin Workspace Member Management › can revoke invite
+[1A[2K[91/869] [chromium] › e2e/admin-workspace-members.spec.ts:139:7 › Admin Workspace Member Management › can copy invite link
+[1A[2K[92/869] [chromium] › e2e/admin-workspace-members.spec.ts:162:7 › Admin User Search › user search shows results when typing
+[1A[2K[93/869] [chromium] › e2e/admin-workspace-members.spec.ts:188:7 › Admin User Search › selecting user from search enables Add User button
+[1A[2K[94/869] [chromium] › e2e/admin-workspace-members.spec.ts:212:7 › Admin User Search › can add existing user to workspace
+[1A[2K[95/869] [chromium] › e2e/admin-workspace-members.spec.ts:242:7 › Admin Workspace Access Control › non-super-admin cannot access workspace detail
+[1A[2K[96/869] [chromium] › e2e/ai-analysis-api.spec.ts:67:7 › AI Status API › GET /api/ai/status returns availability object
+[1A[2K[97/869] [chromium] › e2e/ai-analysis-api.spec.ts:78:7 › AI Status API › GET /api/ai/status requires authentication
+[1A[2K[98/869] [chromium] › e2e/ai-analysis-api.spec.ts:87:7 › AI Analyze Plan API › POST /api/ai/analyze-plan returns 400 when content is missing
+[1A[2K[99/869] [chromium] › e2e/ai-analysis-api.spec.ts:100:7 › AI Analyze Plan API › POST /api/ai/analyze-plan accepts valid content
+[1A[2K[100/869] [chromium] › e2e/ai-analysis-api.spec.ts:124:7 › AI Analyze Plan API › POST /api/ai/analyze-plan requires authentication
+[1A[2K[101/869] [chromium] › e2e/ai-analysis-api.spec.ts:135:7 › AI Analyze Retro API › POST /api/ai/analyze-retro returns 400 when retro_content is missing
+[1A[2K[102/869] [chromium] › e2e/ai-analysis-api.spec.ts:148:7 › AI Analyze Retro API › POST /api/ai/analyze-retro returns 400 when plan_content is missing
+[1A[2K[103/869] [chromium] › e2e/ai-analysis-api.spec.ts:161:7 › AI Analyze Retro API › POST /api/ai/analyze-retro returns 400 when both fields are missing
+[1A[2K[104/869] [chromium] › e2e/ai-analysis-api.spec.ts:172:7 › AI Analyze Retro API › POST /api/ai/analyze-retro accepts valid content
+[1A[2K[105/869] [chromium] › e2e/ai-analysis-api.spec.ts:195:7 › AI Analyze Retro API › POST /api/ai/analyze-retro requires authentication
+[1A[2K[106/869] [chromium] › e2e/ai-analysis-api.spec.ts:209:7 › AI Rate Limiting › POST /api/ai/analyze-plan returns 429 after 10 rapid requests
+[1A[2K[107/869] [chromium] › e2e/auth.spec.ts:9:7 › Authentication › shows login page when not authenticated
+[1A[2K[108/869] [chromium] › e2e/auth.spec.ts:21:7 › Authentication › shows validation error with empty credentials
+[1A[2K[109/869] [chromium] › e2e/auth.spec.ts:32:7 › Authentication › shows error with invalid credentials
+[1A[2K[110/869] [chromium] › e2e/auth.spec.ts:44:7 › Authentication › successful login redirects to app
+[1A[2K[111/869] [chromium] › e2e/auth.spec.ts:59:7 › Authentication › logout returns to login page
+[1A[2K[112/869] [chromium] › e2e/auth.spec.ts:77:7 › Authentication › protected route redirects to login when not authenticated
+[1A[2K[113/869] [chromium] › e2e/auth.spec.ts:85:7 › Authentication › login is case-insensitive for email
+[1A[2K[114/869] [chromium] › e2e/authorization.spec.ts:52:7 › Authorization - Super Admin Access Control › non-super-admin cannot access /admin when logged in
+[1A[2K[115/869] [chromium] › e2e/authorization.spec.ts:66:7 › Authorization - Super Admin Access Control › super-admin CAN access /admin
+[1A[2K[116/869] [chromium] › e2e/authorization.spec.ts:75:7 › Authorization - Super Admin Access Control › non-super-admin cannot toggle super-admin status via API
+[1A[2K[117/869] [chromium] › e2e/authorization.spec.ts:95:7 › Authorization - Workspace Admin Access Control › workspace member cannot access /settings
+[1A[2K[118/869] [chromium] › e2e/authorization.spec.ts:106:7 › Authorization - Workspace Admin Access Control › workspace admin CAN access /settings
+
+[1A[2K[119/869] [chromium] › e2e/authorization.spec.ts:116:7 › Authorization - Workspace Admin Access Control › workspace member cannot change another user role via API
+[1A[2K[120/869] [chromium] › e2e/authorization.spec.ts:132:7 › Authorization - Workspace Admin Access Control › workspace member cannot send invites via API
+[1A[2K[121/869] [chromium] › e2e/authorization.spec.ts:150:7 › Authorization - Cross-Workspace Isolation › cannot access document from another workspace via direct URL
+[1A[2K[122/869] [chromium] › e2e/authorization.spec.ts:167:7 › Authorization - Cross-Workspace Isolation › API rejects document access for wrong workspace
+
+[1A[2K[123/869] [chromium] › e2e/authorization.spec.ts:182:7 › Authorization - Cross-Workspace Isolation › cannot list documents from another workspace
+
+
+
+[1A[2K[124/869] [chromium] › e2e/authorization.spec.ts:202:7 › Authorization - API Route Protection › unauthenticated requests to protected API routes fail
+[1A[2K[125/869] [chromium] › e2e/authorization.spec.ts:217:7 › Authorization - API Route Protection › cannot create workspace without super-admin
+[1A[2K[126/869] [chromium] › e2e/authorization.spec.ts:231:7 › Authorization - API Route Protection › cannot archive workspace without super-admin
+[1A[2K[127/869] [chromium] › e2e/authorization.spec.ts:246:7 › Authorization - Impersonation Controls › non-super-admin cannot impersonate users
+[1A[2K[128/869] [chromium] › e2e/authorization.spec.ts:260:7 › Authorization - Impersonation Controls › super-admin CAN impersonate users
+[1A[2K[129/869] [chromium] › e2e/authorization.spec.ts:286:7 › Authorization - Audit Log Access › non-super-admin cannot view global audit logs
+[1A[2K[130/869] [chromium] › e2e/authorization.spec.ts:299:7 › Authorization - Audit Log Access › workspace member cannot view workspace audit logs (admin only)
+[1A[2K[131/869] [chromium] › e2e/autosave-race-conditions.spec.ts:64:7 › Auto-Save Race Conditions - Title Field › type-pause-type: stale response does not overwrite local title
+[1A[2K[132/869] [chromium] › e2e/autosave-race-conditions.spec.ts:92:7 › Auto-Save Race Conditions - Title Field › rapid typing with throttle: intermediate saves do not overwrite
+[1A[2K[133/869] [chromium] › e2e/autosave-race-conditions.spec.ts:119:7 › Auto-Save Race Conditions - Title Field › multiple pause-resume cycles preserve all changes
+[1A[2K[134/869] [chromium] › e2e/autosave-race-conditions.spec.ts:146:7 › Auto-Save Race Conditions - Title Field › issue title: stale response does not overwrite
+[1A[2K[135/869] [chromium] › e2e/autosave-race-conditions.spec.ts:179:7 › Auto-Save Race Conditions - Throttle Behavior › throttle: saves periodically during long typing session
+[1A[2K[136/869] [chromium] › e2e/autosave-race-conditions.spec.ts:229:7 › Auto-Save Race Conditions - Error Recovery › failed save is retried silently
+[1A[2K[137/869] [chromium] › e2e/autosave-race-conditions.spec.ts:277:7 › Auto-Save Race Conditions - Slow Network › slow response does not overwrite faster local changes
+[1A[2K[138/869] [chromium] › e2e/backlinks.spec.ts:45:7 › Backlinks › backlinks panel shows in sidebar
+[1A[2K[139/869] [chromium] › e2e/backlinks.spec.ts:60:7 › Backlinks › creating mention adds backlink
+[1A[2K[140/869] [chromium] › e2e/backlinks.spec.ts:110:7 › Backlinks › removing mention removes backlink
+[1A[2K[141/869] [chromium] › e2e/backlinks.spec.ts:182:7 › Backlinks › backlinks show correct document info
+[1A[2K[142/869] [chromium] › e2e/backlinks.spec.ts:230:7 › Backlinks › clicking backlink navigates to source document
+[1A[2K[143/869] [chromium] › e2e/backlinks.spec.ts:294:7 › Backlinks › backlinks update in real-time
+[1A[2K[144/869] [chromium] › e2e/backlinks.spec.ts:371:7 › Backlinks › backlinks panel shows empty state when no backlinks
+[1A[2K[145/869] [chromium] › e2e/backlinks.spec.ts:402:7 › Backlinks › backlinks count updates correctly
+[1A[2K[146/869] [chromium] › e2e/bulk-selection.spec.ts:22:9 › Bulk Selection - List View › Checkbox Visibility › checkbox is hidden by default on each row
+[1A[2K[147/869] [chromium] › e2e/bulk-selection.spec.ts:45:9 › Bulk Selection - List View › Checkbox Visibility › checkbox appears on row hover
+[1A[2K[148/869] [chromium] › e2e/bulk-selection.spec.ts:63:9 › Bulk Selection - List View › Checkbox Visibility › checkbox remains visible when item is selected
+[1A[2K[149/869] [chromium] › e2e/bulk-selection.spec.ts:89:9 › Bulk Selection - List View › Single Selection › clicking checkbox selects the item
+[1A[2K[150/869] [chromium] › e2e/bulk-selection.spec.ts:108:9 › Bulk Selection - List View › Single Selection › clicking checkbox does not navigate to item detail
+[1A[2K[151/869] [chromium] › e2e/bulk-selection.spec.ts:127:9 › Bulk Selection - List View › Single Selection › clicking row (not checkbox) navigates to item detail
+[1A[2K[152/869] [chromium] › e2e/bulk-selection.spec.ts:143:9 › Bulk Selection - List View › Single Selection › selected row shows background highlight
+[1A[2K[153/869] [chromium] › e2e/bulk-selection.spec.ts:161:9 › Bulk Selection - List View › Single Selection › clicking selected checkbox deselects the item
+[1A[2K[154/869] [chromium] › e2e/bulk-selection.spec.ts:187:9 › Bulk Selection - List View › Multi-Selection with Shift+Click › shift+click selects range from last selected to clicked item
+[1A[2K[155/869] [chromium] › e2e/bulk-selection.spec.ts:213:9 › Bulk Selection - List View › Multi-Selection with Shift+Click › shift+click extends selection in reverse order
+[1A[2K[156/869] [chromium] › e2e/bulk-selection.spec.ts:238:9 › Bulk Selection - List View › Multi-Selection with Shift+Click › shift+click adds to existing selection
+[1A[2K[157/869] [chromium] › e2e/bulk-selection.spec.ts:303:9 › Bulk Selection - List View › Cmd/Ctrl+Click Toggle › cmd+click on selected item removes it from selection
+[1A[2K[158/869] [chromium] › e2e/bulk-selection.spec.ts:278:9 › Bulk Selection - List View › Cmd/Ctrl+Click Toggle › cmd+click adds single item to selection
+[1A[2K[159/869] [chromium] › e2e/bulk-selection.spec.ts:341:9 › Bulk Selection - Keyboard Navigation › Focus Management › first row is focusable with Tab
+[1A[2K[160/869] [chromium] › e2e/bulk-selection.spec.ts:356:9 › Bulk Selection - Keyboard Navigation › Focus Management › arrow down moves focus to next row
+[1A[2K[161/869] [chromium] › e2e/bulk-selection.spec.ts:382:9 › Bulk Selection - Keyboard Navigation › Focus Management › arrow up moves focus to previous row
+[1A[2K[162/869] [chromium] › e2e/bulk-selection.spec.ts:408:9 › Bulk Selection - Keyboard Navigation › Focus Management › arrow keys do not change selection (focus only)
+[1A[2K[163/869] [chromium] › e2e/bulk-selection.spec.ts:445:9 › Bulk Selection - Keyboard Navigation › Selection with Enter/Space › Enter toggles selection of focused row
+[1A[2K[164/869] [chromium] › e2e/bulk-selection.spec.ts:468:9 › Bulk Selection - Keyboard Navigation › Selection with Enter/Space › Space toggles selection of focused row
+[1A[2K[165/869] [chromium] › e2e/bulk-selection.spec.ts:493:9 › Bulk Selection - Keyboard Navigation › Shift+Arrow Range Selection › shift+down extends selection to next row
+[1A[2K[166/869] [chromium] › e2e/bulk-selection.spec.ts:519:9 › Bulk Selection - Keyboard Navigation › Shift+Arrow Range Selection › shift+up extends selection to previous row
+[1A[2K[chromium] › e2e/backlinks.spec.ts:110:7 › Backlinks › removing mention removes backlink
+No /links POST detected after mention removal: page.waitForResponse: Timeout 5000ms exceeded while waiting for event "response"
+
+[1A[2K[167/869] [chromium] › e2e/bulk-selection.spec.ts:545:9 › Bulk Selection - Keyboard Navigation › Shift+Arrow Range Selection › multiple shift+down extends selection incrementally
+[1A[2K[168/869] [chromium] › e2e/bulk-selection.spec.ts:574:9 › Bulk Selection - Keyboard Navigation › Shift+Arrow Range Selection › shift+down then shift+up contracts selection
+[1A[2K[169/869] [chromium] › e2e/bulk-selection.spec.ts:610:9 › Bulk Selection - Keyboard Navigation › Shift+Arrow Range Selection › shift+end selects from current to last row
+[1A[2K[170/869] [chromium] › e2e/bulk-selection.spec.ts:637:9 › Bulk Selection - Keyboard Navigation › Shift+Arrow Range Selection › shift+home selects from first row to current
+[1A[2K[171/869] [chromium] › e2e/bulk-selection.spec.ts:667:9 › Bulk Selection - Keyboard Navigation › Select All and Clear › cmd/ctrl+a selects all visible items
+[1A[2K[172/869] [chromium] › e2e/bulk-selection.spec.ts:688:9 › Bulk Selection - Keyboard Navigation › Select All and Clear › escape clears all selection
+[1A[2K[173/869] [chromium] › e2e/bulk-selection.spec.ts:718:9 › Bulk Selection - Keyboard Navigation › Select All and Clear › cmd/ctrl+a when all selected deselects all
+[1A[2K[174/869] [chromium] › e2e/bulk-selection.spec.ts:751:9 › Global j/k Vim-Style Navigation › j/k Focus Navigation › j key moves focus to first/next item globally
+[1A[2K[175/869] [chromium] › e2e/bulk-selection.spec.ts:784:9 › Global j/k Vim-Style Navigation › j/k Focus Navigation › k key moves focus to previous item
+[1A[2K[176/869] [chromium] › e2e/bulk-selection.spec.ts:812:9 › Global j/k Vim-Style Navigation › j/k Focus Navigation › j/k work without explicitly focusing the table
+[1A[2K[177/869] [chromium] › e2e/bulk-selection.spec.ts:831:9 › Global j/k Vim-Style Navigation › Enter to Open Item › Enter on focused item navigates to issue detail page
+[1A[2K[178/869] [chromium] › e2e/bulk-selection.spec.ts:857:9 › Global j/k Vim-Style Navigation › Input Field Exclusion › j key navigates when no input is focused
+[1A[2K[179/869] [chromium] › e2e/bulk-selection.spec.ts:884:9 › Global j/k Vim-Style Navigation › Hover-to-Focus › hovering over row sets keyboard focus
+[1A[2K[180/869] [chromium] › e2e/bulk-selection.spec.ts:910:9 › Global j/k Vim-Style Navigation › Hover-to-Focus › Shift+Arrow from hovered item creates selection
+[1A[2K[181/869] [chromium] › e2e/bulk-selection.spec.ts:935:9 › Global j/k Vim-Style Navigation › Breadcrumb and Escape Navigation › navigating from Program shows breadcrumb on issue page
+[1A[2K[182/869] [chromium] › e2e/bulk-selection.spec.ts:974:9 › Global j/k Vim-Style Navigation › Breadcrumb and Escape Navigation › direct URL navigation shows generic back button
+[1A[2K[183/869] [chromium] › e2e/bulk-selection.spec.ts:1004:7 › Bulk Selection - Tab/Filter Behavior › switching tabs clears selection
+[1A[2K[184/869] [chromium] › e2e/bulk-selection.spec.ts:1030:7 › Bulk Selection - Tab/Filter Behavior › selection only applies to visible items
+[1A[2K[185/869] [chromium] › e2e/bulk-selection.spec.ts:1051:7 › Bulk Selection - Tab/Filter Behavior › cmd+a only selects items in current filter
+[1A[2K[186/869] [chromium] › e2e/bulk-selection.spec.ts:1092:9 › Bulk Action Bar › Visibility › bulk action bar is hidden when nothing selected
+[1A[2K[187/869] [chromium] › e2e/bulk-selection.spec.ts:1102:9 › Bulk Action Bar › Visibility › bulk action bar appears when 1+ items selected
+[1A[2K[188/869] [chromium] › e2e/bulk-selection.spec.ts:1119:9 › Bulk Action Bar › Visibility › bulk action bar shows selected count
+[1A[2K[189/869] [chromium] › e2e/bulk-selection.spec.ts:1142:9 › Bulk Action Bar › Visibility › bulk action bar disappears when selection cleared
+[1A[2K[190/869] [chromium] › e2e/bulk-selection.spec.ts:1169:9 › Bulk Action Bar › Actions Available › bulk action bar has Archive button
+[1A[2K[191/869] [chromium] › e2e/bulk-selection.spec.ts:1186:9 › Bulk Action Bar › Actions Available › bulk action bar has Move to Week dropdown
+[1A[2K[192/869] [chromium] › e2e/bulk-selection.spec.ts:1203:9 › Bulk Action Bar › Actions Available › bulk action bar has Delete button
+[1A[2K[193/869] [chromium] › e2e/bulk-selection.spec.ts:1220:9 › Bulk Action Bar › Actions Available › bulk action bar has Change Status dropdown
+[1A[2K[194/869] [chromium] › e2e/bulk-selection.spec.ts:1237:9 › Bulk Action Bar › Actions Available › bulk action bar has Clear Selection button
+[1A[2K[195/869] [chromium] › e2e/bulk-selection.spec.ts:1257:7 › Bulk Actions - Archive › archive action moves selected issues to archived state
+[1A[2K[196/869] [chromium] › e2e/bulk-selection.spec.ts:1286:7 › Bulk Actions - Archive › archived issues do not appear in default views
+[1A[2K[197/869] [chromium] › e2e/bulk-selection.spec.ts:1327:7 › Bulk Actions - Archive › archive shows success toast
+[1A[2K[198/869] [chromium] › e2e/bulk-selection.spec.ts:1347:7 › Bulk Actions - Archive › archive toast has undo button
+[1A[2K[199/869] [chromium] › e2e/bulk-selection.spec.ts:1367:7 › Bulk Actions - Archive › selection clears after archive action
+[1A[2K[200/869] [chromium] › e2e/bulk-selection.spec.ts:1396:7 › Bulk Actions - Move to Week › move to sprint shows sprint picker dropdown
+[1A[2K[201/869] [chromium] › e2e/bulk-selection.spec.ts:1419:7 › Bulk Actions - Move to Week › move to sprint shows success toast
+[1A[2K[202/869] [chromium] › e2e/bulk-selection.spec.ts:1444:7 › Bulk Actions - Move to Week › can move to "No Week" to unassign
+[1A[2K[203/869] [chromium] › e2e/bulk-selection.spec.ts:1470:7 › Bulk Actions - Move to Week › selection clears after move action
+[1A[2K[204/869] [chromium] › e2e/bulk-selection.spec.ts:1503:7 › Bulk Actions - Delete (Trash) › delete action moves selected issues to trash
+[1A[2K[205/869] [chromium] › e2e/bulk-selection.spec.ts:1529:7 › Bulk Actions - Delete (Trash) › delete shows success toast with undo
+[1A[2K[206/869] [chromium] › e2e/bulk-selection.spec.ts:1550:7 › Bulk Actions - Delete (Trash) › undo restores deleted issues from trash
+[1A[2K[207/869] [chromium] › e2e/bulk-selection.spec.ts:1585:7 › Bulk Actions - Delete (Trash) › selection clears after delete action
+[1A[2K[208/869] [chromium] › e2e/bulk-selection.spec.ts:1610:7 › Bulk Actions - Change Status › change status shows status picker dropdown
+[1A[2K[209/869] [chromium] › e2e/bulk-selection.spec.ts:1635:7 › Bulk Actions - Change Status › selecting status updates all selected issues
+[1A[2K[210/869] [chromium] › e2e/bulk-selection.spec.ts:1672:7 › Bulk Actions - Change Status › change status shows success toast
+[1A[2K[211/869] [chromium] › e2e/bulk-selection.spec.ts:1693:7 › Bulk Actions - Change Status › issues move to correct tab after status change
+[1A[2K[212/869] [chromium] › e2e/bulk-selection.spec.ts:1733:7 › Bulk Actions - Change Status › selection clears after status change
+[1A[2K[213/869] [chromium] › e2e/bulk-selection.spec.ts:1760:9 › Bulk Selection - Kanban View › Card Selection › checkbox appears on kanban card hover
+[1A[2K[214/869] [chromium] › e2e/bulk-selection.spec.ts:1798:9 › Bulk Selection - Kanban View › Card Selection › clicking checkbox selects kanban card
+[1A[2K[215/869] [chromium] › e2e/bulk-selection.spec.ts:1817:9 › Bulk Selection - Kanban View › Card Selection › selected card shows visual distinction
+[1A[2K[216/869] [chromium] › e2e/bulk-selection.spec.ts:1837:9 › Bulk Selection - Kanban View › Card Selection › clicking card (not checkbox) opens detail
+[1A[2K[217/869] [chromium] › e2e/bulk-selection.spec.ts:1857:9 › Bulk Selection - Kanban View › Multi-Select in Kanban › can select cards across multiple columns
+[1A[2K[218/869] [chromium] › e2e/bulk-selection.spec.ts:1891:9 › Bulk Selection - Kanban View › Multi-Select in Kanban › cmd+click toggles individual cards
+[1A[2K[219/869] [chromium] › e2e/bulk-selection.spec.ts:1925:9 › Bulk Selection - Kanban View › Bulk Actions in Kanban › bulk action bar appears with kanban selection
+[1A[2K[220/869] [chromium] › e2e/bulk-selection.spec.ts:1949:9 › Bulk Selection - Kanban View › Bulk Actions in Kanban › archive works from kanban view
+[1A[2K[221/869] [chromium] › e2e/bulk-selection.spec.ts:1975:9 › Bulk Selection - Kanban View › Bulk Actions in Kanban › status change moves cards to correct column
+[1A[2K[222/869] [chromium] › e2e/bulk-selection.spec.ts:2016:7 › Bulk Selection - Accessibility › list has aria-multiselectable attribute
+[1A[2K[223/869] [chromium] › e2e/bulk-selection.spec.ts:2026:7 › Bulk Selection - Accessibility › rows have aria-selected attribute
+[1A[2K[224/869] [chromium] › e2e/bulk-selection.spec.ts:2051:7 › Bulk Selection - Accessibility › checkboxes have accessible labels
+[1A[2K[225/869] [chromium] › e2e/bulk-selection.spec.ts:2065:7 › Bulk Selection - Accessibility › bulk action bar is announced to screen readers
+[1A[2K[226/869] [chromium] › e2e/bulk-selection.spec.ts:2081:7 › Bulk Selection - Accessibility › selection count announced when selection changes
+[1A[2K[227/869] [chromium] › e2e/bulk-selection.spec.ts:2112:7 › Bulk Selection - Accessibility › focus is visible on keyboard navigation
+[1A[2K[228/869] [chromium] › e2e/bulk-selection.spec.ts:2129:7 › Bulk Selection - Accessibility › bulk actions are keyboard accessible
+[1A[2K[229/869] [chromium] › e2e/bulk-selection.spec.ts:2160:7 › Bulk Selection - Performance › selecting many items remains responsive
+[1A[2K[230/869] [chromium] › e2e/bulk-selection.spec.ts:2193:7 › Bulk Selection - Performance › bulk action on many items shows loading state
+[1A[2K[231/869] [chromium] › e2e/changes-requested-notifications.spec.ts:91:7 › Changes Requested Notifications › action-items includes changes_requested_plan after requesting plan changes
+[1A[2K[232/869] [chromium] › e2e/changes-requested-notifications.spec.ts:143:7 › Changes Requested Notifications › action-items includes changes_requested_retro after requesting retro changes
+[1A[2K[233/869] [chromium] › e2e/changes-requested-notifications.spec.ts:192:7 › Changes Requested Notifications › changes_requested action items have correct structure
+[1A[2K[234/869] [chromium] › e2e/changes-requested-notifications.spec.ts:229:7 › Changes Requested Notifications › requesting changes persists feedback in sprint properties
+[1A[2K[235/869] [chromium] › e2e/check-aria.spec.ts:22:5 › check aria-expanded elements
+[1A[2K[236/869] [chromium] › e2e/content-caching.spec.ts:14:7 › Content Caching - High Performance Navigation › toggling between two documents shows no blank flash
+[1A[2K[237/869] [chromium] › e2e/content-caching.spec.ts:68:7 › WebSocket Connection Reliability › WebSocket connects successfully on document load
+[1A[2K[238/869] [chromium] › e2e/content-caching.spec.ts:91:7 › WebSocket Connection Reliability › sync status shows status indicator after WebSocket connects
+[1A[2K[239/869] [chromium] › e2e/content-caching.spec.ts:112:7 › WebSocket Connection Reliability › no console errors about WebSocket connection failures
+[1A[2K[240/869] [chromium] › e2e/context-menus.spec.ts:13:9 › Context Menus - Sidebar › Wiki Documents › three-dot menu opens context menu
+[1A[2K[241/869] [chromium] › e2e/context-menus.spec.ts:38:9 › Context Menus - Sidebar › Wiki Documents › right-click opens context menu
+[1A[2K[242/869] [chromium] › e2e/context-menus.spec.ts:57:9 › Context Menus - Sidebar › Programs › three-dot menu opens context menu for program
+[1A[2K[243/869] [chromium] › e2e/context-menus.spec.ts:81:9 › Context Menus - Sidebar › Issues Sidebar › three-dot menu opens context menu for issue
+[1A[2K[244/869] [chromium] › e2e/context-menus.spec.ts:114:7 › Context Menus - Team Directory › right-click on team member shows context menu
+[1A[2K[chromium] › e2e/check-aria.spec.ts:22:5 › check aria-expanded elements
+Sidebar visible: [33mtrue[39m
+
+[1A[2KHas expandable item: [33mtrue[39m
+
+[1A[2KExpandable item: { tag: [32m'LI'[39m, role: [32m'treeitem'[39m, text: [32m'Welcome to Ship'[39m }
+
+[1A[2KInitial aria-expanded: false
+
+[1A[2KExpander visible: [33mtrue[39m
+
+[1A[2KExpander count: [33m1[39m
+
+[1A[2K[245/869] [chromium] › e2e/context-menus.spec.ts:130:7 › Context Menus - Team Directory › three-dot menu on team member card opens context menu
+[1A[2K[246/869] [chromium] › e2e/context-menus.spec.ts:161:7 › Context Menus - Kanban Board › right-click on kanban card shows context menu
+[1A[2KClicked expander
+
+[1A[2KChild doc count: [33m1[39m
+
+[1A[2KChild href: /documents/5974198f-17df-4255-8be8-1a8f1f078df6
+
+[1A[2K[247/869] [chromium] › e2e/context-menus.spec.ts:180:7 › Context Menus - Kanban Board › three-dot menu on kanban card opens context menu
+[1A[2K[248/869] [chromium] › e2e/critical-blockers.spec.ts:31:7 › Critical Blocker: Ticket Number Uniqueness › concurrent issue creation produces unique ticket numbers
+[1A[2K[249/869] [chromium] › e2e/critical-blockers.spec.ts:77:7 › Critical Blocker: Ticket Number Uniqueness › sequential issue creation increments ticket numbers correctly
+[1A[2KExpanded parent count: [33m0[39m
+
+[1A[2KAll aria-expanded elements: [
+  {
+    "tag": "LI",
+    "role": "treeitem",
+    "expanded": "false",
+    "text": "Welcome to Ship"
+  },
+  {
+    "tag": "BUTTON",
+    "role": null,
+    "expanded": "false",
+    "text": "DUDev User"
+  },
+  {
+    "tag": "BUTTON",
+    "role": null,
+    "expanded": "false",
+    "text": "Workspace"
+  }
+]
+
+[1A[2K[250/869] [chromium] › e2e/critical-blockers.spec.ts:118:7 › Critical Blocker: Session Timeout Enforcement › API returns 401 for expired session cookie
+[1A[2K[251/869] [chromium] › e2e/critical-blockers.spec.ts:126:7 › Critical Blocker: Session Timeout Enforcement › API returns 401 when no session cookie provided
+[1A[2K[252/869] [chromium] › e2e/critical-blockers.spec.ts:143:9 › Critical Blocker: Consistent Auth Across Routes › GET /api/documents returns consistent 401 format
+[1A[2K[253/869] [chromium] › e2e/critical-blockers.spec.ts:143:9 › Critical Blocker: Consistent Auth Across Routes › GET /api/issues returns consistent 401 format
+[1A[2K[254/869] [chromium] › e2e/critical-blockers.spec.ts:143:9 › Critical Blocker: Consistent Auth Across Routes › GET /api/programs returns consistent 401 format
+[1A[2K[255/869] [chromium] › e2e/critical-blockers.spec.ts:143:9 › Critical Blocker: Consistent Auth Across Routes › GET /api/auth/me returns consistent 401 format
+[1A[2K[256/869] [chromium] › e2e/critical-blockers.spec.ts:162:7 › Critical Blocker: WebSocket Rate Limiting › WebSocket connections work normally under limit
+[1A[2K[257/869] [chromium] › e2e/data-integrity.spec.ts:65:7 › Data Integrity - Document Persistence › document saves completely with all formatting
+[1A[2K[258/869] [chromium] › e2e/data-integrity.spec.ts:139:7 › Data Integrity - Document Persistence › document with complex nested structure persists
+[1A[2K[259/869] [chromium] › e2e/data-integrity.spec.ts:174:7 › Data Integrity - Document Persistence › empty document saves correctly
+[1A[2K[260/869] [chromium] › e2e/data-integrity.spec.ts:207:7 › Data Integrity - Images › images persist after page reload
+[1A[2K[261/869] [chromium] › e2e/data-integrity.spec.ts:257:7 › Data Integrity - Images › multiple images persist in correct order
+[1A[2K[262/869] [chromium] › e2e/data-integrity.spec.ts:324:7 › Data Integrity - Mentions › mentions survive document reload
+[1A[2K[263/869] [chromium] › e2e/data-integrity.spec.ts:357:7 › Data Integrity - Mentions › multiple mentions persist correctly
+[1A[2K[264/869] [chromium] › e2e/data-integrity.spec.ts:408:7 › Data Integrity - Undo/Redo › undo/redo preserves formatting
+[1A[2K[265/869] [chromium] › e2e/data-integrity.spec.ts:458:7 › Data Integrity - Undo/Redo › undo/redo works across multiple operations
+[1A[2K[266/869] [chromium] › e2e/data-integrity.spec.ts:516:7 › Data Integrity - Copy/Paste › copy/paste preserves structure
+[1A[2K[267/869] [chromium] › e2e/data-integrity.spec.ts:568:7 › Data Integrity - Copy/Paste › paste from external source preserves basic formatting
+[1A[2K[268/869] [chromium] › e2e/debug-create.spec.ts:3:5 › debug document creation
+[1A[2K[269/869] [chromium] › e2e/docs-mode.spec.ts:15:7 › Docs Mode (Phase 3) › can navigate to Docs mode via icon rail
+[1A[2K[270/869] [chromium] › e2e/docs-mode.spec.ts:26:7 › Docs Mode (Phase 3) › shows document list or empty state
+[1A[2K[271/869] [chromium] › e2e/docs-mode.spec.ts:38:7 › Docs Mode (Phase 3) › can create a new wiki document
+[1A[2K[272/869] [chromium] › e2e/docs-mode.spec.ts:58:7 › Docs Mode (Phase 3) › new document appears in sidebar list
+[1A[2K[chromium] › e2e/debug-create.spec.ts:3:5 › debug document creation
+Initial document count: [33m6[39m
+
+[1A[2KSidebar create button visible: [33mtrue[39m
+
+[1A[2KClicked sidebar button
+
+[1A[2K[273/869] [chromium] › e2e/docs-mode.spec.ts:83:7 › Docs Mode (Phase 3) › can edit document title
+[1A[2K[274/869] [chromium] › e2e/docs-mode.spec.ts:114:7 › Docs Mode (Phase 3) › can navigate between documents using sidebar
+[1A[2K[275/869] [chromium] › e2e/docs-mode.spec.ts:146:7 › Docs Mode (Phase 3) › editor shows save status indicator
+[1A[2K[276/869] [chromium] › e2e/document-isolation.spec.ts:61:7 › Document Isolation - Critical Data Integrity › content typed in one document does NOT appear in another document
+[1A[2K[277/869] [chromium] › e2e/document-isolation.spec.ts:124:7 › Document Isolation - Critical Data Integrity › rapid navigation between documents does not cause content contamination
+[1A[2K[278/869] [chromium] › e2e/document-isolation.spec.ts:195:7 › Document Isolation - Critical Data Integrity › editing while rapidly switching documents stays isolated
+[1A[2K[279/869] [chromium] › e2e/document-workflows.spec.ts:67:7 › Issue Program Assignment › user creates issue and assigns to program via dropdown
+[1A[2K[280/869] [chromium] › e2e/document-workflows.spec.ts:98:7 › Issue Week Assignment › user assigns issue to sprint via properties panel
+[1A[2K[281/869] [chromium] › e2e/document-workflows.spec.ts:143:7 › Issue to Project Conversion › user converts issue to project and sees in projects list
+[1A[2KCurrent URL after click: http://localhost:10301/documents/ba37875f-a19a-4b1b-9edc-a5fd45ae69e7
+
+[1A[2KNew document count: [33m7[39m
+
+[1A[2K
+=== Browser console messages ===
+
+[1A[2K[error] Failed to load resource: the server responded with a status of 401 (Unauthorized)
+
+[1A[2K[log] [Schema] Initialized schema version: 2
+
+[1A[2K[error] WebSocket connection to 'ws://localhost:10301/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[error] [RealtimeEvents] Error: Event
+
+[1A[2K[log] [RealtimeEvents] Disconnected
+
+[1A[2K[error] WebSocket connection to 'ws://localhost:10301/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[error] [RealtimeEvents] Error: Event
+
+[1A[2K[log] [RealtimeEvents] Disconnected
+
+[1A[2K[log] [Editor] IndexedDB synced for wiki:ba37875f-a19a-4b1b-9edc-a5fd45ae69e7
+
+[1A[2K[error] WebSocket connection to 'ws://localhost:10301/collaboration/wiki:ba37875f-a19a-4b1b-9edc-a5fd45ae69e7' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[log] [Editor] WebSocket status: connecting for wiki:ba37875f-a19a-4b1b-9edc-a5fd45ae69e7
+
+[1A[2K[error] WebSocket connection to 'ws://localhost:10301/collaboration/wiki:ba37875f-a19a-4b1b-9edc-a5fd45ae69e7' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[log] [Editor] WebSocket status: connecting for wiki:ba37875f-a19a-4b1b-9edc-a5fd45ae69e7
+
+[1A[2K[error] WebSocket connection to 'ws://localhost:10301/collaboration/wiki:ba37875f-a19a-4b1b-9edc-a5fd45ae69e7' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[log] [Editor] WebSocket status: connecting for wiki:ba37875f-a19a-4b1b-9edc-a5fd45ae69e7
+
+[1A[2K[error] WebSocket connection to 'ws://localhost:10301/collaboration/wiki:ba37875f-a19a-4b1b-9edc-a5fd45ae69e7' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[log] [RealtimeEvents] Reconnecting...
+
+[1A[2K[error] WebSocket connection to 'ws://localhost:10301/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[error] [RealtimeEvents] Error: Event
+
+[1A[2K[log] [RealtimeEvents] Disconnected
+
+[1A[2K=== End console messages ===
+
+
+[1A[2K[282/869] [chromium] › e2e/document-workflows.spec.ts:196:7 › Week Planning Board › sprint planning board displays issues
+[1A[2K[283/869] [chromium] › e2e/documents.spec.ts:15:7 › Documents › can view document list
+[1A[2K[284/869] [chromium] › e2e/documents.spec.ts:23:7 › Documents › can create a new document
+[1A[2K[285/869] [chromium] › e2e/documents.spec.ts:36:7 › Documents › can edit document title
+[1A[2K[286/869] [chromium] › e2e/documents.spec.ts:60:7 › Documents › document list updates when new document created
+[1A[2K[287/869] [chromium] › e2e/drag-handle.spec.ts:133:9 › Drag Handle - Block Reordering › Drag Handle Visibility › drag handle appears on hover over paragraph
+[1A[2K[288/869] [chromium] › e2e/drag-handle.spec.ts:148:9 › Drag Handle - Block Reordering › Drag Handle Visibility › drag handle appears on hover over heading
+[1A[2K[289/869] [chromium] › e2e/drag-handle.spec.ts:164:9 › Drag Handle - Block Reordering › Drag Handle Visibility › drag handle stays visible when moving cursor to it
+[1A[2K[290/869] [chromium] › e2e/drag-handle.spec.ts:180:9 › Drag Handle - Block Reordering › Drag Handle Visibility › drag handle hides when mouse leaves editor area
+[1A[2K[291/869] [chromium] › e2e/drag-handle.spec.ts:200:9 › Drag Handle - Block Reordering › Block Selection via Click › clicking drag handle selects the paragraph
+[1A[2K[292/869] [chromium] › e2e/drag-handle.spec.ts:215:9 › Drag Handle - Block Reordering › Block Selection via Click › clicking drag handle on second block selects that block
+[1A[2K[293/869] [chromium] › e2e/drag-handle.spec.ts:231:9 › Drag Handle - Block Reordering › Paragraph Reordering › can drag first paragraph to end
+[1A[2K[294/869] [chromium] › e2e/drag-handle.spec.ts:247:9 › Drag Handle - Block Reordering › Paragraph Reordering › can drag last paragraph to beginning
+[1A[2K[295/869] [chromium] › e2e/drag-handle.spec.ts:276:9 › Drag Handle - Block Reordering › Paragraph Reordering › can drag middle paragraph down
+[1A[2K[296/869] [chromium] › e2e/drag-handle.spec.ts:287:9 › Drag Handle - Block Reordering › Paragraph Reordering › can drag middle paragraph up
+[1A[2K[297/869] [chromium] › e2e/drag-handle.spec.ts:300:9 › Drag Handle - Block Reordering › Content Preservation › drag preserves full paragraph content
+[1A[2K[298/869] [chromium] › e2e/drag-handle.spec.ts:314:9 › Drag Handle - Block Reordering › Content Preservation › drag preserves markdown-style heading
+[1A[2K[299/869] [chromium] › e2e/drag-handle.spec.ts:375:9 › Drag Handle - Block Reordering › Heading Reordering › can drag heading block
+[1A[2K[300/869] [chromium] › e2e/drag-handle.spec.ts:442:9 › Drag Handle - Block Reordering › Document Embed Reordering › can drag document embed block
+[1A[2K[301/869] [chromium] › e2e/drag-handle.spec.ts:608:9 › Drag Handle - Block Reordering › Multiple Drag Operations › can perform multiple sequential drags
+[1A[2K[302/869] [chromium] › e2e/drag-handle.spec.ts:633:9 › Drag Handle - Block Reordering › Persistence › reordered content persists after page reload
+[1A[2K[303/869] [chromium] › e2e/drag-handle.spec.ts:666:9 › Drag Handle - Block Reordering › Edge Cases › dragging to same position does nothing
+[1A[2K[304/869] [chromium] › e2e/drag-handle.spec.ts:714:9 › Drag Handle - Block Reordering › Edge Cases › handles single block document
+[1A[2K[305/869] [chromium] › e2e/drag-handle.spec.ts:729:9 › Drag Handle - Block Reordering › Edge Cases › handles empty paragraphs
+[1A[2K[306/869] [chromium] › e2e/edge-cases.spec.ts:58:7 › Edge Cases › handles very long document titles (500+ characters)
+[1A[2K[307/869] [chromium] › e2e/edge-cases.spec.ts:105:7 › Edge Cases › handles empty document gracefully
+[1A[2K[308/869] [chromium] › e2e/edge-cases.spec.ts:126:7 › Edge Cases › rapid typing does not lose characters
+[1A[2K[309/869] [chromium] › e2e/edge-cases.spec.ts:144:7 › Edge Cases › rapid undo/redo operations
+[1A[2K[310/869] [chromium] › e2e/edge-cases.spec.ts:187:7 › Edge Cases › pasting large content (10KB+ text)
+[1A[2K[311/869] [chromium] › e2e/edge-cases.spec.ts:221:7 › Edge Cases › handles many mentions in one document (20+ mentions)
+[1A[2K[312/869] [chromium] › e2e/edge-cases.spec.ts:254:7 › Edge Cases › handles deeply nested content (lists within lists)
+[1A[2K[313/869] [chromium] › e2e/edge-cases.spec.ts:298:7 › Edge Cases › handles special characters in titles
+[1A[2K[314/869] [chromium] › e2e/edge-cases.spec.ts:320:7 › Edge Cases › handles Unicode content (emoji, CJK characters)
+[1A[2K[315/869] [chromium] › e2e/edge-cases.spec.ts:346:7 › Edge Cases › handles simultaneous formatting operations
+[1A[2K[316/869] [chromium] › e2e/edge-cases.spec.ts:378:7 › Edge Cases › handles switching document types rapidly
+[1A[2K[317/869] [chromium] › e2e/emoji.spec.ts:31:7 › Emoji Picker › typing : shows emoji picker
+[1A[2K[318/869] [chromium] › e2e/emoji.spec.ts:46:7 › Emoji Picker › typing filters emoji list
+[1A[2K[319/869] [chromium] › e2e/emoji.spec.ts:70:7 › Emoji Picker › can select emoji with Enter key
+[1A[2K[320/869] [chromium] › e2e/emoji.spec.ts:94:7 › Emoji Picker › can select emoji with click
+[1A[2K[321/869] [chromium] › e2e/emoji.spec.ts:122:7 › Emoji Picker › emoji renders correctly in document
+[1A[2K[322/869] [chromium] › e2e/emoji.spec.ts:153:7 › Emoji Picker › emoji persists after save and reload
+[1A[2K[323/869] [chromium] › e2e/emoji.spec.ts:200:7 › Emoji Picker › can navigate emoji picker with arrow keys
+[1A[2K[324/869] [chromium] › e2e/emoji.spec.ts:237:7 › Emoji Picker › pressing Escape closes emoji picker
+[1A[2K[325/869] [chromium] › e2e/emoji.spec.ts:259:7 › Emoji Picker › typing non-matching text shows no results
+[1A[2K[326/869] [chromium] › e2e/emoji.spec.ts:290:7 › Emoji Picker › can insert multiple emojis in same document
+[1A[2K[327/869] [chromium] › e2e/error-handling.spec.ts:47:7 › Error Handling › handles API 500 error gracefully
+[1A[2K[328/869] [chromium] › e2e/error-handling.spec.ts:71:7 › Error Handling › handles network disconnect gracefully
+[1A[2K[329/869] [chromium] › e2e/error-handling.spec.ts:98:7 › Error Handling › handles mention search failure gracefully
+[1A[2K[330/869] [chromium] › e2e/error-handling.spec.ts:127:7 › Error Handling › handles websocket reconnection
+[1A[2K[331/869] [chromium] › e2e/error-handling.spec.ts:154:7 › Error Handling › editor remains usable after error
+[1A[2K[332/869] [chromium] › e2e/error-handling.spec.ts:187:7 › Error Handling › handles CSRF token expiration
+[1A[2K[333/869] [chromium] › e2e/error-handling.spec.ts:216:7 › Error Handling › handles concurrent API errors
+[1A[2K[334/869] [chromium] › e2e/error-handling.spec.ts:240:7 › Error Handling › recovers from temporary network failure
+[1A[2K[335/869] [chromium] › e2e/existing-user-invite.spec.ts:38:7 › Existing User Invite Flow › team grid users have valid user_id (not null)
+[1A[2K[336/869] [chromium] › e2e/existing-user-invite.spec.ts:62:7 › Existing User Invite Flow › team people endpoint returns users with valid user_id
+[1A[2K[337/869] [chromium] › e2e/existing-user-invite.spec.ts:79:7 › Existing User Invite Flow › assignment API rejects null userId with 400 error
+[1A[2K[338/869] [chromium] › e2e/existing-user-invite.spec.ts:107:7 › Existing User Invite Flow › assignment API rejects empty string userId with 400 error
+[1A[2K[339/869] [chromium] › e2e/existing-user-invite.spec.ts:131:7 › Existing User Invite Flow › user with valid user_id can be assigned to sprint
+[1A[2K[340/869] [chromium] › e2e/existing-user-invite.spec.ts:177:7 › Existing User Invite Flow › inviting existing user adds them as member directly
+[1A[2K[341/869] [chromium] › e2e/existing-user-invite.spec.ts:204:7 › Existing User Invite Flow › team grid can be scrolled and shows valid users
+[1A[2K[342/869] [chromium] › e2e/existing-user-invite.spec.ts:221:7 › Existing User Invite Flow › clicking cell opens program selector for valid user
+[1A[2K[343/869] [chromium] › e2e/existing-user-invite.spec.ts:255:7 › Existing User Invite Flow › accountability endpoint returns users with valid ids
+[1A[2K[344/869] [chromium] › e2e/features-real.spec.ts:78:7 › TIER 1: @Mentions - REAL TESTS › typing @ shows dropdown with actual workspace users
+[1A[2K[345/869] [chromium] › e2e/features-real.spec.ts:94:7 › TIER 1: @Mentions - REAL TESTS › typing @name filters to matching users
+[1A[2K[346/869] [chromium] › e2e/features-real.spec.ts:109:7 › TIER 1: @Mentions - REAL TESTS › selecting mention inserts clickable link
+[1A[2K[347/869] [chromium] › e2e/features-real.spec.ts:139:7 › TIER 1: @Mentions - REAL TESTS › can @mention documents (not just users)
+[1A[2K[348/869] [chromium] › e2e/features-real.spec.ts:156:7 › TIER 1: Image Upload - REAL TESTS › can upload image via /image command
+[1A[2K[349/869] [chromium] › e2e/features-real.spec.ts:185:7 › TIER 1: Image Upload - REAL TESTS › uploaded image persists after page reload
+[1A[2K[350/869] [chromium] › e2e/features-real.spec.ts:218:7 › TIER 1: Image Upload - REAL TESTS › image is not blocked by CORS (no console errors)
+[1A[2K[351/869] [chromium] › e2e/features-real.spec.ts:258:7 › TIER 2: File Attachments - REAL TESTS › can attach PDF via /file command
+[1A[2K[352/869] [chromium] › e2e/features-real.spec.ts:292:7 › TIER 2: Tables - REAL TESTS › can create table via /table command
+[1A[2K[353/869] [chromium] › e2e/features-real.spec.ts:305:7 › TIER 2: Tables - REAL TESTS › can type in table cells
+[1A[2K[354/869] [chromium] › e2e/features-real.spec.ts:331:7 › TIER 2: Tables - REAL TESTS › table persists after reload
+[1A[2K[355/869] [chromium] › e2e/features-real.spec.ts:365:7 › TIER 2: Toggle/Collapsible - REAL TESTS › can create toggle via /toggle command
+[1A[2K[356/869] [chromium] › e2e/features-real.spec.ts:378:7 › TIER 2: Toggle/Collapsible - REAL TESTS › toggle expands and collapses
+[1A[2K[357/869] [chromium] › e2e/features-real.spec.ts:417:7 › TIER 2: Inline Code - REAL TESTS › backticks create inline code
+[1A[2K[358/869] [chromium] › e2e/features-real.spec.ts:429:7 › TIER 2: Inline Code - REAL TESTS › inline code has distinct styling
+[1A[2K[359/869] [chromium] › e2e/features-real.spec.ts:452:7 › TIER 3: Syntax Highlighting - REAL TESTS › code block has syntax highlighting
+[1A[2K[360/869] [chromium] › e2e/features-real.spec.ts:482:7 › TIER 3: Syntax Highlighting - REAL TESTS › can select language for code block
+[1A[2K[361/869] [chromium] › e2e/features-real.spec.ts:498:7 › TIER 3: Emoji - REAL TESTS › :emoji: syntax inserts emoji
+[1A[2K[362/869] [chromium] › e2e/features-real.spec.ts:514:7 › TIER 3: Emoji - REAL TESTS › emoji picker shows when typing :
+[1A[2K[363/869] [chromium] › e2e/features-real.spec.ts:530:7 › TIER 3: Backlinks - REAL TESTS › backlinks API returns linking documents
+[1A[2K[364/869] [chromium] › e2e/features-real.spec.ts:549:7 › TIER 3: Backlinks - REAL TESTS › linking to document creates backlink
+[1A[2K[365/869] [chromium] › e2e/features-real.spec.ts:594:7 › API Health - REAL TESTS › mentions API does not return 500
+[1A[2K[366/869] [chromium] › e2e/features-real.spec.ts:603:7 › API Health - REAL TESTS › file upload API does not return 500
+[1A[2K[367/869] [chromium] › e2e/features-real.spec.ts:617:7 › API Health - REAL TESTS › backlinks API does not return 500
+[1A[2K[368/869] [chromium] › e2e/feedback-consolidation.spec.ts:52:7 › Issues List: Source Display › source column/badge shows "External" for external issues
+[1A[2K[369/869] [chromium] › e2e/file-attachments.spec.ts:67:7 › File Attachments › should insert file attachment via slash command
+[1A[2K[370/869] [chromium] › e2e/file-attachments.spec.ts:100:7 › File Attachments › should show file upload progress
+[1A[2K[371/869] [chromium] › e2e/feedback-consolidation.spec.ts:76:7 › Issues List: Needs Triage Filter › Needs Triage filter tab is present
+[1A[2K[372/869] [chromium] › e2e/file-attachments.spec.ts:128:7 › File Attachments › should show file download link after upload
+[1A[2K[373/869] [chromium] › e2e/file-attachments.spec.ts:161:7 › File Attachments › should validate file type
+[1A[2K[374/869] [chromium] › e2e/file-attachments.spec.ts:193:7 › File Attachments › should persist file attachment after reload
+[1A[2K[375/869] [chromium] › e2e/feedback-consolidation.spec.ts:92:7 › Public Feedback Form › public form accessible without login
+[1A[2K[376/869] [chromium] › e2e/file-attachments.spec.ts:239:7 › File Attachments › should display file icon based on type
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:193:7 › File Attachments › should persist file attachment after reload
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[377/869] [chromium] › e2e/feedback-consolidation.spec.ts:108:7 › Public Feedback Form › submitting creates issue with source=external, state=triage
+[1A[2KCONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/collaboration/wiki:ffea573a-e0f3-4704-8777-833395a5e854' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[378/869] [chromium] › e2e/file-attachments.spec.ts:269:7 › File Attachments › should show file size in attachment
+[1A[2K[379/869] [chromium] › e2e/file-attachments.spec.ts:304:7 › File Attachments › should upload Word document (.docx) successfully
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:239:7 › File Attachments › should display file icon based on type
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10201/collaboration/wiki:8c3b4167-62d2-4539-9c3a-e62a990c9e7c' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:193:7 › File Attachments › should persist file attachment after reload
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/collaboration/wiki:ffea573a-e0f3-4704-8777-833395a5e854' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:239:7 › File Attachments › should display file icon based on type
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10201/collaboration/wiki:8c3b4167-62d2-4539-9c3a-e62a990c9e7c' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:269:7 › File Attachments › should show file size in attachment
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10501/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:193:7 › File Attachments › should persist file attachment after reload
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/collaboration/wiki:ffea573a-e0f3-4704-8777-833395a5e854' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:161:7 › File Attachments › should validate file type
+CONSOLE ERROR: File type blocked: {name: potentially-dangerous.exe, type: application/x-msdownload, extension: .exe}
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:239:7 › File Attachments › should display file icon based on type
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10201/collaboration/wiki:8c3b4167-62d2-4539-9c3a-e62a990c9e7c' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[380/869] [chromium] › e2e/file-attachments.spec.ts:348:7 › File Attachments › should upload .doc file successfully
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:269:7 › File Attachments › should show file size in attachment
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10501/collaboration/wiki:9f8b2b40-0b9a-44ef-92c0-097172d06f83' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: WebSocket connection to 'ws://localhost:10501/collaboration/wiki:9f8b2b40-0b9a-44ef-92c0-097172d06f83' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:193:7 › File Attachments › should persist file attachment after reload
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/collaboration/wiki:ffea573a-e0f3-4704-8777-833395a5e854' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:348:7 › File Attachments › should upload .doc file successfully
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10201/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[381/869] [chromium] › e2e/file-attachments.spec.ts:385:7 › File Attachments › should upload non-standard file types (.psd, .sketch, etc.)
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:269:7 › File Attachments › should show file size in attachment
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10501/collaboration/wiki:9f8b2b40-0b9a-44ef-92c0-097172d06f83' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[382/869] [chromium] › e2e/file-attachments.spec.ts:422:7 › File Attachments › should block dangerous executable files (.exe)
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:422:7 › File Attachments › should block dangerous executable files (.exe)
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10301/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:348:7 › File Attachments › should upload .doc file successfully
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10201/collaboration/wiki:c94901fb-9b5b-4a36-9a67-ae70e57450a0' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:422:7 › File Attachments › should block dangerous executable files (.exe)
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10301/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:193:7 › File Attachments › should persist file attachment after reload
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:348:7 › File Attachments › should upload .doc file successfully
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10201/collaboration/wiki:c94901fb-9b5b-4a36-9a67-ae70e57450a0' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[383/869] [chromium] › e2e/file-attachments.spec.ts:460:7 › File Attachments › should reject files exceeding 1GB size limit
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:269:7 › File Attachments › should show file size in attachment
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10501/collaboration/wiki:9f8b2b40-0b9a-44ef-92c0-097172d06f83' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:348:7 › File Attachments › should upload .doc file successfully
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10201/collaboration/wiki:c94901fb-9b5b-4a36-9a67-ae70e57450a0' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:460:7 › File Attachments › should reject files exceeding 1GB size limit
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10001/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:422:7 › File Attachments › should block dangerous executable files (.exe)
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10301/collaboration/wiki:ac7ac08f-290a-4fdc-8f4f-b606ad547590' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:193:7 › File Attachments › should persist file attachment after reload
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/collaboration/wiki:ffea573a-e0f3-4704-8777-833395a5e854' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:422:7 › File Attachments › should block dangerous executable files (.exe)
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10301/collaboration/wiki:ac7ac08f-290a-4fdc-8f4f-b606ad547590' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: WebSocket connection to 'ws://localhost:10301/collaboration/wiki:ac7ac08f-290a-4fdc-8f4f-b606ad547590' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:460:7 › File Attachments › should reject files exceeding 1GB size limit
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10001/collaboration/wiki:158cb107-1a06-48a7-a04f-37a643aff38a' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:269:7 › File Attachments › should show file size in attachment
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10501/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:348:7 › File Attachments › should upload .doc file successfully
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10201/collaboration/wiki:c94901fb-9b5b-4a36-9a67-ae70e57450a0' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:460:7 › File Attachments › should reject files exceeding 1GB size limit
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10001/collaboration/wiki:158cb107-1a06-48a7-a04f-37a643aff38a' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:422:7 › File Attachments › should block dangerous executable files (.exe)
+CONSOLE ERROR: File type blocked: {name: malware.exe, type: application/x-msdownload, extension: .exe}
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:460:7 › File Attachments › should reject files exceeding 1GB size limit
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10001/collaboration/wiki:158cb107-1a06-48a7-a04f-37a643aff38a' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[384/869] [chromium] › e2e/file-attachments.spec.ts:506:7 › File Attachments › should show navigation warning during active uploads
+[1A[2K[385/869] [chromium] › e2e/file-upload-api.spec.ts:31:7 › File Upload API › requires authentication for upload endpoint
+[1A[2K[386/869] [chromium] › e2e/file-upload-api.spec.ts:50:7 › File Upload API › returns presigned upload URL when authenticated
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:422:7 › File Attachments › should block dangerous executable files (.exe)
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10301/collaboration/wiki:ac7ac08f-290a-4fdc-8f4f-b606ad547590' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[387/869] [chromium] › e2e/file-upload-api.spec.ts:84:7 › File Upload API › confirms upload and returns CDN URL
+[1A[2K[388/869] [chromium] › e2e/feedback-consolidation.spec.ts:159:7 › Public Feedback Form › shows confirmation message after submission
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:506:7 › File Attachments › should show navigation warning during active uploads
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10501/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:348:7 › File Attachments › should upload .doc file successfully
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10201/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[389/869] [chromium] › e2e/icons.spec.ts:4:7 › Icons › renders icons on the login page
+[1A[2K[390/869] [chromium] › e2e/images.spec.ts:114:7 › Images › should show preview immediately after selecting image
+[1A[2K[391/869] [chromium] › e2e/images.spec.ts:125:7 › Images › should upload to CDN and update src
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:193:7 › File Attachments › should persist file attachment after reload
+CONSOLE ERROR: Error fetching backlinks: TypeError: Failed to fetch
+    at M (http://localhost:10101/assets/index-C2vAyoQ1.js:271:118433)
+
+[1A[2KCONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2KCONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/collaboration/wiki:ffea573a-e0f3-4704-8777-833395a5e854' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[392/869] [chromium] › e2e/feedback-consolidation.spec.ts:176:7 › Public Feedback Form › does not show tracking link or status updates
+[1A[2K[393/869] [chromium] › e2e/images.spec.ts:152:7 › Images › should work via /image slash command
+[1A[2K[394/869] [chromium] › e2e/images.spec.ts:169:7 › Images › should persist after page reload
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:506:7 › File Attachments › should show navigation warning during active uploads
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10501/collaboration/wiki:b8b6cd72-cf77-422a-91bf-263b3b44bfd6' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[395/869] [chromium] › e2e/images.spec.ts:210:7 › Images › should queue upload when offline
+[1A[2K[chromium] › e2e/images.spec.ts:125:7 › Images › should upload to CDN and update src
+REQUEST FAILED: http://localhost:10001/api/team/people?includeArchived=true net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10001/api/documents?type=wiki net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10001/api/accountability/action-items net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2 net::ERR_ABORTED
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:506:7 › File Attachments › should show navigation warning during active uploads
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10501/collaboration/wiki:b8b6cd72-cf77-422a-91bf-263b3b44bfd6' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/images.spec.ts:125:7 › Images › should upload to CDN and update src
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10001/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[chromium] › e2e/images.spec.ts:114:7 › Images › should show preview immediately after selecting image
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10301/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[chromium] › e2e/images.spec.ts:152:7 › Images › should work via /image slash command
+REQUEST FAILED: http://localhost:10601/api/accountability/action-items net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10601/api/team/people?includeArchived=true net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10601/api/documents?type=wiki net::ERR_ABORTED
+
+[1A[2K[chromium] › e2e/images.spec.ts:169:7 › Images › should persist after page reload
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2KREQUEST FAILED: http://localhost:10101/api/documents?type=wiki net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10101/api/auth/session net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10101/api/standups/status net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10101/api/team/people?includeArchived=true net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10101/api/programs net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10101/api/accountability/action-items net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10101/api/projects net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10101/api/issues net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: https://fonts.gstatic.com/s/inter/v20/UcC73FwrK3iLTeHuS_nVMrMxCp50SjIa1ZL7.woff2 net::ERR_ABORTED
+
+[1A[2K[396/869] [chromium] › e2e/images.spec.ts:261:7 › Images › should clear IndexedDB after successful upload
+[1A[2K[chromium] › e2e/images.spec.ts:210:7 › Images › should queue upload when offline
+REQUEST FAILED: http://localhost:10201/api/team/people?includeArchived=true net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10201/api/programs net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10201/api/documents?type=wiki net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10201/api/accountability/action-items net::ERR_ABORTED
+
+[1A[2K[chromium] › e2e/images.spec.ts:152:7 › Images › should work via /image slash command
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10601/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:506:7 › File Attachments › should show navigation warning during active uploads
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10501/collaboration/wiki:b8b6cd72-cf77-422a-91bf-263b3b44bfd6' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/images.spec.ts:210:7 › Images › should queue upload when offline
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10201/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[chromium] › e2e/images.spec.ts:169:7 › Images › should persist after page reload
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[397/869] [chromium] › e2e/feedback-consolidation.spec.ts:199:7 › Program View: Feedback Tab Removed › Feedback tab does not appear in Program tabs
+[1A[2K[chromium] › e2e/images.spec.ts:114:7 › Images › should show preview immediately after selecting image
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10301/collaboration/wiki:80bfd668-2aa0-4168-bf16-381ee2c48c15' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/images.spec.ts:125:7 › Images › should upload to CDN and update src
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10001/collaboration/wiki:28d8b1f2-3fd2-4c56-9c68-ddcfd6255075' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/images.spec.ts:261:7 › Images › should clear IndexedDB after successful upload
+REQUEST FAILED: http://localhost:10702/api/standups/status net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10702/api/issues net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10702/api/team/people?includeArchived=true net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10702/api/projects net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10702/api/documents?type=wiki net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10702/api/programs net::ERR_ABORTED
+
+[1A[2KREQUEST FAILED: http://localhost:10702/api/accountability/action-items net::ERR_ABORTED
+
+[1A[2K[chromium] › e2e/images.spec.ts:114:7 › Images › should show preview immediately after selecting image
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10301/collaboration/wiki:80bfd668-2aa0-4168-bf16-381ee2c48c15' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/images.spec.ts:125:7 › Images › should upload to CDN and update src
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10001/collaboration/wiki:28d8b1f2-3fd2-4c56-9c68-ddcfd6255075' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/images.spec.ts:152:7 › Images › should work via /image slash command
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10601/collaboration/wiki:e3ce5b93-ca0f-4c07-8752-fd5a9a3e3180' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/images.spec.ts:169:7 › Images › should persist after page reload
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/collaboration/wiki:a955fc4b-9ac8-4f3f-9508-df61ba88edf5' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/images.spec.ts:210:7 › Images › should queue upload when offline
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10201/collaboration/wiki:7be32e11-af26-4584-9466-70602c44c2c4' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:506:7 › File Attachments › should show navigation warning during active uploads
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10501/collaboration/wiki:b8b6cd72-cf77-422a-91bf-263b3b44bfd6' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/images.spec.ts:114:7 › Images › should show preview immediately after selecting image
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10301/collaboration/wiki:80bfd668-2aa0-4168-bf16-381ee2c48c15' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/images.spec.ts:152:7 › Images › should work via /image slash command
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10601/collaboration/wiki:e3ce5b93-ca0f-4c07-8752-fd5a9a3e3180' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/images.spec.ts:169:7 › Images › should persist after page reload
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/collaboration/wiki:a955fc4b-9ac8-4f3f-9508-df61ba88edf5' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/images.spec.ts:125:7 › Images › should upload to CDN and update src
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10001/collaboration/wiki:28d8b1f2-3fd2-4c56-9c68-ddcfd6255075' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/images.spec.ts:210:7 › Images › should queue upload when offline
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10201/collaboration/wiki:7be32e11-af26-4584-9466-70602c44c2c4' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[398/869] [chromium] › e2e/feedback-consolidation.spec.ts:216:7 › Program View: Feedback Tab Removed › Issues tab shows all issues including external ones
+[1A[2KREQUEST FAILED: http://localhost:10201/api/search/mentions?q=i net::ERR_INTERNET_DISCONNECTED
+
+[1A[2KCONSOLE ERROR: Failed to load resource: net::ERR_INTERNET_DISCONNECTED
+
+[1A[2KCONSOLE ERROR: Error fetching documents for embed: TypeError: Failed to fetch
+    at L0e (http://localhost:10201/assets/index-C2vAyoQ1.js:222:11375)
+    at items (http://localhost:10201/assets/index-C2vAyoQ1.js:222:25083)
+    at Object.update (http://localhost:10201/assets/index-C2vAyoQ1.js:222:9805)
+    at CP.updatePluginViews (http://localhost:10201/assets/index-C2vAyoQ1.js:108:46315)
+    at CP.updateStateInner (http://localhost:10201/assets/index-C2vAyoQ1.js:108:45120)
+    at CP.updateState (http://localhost:10201/assets/index-C2vAyoQ1.js:108:43755)
+    at Ese.dispatchTransaction (http://localhost:10201/assets/index-C2vAyoQ1.js:186:5538)
+    at CP.dispatch (http://localhost:10201/assets/index-C2vAyoQ1.js:108:48798)
+    at tne (http://localhost:10201/assets/index-C2vAyoQ1.js:108:40597)
+    at Gte.handleDOMChange (http://localhost:10201/assets/index-C2vAyoQ1.js:108:43129)
+
+[1A[2K[399/869] [chromium] › e2e/images.spec.ts:310:7 › Images › should set alt text from filename
+[1A[2K[chromium] › e2e/images.spec.ts:152:7 › Images › should work via /image slash command
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10601/collaboration/wiki:e3ce5b93-ca0f-4c07-8752-fd5a9a3e3180' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/images.spec.ts:169:7 › Images › should persist after page reload
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/collaboration/wiki:a955fc4b-9ac8-4f3f-9508-df61ba88edf5' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[400/869] [chromium] › e2e/inline-code.spec.ts:50:7 › Inline Code › should create inline code with backtick wrapping
+[1A[2K[401/869] [chromium] › e2e/inline-code.spec.ts:69:7 › Inline Code › should toggle inline code with Cmd/Ctrl+E
+[1A[2K[chromium] › e2e/images.spec.ts:210:7 › Images › should queue upload when offline
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10201/collaboration/wiki:7be32e11-af26-4584-9466-70602c44c2c4' failed: Error in connection establishment: net::ERR_INTERNET_DISCONNECTED
+
+[1A[2KREQUEST FAILED: http://localhost:10201/api/csrf-token net::ERR_INTERNET_DISCONNECTED
+
+[1A[2KCONSOLE ERROR: Failed to load resource: net::ERR_INTERNET_DISCONNECTED
+
+[1A[2KCONSOLE ERROR: Image upload failed: TypeError: Failed to fetch
+    at Q0e (http://localhost:10201/assets/index-C2vAyoQ1.js:222:42365)
+    at KM (http://localhost:10201/assets/index-C2vAyoQ1.js:222:42628)
+    at f.onload (http://localhost:10201/assets/index-C2vAyoQ1.js:222:21476)
+
+[1A[2K[402/869] [chromium] › e2e/feedback-consolidation.spec.ts:237:7 › Data Migration › existing feedback with status=submitted migrates to state=triage
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:506:7 › File Attachments › should show navigation warning during active uploads
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10501/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[403/869] [chromium] › e2e/inline-code.spec.ts:106:7 › Inline Code › should show inline code styling
+[1A[2K[chromium] › e2e/images.spec.ts:310:7 › Images › should set alt text from filename
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10301/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[404/869] [chromium] › e2e/inline-code.spec.ts:144:7 › Inline Code › should persist inline code after reload
+[1A[2K[chromium] › e2e/images.spec.ts:169:7 › Images › should persist after page reload
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/collaboration/wiki:a955fc4b-9ac8-4f3f-9508-df61ba88edf5' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[405/869] [chromium] › e2e/feedback-consolidation.spec.ts:262:7 › Data Migration › existing feedback with rejection_reason migrates to state=cancelled
+[1A[2K[chromium] › e2e/file-attachments.spec.ts:506:7 › File Attachments › should show navigation warning during active uploads
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10501/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[chromium] › e2e/images.spec.ts:310:7 › Images › should set alt text from filename
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10301/collaboration/wiki:d7f77baf-f136-46e0-9d42-370082780240' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: WebSocket connection to 'ws://localhost:10301/collaboration/wiki:d7f77baf-f136-46e0-9d42-370082780240' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[chromium] › e2e/images.spec.ts:169:7 › Images › should persist after page reload
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2K[chromium] › e2e/images.spec.ts:310:7 › Images › should set alt text from filename
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10301/collaboration/wiki:d7f77baf-f136-46e0-9d42-370082780240' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[406/869] [chromium] › e2e/inline-code.spec.ts:173:7 › Inline Code › should support multiple inline code elements in one line
+[1A[2K[407/869] [chromium] › e2e/feedback-consolidation.spec.ts:282:7 › Data Migration › migrated feedback retains source=external (from source=feedback)
+[1A[2K[408/869] [chromium] › e2e/inline-code.spec.ts:195:7 › Inline Code › should handle nested backticks
+[1A[2K[409/869] [chromium] › e2e/inline-code.spec.ts:214:7 › Inline Code › should work in combination with other formatting
+[1A[2K[chromium] › e2e/images.spec.ts:169:7 › Images › should persist after page reload
+CONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/events' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2KCONSOLE ERROR: [RealtimeEvents] Error: Event
+
+[1A[2KCONSOLE ERROR: WebSocket connection to 'ws://localhost:10101/collaboration/wiki:a955fc4b-9ac8-4f3f-9508-df61ba88edf5' failed: Error during WebSocket handshake: Unexpected response code: 429
+
+[1A[2K[410/869] [chromium] › e2e/inline-comments.spec.ts:60:7 › Inline Comments › bubble menu shows Comment button on text selection
+[1A[2K[411/869] [chromium] › e2e/inline-comments.spec.ts:70:7 › Inline Comments › can create an inline comment via bubble menu
+[1A[2K[412/869] [chromium] › e2e/inline-comments.spec.ts:97:7 › Inline Comments › can create a comment via Cmd+Shift+M keyboard shortcut
+[1A[2K[413/869] [chromium] › e2e/feedback-consolidation.spec.ts:295:7 › Data Migration › existing issues retain source=internal
+[1A[2K[414/869] [chromium] › e2e/inline-comments.spec.ts:118:7 › Inline Comments › canceling a comment removes the highlight
+[1A[2K[415/869] [chromium] › e2e/feedback-consolidation.spec.ts:312:7 › API Changes › GET /api/issues returns both internal and external issues
+[1A[2K[416/869] [chromium] › e2e/inline-comments.spec.ts:135:7 › Inline Comments › inline comment card shows quoted text, author, and timestamp
+[1A[2K[417/869] [chromium] › e2e/inline-comments.spec.ts:161:7 › Inline Comments › can reply to an existing comment
+[1A[2K[418/869] [chromium] › e2e/feedback-consolidation.spec.ts:328:7 › API Changes › GET /api/issues?state=triage returns only triage items
+[1A[2K[419/869] [chromium] › e2e/inline-comments.spec.ts:189:7 › Inline Comments › resolving a comment collapses thread and removes highlight
+[1A[2K[420/869] [chromium] › e2e/feedback-consolidation.spec.ts:344:7 › API Changes › GET /api/issues?source=external returns only external items
+[1A[2K[421/869] [chromium] › e2e/inline-comments.spec.ts:225:7 › Inline Comments › un-resolving restores thread and highlight
+[1A[2K[422/869] [chromium] › e2e/feedback-consolidation.spec.ts:360:7 › API Changes › POST /api/feedback creates issue with state=triage, source=external
+[1A[2K[423/869] [chromium] › e2e/feedback-consolidation.spec.ts:380:7 › API Changes › POST /api/issues/:id/accept moves to backlog
+[1A[2K[424/869] [chromium] › e2e/inline-comments.spec.ts:259:7 › Inline Comments › comments persist across page reload
+[1A[2K[425/869] [chromium] › e2e/issue-display-id.spec.ts:15:7 › Issue Display IDs › displays issue with hash-number format (#N) in issues list
+[1A[2K[426/869] [chromium] › e2e/issue-display-id.spec.ts:32:7 › Issue Display IDs › displays issue with hash-number format (#N) in issue editor header
+[1A[2K[427/869] [chromium] › e2e/feedback-consolidation.spec.ts:403:7 › API Changes › POST /api/issues/:id/reject moves to cancelled with reason
+[1A[2K[428/869] [chromium] › e2e/issue-display-id.spec.ts:47:7 › Issue Display IDs › new issue gets sequential ticket number
+[1A[2K[429/869] [chromium] › e2e/issue-display-id.spec.ts:66:7 › Issue Display IDs › issue display ID does not contain program prefix
+[1A[2K[430/869] [chromium] › e2e/issue-display-id.spec.ts:86:7 › Issue Display IDs › all issue display IDs use hash-number format
+[1A[2K[431/869] [chromium] › e2e/issue-display-id.spec.ts:116:7 › Issue Display IDs › program issues list shows hash-number format
+[1A[2K[432/869] [chromium] › e2e/issue-display-id.spec.ts:142:7 › Issue Display IDs › command palette shows issues with hash-number format (#N)
+[1A[2K[433/869] [chromium] › e2e/issue-estimates.spec.ts:24:9 › Issue Estimates › Estimate Field UI › shows estimate field in issue editor properties
+[1A[2K[434/869] [chromium] › e2e/issue-estimates.spec.ts:34:9 › Issue Estimates › Estimate Field UI › can enter estimate as free text number
+[1A[2K[435/869] [chromium] › e2e/issue-estimates.spec.ts:53:9 › Issue Estimates › Estimate Field UI › accepts decimal values (0.5 increments)
+[1A[2K[436/869] [chromium] › e2e/issue-estimates.spec.ts:67:9 › Issue Estimates › Estimate Field UI › shows hours label/hint next to estimate field
+[1A[2K[437/869] [chromium] › e2e/issue-estimates.spec.ts:79:9 › Issue Estimates › Week Assignment Validation › allows adding issue without estimate to backlog
+[1A[2K[438/869] [chromium] › e2e/issue-estimates.spec.ts:93:9 › Issue Estimates › Week Assignment Validation › requires estimate before adding issue to sprint
+[1A[2K[439/869] [chromium] › e2e/issue-estimates.spec.ts:136:9 › Issue Estimates › Week Assignment Validation › allows sprint assignment after estimate is set
+[1A[2K[440/869] [chromium] › e2e/issue-estimates.spec.ts:183:9 › Issue Estimates › Week Capacity Display › sprint header shows total estimated hours
+[1A[2K[441/869] [chromium] › e2e/issue-estimates.spec.ts:198:9 › Issue Estimates › Week Capacity Display › sprint timeline cards show estimate totals when issues have estimates
+[1A[2K[442/869] [chromium] › e2e/issue-estimates.spec.ts:228:7 › Progress Chart Integration › progress chart shows estimate-based metrics
+[1A[2K[443/869] [chromium] › e2e/issues-bulk-operations.spec.ts:25:7 › Issues - Bulk Operations › can right-click to open context menu
+[1A[2K[444/869] [chromium] › e2e/issues-bulk-operations.spec.ts:44:7 › Issues - Bulk Operations › can archive an issue via context menu
+[1A[2K[445/869] [chromium] › e2e/issues-bulk-operations.spec.ts:80:7 › Issues - Bulk Operations › context menu shows change status option
+[1A[2K[446/869] [chromium] › e2e/issues.spec.ts:15:7 › Issues (Phase 5) › can navigate to Issues mode via URL
+[1A[2K[447/869] [chromium] › e2e/issues.spec.ts:26:7 › Issues (Phase 5) › shows issues list or empty state
+[1A[2K[448/869] [chromium] › e2e/issues.spec.ts:33:7 › Issues (Phase 5) › can create a new issue
+[1A[2K[449/869] [chromium] › e2e/issues.spec.ts:46:7 › Issues (Phase 5) › new issue appears with ticket number in list
+[1A[2K[450/869] [chromium] › e2e/issues.spec.ts:60:7 › Issues (Phase 5) › issue has filter tabs (All, Active, Backlog, Done)
+[1A[2K[451/869] [chromium] › e2e/issues.spec.ts:70:7 › Issues (Phase 5) › can switch between list and kanban view
+[1A[2K[452/869] [chromium] › e2e/issues.spec.ts:85:7 › Issues (Phase 5) › issue editor shows full document editor
+[1A[2K[453/869] [chromium] › e2e/issues.spec.ts:99:7 › Issues (Phase 5) › can edit issue title
+[1A[2K[454/869] [chromium] › e2e/issues.spec.ts:122:7 › Issues (Phase 5) › issue list shows status column
+[1A[2K[455/869] [chromium] › e2e/issues.spec.ts:132:7 › Issues (Phase 5) › issue list shows priority column
+[1A[2K[456/869] [chromium] › e2e/issues.spec.ts:142:7 › Issues (Phase 5) › clicking issue row opens editor
+[1A[2K[457/869] [chromium] › e2e/issues.spec.ts:161:7 › Issues (Phase 5) › filter tabs filter the issues list
+[1A[2K[458/869] [chromium] › e2e/issues.spec.ts:171:7 › Issues (Phase 5) › keyboard shortcut C creates new issue
+[1A[2K[459/869] [chromium] › e2e/manager-reviews-visual.spec.ts:156:7 › Manager Reviews Visual Verification › plan review supports request changes and approve-with-note flows
+[1A[2K[460/869] [chromium] › e2e/manager-reviews-visual.spec.ts:209:7 › Manager Reviews Visual Verification › retro review requires a rating before approve and persists note
+[1A[2K[461/869] [chromium] › e2e/manager-reviews.spec.ts:23:7 › Manager Reviews › reviews page renders with grid and sidebar navigation
+[1A[2K[462/869] [chromium] › e2e/manager-reviews.spec.ts:49:7 › Manager Reviews › GET /api/team/reviews returns valid data structure
+[1A[2K[463/869] [chromium] › e2e/manager-reviews.spec.ts:88:7 › Manager Reviews › POST /api/weeks/:id/approve-review with rating succeeds
+[1A[2K[464/869] [chromium] › e2e/manager-reviews.spec.ts:123:7 › Manager Reviews › POST /api/weeks/:id/approve-review rejects invalid ratings
+[1A[2K[465/869] [chromium] › e2e/manager-reviews.spec.ts:170:7 › Manager Reviews › POST /api/weeks/:id/approve-review without rating is rejected
+[1A[2K[466/869] [chromium] › e2e/manager-reviews.spec.ts:196:7 › Manager Reviews › GET /api/team/reviews rejects non-admin users
+[1A[2K[467/869] [chromium] › e2e/mentions.spec.ts:51:7 › Mentions › typing @ opens mention popup
+[1A[2K[468/869] [chromium] › e2e/mentions.spec.ts:84:7 › Mentions › mention popup shows search results
+[1A[2K[469/869] [chromium] › e2e/mentions.spec.ts:99:7 › Mentions › can navigate mention list with keyboard
+[1A[2K[470/869] [chromium] › e2e/mentions.spec.ts:117:7 › Mentions › pressing Escape closes mention popup
+[1A[2K[471/869] [chromium] › e2e/mentions.spec.ts:134:7 › Mentions › selecting mention inserts styled inline link
+[1A[2K[472/869] [chromium] › e2e/mentions.spec.ts:154:7 › Mentions › mention shows correct styling for people
+
+
+[1A[2K[473/869] [chromium] › e2e/mentions.spec.ts:175:7 › Mentions › filtering works when typing after @
+[1A[2K[474/869] [chromium] › e2e/mentions.spec.ts:192:7 › Mentions › mention popup positioned below cursor
+[1A[2K[475/869] [chromium] › e2e/mentions.spec.ts:209:7 › Mentions › can insert mention with Enter key
+[1A[2K[476/869] [chromium] › e2e/mentions.spec.ts:230:7 › Mentions › empty search shows no results message
+[1A[2K[477/869] [chromium] › e2e/mentions.spec.ts:254:7 › Mentions › should navigate to person on click
+[1A[2K[478/869] [chromium] › e2e/mentions.spec.ts:283:7 › Mentions › should navigate to document on click
+[1A[2K[479/869] [chromium] › e2e/mentions.spec.ts:311:7 › Mentions › should show broken styling for deleted target
+[1A[2K[chromium] › e2e/mentions.spec.ts:51:7 › Mentions › typing @ opens mention popup
+Console messages: [
+  [32m"error: WebSocket connection to 'ws://localhost:10001/events' failed: Error during WebSocket handshake: Unexpected response code: 429"[39m,
+  [32m'error: [RealtimeEvents] Error: Event'[39m,
+  [32m'log: [RealtimeEvents] Disconnected'[39m,
+  [32m"error: WebSocket connection to 'ws://localhost:10001/events' failed: Error during WebSocket handshake: Unexpected response code: 429"[39m,
+  [32m'error: [RealtimeEvents] Error: Event'[39m,
+  [32m'log: [RealtimeEvents] Disconnected'[39m,
+  [32m'log: [Editor] IndexedDB synced for wiki:4d9eb375-ba00-4394-abb5-4202ca77b206'[39m,
+  [32m"error: WebSocket connection to 'ws://localhost:10001/collaboration/wiki:4d9eb375-ba00-4394-abb5-4202ca77b206' failed: Error during WebSocket handshake: Unexpected response code: 429"[39m,
+  [32m'log: [Editor] WebSocket status: connecting for wiki:4d9eb375-ba00-4394-abb5-4202ca77b206'[39m,
+  [32m"error: WebSocket connection to 'ws://localhost:10001/collaboration/wiki:4d9eb375-ba00-4394-abb5-4202ca77b206' failed: Error during WebSocket handshake: Unexpected response code: 429"[39m,
+  [32m'log: [Editor] WebSocket status: connecting for wiki:4d9eb375-ba00-4394-abb5-4202ca77b206'[39m,
+  [32m"error: WebSocket connection to 'ws://localhost:10001/collaboration/wiki:4d9eb375-ba00-4394-abb5-4202ca77b206' failed: Error during WebSocket handshake: Unexpected response code: 429"[39m,
+  [32m'log: [Editor] WebSocket status: connecting for wiki:4d9eb375-ba00-4394-abb5-4202ca77b206'[39m,
+  [32m"error: WebSocket connection to 'ws://localhost:10001/collaboration/wiki:4d9eb375-ba00-4394-abb5-4202ca77b206' failed: Error during WebSocket handshake: Unexpected response code: 429"[39m
+]
+
+[1A[2KTippy elements found: [33m1[39m
+
+[1A[2KPopup elements found: [33m3[39m
+
+[1A[2K[480/869] [chromium] › e2e/mentions.spec.ts:343:7 › Mentions › should update mention label when target renamed
+[1A[2K[481/869] [chromium] › e2e/mentions.spec.ts:374:7 › Mentions › should sync mentions between collaborators
+[1A[2K[482/869] [chromium] › e2e/my-week-stale-data.spec.ts:28:7 › My Week - stale data after editing plan/retro › plan edits are visible on /my-week after navigating back
+[1A[2K[483/869] [chromium] › e2e/my-week-stale-data.spec.ts:63:7 › My Week - stale data after editing plan/retro › retro edits are visible on /my-week after navigating back
+[1A[2K[484/869] [chromium] › e2e/pending-invites-allocation.spec.ts:55:7 › Pending Invites in Allocation Grid › pending invite appears in team grid with isPending flag
+[1A[2K[485/869] [chromium] › e2e/pending-invites-allocation.spec.ts:81:7 › Pending Invites in Allocation Grid › pending invite appears in team people API with isPending flag
+[1A[2K[486/869] [chromium] › e2e/pending-invites-allocation.spec.ts:99:7 › Pending Invites in Allocation Grid › pending user appears in grid UI with visual distinction
+
+[1A[2K[487/869] [chromium] › e2e/pending-invites-allocation.spec.ts:119:7 › Pending Invites in Allocation Grid › clicking pending user cell DOES open program selector
+[1A[2K[488/869] [chromium] › e2e/pending-invites-allocation.spec.ts:156:7 › Pending Invites in Allocation Grid › non-pending users still have clickable cells
+[1A[2K[489/869] [chromium] › e2e/pending-invites-allocation.spec.ts:194:7 › Pending Invites in Allocation Grid › assignment API accepts personId for pending users
+[1A[2K[490/869] [chromium] › e2e/pending-invites-allocation.spec.ts:249:7 › Pending Invite Acceptance Flow › accepted invite converts pending user to regular member
+[1A[2K[491/869] [chromium] › e2e/pending-invites-allocation.spec.ts:302:7 › Pending Invite Acceptance Flow › accepted user can now be assigned to programs
+[1A[2K[492/869] [chromium] › e2e/pending-invites-allocation.spec.ts:377:7 › Full Pending User Allocation Flow (Story 7) › allocations made to pending user persist after invite acceptance
+[1A[2K[493/869] [chromium] › e2e/pending-invites-allocation.spec.ts:488:7 › Full Pending User Allocation Flow (Story 7) › UI shows allocation for pending user, then shows active user after acceptance
+[1A[2K[494/869] [chromium] › e2e/performance.spec.ts:72:7 › Performance - Page Load › editor loads within 3 seconds
+[1A[2K[495/869] [chromium] › e2e/performance.spec.ts:88:7 › Performance - Page Load › existing document loads quickly
+[1A[2K[496/869] [chromium] › e2e/performance.spec.ts:118:7 › Performance - Page Load › document list loads quickly
+[1A[2K[497/869] [chromium] › e2e/performance.spec.ts:136:7 › Performance - Page Load › navigation between modes is fast
+[1A[2K[chromium] › e2e/performance.spec.ts:72:7 › Performance - Page Load › editor loads within 3 seconds
+Editor loaded in 790ms
+
+[1A[2K[498/869] [chromium] › e2e/performance.spec.ts:172:7 › Performance - Typing Latency › typing latency is acceptable
+[1A[2K[chromium] › e2e/performance.spec.ts:118:7 › Performance - Page Load › document list loads quickly
+Document list loaded in 575ms
+
+
+[1A[2K[499/869] [chromium] › e2e/performance.spec.ts:195:7 › Performance - Typing Latency › typing is smooth during collaboration
+
+[1A[2K[chromium] › e2e/performance.spec.ts:136:7 › Performance - Page Load › navigation between modes is fast
+Navigation to Projects: 24ms
+
+[1A[2KNavigation to Programs: 31ms
+
+[1A[2KNavigation to Docs: 18ms
+
+[1A[2K[500/869] [chromium] › e2e/performance.spec.ts:228:7 › Performance - Typing Latency › rapid typing does not cause lag
+[1A[2K[chromium] › e2e/performance.spec.ts:172:7 › Performance - Typing Latency › typing latency is acceptable
+Typing latency: 35ms for 17 characters
+
+[1A[2K[501/869] [chromium] › e2e/performance.spec.ts:256:7 › Performance - Large Documents › large document does not freeze
+[1A[2K[502/869] [chromium] › e2e/performance.spec.ts:286:7 › Performance - Large Documents › scrolling large document is smooth
+[1A[2K[chromium] › e2e/performance.spec.ts:228:7 › Performance - Typing Latency › rapid typing does not cause lag
+Rapid typing duration: 444ms for 200 characters
+
+[1A[2K[503/869] [chromium] › e2e/performance.spec.ts:323:7 › Performance - Large Documents › searching in large document is fast
+[1A[2K[chromium] › e2e/performance.spec.ts:88:7 › Performance - Page Load › existing document loads quickly
+Existing document loaded in 128ms
+
+[1A[2K[504/869] [chromium] › e2e/performance.spec.ts:366:7 › Performance - Many Images › many images do not crash the editor
+[1A[2K[chromium] › e2e/performance.spec.ts:195:7 › Performance - Typing Latency › typing is smooth during collaboration
+Typing latency during collaboration: 41ms
+
+[1A[2K[505/869] [chromium] › e2e/performance.spec.ts:448:7 › Performance - Many Images › image-heavy document loads without issues
+[1A[2K[chromium] › e2e/performance.spec.ts:286:7 › Performance - Large Documents › scrolling large document is smooth
+Scroll duration: 211ms
+
+[1A[2K[506/869] [chromium] › e2e/performance.spec.ts:542:7 › Performance - Memory Usage › memory does not grow unbounded during editing
+[1A[2K[507/869] [chromium] › e2e/performance.spec.ts:584:7 › Performance - Memory Usage › memory is released after deleting content
+[1A[2K[508/869] [chromium] › e2e/private-documents.spec.ts:134:7 › Private Documents › shows Private and Workspace sections in sidebar
+[1A[2K[chromium] › e2e/performance.spec.ts:323:7 › Performance - Large Documents › searching in large document is fast
+Search duration: 520ms
+
+[1A[2K[509/869] [chromium] › e2e/private-documents.spec.ts:161:7 › Private Documents › displays private docs under Private section
+[1A[2K[510/869] [chromium] › e2e/private-documents.spec.ts:183:7 › Private Documents › displays workspace docs under Workspace section
+[1A[2K[511/869] [chromium] › e2e/private-documents.spec.ts:205:7 › Private Documents › shows lock icon for private documents
+[1A[2K[512/869] [chromium] › e2e/private-documents.spec.ts:233:7 › Private Documents › creates workspace doc by default
+[1A[2K[chromium] › e2e/performance.spec.ts:542:7 › Performance - Memory Usage › memory does not grow unbounded during editing
+Memory growth: 0.00MB
+
+[1A[2K[513/869] [chromium] › e2e/private-documents.spec.ts:245:7 › Private Documents › can create private doc from new doc button
+[1A[2K[514/869] [chromium] › e2e/private-documents.spec.ts:269:7 › Private Documents › inherits visibility from parent when creating sub-doc
+[1A[2K[515/869] [chromium] › e2e/private-documents.spec.ts:288:7 › Private Documents › shows visibility dropdown in properties sidebar
+[1A[2K[516/869] [chromium] › e2e/private-documents.spec.ts:307:7 › Private Documents › can change doc from workspace to private
+[1A[2K[517/869] [chromium] › e2e/private-documents.spec.ts:343:7 › Private Documents › can change doc from private to workspace
+[1A[2K[518/869] [chromium] › e2e/private-documents.spec.ts:379:7 › Private Documents › changing parent visibility cascades to children
+[1A[2K[519/869] [chromium] › e2e/private-documents.spec.ts:412:7 › Private Documents › private doc not visible to other users
+[1A[2K[520/869] [chromium] › e2e/private-documents.spec.ts:441:7 › Private Documents › private doc visible to workspace admin
+[1A[2K[521/869] [chromium] › e2e/private-documents.spec.ts:469:7 › Private Documents › navigating to private doc URL shows 404 for non-creator
+[1A[2K[chromium] › e2e/performance.spec.ts:584:7 › Performance - Memory Usage › memory is released after deleting content
+Memory before delete: 29.75MB
+
+[1A[2KMemory after delete: 29.75MB
+
+[1A[2K[522/869] [chromium] › e2e/private-documents.spec.ts:497:7 › Private Documents › embedded link to private doc shows placeholder for non-creator
+[1A[2K[523/869] [chromium] › e2e/private-documents.spec.ts:523:7 › Private Documents › mention of private doc shows placeholder for non-creator
+[1A[2K[524/869] [chromium] › e2e/private-documents.spec.ts:549:7 › Private Documents › Cmd+K finds private docs for creator
+[1A[2K[525/869] [chromium] › e2e/private-documents.spec.ts:579:7 › Private Documents › Cmd+K does not find private docs for non-creator
+[1A[2K[526/869] [chromium] › e2e/private-documents.spec.ts:618:7 › Private Documents › admin can still see doc after visibility change
+[1A[2K[527/869] [chromium] › e2e/private-documents.spec.ts:656:7 › Private Documents › moving private doc to workspace parent shows in Workspace section
+[1A[2K[528/869] [chromium] › e2e/program-mode-week-ux.spec.ts:105:7 › Phase 1: Data Model & Status Computation › API returns sprints with sprint_number property
+[1A[2K[529/869] [chromium] › e2e/programs.spec.ts:15:7 › Programs › can navigate to Programs mode via icon rail
+[1A[2K[530/869] [chromium] › e2e/programs.spec.ts:26:7 › Programs › shows programs list with New Program button
+[1A[2K[531/869] [chromium] › e2e/programs.spec.ts:33:7 › Programs › can create a new program
+[1A[2K[532/869] [chromium] › e2e/programs.spec.ts:43:7 › Programs › new program appears in sidebar list
+[1A[2K[533/869] [chromium] › e2e/programs.spec.ts:62:7 › Programs › program editor has tabbed navigation (Overview, Issues, Weeks)
+[1A[2K[534/869] [chromium] › e2e/programs.spec.ts:76:7 › Programs › can switch between program tabs
+[1A[2K[535/869] [chromium] › e2e/programs.spec.ts:99:7 › Programs › Issues tab shows list and kanban view toggle
+[1A[2K[536/869] [chromium] › e2e/programs.spec.ts:114:7 › Programs › can create issue from program Issues tab
+[1A[2K[537/869] [chromium] › e2e/programs.spec.ts:144:7 › Programs › Weeks tab shows auto-generated week timeline
+[1A[2K[538/869] [chromium] › e2e/programs.spec.ts:162:7 › Programs › program list shows issue and sprint counts
+[1A[2K[539/869] [chromium] › e2e/programs.spec.ts:176:7 › Programs › can navigate between programs using sidebar
+[1A[2K[540/869] [chromium] › e2e/programs.spec.ts:200:7 › Programs › program editor has editable title
+[1A[2K[541/869] [chromium] › e2e/programs.spec.ts:212:7 › Programs › program cards show emoji or initial badges
+[1A[2K[542/869] [chromium] › e2e/programs.spec.ts:227:7 › Programs › empty programs page shows create prompt
+[1A[2K[543/869] [chromium] › e2e/programs.spec.ts:235:7 › Programs › can create project from program Projects tab
+[1A[2K[544/869] [chromium] › e2e/programs.spec.ts:258:7 › Programs › Plan Week button navigates to week planning page
+[1A[2K[545/869] [chromium] › e2e/project-weeks.spec.ts:104:7 › Project Weeks Tab › shows allocated team members in the grid
+[1A[2K[546/869] [chromium] › e2e/project-weeks.spec.ts:134:7 › Project Weeks Tab › clicking cell opens weekly plan document with context
+[1A[2K[547/869] [chromium] › e2e/project-weeks.spec.ts:178:7 › Project Weeks Tab › project link in Properties sidebar navigates back to project
+[1A[2K[548/869] [chromium] › e2e/project-weeks.spec.ts:215:7 › Project Allocation Grid API › GET /project-allocation-grid returns allocated people
+[1A[2K[549/869] [chromium] › e2e/project-weeks.spec.ts:243:7 › Project Allocation Grid API › allocation grid shows multiple weeks for same person
+[1A[2K[550/869] [chromium] › e2e/race-conditions.spec.ts:71:7 › Race Conditions - Rapid Operations › rapid save operations do not conflict
+[1A[2K[551/869] [chromium] › e2e/race-conditions.spec.ts:92:7 › Race Conditions - Rapid Operations › rapid title changes are handled correctly
+[1A[2K[552/869] [chromium] › e2e/race-conditions.spec.ts:116:7 › Race Conditions - Rapid Operations › rapid document creation does not cause duplicates
+[1A[2K[553/869] [chromium] › e2e/race-conditions.spec.ts:156:7 › Race Conditions - Rapid Operations › rapid mention searches do not cause race conditions
+[1A[2K[554/869] [chromium] › e2e/race-conditions.spec.ts:186:7 › Race Conditions - Image Upload › image upload while typing does not interrupt editing
+[1A[2K[555/869] [chromium] › e2e/program-mode-week-ux.spec.ts:121:7 › Phase 1: Data Model & Status Computation › API returns sprints with owner info
+[1A[2K[chromium] › e2e/performance.spec.ts:448:7 › Performance - Many Images › image-heavy document loads without issues
+Image-heavy document loaded in 177ms
+
+[1A[2K[556/869] [chromium] › e2e/race-conditions.spec.ts:227:7 › Race Conditions - Image Upload › multiple image uploads in parallel
+[1A[2K[557/869] [chromium] › e2e/race-conditions.spec.ts:271:7 › Race Conditions - Image Upload › mention search while editing
+[1A[2K[558/869] [chromium] › e2e/race-conditions.spec.ts:298:7 › Race Conditions - Network and Offline › offline edits queue and sync when back online
+[1A[2K[559/869] [chromium] › e2e/race-conditions.spec.ts:337:7 › Race Conditions - Network and Offline › slow network does not cause duplicate operations
+[1A[2K[560/869] [chromium] › e2e/real-integration.spec.ts:40:7 › Real Integration - @Mentions › @mention API returns real users from database
+[1A[2K[561/869] [chromium] › e2e/real-integration.spec.ts:66:7 › Real Integration - @Mentions › @mention API filters users by search query
+[1A[2K[562/869] [chromium] › e2e/real-integration.spec.ts:82:7 › Real Integration - @Mentions › typing @ in editor triggers mention suggestion
+[1A[2K[563/869] [chromium] › e2e/real-integration.spec.ts:100:7 › Real Integration - API Health › mentions API returns 200, not 500
+[1A[2K[564/869] [chromium] › e2e/real-integration.spec.ts:115:7 › Real Integration - API Health › file upload API works
+[1A[2K[565/869] [chromium] › e2e/real-integration.spec.ts:142:7 › Real Integration - API Health › CORS headers are set correctly on file endpoints
+[1A[2K[566/869] [chromium] › e2e/program-mode-week-ux.spec.ts:135:7 › Phase 1: Data Model & Status Computation › API returns workspace_sprint_start_date for computing dates
+[1A[2K[567/869] [chromium] › e2e/real-integration.spec.ts:162:7 › Real Integration - Document Editor › can create and edit a document
+[1A[2K[568/869] [chromium] › e2e/real-integration.spec.ts:173:7 › Real Integration - Document Editor › pressing Enter in title focuses editor body
+[1A[2K[569/869] [chromium] › e2e/real-integration.spec.ts:206:7 › Real Integration - Document Editor › new document title is selected for immediate typing
+[1A[2K[570/869] [chromium] › e2e/request-changes-api.spec.ts:55:7 › Request Plan Changes API › POST /api/weeks/:id/request-plan-changes succeeds with valid feedback
+[1A[2K[571/869] [chromium] › e2e/request-changes-api.spec.ts:77:7 › Request Plan Changes API › POST /api/weeks/:id/request-plan-changes returns 400 when feedback is missing
+[1A[2K[572/869] [chromium] › e2e/request-changes-api.spec.ts:95:7 › Request Plan Changes API › POST /api/weeks/:id/request-plan-changes returns 400 when feedback is empty string
+[1A[2K[573/869] [chromium] › e2e/request-changes-api.spec.ts:110:7 › Request Plan Changes API › POST /api/weeks/:id/request-plan-changes returns 400 when feedback exceeds 2000 chars
+[1A[2K[574/869] [chromium] › e2e/request-changes-api.spec.ts:128:7 › Request Plan Changes API › POST /api/weeks/:id/request-plan-changes returns 404 for non-existent sprint
+[1A[2K[575/869] [chromium] › e2e/request-changes-api.spec.ts:143:7 › Request Plan Changes API › POST /api/weeks/:id/request-plan-changes updates sprint properties correctly
+[1A[2K[576/869] [chromium] › e2e/request-changes-api.spec.ts:168:7 › Request Retro Changes API › POST /api/weeks/:id/request-retro-changes succeeds with valid feedback
+[1A[2K[577/869] [chromium] › e2e/request-changes-api.spec.ts:190:7 › Request Retro Changes API › POST /api/weeks/:id/request-retro-changes returns 400 when feedback is missing
+[1A[2K[578/869] [chromium] › e2e/request-changes-api.spec.ts:205:7 › Request Retro Changes API › POST /api/weeks/:id/request-retro-changes returns 400 when feedback exceeds 2000 chars
+[1A[2K[579/869] [chromium] › e2e/request-changes-api.spec.ts:221:7 › Request Retro Changes API › POST /api/weeks/:id/request-retro-changes updates sprint properties correctly
+[1A[2K[580/869] [chromium] › e2e/request-changes-api.spec.ts:246:7 › Request Changes Authorization › non-admin, non-accountable user gets 403 on request-plan-changes
+[1A[2K[581/869] [chromium] › e2e/request-changes-api.spec.ts:266:7 › Request Changes Authorization › non-admin, non-accountable user gets 403 on request-retro-changes
+[1A[2K[582/869] [chromium] › e2e/request-changes-api.spec.ts:286:7 › Request Changes Authorization › unauthenticated request returns 401
+[1A[2K[583/869] [chromium] › e2e/request-changes-ui.spec.ts:111:7 › Request Changes UI › Reviews page shows "Changes Requested" in the legend
+[1A[2K[584/869] [chromium] › e2e/request-changes-ui.spec.ts:122:7 › Request Changes UI › Reviews page renders with week headers and review grid
+[1A[2K[585/869] [chromium] › e2e/request-changes-ui.spec.ts:136:7 › Request Changes UI › Review Plans button appears when pending plans exist
+[1A[2K[586/869] [chromium] › e2e/request-changes-ui.spec.ts:151:7 › Request Changes UI › Batch review navigates to plan document with review mode
+[1A[2K[587/869] [chromium] › e2e/request-changes-ui.spec.ts:167:7 › Request Changes UI › Request Changes button appears on plan document in review mode
+[1A[2K[588/869] [chromium] › e2e/request-changes-ui.spec.ts:180:7 › Request Changes UI › Reviews page shows all legend colors
+[1A[2K[589/869] [chromium] › e2e/search-api.spec.ts:17:7 › Search API › requires authentication
+[1A[2K[590/869] [chromium] › e2e/search-api.spec.ts:26:7 › Search API › returns people when searching for person documents
+[1A[2K[591/869] [chromium] › e2e/search-api.spec.ts:63:7 › Search API › limits results to reasonable count
+[1A[2K[592/869] [chromium] › e2e/search-api.spec.ts:41:7 › Search API › returns documents when searching for wiki/issue/project
+[1A[2K[593/869] [chromium] › e2e/security.spec.ts:56:7 › Security - XSS Prevention › XSS in document content is escaped
+[1A[2K[594/869] [chromium] › e2e/program-mode-week-ux.spec.ts:147:7 › Phase 1: Data Model & Status Computation › API does NOT return sprint_status in sprint properties
+[1A[2K[595/869] [chromium] › e2e/security.spec.ts:79:7 › Security - XSS Prevention › XSS in document titles is escaped
+[1A[2K[596/869] [chromium] › e2e/security.spec.ts:101:7 › Security - XSS Prevention › XSS in mentions is escaped
+[1A[2K[597/869] [chromium] › e2e/security.spec.ts:121:7 › Security - XSS Prevention › HTML injection in code blocks is escaped
+[1A[2K[598/869] [chromium] › e2e/security.spec.ts:148:7 › Security - XSS Prevention › XSS in image alt text is escaped
+
+[1A[2K[599/869] [chromium] › e2e/security.spec.ts:197:7 › Security - XSS Prevention › XSS via markdown link injection
+[1A[2K[600/869] [chromium] › e2e/security.spec.ts:217:7 › Security - XSS Prevention › XSS via data: URI in links
+[1A[2K[601/869] [chromium] › e2e/security.spec.ts:247:7 › Security - File Upload Validation › file upload validates content type
+[1A[2K[602/869] [chromium] › e2e/security.spec.ts:299:7 › Security - File Upload Validation › file upload rejects executable files
+[1A[2K[603/869] [chromium] › e2e/security.spec.ts:340:7 › Security - File Upload Validation › no directory traversal in file paths
+[1A[2K[604/869] [chromium] › e2e/security.spec.ts:381:7 › Security - CSRF Protection › CSRF tokens are validated on state-changing requests
+[1A[2K[605/869] [chromium] › e2e/security.spec.ts:406:7 › Security - CSRF Protection › CSRF tokens prevent cross-origin requests
+[1A[2K[606/869] [chromium] › e2e/security.spec.ts:435:7 › Security - Authentication and Authorization › authenticated routes require auth
+[1A[2K[607/869] [chromium] › e2e/security.spec.ts:453:7 › Security - Authentication and Authorization › API routes require authentication
+[1A[2K[608/869] [chromium] › e2e/security.spec.ts:468:7 › Security - Authentication and Authorization › users cannot access other workspaces
+[1A[2K[609/869] [chromium] › e2e/security.spec.ts:483:7 › Security - Authentication and Authorization › file URLs are workspace-scoped
+[1A[2K[610/869] [chromium] › e2e/security.spec.ts:500:7 › Security - Session Management › session expires after inactivity
+[1A[2K[611/869] [chromium] › e2e/security.spec.ts:520:7 › Security - Session Management › logout clears session completely
+[1A[2K[612/869] [chromium] › e2e/session-timeout.spec.ts:29:7 › Session Timeout Warning › shows warning modal when 60 seconds remain before timeout
+[1A[2K[613/869] [chromium] › e2e/session-timeout.spec.ts:45:7 › Session Timeout Warning › warning modal displays correct title text
+[1A[2K[614/869] [chromium] › e2e/session-timeout.spec.ts:58:7 › Session Timeout Warning › warning modal displays explanatory message about inactivity
+[1A[2K[615/869] [chromium] › e2e/session-timeout.spec.ts:71:7 › Session Timeout Warning › displays countdown timer in warning modal
+[1A[2K[616/869] [chromium] › e2e/session-timeout.spec.ts:86:7 › Session Timeout Warning › countdown timer format is MM:SS or M:SS
+[1A[2K[617/869] [chromium] › e2e/session-timeout.spec.ts:101:7 › Session Timeout Warning › countdown timer updates every second
+[1A[2K[618/869] [chromium] › e2e/session-timeout.spec.ts:122:7 › Session Timeout Warning › modal has "Stay Logged In" button
+[1A[2K[619/869] [chromium] › e2e/session-timeout.spec.ts:136:7 › Session Timeout Warning › clicking "Stay Logged In" dismisses modal and resets timer
+[1A[2K[620/869] [chromium] › e2e/session-timeout.spec.ts:155:7 › Session Timeout Warning › any user activity (mouse move) dismisses modal and resets timer
+[1A[2K[621/869] [chromium] › e2e/session-timeout.spec.ts:171:7 › Session Timeout Warning › any user activity (keypress) dismisses modal and resets timer
+[1A[2K[622/869] [chromium] › e2e/session-timeout.spec.ts:187:7 › Session Timeout Warning › any user activity (scroll) dismisses modal and resets timer
+[1A[2K[623/869] [chromium] › e2e/session-timeout.spec.ts:205:7 › Session Timeout Warning › logs user out when countdown reaches zero
+[1A[2K[624/869] [chromium] › e2e/session-timeout.spec.ts:225:7 › Session Timeout Warning › shows session expired message after forced logout
+[1A[2K[625/869] [chromium] › e2e/program-mode-week-ux.spec.ts:163:7 › Phase 1: Data Model & Status Computation › seed data creates sprints with varied sprint_numbers for different statuses
+[1A[2K[626/869] [chromium] › e2e/session-timeout.spec.ts:242:7 › Session Timeout Warning › session expired message mentions inactivity as reason
+[1A[2K[627/869] [chromium] › e2e/session-timeout.spec.ts:253:7 › Timer Reset Behavior › rapid clicks on Stay Logged In do not cause duplicate API calls
+[1A[2K[628/869] [chromium] › e2e/session-timeout.spec.ts:317:7 › Timer Reset Behavior › timer resets on page refresh
+[1A[2K[629/869] [chromium] › e2e/session-timeout.spec.ts:297:7 › Timer Reset Behavior › timer survives page navigation within app
+[1A[2K[630/869] [chromium] › e2e/session-timeout.spec.ts:343:7 › 12-Hour Absolute Timeout › shows 5-minute warning before absolute session timeout
+[1A[2K[631/869] [chromium] › e2e/session-timeout.spec.ts:357:7 › 12-Hour Absolute Timeout › absolute timeout warning has different message than inactivity warning
+[1A[2K[632/869] [chromium] › e2e/session-timeout.spec.ts:375:7 › 12-Hour Absolute Timeout › absolute timeout warning says session WILL end, not can be extended
+[1A[2K[633/869] [chromium] › e2e/session-timeout.spec.ts:393:7 › 12-Hour Absolute Timeout › clicking I Understand on absolute warning does NOT extend session
+[1A[2K[634/869] [chromium] › e2e/session-timeout.spec.ts:417:7 › 12-Hour Absolute Timeout › logs user out at 12-hour mark regardless of activity
+[1A[2K[635/869] [chromium] › e2e/session-timeout.spec.ts:446:7 › 12-Hour Absolute Timeout › absolute timeout takes precedence if it occurs before inactivity timeout
+[1A[2K[636/869] [chromium] › e2e/session-timeout.spec.ts:465:7 › 401 Error Handling › shows "session expired" message on login page after timeout
+[1A[2K[637/869] [chromium] › e2e/session-timeout.spec.ts:473:7 › 401 Error Handling › returns user to original page after re-login
+[1A[2K[638/869] [chromium] › e2e/session-timeout.spec.ts:487:7 › 401 Error Handling › returnTo only works for same-origin URLs (security)
+[1A[2K[639/869] [chromium] › e2e/session-timeout.spec.ts:505:7 › 401 Error Handling › API calls without valid session return 401
+[1A[2K[640/869] [chromium] › e2e/session-timeout.spec.ts:515:7 › Activity Tracking › mouse activity resets inactivity timer
+[1A[2K[641/869] [chromium] › e2e/session-timeout.spec.ts:535:7 › Activity Tracking › keyboard activity resets inactivity timer
+[1A[2K[642/869] [chromium] › e2e/session-timeout.spec.ts:555:7 › Activity Tracking › editor typing resets inactivity timer
+[1A[2K[643/869] [chromium] › e2e/session-timeout.spec.ts:582:7 › Activity Tracking › scroll activity resets inactivity timer
+[1A[2K[644/869] [chromium] › e2e/session-timeout.spec.ts:604:7 › Activity Tracking › throttled activity still resets timer (activity within throttle window is ignored but initial activity counts)
+[1A[2K[645/869] [chromium] › e2e/session-timeout.spec.ts:629:7 › Extend Session API › Stay Logged In calls extend session endpoint
+[1A[2K[646/869] [chromium] › e2e/session-timeout.spec.ts:673:7 › Accessibility › warning modal has role="alertdialog"
+[1A[2K[647/869] [chromium] › e2e/session-timeout.spec.ts:687:7 › Accessibility › warning modal has aria-modal="true"
+[1A[2K[648/869] [chromium] › e2e/session-timeout.spec.ts:700:7 › Accessibility › warning modal has descriptive aria-labelledby
+[1A[2K[649/869] [chromium] › e2e/session-timeout.spec.ts:718:7 › Accessibility › warning modal has aria-describedby for description
+[1A[2K[650/869] [chromium] › e2e/session-timeout.spec.ts:736:7 › Accessibility › focus moves to modal when it appears
+[1A[2K[651/869] [chromium] › e2e/program-mode-week-ux.spec.ts:182:7 › Phase 1: Data Model & Status Computation › sprints compute to different statuses (completed, active, upcoming)
+[1A[2K[652/869] [chromium] › e2e/session-timeout.spec.ts:759:7 › Accessibility › focus moves to Stay Logged In button specifically
+[1A[2K[653/869] [chromium] › e2e/session-timeout.spec.ts:778:7 › Accessibility › focus is trapped within modal
+[1A[2K[654/869] [chromium] › e2e/session-timeout.spec.ts:810:7 › Accessibility › focus returns to previous element after modal closes
+
+[1A[2K[655/869] [chromium] › e2e/session-timeout.spec.ts:629:7 › Extend Session API › Stay Logged In calls extend session endpoint (retry #1)
+[1A[2K[656/869] [chromium] › e2e/session-timeout.spec.ts:843:7 › Accessibility › countdown is announced to screen readers at key intervals
+[1A[2K[657/869] [chromium] › e2e/session-timeout.spec.ts:865:7 › Accessibility › modal backdrop blocks interaction with page behind
+[1A[2K[658/869] [chromium] › e2e/session-timeout.spec.ts:882:7 › Accessibility › Escape key triggers Stay Logged In behavior
+[1A[2K[659/869] [chromium] › e2e/session-timeout.spec.ts:909:7 › Accessibility › Enter key on Stay Logged In button works
+[1A[2K[660/869] [chromium] › e2e/session-timeout.spec.ts:941:7 › Edge Cases › handles computer sleep/wake gracefully
+[1A[2K[661/869] [chromium] › e2e/session-timeout.spec.ts:956:7 › Edge Cases › warning does not appear if user is already on login page
+[1A[2K[662/869] [chromium] › e2e/session-timeout.spec.ts:970:7 › Edge Cases › warning does not appear during initial login flow
+[1A[2K[663/869] [chromium] › e2e/session-timeout.spec.ts:988:7 › Edge Cases › race condition: user clicks Stay Logged In as timer expires
+[1A[2K[664/869] [chromium] › e2e/session-timeout.spec.ts:1028:7 › Edge Cases › modal renders on top of other UI elements (z-index)
+[1A[2K[665/869] [chromium] › e2e/session-timeout.spec.ts:1054:7 › Edge Cases › modal does not conflict with command palette
+[1A[2K[666/869] [chromium] › e2e/session-timeout.spec.ts:1078:7 › Session Info API › GET /api/auth/session returns session metadata
+[1A[2K[667/869] [chromium] › e2e/session-timeout.spec.ts:1099:7 › Session Info API › GET /api/auth/session returns 401 when not authenticated
+[1A[2K[668/869] [chromium] › e2e/session-timeout.spec.ts:1107:7 › Session Info API › session info expiresAt is accurate
+[1A[2K[669/869] [chromium] › e2e/session-timeout.spec.ts:1133:7 › Visual Verification › warning modal is visually centered on screen
+[1A[2K[670/869] [chromium] › e2e/session-timeout.spec.ts:1157:7 › Visual Verification › warning modal has visible backdrop
+[1A[2K[671/869] [chromium] › e2e/session-timeout.spec.ts:1174:7 › Visual Verification › countdown timer is prominently displayed
+[1A[2K[672/869] [chromium] › e2e/session-timeout.spec.ts:1196:7 › Visual Verification › Stay Logged In button has clear visual affordance
+[1A[2K[673/869] [chromium] › e2e/program-mode-week-ux.spec.ts:208:7 › Phase 2: Weeks Tab UI › shows two-part layout: progress graph + horizontal timeline
+[1A[2K[674/869] [chromium] › e2e/spike-isolated.spec.ts:15:7 › Isolated Environment Spike › login page shows with seeded database (proves isolation + seeding)
+[1A[2K[675/869] [chromium] › e2e/spike-isolated.spec.ts:28:7 › Isolated Environment Spike › API health endpoint responds (proves API + DB work)
+[1A[2K[676/869] [chromium] › e2e/spike-isolated.spec.ts:38:7 › Isolated Environment Spike › API routes work through Vite proxy
+[1A[2K[677/869] [chromium] › e2e/spike-isolated.spec.ts:47:7 › Isolated Environment Spike › can login with seeded credentials
+[1A[2K[678/869] [chromium] › e2e/status-colors-accessibility.spec.ts:21:9 › Status Colors Accessibility › Issues List View › status badges use accessible color classes
+[1A[2K[679/869] [chromium] › e2e/status-colors-accessibility.spec.ts:32:9 › Status Colors Accessibility › Issues List View › priority indicators use accessible color classes
+[1A[2K[680/869] [chromium] › e2e/status-colors-accessibility.spec.ts:45:9 › Status Colors Accessibility › Program View › issue status badges use accessible colors
+[1A[2K[681/869] [chromium] › e2e/status-colors-accessibility.spec.ts:64:9 › Status Colors Accessibility › Program View › sprint status badges use accessible colors
+[1A[2K[682/869] [chromium] › e2e/status-colors-accessibility.spec.ts:82:9 › Status Colors Accessibility › Week View › sprint status uses accessible colors
+[1A[2K[683/869] [chromium] › e2e/status-colors-accessibility.spec.ts:95:9 › Status Colors Accessibility › Feedback Editor › feedback status badges use accessible colors
+[1A[2K[684/869] [chromium] › e2e/status-colors-accessibility.spec.ts:112:7 › Centralized Status Colors › status colors are imported from shared utility
+[1A[2K[685/869] [chromium] › e2e/status-overview-heatmap.spec.ts:15:7 › Status Overview Heatmap › can navigate to Status Overview via Teams sidebar
+[1A[2K[686/869] [chromium] › e2e/status-overview-heatmap.spec.ts:29:7 › Status Overview Heatmap › displays legend with status colors
+[1A[2K  1) [chromium] › e2e/session-timeout.spec.ts:629:7 › Extend Session API › Stay Logged In calls extend session endpoint 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBe[2m([22m[32mexpected[39m[2m) // Object.is equality[22m
+
+    Expected: [32m1[39m
+    Received: [31m0[39m
+
+      664 |
+      665 |     // Verify API call was made
+    > 666 |     expect(extendCalls.length).toBe(1);
+          |                                ^
+      667 |     expect(extendCalls[0]).toContain('/api/auth/extend-session');
+      668 |   });
+      669 |
+        at /Users/sheep/Desktop/Gauntlet/ship/e2e/session-timeout.spec.ts:666:32
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/session-timeout-Extend-Ses-ada77-lls-extend-session-endpoint-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/session-timeout-Extend-Ses-ada77-lls-extend-session-endpoint-chromium/error-context.md
+
+
+[1A[2K[687/869] [chromium] › e2e/status-overview-heatmap.spec.ts:44:7 › Status Overview Heatmap › displays programs with people directly underneath
+[1A[2K[688/869] [chromium] › e2e/status-overview-heatmap.spec.ts:57:7 › Status Overview Heatmap › shows people directly under programs without expansion
+[1A[2K[689/869] [chromium] › e2e/status-overview-heatmap.spec.ts:69:7 › Status Overview Heatmap › displays split cells for plan/retro status
+[1A[2K[690/869] [chromium] › e2e/status-overview-heatmap.spec.ts:88:7 › Status Overview Heatmap › clicking plan cell navigates to weekly plan document
+[1A[2K[691/869] [chromium] › e2e/status-overview-heatmap.spec.ts:109:7 › Status Overview Heatmap › clicking retro cell navigates to weekly retro document
+[1A[2K[692/869] [chromium] › e2e/status-overview-heatmap.spec.ts:130:7 › Status Overview Heatmap › Show archived checkbox is present
+[1A[2K[693/869] [chromium] › e2e/status-overview-heatmap.spec.ts:138:7 › Status Overview Heatmap › displays week columns with dates
+[1A[2K[694/869] [chromium] › e2e/status-overview-heatmap.spec.ts:152:7 › Status Overview Heatmap › API returns accountability-grid-v3 data structure
+[1A[2K[695/869] [chromium] › e2e/status-overview-heatmap.spec.ts:189:7 › Status Overview Heatmap › non-admin users see appropriate content
+[1A[2K[696/869] [chromium] › e2e/syntax-highlighting.spec.ts:31:7 › Syntax Highlighting - Code Blocks › can create code block via triple backticks
+[1A[2K[697/869] [chromium] › e2e/syntax-highlighting.spec.ts:47:7 › Syntax Highlighting - Code Blocks › can create code block via slash command
+[1A[2K[698/869] [chromium] › e2e/syntax-highlighting.spec.ts:67:7 › Syntax Highlighting - Code Blocks › can select programming language for code block
+[1A[2K[699/869] [chromium] › e2e/syntax-highlighting.spec.ts:92:7 › Syntax Highlighting - Code Blocks › syntax highlighting renders for JavaScript
+[1A[2K[700/869] [chromium] › e2e/syntax-highlighting.spec.ts:124:7 › Syntax Highlighting - Code Blocks › can edit code inside code block
+[1A[2K[701/869] [chromium] › e2e/syntax-highlighting.spec.ts:154:7 › Syntax Highlighting - Code Blocks › code block content persists after save
+[1A[2K[702/869] [chromium] › e2e/syntax-highlighting.spec.ts:189:7 › Syntax Highlighting - Code Blocks › can create multiple code blocks in same document
+[1A[2K[703/869] [chromium] › e2e/program-mode-week-ux.spec.ts:218:7 › Phase 2: Weeks Tab UI › timeline shows week windows with info
+[1A[2K[704/869] [chromium] › e2e/syntax-highlighting.spec.ts:224:7 › Syntax Highlighting - Code Blocks › pressing Enter inside code block creates new line, not new paragraph
+[1A[2K[705/869] [chromium] › e2e/syntax-highlighting.spec.ts:252:7 › Syntax Highlighting - Code Blocks › code block maintains multiline content
+
+[1A[2K[706/869] [chromium] › e2e/tables.spec.ts:50:7 › Tables › should create table via /table command
+[1A[2K[707/869] [chromium] › e2e/tables.spec.ts:72:7 › Tables › should add rows to table
+[1A[2K[708/869] [chromium] › e2e/tables.spec.ts:112:7 › Tables › should add columns to table
+[1A[2K[709/869] [chromium] › e2e/tables.spec.ts:195:7 › Tables › should delete columns from table
+[1A[2K[710/869] [chromium] › e2e/tables.spec.ts:153:7 › Tables › should delete rows from table
+[1A[2K[711/869] [chromium] › e2e/tables.spec.ts:238:7 › Tables › should navigate cells with Tab key
+[1A[2K[712/869] [chromium] › e2e/tables.spec.ts:275:7 › Tables › should edit cell content
+[1A[2K[713/869] [chromium] › e2e/tables.spec.ts:303:7 › Tables › should show header row styling
+[1A[2K[714/869] [chromium] › e2e/tables.spec.ts:330:7 › Tables › should select entire table
+[1A[2K[715/869] [chromium] › e2e/tables.spec.ts:375:7 › Tables › should delete entire table
+[1A[2K[716/869] [chromium] › e2e/tables.spec.ts:418:7 › Tables › should persist table after reload
+[1A[2K[717/869] [chromium] › e2e/tables.spec.ts:455:7 › Tables › should navigate with Shift+Tab to go backwards
+[1A[2K[718/869] [chromium] › e2e/tables.spec.ts:500:7 › Tables › should support column resizing
+[1A[2K[719/869] [chromium] › e2e/team-mode.spec.ts:15:7 › Team Mode (Phase 7) › can navigate to Teams mode via icon rail
+[1A[2K[720/869] [chromium] › e2e/program-mode-week-ux.spec.ts:235:7 › Phase 2: Weeks Tab UI › week windows show issue count info
+[1A[2K[721/869] [chromium] › e2e/team-mode.spec.ts:23:7 › Team Mode (Phase 7) › Teams mode shows header with team member count
+[1A[2K[722/869] [chromium] › e2e/team-mode.spec.ts:33:7 › Team Mode (Phase 7) › Team grid displays logged-in user
+[1A[2K[723/869] [chromium] › e2e/team-mode.spec.ts:43:7 › Team Mode (Phase 7) › Team grid displays sprint columns
+[1A[2K[724/869] [chromium] › e2e/team-mode.spec.ts:53:7 › Team Mode (Phase 7) › Current sprint column is highlighted
+[1A[2K[725/869] [chromium] › e2e/team-mode.spec.ts:66:7 › Team Mode (Phase 7) › sprint columns can be scrolled horizontally
+[1A[2K[726/869] [chromium] › e2e/team-mode.spec.ts:93:7 › Team Mode (Phase 7) › API returns team grid data structure
+[1A[2K[727/869] [chromium] › e2e/team-mode.spec.ts:129:7 › Team Mode (Phase 7) › grid cells are clickable and empty cells exist
+[1A[2K[728/869] [chromium] › e2e/team-mode.spec.ts:149:7 › Team Mode (Phase 7) › can click cell to open program selector
+[1A[2K[729/869] [chromium] › e2e/team-mode.spec.ts:186:7 › Team Mode (Phase 7) › program selector can be closed with Escape
+[1A[2K[730/869] [chromium] › e2e/team-mode.spec.ts:229:9 › Team Mode (Phase 7) › Assignments View - Program Grouping › displays Unassigned group for people without current sprint assignment
+[1A[2K[731/869] [chromium] › e2e/team-mode.spec.ts:245:9 › Team Mode (Phase 7) › Assignments View - Program Grouping › people are sorted alphabetically within groups
+[1A[2K[732/869] [chromium] › e2e/team-mode.spec.ts:268:9 › Team Mode (Phase 7) › Assignments View - Program Grouping › project cells display with colored badge
+[1A[2K[733/869] [chromium] › e2e/team-mode.spec.ts:280:9 › Team Mode (Phase 7) › Assignments View - Program Grouping › clicking cell opens project dropdown grouped by program
+[1A[2K[734/869] [chromium] › e2e/team-mode.spec.ts:302:9 › Team Mode (Phase 7) › Assignments View - Program Grouping › selecting project updates cell and shows badge
+[1A[2K[735/869] [chromium] › e2e/team-mode.spec.ts:335:9 › Team Mode (Phase 7) › Assignments View - Program Grouping › selecting None clears the assignment
+[1A[2K[736/869] [chromium] › e2e/team-mode.spec.ts:381:9 › Team Mode (Phase 7) › Assignments View - Collapse/Expand › clicking program header collapses the group
+[1A[2K[737/869] [chromium] › e2e/team-mode.spec.ts:408:9 › Team Mode (Phase 7) › Assignments View - Collapse/Expand › clicking collapsed header expands the group
+[1A[2K[738/869] [chromium] › e2e/team-mode.spec.ts:434:9 › Team Mode (Phase 7) › Assignments View - Collapse/Expand › collapsed state shows member count in parentheses
+[1A[2K[739/869] [chromium] › e2e/team-mode.spec.ts:460:9 › Team Mode (Phase 7) › Assignments View - Instant Regrouping › changing current sprint assignment regroups person
+
+[1A[2K[740/869] [chromium] › e2e/toc.spec.ts:50:7 › Table of Contents (TOC) › can create TOC via /toc command
+[1A[2K[741/869] [chromium] › e2e/performance.spec.ts:366:7 › Performance - Many Images › many images do not crash the editor (retry #1)
+[1A[2K[742/869] [chromium] › e2e/program-mode-week-ux.spec.ts:243:7 › Phase 2: Weeks Tab UI › active week shows status indicator
+[1A[2K[743/869] [chromium] › e2e/toc.spec.ts:71:7 › Table of Contents (TOC) › TOC shows document headings
+[1A[2K[744/869] [chromium] › e2e/toc.spec.ts:105:7 › Table of Contents (TOC) › TOC updates when heading added
+[1A[2K[745/869] [chromium] › e2e/toc.spec.ts:141:7 › Table of Contents (TOC) › TOC updates when heading removed
+[1A[2K[746/869] [chromium] › e2e/toc.spec.ts:189:7 › Table of Contents (TOC) › TOC updates when heading renamed
+[1A[2K[747/869] [chromium] › e2e/toc.spec.ts:243:7 › Table of Contents (TOC) › clicking TOC item scrolls to heading
+[1A[2K[748/869] [chromium] › e2e/toc.spec.ts:294:7 › Table of Contents (TOC) › TOC handles multiple heading levels
+[1A[2K[749/869] [chromium] › e2e/toc.spec.ts:343:7 › Table of Contents (TOC) › TOC persists after page reload
+[1A[2K[750/869] [chromium] › e2e/toc.spec.ts:392:7 › Table of Contents (TOC) › empty document TOC shows "No headings" message
+[1A[2K[751/869] [chromium] › e2e/toggle.spec.ts:50:7 › Toggle (Collapsible) › should create toggle via slash command
+[1A[2K[752/869] [chromium] › e2e/toggle.spec.ts:72:7 › Toggle (Collapsible) › should expand and collapse toggle
+[1A[2K[753/869] [chromium] › e2e/program-mode-week-ux.spec.ts:250:7 › Phase 2: Weeks Tab UI › Plan Week button navigates to SprintView when present
+[1A[2K[754/869] [chromium] › e2e/toggle.spec.ts:123:7 › Toggle (Collapsible) › should edit toggle title
+[1A[2K[755/869] [chromium] › e2e/toggle.spec.ts:151:7 › Toggle (Collapsible) › should edit toggle content
+[1A[2K[756/869] [chromium] › e2e/toggle.spec.ts:191:7 › Toggle (Collapsible) › should support nested content in toggle
+[1A[2K[757/869] [chromium] › e2e/toggle.spec.ts:236:7 › Toggle (Collapsible) › should persist toggle state after reload
+[1A[2K[758/869] [chromium] › e2e/toggle.spec.ts:273:7 › Toggle (Collapsible) › should support keyboard navigation
+[1A[2K[759/869] [chromium] › e2e/toggle.spec.ts:312:7 › Toggle (Collapsible) › should show collapse indicator icon
+[1A[2K[760/869] [chromium] › e2e/tooltips.spec.ts:13:7 › Icon Tooltips › rail icons show tooltips on hover
+[1A[2K[761/869] [chromium] › e2e/tooltips.spec.ts:33:7 › Icon Tooltips › new document button shows tooltip on hover
+
+[1A[2K[762/869] [chromium] › e2e/team-mode.spec.ts:460:9 › Team Mode (Phase 7) › Assignments View - Instant Regrouping › changing current sprint assignment regroups person (retry #1)
+[1A[2K[763/869] [chromium] › e2e/tooltips.spec.ts:57:7 › Icon Tooltips › document tree delete button shows tooltip on hover
+[1A[2K[764/869] [chromium] › e2e/tooltips.spec.ts:86:7 › Icon Tooltips › command palette close button shows tooltip on hover
+[1A[2K[765/869] [chromium] › e2e/program-mode-week-ux.spec.ts:268:7 › Phase 2: Weeks Tab UI › horizontal timeline shows weeks chronologically
+[1A[2K[766/869] [chromium] › e2e/weekly-accountability.spec.ts:78:7 › Weekly Plan API › POST /weekly-plans creates new weekly plan document
+[1A[2K[767/869] [chromium] › e2e/weekly-accountability.spec.ts:106:7 › Weekly Plan API › POST /weekly-plans is idempotent - returns existing document
+[1A[2K[768/869] [chromium] › e2e/weekly-accountability.spec.ts:138:7 › Weekly Plan API › GET /weekly-plans queries plans by person and project
+[1A[2K[769/869] [chromium] › e2e/weekly-accountability.spec.ts:170:7 › Weekly Plan API › GET /weekly-plans/:id returns specific plan
+[1A[2K[770/869] [chromium] › e2e/weekly-accountability.spec.ts:195:7 › Weekly Plan API › POST /weekly-plans returns 404 for non-existent person
+[1A[2K[771/869] [chromium] › e2e/weekly-accountability.spec.ts:213:7 › Weekly Plan API › POST /weekly-plans returns 404 for non-existent project
+[1A[2K[772/869] [chromium] › e2e/weekly-accountability.spec.ts:233:7 › Weekly Retro API › POST /weekly-retros creates new weekly retro document
+[1A[2K[773/869] [chromium] › e2e/weekly-accountability.spec.ts:261:7 › Weekly Retro API › POST /weekly-retros is idempotent - returns existing document
+[1A[2K[774/869] [chromium] › e2e/weekly-accountability.spec.ts:293:7 › Weekly Retro API › GET /weekly-retros queries retros by person and project
+[1A[2K[775/869] [chromium] › e2e/weekly-accountability.spec.ts:325:7 › Weekly Retro API › GET /weekly-retros/:id returns specific retro
+[1A[2K[776/869] [chromium] › e2e/weekly-accountability.spec.ts:352:7 › Project Allocation Grid API › GET /project-allocation-grid/:projectId returns grid data structure
+[1A[2K[777/869] [chromium] › e2e/weekly-accountability.spec.ts:384:7 › Project Allocation Grid API › Allocation grid shows person with assigned issues and plan/retro status
+[1A[2K[778/869] [chromium] › e2e/weekly-accountability.spec.ts:473:7 › Project Allocation Grid API › Allocation grid returns 404 for non-existent project
+[1A[2K[779/869] [chromium] › e2e/weekly-accountability.spec.ts:487:7 › Content Version History API › GET /weekly-plans/:id/history returns empty array for new document
+[1A[2K[780/869] [chromium] › e2e/weekly-accountability.spec.ts:517:7 › Content Version History API › GET /weekly-retros/:id/history returns empty array for new document
+[1A[2K[781/869] [chromium] › e2e/weekly-accountability.spec.ts:547:7 › Content Version History API › GET /weekly-plans/:id/history returns 404 for non-existent plan
+[1A[2K[782/869] [chromium] › e2e/weekly-accountability.spec.ts:562:7 › Content Version History API › GET /weekly-retros/:id/history returns 404 for non-existent retro
+[1A[2K[783/869] [chromium] › e2e/weekly-accountability.spec.ts:579:7 › Weekly Plan/Retro Document Navigation › Weekly plan document can be fetched and navigated to
+[1A[2K[784/869] [chromium] › e2e/program-mode-week-ux.spec.ts:278:7 › Phase 2: Weeks Tab UI › timeline weeks are in chronological order (left to right)
+[1A[2K[785/869] [chromium] › e2e/weekly-accountability.spec.ts:605:7 › Weekly Plan/Retro Document Navigation › Weekly retro document can be fetched and navigated to
+[1A[2K[786/869] [chromium] › e2e/weeks.spec.ts:22:7 › Weeks - Issue Editor Integration › Weeks tab shows in program view
+[1A[2K[787/869] [chromium] › e2e/weeks.spec.ts:33:7 › Weeks - Issue Editor Integration › can assign issue to sprint via sprint picker in issue editor
+[1A[2K[788/869] [chromium] › e2e/weeks.spec.ts:99:7 › Week Planning Page › Start Week button is visible on planning sprint
+[1A[2K[789/869] [chromium] › e2e/wiki-document-properties.spec.ts:14:9 › Wiki Document Properties Sidebar › Maintainer Field › displays maintainer field in properties sidebar
+[1A[2K[790/869] [chromium] › e2e/wiki-document-properties.spec.ts:35:9 › Wiki Document Properties Sidebar › Maintainer Field › defaults to document creator when maintainer is not explicitly set
+[1A[2K[791/869] [chromium] › e2e/wiki-document-properties.spec.ts:56:9 › Wiki Document Properties Sidebar › Maintainer Field › can change maintainer via person combobox
+[1A[2K[792/869] [chromium] › e2e/wiki-document-properties.spec.ts:86:9 › Wiki Document Properties Sidebar › Maintainer Field › persists maintainer change after page reload
+[1A[2K  2) [chromium] › e2e/team-mode.spec.ts:460:9 › Team Mode (Phase 7) › Assignments View - Instant Regrouping › changing current sprint assignment regroups person 
+
+    Error: [2mexpect([22m[31mreceived[39m[2m).[22mtoBeLessThan[2m([22m[32mexpected[39m[2m)[22m
+
+    Expected: < [32m1[39m
+    Received:   [31m1[39m
+
+    Call Log:
+    - Timeout 10000ms exceeded while waiting on the predicate
+
+      516 |             expect(initialCount).toBe(1)
+      517 |           }
+    > 518 |         }).toPass({ timeout: 10000, intervals: [500, 1000, 2000] })
+          |            ^
+      519 |
+      520 |         // Verify a new program group appeared
+      521 |         const programGroups = page.getByRole('button', { name: /^[A-Z].*\d+$/ }).filter({ hasNotText: 'Unassigned' })
+        at /Users/sheep/Desktop/Gauntlet/ship/e2e/team-mode.spec.ts:518:12
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/team-mode-Team-Mode-Phase--d1b42--assignment-regroups-person-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/team-mode-Team-Mode-Phase--d1b42--assignment-regroups-person-chromium/error-context.md
+
+
+[1A[2K[793/869] [chromium] › e2e/wiki-document-properties.spec.ts:121:9 › Wiki Document Properties Sidebar › Maintainer Field › shows person avatar/initials for maintainer
+[1A[2K[794/869] [chromium] › e2e/wiki-document-properties.spec.ts:150:9 › Wiki Document Properties Sidebar › Timestamps › displays created date in properties sidebar
+[1A[2K[795/869] [chromium] › e2e/wiki-document-properties.spec.ts:175:9 › Wiki Document Properties Sidebar › Timestamps › displays updated date in properties sidebar
+[1A[2K[796/869] [chromium] › e2e/wiki-document-properties.spec.ts:200:9 › Wiki Document Properties Sidebar › Timestamps › updated date changes after editing document
+[1A[2K[797/869] [chromium] › e2e/wiki-document-properties.spec.ts:241:9 › Wiki Document Properties Sidebar › Properties Sidebar Layout › properties sidebar is visible for wiki documents
+[1A[2K[798/869] [chromium] › e2e/wiki-document-properties.spec.ts:265:9 › Wiki Document Properties Sidebar › Properties Sidebar Layout › maintains consistent layout with other document types
+[1A[2K[799/869] [chromium] › e2e/workspaces.spec.ts:23:7 › Workspace Switcher › shows workspace switcher button in icon rail
+[1A[2K[800/869] [chromium] › e2e/workspaces.spec.ts:29:7 › Workspace Switcher › clicking workspace switcher opens dropdown
+[1A[2K[801/869] [chromium] › e2e/workspaces.spec.ts:38:7 › Workspace Switcher › dropdown shows available workspaces with roles
+[1A[2K[802/869] [chromium] › e2e/workspaces.spec.ts:47:7 › Workspace Switcher › super admin sees Admin Dashboard link
+[1A[2K[803/869] [chromium] › e2e/workspaces.spec.ts:61:7 › Admin Dashboard › super admin can access admin dashboard
+[1A[2K[804/869] [chromium] › e2e/workspaces.spec.ts:74:7 › Admin Dashboard › admin dashboard shows workspaces tab by default
+[1A[2K[805/869] [chromium] › e2e/workspaces.spec.ts:85:7 › Admin Dashboard › can create a new workspace
+[1A[2K[806/869] [chromium] › e2e/workspaces.spec.ts:102:7 › Admin Dashboard › shows users tab with user list
+[1A[2K[807/869] [chromium] › e2e/workspaces.spec.ts:114:7 › Admin Dashboard › shows audit logs tab
+[1A[2K[808/869] [chromium] › e2e/workspaces.spec.ts:126:7 › Admin Dashboard › can export audit logs
+[1A[2K[809/869] [chromium] › e2e/workspaces.spec.ts:142:7 › Workspace Settings › workspace admin can access settings
+[1A[2K[810/869] [chromium] › e2e/program-mode-week-ux.spec.ts:302:7 › Phase 2: Weeks Tab UI › timeline supports smooth infinite scrolling
+[1A[2K[811/869] [chromium] › e2e/workspaces.spec.ts:149:7 › Workspace Settings › shows members tab with member list
+[1A[2K[812/869] [chromium] › e2e/workspaces.spec.ts:161:7 › Workspace Settings › shows pending invites tab
+[1A[2K[813/869] [chromium] › e2e/workspaces.spec.ts:172:7 › Workspace Settings › can send an invite
+[1A[2K[814/869] [chromium] › e2e/workspaces.spec.ts:187:7 › Workspace Settings › shows audit logs tab
+[1A[2K[815/869] [chromium] › e2e/workspaces.spec.ts:205:7 › Workspace Isolation › documents are scoped to current workspace
+[1A[2K[816/869] [chromium] › e2e/workspaces.spec.ts:213:7 › Workspace Isolation › switching workspaces shows different documents
+[1A[2K[817/869] [chromium] › e2e/workspaces.spec.ts:229:7 › Non-Admin Access Control › non-super-admin cannot access /admin
+[1A[2K[818/869] [chromium] › e2e/workspaces.spec.ts:239:7 › Non-Admin Access Control › non-workspace-admin sees permission denied on settings
+[1A[2K[819/869] [chromium] › e2e/workspaces.spec.ts:251:7 › Invite Accept Flow › invalid invite token shows error
+[1A[2K[820/869] [chromium] › e2e/workspaces.spec.ts:258:7 › Invite Accept Flow › invite page shows login prompt when not authenticated
+[1A[2K  3) [chromium] › e2e/performance.spec.ts:366:7 › Performance - Many Images › many images do not crash the editor 
+
+    TimeoutError: page.waitForEvent: Timeout 45000ms exceeded while waiting for event "filechooser"
+    =========================== logs ===========================
+    waiting for event "filechooser"
+    ============================================================
+
+      408 |       imagePaths.push(tmpPath)
+      409 |
+    > 410 |       const fileChooserPromise = page.waitForEvent('filechooser', { timeout: 45000 })
+          |                                       ^
+      411 |       await page.keyboard.press('Enter')
+      412 |
+      413 |       const fileChooser = await fileChooserPromise
+        at /Users/sheep/Desktop/Gauntlet/ship/e2e/performance.spec.ts:410:39
+
+    attachment #1: screenshot (image/png) ──────────────────────────────────────────────────────────
+    test-results/performance-Performance----fa541-ges-do-not-crash-the-editor-chromium/test-failed-1.png
+    ────────────────────────────────────────────────────────────────────────────────────────────────
+
+    Error Context: test-results/performance-Performance----fa541-ges-do-not-crash-the-editor-chromium/error-context.md
+
+
+[1A[2K[821/869] [chromium] › e2e/program-mode-week-ux.spec.ts:317:7 › Phase 2: Weeks Tab UI › timeline cards show owner names when sprint exists
+[1A[2K[822/869] [chromium] › e2e/program-mode-week-ux.spec.ts:333:7 › Phase 2: Weeks Tab UI › timeline cards display owner name (not avatars in current implementation)
+[1A[2K[823/869] [chromium] › e2e/program-mode-week-ux.spec.ts:351:7 › Phase 2: Weeks Tab UI › timeline cards show issue stats
+[1A[2K[824/869] [chromium] › e2e/program-mode-week-ux.spec.ts:358:7 › Phase 2: Weeks Tab UI › timeline cards show status badges
+[1A[2K[825/869] [chromium] › e2e/program-mode-week-ux.spec.ts:369:7 › Phase 2: Weeks Tab UI › clicking sprint card selects it in the chart
+[1A[2K[826/869] [chromium] › e2e/program-mode-week-ux.spec.ts:389:7 › Phase 2: Weeks Tab UI › double-clicking sprint card navigates to SprintView
+[1A[2K[827/869] [chromium] › e2e/program-mode-week-ux.spec.ts:406:7 › Phase 2: Weeks Tab UI › double-clicking completed sprint card navigates to SprintView (read-only history)
+[1A[2K[828/869] [chromium] › e2e/program-mode-week-ux.spec.ts:420:7 › Phase 2: Weeks Tab UI › timeline shows empty future windows with "+ Create sprint"
+[1A[2K[829/869] [chromium] › e2e/program-mode-week-ux.spec.ts:459:7 › Phase 3: Week Creation UX › week windows show date range
+[1A[2K[830/869] [chromium] › e2e/program-mode-week-ux.spec.ts:468:7 › Phase 3: Week Creation UX › clicking empty future window opens owner selection prompt
+[1A[2K[831/869] [chromium] › e2e/program-mode-week-ux.spec.ts:488:7 › Phase 3: Week Creation UX › owner selection shows availability indicators
+[1A[2K[832/869] [chromium] › e2e/program-mode-week-ux.spec.ts:512:7 › Phase 3: Week Creation UX › selecting owner and clicking Create creates sprint
+[1A[2K[833/869] [chromium] › e2e/program-mode-week-ux.spec.ts:547:7 › Phase 3: Week Creation UX › can cancel owner selection
+[1A[2K[834/869] [chromium] › e2e/program-mode-week-ux.spec.ts:587:7 › Phase 4: Issues Tab Filtering › Issues tab has sprint filter dropdown
+[1A[2K[835/869] [chromium] › e2e/program-mode-week-ux.spec.ts:600:7 › Phase 4: Issues Tab Filtering › sprint filter has "All Weeks" as default option
+[1A[2K[836/869] [chromium] › e2e/program-mode-week-ux.spec.ts:615:7 › Phase 4: Issues Tab Filtering › sprint filter has "Backlog (No Week)" option
+[1A[2K[837/869] [chromium] › e2e/program-mode-week-ux.spec.ts:627:7 › Phase 4: Issues Tab Filtering › sprint filter has "Active Week" option
+[1A[2K[838/869] [chromium] › e2e/program-mode-week-ux.spec.ts:638:7 › Phase 4: Issues Tab Filtering › sprint filter has "Upcoming Weeks" option
+[1A[2K[839/869] [chromium] › e2e/program-mode-week-ux.spec.ts:649:7 › Phase 4: Issues Tab Filtering › sprint filter has "Completed Weeks" option
+[1A[2K[840/869] [chromium] › e2e/program-mode-week-ux.spec.ts:660:7 › Phase 4: Issues Tab Filtering › filtering by "Backlog" shows only issues without sprint
+[1A[2K[841/869] [chromium] › e2e/program-mode-week-ux.spec.ts:684:7 › Phase 4: Issues Tab Filtering › issues table has checkbox column for bulk selection
+[1A[2K[842/869] [chromium] › e2e/program-mode-week-ux.spec.ts:699:7 › Phase 4: Issues Tab Filtering › selecting issues shows bulk action bar
+[1A[2K[843/869] [chromium] › e2e/program-mode-week-ux.spec.ts:716:7 › Phase 4: Issues Tab Filtering › bulk action bar has "Move to Week" dropdown
+[1A[2K[844/869] [chromium] › e2e/program-mode-week-ux.spec.ts:733:7 › Phase 4: Issues Tab Filtering › bulk "Move to Week" updates issues
+[1A[2K[845/869] [chromium] › e2e/program-mode-week-ux.spec.ts:781:7 › Phase 4: Issues Tab Filtering › issue row has quick menu (⋮) button
+[1A[2K[846/869] [chromium] › e2e/program-mode-week-ux.spec.ts:798:7 › Phase 4: Issues Tab Filtering › quick menu has "Assign to Week" option
+[1A[2K[847/869] [chromium] › e2e/program-mode-week-ux.spec.ts:818:7 › Phase 4: Issues Tab Filtering › quick menu "Assign to Week" shows available sprints
+[1A[2K[848/869] [chromium] › e2e/program-mode-week-ux.spec.ts:843:7 › Phase 4: Issues Tab Filtering › quick menu can assign issue to a sprint (full flow)
+[1A[2K[849/869] [chromium] › e2e/program-mode-week-ux.spec.ts:900:7 › Phase 2 Continued: Progress Graph & Visual Details › active sprint shows Linear-style progress graph
+[1A[2K[850/869] [chromium] › e2e/program-mode-week-ux.spec.ts:915:7 › Phase 2 Continued: Progress Graph & Visual Details › progress graph shows predicted completion line and estimate
+[1A[2K[851/869] [chromium] › e2e/program-mode-week-ux.spec.ts:925:7 › Phase 2 Continued: Progress Graph & Visual Details › progress graph has dotted/dashed prediction line
+[1A[2K[852/869] [chromium] › e2e/program-mode-week-ux.spec.ts:945:7 › Phase 2 Continued: Progress Graph & Visual Details › progress graph shows scope and completed indicators (div-based)
+[1A[2K[853/869] [chromium] › e2e/program-mode-week-ux.spec.ts:966:7 › Phase 2 Continued: Progress Graph & Visual Details › progress graph uses distinct colors for different elements
+[1A[2K[854/869] [chromium] › e2e/program-mode-week-ux.spec.ts:990:7 › Phase 2 Continued: Progress Graph & Visual Details › progress graph shows estimated completion with variance text
+[1A[2K[855/869] [chromium] › e2e/program-mode-week-ux.spec.ts:1004:7 › Phase 2 Continued: Progress Graph & Visual Details › active sprint is highlighted in timeline
+[1A[2K[856/869] [chromium] › e2e/program-mode-week-ux.spec.ts:1020:7 › Phase 2 Continued: Progress Graph & Visual Details › timeline cards show mini progress bar
+[1A[2K[857/869] [chromium] › e2e/program-mode-week-ux.spec.ts:1035:7 › Phase 2 Continued: Progress Graph & Visual Details › timeline centers on active sprint initially
+[1A[2K[858/869] [chromium] › e2e/program-mode-week-ux.spec.ts:1057:7 › Phase 2: Empty States › shows "No active sprint" message when gap between sprints
+[1A[2K[859/869] [chromium] › e2e/program-mode-week-ux.spec.ts:1076:7 › Phase 2: Empty States › shows "Next sprint starts" info when no active sprint
+[1A[2K[860/869] [chromium] › e2e/program-mode-week-ux.spec.ts:1099:7 › Phase 3 Continued: Past Windows & Validation › past empty windows are not clickable (read-only)
+[1A[2K[861/869] [chromium] › e2e/program-mode-week-ux.spec.ts:1127:7 › Phase 3 Continued: Past Windows & Validation › created sprint has correct week matching clicked window
+[1A[2K[862/869] [chromium] › e2e/program-mode-week-ux.spec.ts:1157:7 › Phase 3 Continued: Past Windows & Validation › owner availability shows warning for busy owners
+[1A[2K[863/869] [chromium] › e2e/program-mode-week-ux.spec.ts:1182:7 › Phase 3 Continued: Past Windows & Validation › created sprint has correct owner_id in API response
+[1A[2K[864/869] [chromium] › e2e/program-mode-week-ux.spec.ts:1226:7 › Phase 4 Continued: Filter Functionality › filtering by "Active Week" shows only issues in active sprint
+[1A[2K[865/869] [chromium] › e2e/program-mode-week-ux.spec.ts:1252:7 › Phase 4 Continued: Filter Functionality › filtering by "Upcoming Weeks" shows only issues in upcoming sprints
+[1A[2K[866/869] [chromium] › e2e/program-mode-week-ux.spec.ts:1274:7 › Phase 4 Continued: Filter Functionality › filtering by "Completed Weeks" shows only issues in completed sprints
+[1A[2K[867/869] [chromium] › e2e/program-mode-week-ux.spec.ts:1296:7 › Phase 4 Continued: Filter Functionality › sprint filter has specific sprint options
+[1A[2K[868/869] [chromium] › e2e/program-mode-week-ux.spec.ts:1317:7 › Phase 4 Continued: Filter Functionality › filtering by specific sprint shows only that sprint's issues
+[1A[2K[869/869] [chromium] › e2e/program-mode-week-ux.spec.ts:1350:7 › Phase 4 Continued: Filter Functionality › deselecting all issues clears bulk action bar
+[1A[2K[870/869] (retries) [chromium] › e2e/program-mode-week-ux.spec.ts:1384:7 › Integration: Full User Flows › user navigates to program → Weeks tab → sees graph + timeline
+[1A[2K[871/869] (retries) [chromium] › e2e/program-mode-week-ux.spec.ts:1399:7 › Integration: Full User Flows › user filters issues by backlog → sees only unassigned issues
+[1A[2K[872/869] (retries) [chromium] › e2e/program-mode-week-ux.spec.ts:1424:7 › Integration: Full User Flows › sprint creation flow: click window → select owner → navigate to sprint
+[1A[2K  3 flaky
+    [chromium] › e2e/performance.spec.ts:366:7 › Performance - Many Images › many images do not crash the editor 
+    [chromium] › e2e/session-timeout.spec.ts:629:7 › Extend Session API › Stay Logged In calls extend session endpoint 
+    [chromium] › e2e/team-mode.spec.ts:460:9 › Team Mode (Phase 7) › Assignments View - Instant Regrouping › changing current sprint assignment regroups person 
+  866 passed (6.9m)

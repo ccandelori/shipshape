@@ -1,0 +1,9 @@
+# Flow: Search content
+# Captured: 2026-05-19 via pg_stat_statements (exact counts; no buffer drops)
+# Endpoints walked: search/mentions?q=test
+# Format: calls<TAB>total_ms<TAB>mean_ms<TAB>rows<TAB>SQL
+1	0.195	0.195	9	SELECT id, title, document_type, visibility FROM documents WHERE workspace_id = $1 AND document_type IN ($5, $6, $7, $8) AND deleted_at IS NULL AND title ILIKE $2 AND (visibility = $9 OR created_by = $3 OR $4 = $10) ORDER BY CASE document_type WHEN $11 THEN $12 WHEN $13 THEN $14 WHEN $15 THEN $16 WHEN $17 THEN $18 ELSE $19 END, updated_at DESC LIMIT $20
+1	0.035	0.035	0	SELECT d.id::text as id, d.title as name, $3 as document_type FROM documents d WHERE d.workspace_id = $1 AND d.document_type = $4 AND d.archived_at IS NULL AND d.deleted_at IS NULL AND d.title ILIKE $2 ORDER BY d.title ASC LIMIT $5
+1	0.025	0.025	1	SELECT s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at, u.is_super_admin FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.id = $1
+1	0.018	0.018	1	UPDATE sessions SET last_activity = $1 WHERE id = $2
+1	0.005	0.005	1	SELECT role FROM workspace_memberships WHERE workspace_id = $1 AND user_id = $2

@@ -1,0 +1,17 @@
+>>> /api/auth/me @ c=10 -> /Users/sheep/Desktop/Gauntlet/ship/orientation/baselines/api-response-time/api-api_auth_me-c10.json
+>>> /api/auth/me @ c=25 -> /Users/sheep/Desktop/Gauntlet/ship/orientation/baselines/api-response-time/api-api_auth_me-c25.json
+>>> /api/auth/me @ c=50 -> /Users/sheep/Desktop/Gauntlet/ship/orientation/baselines/api-response-time/api-api_auth_me-c50.json
+>>> /api/documents?type=wiki @ c=10 -> /Users/sheep/Desktop/Gauntlet/ship/orientation/baselines/api-response-time/api-api_documents_type_wiki-c10.json
+>>> /api/documents?type=wiki @ c=25 -> /Users/sheep/Desktop/Gauntlet/ship/orientation/baselines/api-response-time/api-api_documents_type_wiki-c25.json
+>>> /api/documents?type=wiki @ c=50 -> /Users/sheep/Desktop/Gauntlet/ship/orientation/baselines/api-response-time/api-api_documents_type_wiki-c50.json
+>>> /api/issues @ c=10 -> /Users/sheep/Desktop/Gauntlet/ship/orientation/baselines/api-response-time/api-api_issues-c10.json
+>>> /api/issues @ c=25 -> /Users/sheep/Desktop/Gauntlet/ship/orientation/baselines/api-response-time/api-api_issues-c25.json
+>>> /api/issues @ c=50 -> /Users/sheep/Desktop/Gauntlet/ship/orientation/baselines/api-response-time/api-api_issues-c50.json
+>>> /api/projects @ c=10 -> /Users/sheep/Desktop/Gauntlet/ship/orientation/baselines/api-response-time/api-api_projects-c10.json
+>>> /api/projects @ c=25 -> /Users/sheep/Desktop/Gauntlet/ship/orientation/baselines/api-response-time/api-api_projects-c25.json
+>>> /api/projects @ c=50 -> /Users/sheep/Desktop/Gauntlet/ship/orientation/baselines/api-response-time/api-api_projects-c50.json
+>>> /api/weeks @ c=10 -> /Users/sheep/Desktop/Gauntlet/ship/orientation/baselines/api-response-time/api-api_weeks-c10.json
+>>> /api/weeks @ c=25 -> /Users/sheep/Desktop/Gauntlet/ship/orientation/baselines/api-response-time/api-api_weeks-c25.json
+>>> /api/weeks @ c=50 -> /Users/sheep/Desktop/Gauntlet/ship/orientation/baselines/api-response-time/api-api_weeks-c50.json
+Done. JSON results in /Users/sheep/Desktop/Gauntlet/ship/orientation/baselines/api-response-time/api-*-c{10,25,50}.json
+Parse P50/P95/P99 with: jq '.latency | {p50, p97_5, p99, mean}' <file>

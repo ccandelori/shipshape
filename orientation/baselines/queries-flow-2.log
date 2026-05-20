@@ -1,0 +1,9 @@
+# Flow: View a document
+# Captured: 2026-05-19 via pg_stat_statements (exact counts; no buffer drops)
+# Endpoints walked: documents/<id> + documents/<id>/content
+# Format: calls<TAB>total_ms<TAB>mean_ms<TAB>rows<TAB>SQL
+2	0.044	0.022	2	SELECT s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at, u.is_super_admin FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.id = $1
+2	0.037	0.018	2	UPDATE sessions SET last_activity = $1 WHERE id = $2
+1	0.022	0.022	1	SELECT d.*, (d.visibility = $4 OR d.created_by = $2 OR (SELECT role FROM workspace_memberships WHERE workspace_id = $3 AND user_id = $2) = $5) as can_access FROM documents d WHERE d.id = $1 AND d.workspace_id = $3 AND d.deleted_at IS NULL
+1	0.010	0.010	1	SELECT d.id, d.content, d.yjs_state, d.title, (d.visibility = $4 OR d.created_by = $2 OR (SELECT role FROM workspace_memberships WHERE workspace_id = $3 AND user_id = $2) = $5) as can_access FROM documents d WHERE d.id = $1 AND d.workspace_id = $3 AND d.archived_at IS NULL AND d.deleted_at IS NULL
+1	0.003	0.003	0	SELECT da.related_id as id, da.relationship_type as type, d.title, (d.properties->>$2) as color FROM document_associations da LEFT JOIN documents d ON d.id = da.related_id WHERE da.document_id = $1

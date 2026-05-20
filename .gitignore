@@ -50,10 +50,11 @@ evidence/
 *.png
 
 # Override: orientation/ holds the PRD-required baseline artifacts and must
-# be tracked despite the generic evidence/ and *.png ignores above.
+# be tracked despite the generic evidence/, *.png, and *.log ignores.
 !orientation/**/evidence/
 !orientation/**/evidence/**
 !orientation/**/*.png
+!orientation/**/*.log
 
 # Playwright test artifacts
 playwright-report/
