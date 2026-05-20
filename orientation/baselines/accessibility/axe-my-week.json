@@ -1,0 +1,54 @@
+{
+  "capturedAt": "2026-05-20T03:14:00.664Z",
+  "route": "/my-week",
+  "url": "http://localhost:5174/my-week",
+  "tags": [
+    "wcag2a",
+    "wcag2aa",
+    "wcag21a",
+    "wcag21aa",
+    "section508"
+  ],
+  "counts": {
+    "critical": 0,
+    "serious": 1,
+    "moderate": 0,
+    "minor": 0
+  },
+  "violationsTotal": 1,
+  "violations": [
+    {
+      "id": "color-contrast",
+      "impact": "serious",
+      "description": "Ensure the contrast between foreground and background colors meets WCAG 2 AA minimum contrast ratio thresholds",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.11/color-contrast?application=playwright",
+      "nodes": 15,
+      "sample": [
+        {
+          "target": [
+            ".bg-accent\\/20.py-0\\.5.px-1\\.5"
+          ],
+          "html": "<span class=\"text-xs bg-accent/20 text-accent px-1.5 py-0.5 rounded\">Current</span>",
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.55 (foreground color: #005ea2, background color: #0a1d2b, font size: 9.0pt (12px), font weight: normal). Expected contrast ratio of 4.5:1"
+        },
+        {
+          "target": [
+            ".items-start.gap-2\\.5.py-1\\.5:nth-child(1) > .text-\\[11px\\].text-muted\\/50.text-right"
+          ],
+          "html": "<span class=\"text-[11px] font-semibold text-muted/50 w-4 text-right shrink-0 mt-0.5\">1.</span>",
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.26 (foreground color: #4c4c4c, background color: #0d0d0d, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+        },
+        {
+          "target": [
+            ".items-start.gap-2\\.5.py-1\\.5:nth-child(2) > .text-\\[11px\\].text-muted\\/50.text-right"
+          ],
+          "html": "<span class=\"text-[11px] font-semibold text-muted/50 w-4 text-right shrink-0 mt-0.5\">2.</span>",
+          "failureSummary": "Fix any of the following:\n  Element has insufficient color contrast of 2.26 (foreground color: #4c4c4c, background color: #0d0d0d, font size: 8.3pt (11px), font weight: normal). Expected contrast ratio of 4.5:1"
+        }
+      ]
+    }
+  ],
+  "passes": 21,
+  "incomplete": 1,
+  "inapplicable": 40
+}

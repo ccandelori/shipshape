@@ -1,0 +1,56 @@
+{
+  "capturedAt": "2026-05-20T03:13:58.106Z",
+  "route": "/docs",
+  "url": "http://localhost:5174/docs",
+  "tags": [
+    "wcag2a",
+    "wcag2aa",
+    "wcag21a",
+    "wcag21aa",
+    "section508"
+  ],
+  "counts": {
+    "critical": 1,
+    "serious": 1,
+    "moderate": 0,
+    "minor": 0
+  },
+  "violationsTotal": 2,
+  "violations": [
+    {
+      "id": "aria-required-children",
+      "impact": "critical",
+      "description": "Ensure elements with an ARIA role that require child roles contain them",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.11/aria-required-children?application=playwright",
+      "nodes": 1,
+      "sample": [
+        {
+          "target": [
+            "ul[aria-label=\"Workspace documents\"]"
+          ],
+          "html": "<ul role=\"tree\" aria-label=\"Workspace documents\" aria-live=\"polite\" class=\"space-y-0.5 px-2\">",
+          "failureSummary": "Fix any of the following:\n  Element has children which are not allowed: li[tabindex]"
+        }
+      ]
+    },
+    {
+      "id": "listitem",
+      "impact": "serious",
+      "description": "Ensure <li> elements are used semantically",
+      "helpUrl": "https://dequeuniversity.com/rules/axe/4.11/listitem?application=playwright",
+      "nodes": 1,
+      "sample": [
+        {
+          "target": [
+            "ul[aria-label=\"Workspace documents\"] > li:nth-child(11)"
+          ],
+          "html": "<li><a class=\"block px-2 py-1.5 text-sm text-muted hover:text-foreground hover:bg-border/30 rounded-md transition-colors\" href=\"/docs?filter=workspace\" data-discover=\"true\">238 more...</a></li>",
+          "failureSummary": "Fix any of the following:\n  List item parent element has a role that is not role=\"list\""
+        }
+      ]
+    }
+  ],
+  "passes": 25,
+  "incomplete": 2,
+  "inapplicable": 35
+}

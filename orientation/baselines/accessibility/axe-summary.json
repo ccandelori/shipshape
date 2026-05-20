@@ -1,0 +1,85 @@
+{
+  "capturedAt": "2026-05-20T03:14:15.076Z",
+  "routes": [
+    {
+      "name": "login",
+      "path": "/login",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "total": 0,
+      "ms": 2385
+    },
+    {
+      "name": "docs",
+      "path": "/docs",
+      "critical": 1,
+      "serious": 1,
+      "moderate": 0,
+      "minor": 0,
+      "total": 2,
+      "ms": 3818
+    },
+    {
+      "name": "my-week",
+      "path": "/my-week",
+      "critical": 0,
+      "serious": 1,
+      "moderate": 0,
+      "minor": 0,
+      "total": 1,
+      "ms": 2557
+    },
+    {
+      "name": "issues",
+      "path": "/issues",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "total": 0,
+      "ms": 3999
+    },
+    {
+      "name": "projects",
+      "path": "/projects",
+      "critical": 0,
+      "serious": 1,
+      "moderate": 0,
+      "minor": 0,
+      "total": 1,
+      "ms": 2864
+    },
+    {
+      "name": "settings",
+      "path": "/settings",
+      "critical": 1,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "total": 1,
+      "ms": 2598
+    },
+    {
+      "name": "team_allocation",
+      "path": "/team-allocation",
+      "critical": 0,
+      "serious": 0,
+      "moderate": 0,
+      "minor": 0,
+      "total": 0,
+      "ms": 2241
+    },
+    {
+      "name": "editor-wiki",
+      "path": "/documents/57895cfe-dcba-419a-8dbc-a919a846c0b7",
+      "critical": 2,
+      "serious": 1,
+      "moderate": 0,
+      "minor": 0,
+      "total": 3,
+      "ms": 2675
+    }
+  ]
+}
