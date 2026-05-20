@@ -1,0 +1,205 @@
+{
+	"meta": {
+		"generatedAt": "2026-05-19T15:15:00.528Z",
+		"tasksAnalyzed": 24,
+		"totalTasks": 24,
+		"analysisCount": 24,
+		"thresholdScore": 5,
+		"projectName": "Task Master",
+		"usedResearch": false
+	},
+	"complexityAnalysis": [
+		{
+			"taskId": 1,
+			"taskTitle": "Establish Audit Baseline Directory Structure",
+			"complexityScore": 2,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "N/A - trivial task requiring only directory creation and template file",
+			"reasoning": "Very simple task: create directory, create markdown template with headers. No dependencies, no technical complexity. Pure file system operations with predefined structure."
+		},
+		{
+			"taskId": 2,
+			"taskTitle": "Audit 1: Type Safety Baseline Measurement",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: (1) Run tsc and capture output, (2) Count violations using ripgrep across different patterns, (3) Analyze violations by package and identify top files, (4) Document tsconfig gaps and compile metrics table",
+			"reasoning": "Moderate complexity. Requires running type-check across 417 TS files, analyzing ~1,836 'as' assertions (confirmed by grep), categorizing by violation type, and analyzing tsconfig differences between packages. Involves scripting, data aggregation, and understanding TypeScript configuration nuances."
+		},
+		{
+			"taskId": 3,
+			"taskTitle": "Audit 2: Bundle Size Baseline Measurement",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down into: (1) Install and configure bundle visualizer plugin in Vite, (2) Build production frontend and measure output, (3) Generate treemap and capture metrics, (4) Analyze top dependencies from web/package.json (TipTap, Radix, USWDS, emoji-picker-react), (5) Identify code-splitting opportunities",
+			"reasoning": "Moderate-high complexity. Requires modifying vite.config.ts (currently has no visualizer), understanding Vite build output, analyzing dependency tree with 40+ web dependencies, and identifying optimization opportunities. Build process knowledge and bundle analysis expertise needed."
+		},
+		{
+			"taskId": 4,
+			"taskTitle": "Audit 3: API Response Time Baseline Measurement",
+			"complexityScore": 7,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break down into: (1) Seed database and verify data volume, (2) Identify 5 most-used endpoints by tracing frontend network calls, (3) Install load testing tool (autocannon/k6), (4) Benchmark each endpoint at 10/25/50 concurrency, (5) Extract P50/P95/P99 metrics from results, (6) Hypothesize causes of slowness and consolidate into JSON",
+			"reasoning": "High complexity. Requires database seeding, frontend analysis to identify hot endpoints, load testing infrastructure, interpreting performance metrics under load, and root-cause analysis. Must handle concurrency testing, statistical analysis, and performance hypothesis generation."
+		},
+		{
+			"taskId": 5,
+			"taskTitle": "Audit 4: Database Query Efficiency Baseline",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break down into: (1) Enable PostgreSQL query logging, (2) Execute 5 user flows while capturing queries, (3) Count queries per flow and identify N+1 patterns, (4) Run EXPLAIN ANALYZE on slowest queries, (5) Cross-reference WHERE clauses against existing indexes, (6) Analyze JSONB property access patterns and document missing indexes",
+			"reasoning": "High complexity. Requires PostgreSQL configuration changes, capturing queries during live flows, understanding N+1 anti-patterns, reading EXPLAIN ANALYZE plans, and identifying index optimization opportunities on JSONB columns. Database expertise, query analysis, and performance tuning knowledge essential."
+		},
+		{
+			"taskId": 6,
+			"taskTitle": "Audit 5: Test Coverage & Quality Baseline",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down into: (1) Run Vitest unit tests and capture metrics, (2) Run E2E tests 3 times using /e2e-test-runner to identify flaky tests, (3) Catalog covered vs uncovered critical flows, (4) Configure code coverage in both packages, (5) Generate coverage reports and analyze gaps",
+			"reasoning": "High complexity. Must run 71 E2E test files multiple times to detect flakiness, configure Vitest coverage (currently not set up), analyze coverage gaps across api/ and web/ packages, and map test coverage to critical user flows. Requires understanding test architecture, identifying missing test scenarios, and statistical flake detection."
+		},
+		{
+			"taskId": 7,
+			"taskTitle": "Audit 6: Runtime Error & Edge Case Baseline",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down into: (1) DevTools console audit during normal usage, (2) Test network failure scenarios during collaboration (WebSocket disconnect/reconnect), (3) Test malformed input and injection attempts, (4) Test concurrent editing and CRDT merge behavior, (5) Throttle network and test loading states, document findings with reproduction steps",
+			"reasoning": "Moderate-high complexity. Requires manual browser testing across multiple scenarios, understanding Yjs CRDT behavior (api/src/collaboration/index.ts), testing WebSocket resilience, security testing (XSS, injection), and documenting edge cases with clear reproduction steps. Combination of security, performance, and UX testing."
+		},
+		{
+			"taskId": 8,
+			"taskTitle": "Audit 7: Accessibility Baseline Measurement",
+			"complexityScore": 7,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break down into: (1) Run Lighthouse accessibility audit on 6 major pages, (2) Configure and run axe-core/playwright scans, (3) Test keyboard navigation across critical flows, (4) Test VoiceOver on macOS for screen reader compatibility, (5) Check color contrast ratios using DevTools, (6) Categorize violations by severity and document findings",
+			"reasoning": "High complexity. Requires running multiple accessibility tools (Lighthouse, axe-core already in package.json), manual keyboard navigation testing, VoiceOver testing (specialized skill), color contrast validation, and synthesizing findings across 6 pages. USWDS projects typically have accessibility requirements, making this thorough audit critical. Requires a11y expertise."
+		},
+		{
+			"taskId": 9,
+			"taskTitle": "Consolidate Phase 1 Audit Report",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: (1) Review and synthesize findings from all 7 baseline audits, (2) Write executive summary highlighting cross-cutting issues and severity, (3) Create Phase 2 prioritization matrix ranking categories by severity, effort, and dependencies",
+			"reasoning": "Moderate complexity. Depends on all 7 audits completing (tasks 2-8). Requires synthesizing diverse technical findings (type safety, performance, accessibility, security) into coherent report, identifying cross-cutting themes, and creating actionable prioritization framework. Technical writing and analysis skills needed."
+		},
+		{
+			"taskId": 10,
+			"taskTitle": "Implementation 1: Type-Safety Domain Mapper Layer",
+			"complexityScore": 8,
+			"recommendedSubtasks": 6,
+			"expansionPrompt": "Break down into: (1) Create mapper layer in shared/src/mappers/ with typed functions per document type, (2) Refactor api/src/routes/team.ts (132 assertions), (3) Refactor api/src/routes/weeks.ts (142 assertions), (4) Refactor api/src/routes/claude.ts (79 assertions), (5) Fix web/tsconfig.json to inherit strict flags, (6) Verify type-check passes and measure reduction",
+			"reasoning": "High complexity. Must understand existing document type system (shared/src/types/document.ts:236-259 with Record<string, unknown> properties), create centralized mappers to replace ~1,836 type assertions, refactor 5 most-violated files across api/ and web/, fix tsconfig inheritance, and ensure no runtime breakage. Touches 262 files. Requires deep TypeScript knowledge and careful refactoring across monorepo."
+		},
+		{
+			"taskId": 11,
+			"taskTitle": "Implementation 2: Bundle Size - Code Splitting & Dependency Audit",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down into: (1) Audit and remove unused dependencies using depcheck, (2) Implement React.lazy() route-level code splitting in main.tsx router, (3) Lazy-load heavy dependencies (TipTap extensions, emoji-picker-react), (4) Configure Vite manualChunks for vendor splitting, (5) Build and verify 15% reduction or 20% initial-load reduction",
+			"reasoning": "High complexity. Requires analyzing 40+ web dependencies, implementing lazy loading patterns without breaking functionality, configuring Vite build optimization (vite.config.ts currently has no manualChunks), and measuring results. Must understand React code splitting, dynamic imports, and Vite's build process. Risk of breaking lazy-loaded routes or introducing loading race conditions."
+		},
+		{
+			"taskId": 12,
+			"taskTitle": "Implementation 3: API Response Time - Membership Cache & N+1 Fixes",
+			"complexityScore": 8,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down into: (1) Add per-request membership cache in api/src/middleware/auth.ts, (2) Identify 2 slowest endpoints from Audit 3 baseline, (3) Diagnose N+1 patterns in those endpoints, (4) Refactor to use JOIN or batched queries, (5) Re-benchmark and verify 20% P95 reduction",
+			"reasoning": "High complexity. Requires understanding Express middleware lifecycle, implementing per-request caching without memory leaks, diagnosing N+1 queries from load test results, refactoring SQL queries (api uses raw pg queries, no ORM), and ensuring correctness. Touches critical auth path (api/src/middleware/auth.ts). Must balance performance gains with code maintainability and avoid introducing auth bugs."
+		},
+		{
+			"taskId": 13,
+			"taskTitle": "Implementation 4: Database Query Efficiency - JSONB Expression Indexes",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: (1) Create migration 038_jsonb_expression_indexes.sql with expression indexes on properties->>'state', properties->>'assignee_id', properties->>'sprint_number', properties->>'owner_id', (2) Run migration and verify indexes created, (3) Test queries with EXPLAIN ANALYZE to confirm index usage, (4) Re-measure query performance and verify 20% reduction or 50% improvement on slowest query",
+			"reasoning": "High complexity. Requires PostgreSQL index expertise (B-tree expression indexes on JSONB paths, partial indexes with WHERE clauses), writing production migration (37 existing migrations in api/src/db/migrations/), ensuring CONCURRENTLY for zero-downtime, and validating index effectiveness with EXPLAIN ANALYZE. Wrong indexes can degrade write performance. Must understand JSONB indexing trade-offs."
+		},
+		{
+			"taskId": 14,
+			"taskTitle": "Implementation 5: Test Coverage - Three Critical Path Tests",
+			"complexityScore": 8,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: (1) Write WebSocket session timeout enforcement test in api/src/collaboration/__tests__/, (2) Write document body/properties drift detection test in api/src/__tests__/, (3) Write cascade delete safety test (person archival clears assignee references), (4) Ensure all tests pass and document mitigated risks",
+			"reasoning": "High complexity. Requires understanding WebSocket lifecycle (api/src/collaboration/index.ts with Yjs CRDT), session timeout mechanics (SESSION_TIMEOUT_MS), TipTap content sync with properties extraction (extractHypothesisFromContent, etc.), and cascade delete behavior. Writing integration tests for WebSocket connections, concurrent editing, and database referential integrity. Must use Vitest and potentially testcontainers for DB state. Complex scenarios with async behavior."
+		},
+		{
+			"taskId": 15,
+			"taskTitle": "Implementation 6: Runtime Error Handling - Global Error Handler, WS Re-check, yjsToJson Safety",
+			"complexityScore": 7,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: (1) Add global Express error handler in api/src/app.ts returning JSON errors, (2) Add periodic session validation in WebSocket message handler (api/src/collaboration/index.ts), (3) Wrap yjsToJson() call with try/catch and fallback logic, (4) Document before/after behavior with reproduction steps",
+			"reasoning": "High complexity. Requires understanding Express error middleware order, WebSocket session validation within long-lived connections, and Yjs JSON conversion failure modes (yjsToJson at api/src/collaboration/index.ts:118). Must ensure error handler doesn't break existing error responses, session re-check doesn't cause performance regression, and yjsToJson fallback prevents data loss. Touches critical collaboration infrastructure."
+		},
+		{
+			"taskId": 16,
+			"taskTitle": "Implementation 7: Accessibility - Fix Axe Violations on 3 Critical Pages",
+			"complexityScore": 6,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: (1) Fix Critical/Serious axe violations on dashboard, (2) Fix violations on document editor (UnifiedDocumentPage.tsx), (3) Fix violations on issue list (IssuesList.tsx), (4) Re-run Lighthouse and axe scans, verify 10+ point improvement",
+			"reasoning": "Moderate-high complexity. Requires interpreting axe violations from Audit 7, applying USWDS accessibility patterns, fixing missing aria-labels on icon buttons, color contrast issues, focus management, and form labels across 3 pages. USWDS provides a11y components but custom components need remediation. Must verify fixes don't break existing functionality. Accessibility expertise needed but task is scoped to specific pages."
+		},
+		{
+			"taskId": 17,
+			"taskTitle": "Cross-Cutting: Add Minimal CI Workflow",
+			"complexityScore": 5,
+			"recommendedSubtasks": 3,
+			"expansionPrompt": "Break down into: (1) Create .github/workflows/test.yml with PostgreSQL service, pnpm setup, and type-check/test jobs, (2) Test workflow locally with act or by pushing to branch, (3) Verify workflow runs on GitHub Actions and document",
+			"reasoning": "Moderate complexity. Requires GitHub Actions knowledge, PostgreSQL service configuration, pnpm caching setup, and ensuring tests pass in CI environment (DATABASE_URL env var, migrations, etc.). Risk of flaky tests in CI. Straightforward YAML configuration but must handle environment differences between local and CI."
+		},
+		{
+			"taskId": 18,
+			"taskTitle": "Phase 2 Documentation - Per-Category Improvement Docs",
+			"complexityScore": 6,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "N/A - consolidation task depending on implementations 10-16 completing",
+			"reasoning": "Moderate-high complexity. Depends on tasks 10-16 completing. Requires synthesizing before/after measurements, writing clear root-cause explanations, documenting code changes with examples, and providing reproduction instructions for 7 categories. Technical writing task but must ensure accuracy of metrics and clear communication of tradeoffs. No new implementation, but comprehensive documentation effort."
+		},
+		{
+			"taskId": 19,
+			"taskTitle": "Discovery Write-up - 3 Things Learned",
+			"complexityScore": 4,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "N/A - documentation task requiring reflection on codebase patterns",
+			"reasoning": "Moderate complexity. Requires identifying 3 non-trivial architectural patterns from codebase (Yjs CRDT dual-persistence in api/src/collaboration/index.ts and web/src/components/Editor.tsx, unified document model with JSONB properties in shared/src/types/document.ts, MCP-from-OpenAPI auto-generation in api/src/openapi/index.ts and api/src/mcp/server.ts). Writing clear explanations with code references and future applicability. Reflective analysis rather than implementation."
+		},
+		{
+			"taskId": 20,
+			"taskTitle": "AI Cost Analysis Documentation",
+			"complexityScore": 3,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "N/A - retrospective documentation task",
+			"reasoning": "Low-moderate complexity. Requires tracking token usage during project (manually or via logs), calculating costs based on Claude pricing, reflecting on high/low-value AI usage, estimating time savings, and providing recommendations. No technical implementation, mostly analysis and reflection. Can be done incrementally throughout project."
+		},
+		{
+			"taskId": 21,
+			"taskTitle": "Demo Video Production",
+			"complexityScore": 5,
+			"recommendedSubtasks": 4,
+			"expansionPrompt": "Break down into: (1) Prepare script and storyboard covering audit findings and improvements, (2) Record screen capture showing audit-report.md, benchmarks, and code changes, (3) Edit video to 3-5 minutes, (4) Upload and add link to README",
+			"reasoning": "Moderate complexity. Requires video production skills (scripting, recording, editing), storytelling ability to present technical findings engagingly, and familiarity with screen recording tools. Must condense complex audit into 3-5 minutes. Non-coding task but requires effort and iteration to produce quality demo."
+		},
+		{
+			"taskId": 22,
+			"taskTitle": "Deploy Improved Fork to Public URL",
+			"complexityScore": 7,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down into: (1) Choose deployment platform (Vercel+Railway, personal AWS, or Cloudflare), (2) Deploy backend with PostgreSQL and environment variables, (3) Deploy frontend with correct API_URL, (4) Test deployed app and verify all improvements are live, (5) Document deployment steps",
+			"reasoning": "High complexity. Requires choosing deployment platform, configuring PostgreSQL (Railway add-on or Aurora), setting up environment variables (DATABASE_URL, SESSION_SECRET, AWS_*), deploying Express backend and Vite frontend separately, ensuring WebSocket support for collaboration, and testing all functionality in production environment. Deployment issues, CORS, environment mismatches, and cost management. DevOps expertise needed."
+		},
+		{
+			"taskId": 23,
+			"taskTitle": "Social Post - Tag @GauntletAI",
+			"complexityScore": 2,
+			"recommendedSubtasks": 0,
+			"expansionPrompt": "N/A - social media post creation",
+			"reasoning": "Low complexity. Requires drafting social media post summarizing audit learnings, tagging @GauntletAI, and including links. Straightforward writing task with no technical implementation. Must wait for demo video and deployed app to be ready."
+		},
+		{
+			"taskId": 24,
+			"taskTitle": "Repository Hygiene & Final Submission",
+			"complexityScore": 6,
+			"recommendedSubtasks": 5,
+			"expansionPrompt": "Break down into: (1) Create improvement branches for each of 7 categories with descriptive commits, (2) Update README with ShipShape section, reproduction instructions, and links, (3) Commit all baseline files and audit report, (4) Verify all 8 deliverables are complete, (5) Push branches and create submission document with all links",
+			"reasoning": "Moderate-high complexity. Requires git workflow discipline (7 feature branches, descriptive commits, no merge conflicts), comprehensive README updates with reproduction instructions for all audit categories, verifying completeness of 8 deliverables, and ensuring submission before deadline. Organizational and git expertise needed. Risk of missing deliverables or broken links."
+		}
+	]
+}
