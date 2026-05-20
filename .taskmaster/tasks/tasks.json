@@ -1688,7 +1688,7 @@
             "dependencies": [
               1
             ],
-            "details": "Retrieve links from completed dependency tasks:\n\n1. Demo video link from Task 22 (Record Demo Video)\n   - Check orientation/demo-video.txt or wherever video link was saved\n   - Ensure video is publicly accessible (YouTube, Loom, or similar)\n\n2. Forked repository link from Task 21 (Fork and Push to Public GitHub)\n   - Check orientation/fork-url.txt or wherever fork URL was saved\n   - Verify fork is public and accessible\n   - Standard format: https://github.com/[username]/ship\n\nIf either link is missing, coordinate with those tasks to ensure completion before proceeding",
+            "details": "Retrieve links from completed dependency tasks:\n\n1. Demo video link from Task 21 (Demo Video Production)\n   - Check orientation/demo-video.txt or wherever video link was saved\n   - Ensure video is publicly accessible (YouTube, Loom, or similar)\n\n2. Forked repository link from Task 22 (Deploy Improved Fork to Public URL)\n   - Check orientation/fork-url.txt or wherever fork URL was saved\n   - Verify fork is public and accessible\n   - Standard format: https://github.com/[username]/ship\n\nIf either link is missing, coordinate with those tasks to ensure completion before proceeding",
             "status": "pending",
             "testStrategy": "Verify: (1) Demo video link is accessible and publicly viewable. (2) Fork repository URL is valid and public. (3) Both links are in final format ready for social media post.",
             "parentId": "undefined"
