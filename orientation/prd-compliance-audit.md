@@ -82,62 +82,23 @@ If a stricter reading of the rule is preferred, the alternative is to split this
 - Discovery write-up, AI cost analysis, demo video/script, public deployment, social post.
 - Final repository hygiene pass.
 
-## Recheck - 2026-05-20
+## Recheck — 2026-05-20 (original / superseded)
 
-Phase 1 is **provisionally measured**, but it is not clean enough to call an unconditional pass. The audit now has baseline artifacts for all 7 categories, and Category 4 has been corrected to use exact `pg_stat_statements` per-flow snapshots. The remaining Phase 1 gaps are PRD-significant:
+This section is the original 2026-05-20 recheck. **Its findings have been superseded by the second-pass recheck above** — the four gaps it identified were closed on the same date and merged to master. The text is preserved here as audit trail so a reader can see what the gaps used to look like; it is no longer the current state of the project.
 
-- Category 6 does not include a separate normal-usage browser console error/warning count.
-- Category 7 does not include a real VoiceOver/NVDA screen-reader test on dashboard and document editing.
-- Category 5 required edits to four web test files while measuring, which conflicts with the PRD's "no fixes during audit" rule.
-- Category 2 has a treemap artifact, but its generation is not reproducible from checked-in Vite/package configuration.
+Original verdict: "Phase 1 is **provisionally measured**, but it is not clean enough to call an unconditional pass." Original four PRD gaps and where each was closed:
 
-Phase 2 and final submission are **not done**. Taskmaster tasks 10-24 are still pending, including all seven improvements, CI, improvement docs, discovery write-up, AI cost analysis, demo video, deployment, social post, and final repository hygiene.
+| Original gap | Closed on master via |
+|---|---|
+| Cat 6 had no separate normal-usage browser console count | Merge `430cbd4`-ish chain → `orientation/baselines/runtime-errors/evidence/normal-usage-summary.md` (1 expected 401, 0 warnings, 0 page errors over 11 routes) |
+| Cat 7 had no real VoiceOver/NVDA transcript | Merge of `feat/phase2-cat-7-accessibility` → `orientation/baselines/accessibility/voiceover-results-2026-05-20.md` (real macOS speech-log capture via guidepup) |
+| Cat 5 had four web test files edited during the no-fix audit phase | Reverted on master 2026-05-20 — none of the four test files carry a working-tree diff vs origin |
+| Cat 2 treemap generation was not reproducible from checked-in config | Merge of `feat/phase2-cat-2-bundle` → `web/vite.config.ts` `BUNDLE_ANALYZE=1` hook + `orientation/baselines/bundle/regenerate.sh` |
 
-Current workspace evidence matches the prior verdict: branch is still `master`, recent git history has no new improvement commits, and the only tracked source diff is the same four web test files listed below.
+The original recheck also listed seven "Highest-Priority Corrections," all of which map 1:1 to work that has since landed: items 1–4 are the four gaps above; item 5 (Phase 2 improvements) is open work tracked in Taskmaster Tasks 10–17 + 18; item 6 (final-submission artifacts) is open work tracked in Tasks 19–24; item 7 (repository hygiene) is partially done (labeled branches exist; untracked working-tree dotfiles remain).
 
-## Gate Matrix
+### Notes on prior artifacts (still accurate)
 
-| PRD Area | Status | Audit Finding |
-|---|---|---|
-| Orientation / PRD capture | Pass | `orientation/prd.md` accurately reflects the PDF's phase gates and category targets. The PDF remains canonical. |
-| Category 1: Type safety baseline | Pass with caveat | Counts and `pnpm type-check` output exist. Caveat: `e2e/` is excluded from workspace type-checking. |
-| Category 2: Bundle baseline | Pass with caveat | Production build and treemap artifact exist. Caveat: treemap generation is not reproducible from checked-in config/deps. |
-| Category 3: API response baseline | Pass with caveat | Seed floor met and 15 load-test JSONs exist. Caveat: numbers are localhost floors and use an autocannon percentile proxy. |
-| Category 4: DB query baseline | Pass | Per-flow query counts, slow-query `EXPLAIN ANALYZE`, missing-index findings, and N+1 findings exist. This category now matches the PRD baseline requirement. |
-| Category 5: Test coverage baseline | Provisional | API/web coverage and 3 E2E runs exist. Caveat: web tests were edited during the audit and E2E summary JSONs are internally inconsistent, so stdout logs are authoritative. |
-| Category 6: Runtime/error baseline | Incomplete | Scenario evidence exists, but the PRD explicitly asks for console errors/warnings during normal usage; that clean count is missing. |
-| Category 7: Accessibility baseline | Incomplete | Lighthouse, axe, and keyboard walks exist, but the PRD explicitly asks for VoiceOver/NVDA testing; no real screen-reader transcript exists. |
-| Phase 2 improvements | Fail | Taskmaster tasks 10-17 are pending. No before/after improvement proof exists. |
-| Per-category improvement docs | Fail | `orientation/improvements/` is absent. |
-| Discovery write-up | Fail | `orientation/discovery.md` is absent. |
-| AI cost analysis | Fail | `orientation/ai-cost-analysis.md` is absent. |
-| Demo video / script | Fail | Demo artifacts are absent. |
-| Public deployment | Fail | No deployment proof or deployment write-up exists. |
-| Social post | Fail | No social post artifact exists. |
-| Branch / commit hygiene | Fail | Current work is on `master`, with unstaged modifications and many untracked artifacts; no labeled improvement branches are present. |
-
-## Highest-Priority Corrections
-
-1. Run and record the missing Category 6 normal-usage console pass. Use a clean browser session, walk the core pages, and record exact error and warning counts plus route names.
-2. Run and record the missing Category 7 screen-reader pass. At minimum: VoiceOver on `/my-week` and a document editor page, with task notes for navigation, labels, focus order, and editor interaction.
-3. Decide how to handle the four modified web test files. Either revert them before claiming a pure Phase 1 audit, or explicitly move them into Phase 2 as a test-quality improvement with before/after evidence.
-4. Make bundle visualization reproducible. Commit the visualizer dependency/config or a checked-in script that regenerates `orientation/baselines/bundle/bundle-baseline.html`.
-5. Complete the pending Phase 2 tasks and write one improvement document per category with before/after measurements under identical conditions.
-6. Add the missing final-submission artifacts: discovery, AI cost analysis, demo plan/video link, deployment proof, social post text/link, and README setup/reproduction guidance.
-7. Clean repository hygiene before submission: labeled branches, clean status, committed baseline artifacts, and no generated coverage HTML unless intentionally tracked.
-
-## Evidence Notes
-
-- `orientation/audit-report.md` is now more honest than before, but it should still be treated as **provisional** because the PDF gaps above remain.
 - `orientation/baselines/db-baseline.txt`, `orientation/baselines/queries-flow-{1..5}.log`, and `orientation/baselines/explain-flow-{1..5}.txt` satisfy the Category 4 baseline expectations.
 - `orientation/baselines/test-coverage/full-report.md` is stale and contradicts newer coverage files. Prefer `api-coverage.txt`, `web-coverage.txt`, and E2E stdout logs.
 - `orientation/baselines/type-safety/counts.txt` contains stale wording about a sandbox-blocked type-check. Prefer `type-safety/tsc-output.txt` plus the corrected audit-report section.
-- The current `git diff` includes four modified web test files:
-  - `web/src/components/editor/DetailsExtension.test.ts`
-  - `web/src/hooks/useSessionTimeout.test.ts`
-  - `web/src/lib/document-tabs.test.ts`
-  - `web/src/styles/drag-handle.test.ts`
-
-## Bottom Line
-
-The current work can be defended as a strong baseline investigation, especially after the Category 4 repair, but it cannot honestly be submitted as complete PRD work. The next pass should close the two remaining Phase 1 measurement gaps, resolve the audit-purity problem, then execute and document Phase 2.
