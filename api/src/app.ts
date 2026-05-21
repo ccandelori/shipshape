@@ -247,5 +247,25 @@ export function createApp(corsOrigin: string = 'http://localhost:5173'): express
     console.warn('CAIA initialization failed:', err);
   });
 
+  // Global error handler — registered last so Express invokes it for any
+  // route that calls next(err) or any middleware (body-parser, csrf,
+  // route handler) that throws. Returns generic JSON. The full error is
+  // logged server-side so debugging is not lost.
+  // Why: Express's default error handler renders an HTML page that
+  // includes the full SyntaxError stack trace and absolute filesystem
+  // paths, which leaks runtime detail useful to attackers. The
+  // shipshapesec audit flagged this as a verbose-error leak.
+  app.use((err: any, req: Request, res: Response, _next: NextFunction) => {
+    if (err?.type === 'entity.parse.failed' || err instanceof SyntaxError) {
+      console.warn(`[400] malformed JSON on ${req.method} ${req.path}`);
+      return res.status(400).json({ error: 'Malformed JSON in request body.' });
+    }
+    if (err?.code === 'EBADCSRFTOKEN') {
+      return res.status(403).json({ error: 'Invalid or missing CSRF token.' });
+    }
+    console.error(`[${err?.statusCode || 500}] unhandled error on ${req.method} ${req.path}:`, err);
+    res.status(err?.statusCode || 500).json({ error: 'Internal server error.' });
+  });
+
   return app;
 }
