@@ -65,7 +65,7 @@ starts.
 **Goal:** Get the app running locally and form a top-down map of the monorepo.
 
 **To do**
-- [ ] Clone the fork, run `pnpm dev`, hit the local URL in a browser. Note every step that wasn't in `README.md` — those gaps are real findings.
+- [x] Cloned, ran `pnpm dev`, hit the local URL. Real first-contact gaps relative to `README.md` captured under **"First-contact gaps"** at the end of this section.
 - [x] Read every file in `docs/`. Summarized in conversation; key architectural findings folded into the deep-dives.
 - [x] Read `shared/src/` end-to-end (see Findings below).
 - [x] Draw a one-page diagram of `web/` ↔ `api/` ↔ `shared/` (see Findings below).
@@ -142,6 +142,15 @@ starts.
 - **Auth types are unshared by design.** This is unusual — most apps share a `Session` or `AuthedUser` shape. Worth tracking whether web's local auth types diverge from api's; the new error shape (`ApiResponse<T>`) is the canonical one but legacy routes don't use it.
 - **`Record<string, unknown>` on `Document.content` and `Document.properties`.** This single decision is the source of most type-safety violations downstream (see §5). It exists because Postgres returns JSONB as untyped JSON; a domain mapper layer would close the gap.
 - **`@ts-expect-error` is rare (1 occurrence) and `@ts-ignore` is absent.** The codebase is already disciplined here.
+
+**First-contact gaps** (what wasn't in `README.md` and what required guessing during the actual `pnpm dev` walk):
+
+- **Port 5432 conflict — Postgres.app vs Docker.** `README.md:103` says `docker-compose up -d`. If a native Postgres.app is already running on `:5432`, the docker container fails to bind. The actual fix on this machine was `pg_ctl stop -D "~/Library/Application Support/Postgres/var-18" -m fast` first. Worse, Postgres.app's `trust` auth mode rejects the API's login flow even when the port is free. **README doesn't mention this conflict.** Tracked at `orientation/next-session.md:50, 81–89, 166`.
+- **Web dev port is non-deterministic.** `scripts/dev.sh`'s port-finder lands on the first free port from 5173. Different orientation/audit scripts hard-code different ports — `normal-usage.mjs` defaults to `:5173`; `voiceover-walk.mjs` defaults to `:4173` (preview build); `scenarios.mjs` defaults to `:5174` (now `WEB` env var). **README states `:5173` as if it were fixed.** Set `WEB=http://localhost:<port>` to match your stack.
+- **macOS Accessibility + Automation permissions required for VoiceOver baselining.** `@guidepup/guidepup` needs the terminal (iTerm in this case) to have both permissions granted in System Settings → Privacy & Security. Additionally `defaults write com.apple.VoiceOver4/default SCREnableAppleScript -bool true` must be set, and VoiceOver must have been launched at least once so `/private/var/db/Accessibility/.VoiceOverAppleScriptEnabled` exists. **README doesn't mention any of this** — it's a Cat 7 baselining prerequisite, not a Ship dev prerequisite, but the gap is real for an auditor.
+- **`playwright-chromium` postinstall downloads ~169 MB of Chromium.** Not a Ship dependency directly, but the demo deck / Cat 6 scenarios use Playwright via `pnpm exec` from the workspace. First run is slow.
+- **`pnpm install` from a nested directory inside the workspace.** A sub-project like `orientation/demo-deck/` needs `pnpm install --ignore-workspace` to get its own `node_modules`; otherwise pnpm tries to splice it into the root workspace listed at `pnpm-workspace.yaml`. **README is silent on this** because it assumes you're working from the root.
+- **CLAUDE.md is the load-bearing setup doc, not README.md.** `README.md` has the basics; the real "what `pnpm dev` does" walkthrough (env file creation, port-finder, migration on fresh DB, multi-worktree) lives in `.claude/CLAUDE.md` under "Commands". A new engineer reading only README would miss the dev-script behavior.
 
 ---
 
@@ -591,7 +600,7 @@ All eight parameters are parameterized. ✓ No injection risk.
 
 **To do**
 - [x] Read every tsconfig. Findings below — root has `strict + noUncheckedIndexedAccess + noImplicitReturns + noFallthroughCasesInSwitch`. Web does *not* inherit the safety flags fully.
-- [ ] Run `pnpm type-check` and record the baseline error count. **Pending — needs running in your terminal.** Run before any audit changes; capture stdout into the audit report.
+- [x] Ran `pnpm type-check` live from the audit thread on 2026-05-19. **Exit 0 across api/web/shared; 0 compile errors.** Captured at `orientation/baselines/type-safety/tsc-output.txt`; cited in the audit at `audit-report-detailed.md` Cat 1 baseline-metrics row "`pnpm type-check` error count".
 - [x] Pattern examples found and quoted below.
 - [x] Catalogued patterns. The codebase is light on advanced TS — no mapped types, branded types, conditional types, or template-literal types in `shared/`. Heavy use of `Record<string, unknown>`.
 
