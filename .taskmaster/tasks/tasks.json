@@ -1894,6 +1894,152 @@
         "complexity": 3,
         "recommendedSubtasks": 4,
         "expansionPrompt": "Inventory existing orientation artifacts \u2192 fill gaps (architecture diagram, testing infra, deploy notes) \u2192 assemble the consolidated checklist."
+      },
+      {
+        "id": "27",
+        "title": "ShipShape Quality Dashboard \u2014 pnpm shipshape orchestrator",
+        "description": "Turn the one-time Phase 2 audit into a permanent reproducible quality system. `pnpm shipshape` produces a fresh per-category scoreboard with PRD thresholds; future PRs can't silently regress any of the 7 categories.",
+        "details": "Build a single command that produces a versioned markdown scoreboard wiring together every existing per-category measurement script. The orchestrator lives at scripts/shipshape/run.ts (or .mjs) and emits orientation/shipshape-report.md with one section per PRD category, each ending in a pass/fail line keyed to the PRD threshold.\n\nPer-category checks to wire under one entry point:\n\n1. Type Safety \u2014 re-run the baseline grep methodology from orientation/baselines/type-safety/counts.txt and report total + delta vs the 747 baseline. Pass if reduction >= 25%.\n\n2. Bundle Size \u2014 run `pnpm --filter @ship/web build` with the existing BUNDLE_ANALYZE=1 hook, parse build.txt for the entry chunk gzip size. Pass if <= 200 KB gzip (current 142).\n\n3. API Response Time \u2014 run autocannon against the 5 baseline endpoints at c=25 for the duration used in Phase 1. Compare P90 + P97.5 to the baseline JSONs in orientation/baselines/api-response-time/. Pass if every endpoint within 10% of the current after-* numbers (no regression).\n\n4. DB Query Efficiency \u2014 `EXPLAIN (ANALYZE, BUFFERS)` against the 4 hot queries from orientation/baselines/db-efficiency/. Verify the 4 indexes from migration 038 are present and chosen. Pass if execution time within 20% of the current after-* numbers AND the index is in the plan.\n\n5. Test Coverage \u2014 run `pnpm --filter @ship/api test` and verify all 494 tests pass. Pass if zero failures.\n\n6. Runtime Error Handling \u2014 run the three Task 14 critical-path test files (session-timeout, document-sync, cascade-delete) plus the yjsConverter regression set. Pass if zero failures.\n\n7. Accessibility \u2014 run orientation/baselines/accessibility/axe-scan-after.mjs and verify 0 Critical / 0 Serious across all 8 baseline routes. Pass if the after-axe-summary.md shows zero on both severities.\n\nCross-cutting: emit orientation/shipshape-report.md with a top scoreboard table + per-category section including the raw numbers. Use the same filename pattern as orientation/improvements/*.md so a grader can read either set independently. Include a 'last run' timestamp and a 'how to reproduce' command per section.\n\nImplementation notes:\n- Orchestrator should be idempotent and runnable from a clean checkout   given `pnpm install && docker compose up -d && pnpm db:seed` first.\n- Each category check should be a separate file under scripts/shipshape/   (typecheck.ts, bundle.ts, api.ts, db.ts, tests.ts, errors.ts, axe.ts)   with a uniform return shape: { category, target, actual, pass, evidence_path }.\n- Top-level run.ts calls each in parallel where safe (typecheck, tests,   bundle are safe to parallelize; axe + api need the dev stack up).\n- Failure mode: any category failing the threshold makes the orchestrator   exit nonzero. Suitable for `pnpm shipshape` to gate releases.\n\nPRD targets the scoreboard pins:\n- Cat 1: >= 25% type-safety violation reduction from 747 baseline\n- Cat 2: entry chunk <= 200 KB gzip\n- Cat 3: P90 of each baseline endpoint <= 1.1x the after-* number\n- Cat 4: dashboard slowest query <= 0.1 ms; indexes idx_documents_issue_state,   idx_documents_issue_assignee_id, idx_documents_sprint_number,   idx_documents_project_owner_id all present and used in the plan\n- Cat 5: all 494 tests pass\n- Cat 6: all phase2-regressions + Task 14 tests pass\n- Cat 7: 0 Critical + 0 Serious across all 8 axe routes\n",
+        "testStrategy": "(1) `pnpm shipshape` runs from a clean checkout in <=120s (without axe re-run, which needs dev:web up). (2) Output orientation/shipshape-report.md exists, contains 7 category sections, and ends with a top-line pass/fail. (3) Intentionally regress one category (e.g. delete migration 038 or break the bundle by removing a lazy() wrapper) \u2014 shipshape detects it and exits nonzero. (4) orientation/shipshape-report.md is git-tracked and updated by CI on every push to master.",
+        "priority": "high",
+        "dependencies": [
+          "17"
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Scaffold scripts/shipshape/ with shared types + run.ts entry point",
+            "status": "pending",
+            "details": "Define the per-check return shape, set up parallel execution, wire the markdown emitter."
+          },
+          {
+            "id": 2,
+            "title": "Wire Cat 1 (type-safety) check \u2014 replay the baseline grep methodology",
+            "status": "pending",
+            "details": "Use the same ripgrep commands from orientation/baselines/type-safety/counts.txt to produce the current grand total + per-category breakdown."
+          },
+          {
+            "id": 3,
+            "title": "Wire Cat 2 (bundle) check \u2014 parse pnpm build output for entry chunk gzip size",
+            "status": "pending",
+            "details": "Re-run BUNDLE_ANALYZE=0 build, scrape the chunk table for index-*.js gzip size, compare to 200KB threshold."
+          },
+          {
+            "id": 4,
+            "title": "Wire Cat 3 (API response time) check \u2014 autocannon against 5 baseline endpoints",
+            "status": "pending",
+            "details": "Requires dev:api up with E2E_TEST=1. Reuses orientation/baselines/api-response-time/benchmark-script.sh pattern. Compare P90 + P97.5 to baseline JSONs."
+          },
+          {
+            "id": 5,
+            "title": "Wire Cat 4 (DB) check \u2014 EXPLAIN ANALYZE + index existence verification",
+            "status": "pending",
+            "details": "Connect to ship-postgres-1 via docker exec. Run EXPLAIN ANALYZE on the 4 hot queries from orientation/baselines/db-efficiency/. Verify the 4 migration-038 indexes are in pg_indexes and chosen by the planner."
+          },
+          {
+            "id": 6,
+            "title": "Wire Cat 5 (tests) + Cat 6 (regression tests) checks \u2014 pnpm vitest run",
+            "status": "pending",
+            "details": "Parse vitest JSON output for pass/fail/skip counts. Cat 6 is a filtered subset focused on phase2-regressions + Task 14 critical-path tests."
+          },
+          {
+            "id": 7,
+            "title": "Wire Cat 7 (axe) check \u2014 run the after-scan driver, parse for 0/0",
+            "status": "pending",
+            "details": "Reuses orientation/baselines/accessibility/axe-scan-after.mjs. Requires dev:web up. Parse after-axe-summary.json for Critical/Serious totals."
+          },
+          {
+            "id": 8,
+            "title": "Emit orientation/shipshape-report.md with top scoreboard + per-category sections",
+            "status": "pending",
+            "details": "Markdown template lives at scripts/shipshape/report-template.md. Each section: target, actual, pass/fail, evidence-path link, reproduction command. Top-line: overall pass/fail."
+          },
+          {
+            "id": 9,
+            "title": "Add pnpm shipshape script alias to root package.json",
+            "status": "pending",
+            "details": "Map `pnpm shipshape` to `tsx scripts/shipshape/run.ts`."
+          },
+          {
+            "id": 10,
+            "title": "Self-test: intentionally regress one category and verify shipshape catches it",
+            "status": "pending",
+            "details": "Demonstrate the gate working. Document the regression-detection demo in orientation/improvements/shipshape.md."
+          }
+        ],
+        "metadata": {
+          "created_for": "Phase 3 institutional-memory work, post-Phase-2 deadline."
+        }
+      },
+      {
+        "id": "28",
+        "title": "ShipShape :ci lite mode \u2014 wire shipshape into GitHub Actions",
+        "description": "Run a fast subset of shipshape on every PR. The full audit is for releases / manual runs; CI gets the cheap gates that catch regressions in seconds.",
+        "details": "`pnpm shipshape:ci` is a fast variant that skips the dev-stack-requiring categories (axe needs dev:web up, api benchmark needs dev:api). The CI mode runs only Cat 1 (type-safety count), Cat 2 (bundle build), Cat 5 + Cat 6 (vitest), and the static parts of Cat 4 (index existence in pg_indexes against a fresh migration run).\n\nUpdate .github/workflows/test.yml to call `pnpm shipshape:ci` after the type-check + tests jobs succeed. Upload orientation/shipshape-report.md as a workflow artifact so every PR has a downloadable scoreboard.\n\nCat 3 (autocannon) and Cat 7 (axe full-route walk) stay out of CI for now \u2014 they need a longer-running runner with Playwright + autocannon installed and the full stack up. Track as follow-up if we want them in CI eventually.\n\nUpdate orientation/improvements/ci-workflow.md to document the new gates and what they catch.",
+        "testStrategy": "(1) Open a PR that intentionally regresses Cat 1 (add an `as any` cast to a hot file) and watch the CI workflow fail. (2) Open a PR that doesn't regress anything and watch it pass. (3) Verify the artifact upload includes shipshape-report.md.",
+        "priority": "high",
+        "dependencies": [
+          "27"
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Add scripts/shipshape/run-ci.ts with the lite-mode check selection",
+            "status": "pending"
+          },
+          {
+            "id": 2,
+            "title": "Add pnpm shipshape:ci script alias to root package.json",
+            "status": "pending"
+          },
+          {
+            "id": 3,
+            "title": "Update .github/workflows/test.yml to invoke pnpm shipshape:ci + upload artifact",
+            "status": "pending"
+          },
+          {
+            "id": 4,
+            "title": "Update orientation/improvements/ci-workflow.md with the new gate description",
+            "status": "pending"
+          }
+        ],
+        "metadata": {
+          "created_for": "Phase 3 \u2014 institutional-memory + CI gate hardening."
+        }
+      },
+      {
+        "id": "29",
+        "title": "(stretch) Typed document contracts via Zod \u2014 single-source schema for the unified document model",
+        "description": "Define each document_type's properties shape once via Zod; generate API validators, shared TS types, mapper runtime guards, and OpenAPI fragments from that single source. Turns 'everything is a document' from a philosophy into an enforceable platform.",
+        "details": "Ship's unified document model stores per-type properties in a JSONB column. Today the IssueProperties / ProjectProperties / etc TS interfaces in shared/src/types/document.ts are the source of truth, and the runtime guards in shared/src/mappers/document-mappers.ts re-derive them by hand. Routes use ad-hoc Zod schemas (api/src/routes/issues.ts createIssueSchema) that drift from the shared types. OpenAPI schemas are written manually.\n\nBuild a single Zod schema per document_type as the source of truth:\n\n1. shared/src/schemas/document-properties.ts exports issuePropertiesSchema,    projectPropertiesSchema, sprintPropertiesSchema, etc. \u2014 each a z.object().\n\n2. shared/src/types/document.ts derives TS types via z.infer<typeof issuePropertiesSchema>.    Replaces the hand-written interfaces.\n\n3. shared/src/mappers/document-mappers.ts isIssueProperties() / isProjectProperties()    etc become single-line wrappers around schema.safeParse(value).success.\n\n4. api/src/routes/issues.ts (and the other routes) import the schemas and use them    for body validation instead of redefining.\n\n5. api/src/openapi/schemas/*.ts schema fragments come from zodToJsonSchema(schema).\n\nRisk: this is a wide refactor. Touch many files. Estimate 1-2 days for a careful implementation. Worth deferring until after Phase 2 final submission.\n\nThis is the high-leverage move for keeping the unified document model honest as it scales. Without it, the next time someone adds a property, they have to remember to update three files in lockstep.",
+        "testStrategy": "(1) Every existing IssueProperties / ProjectProperties / etc consumer compiles without changes (z.infer produces the same shape). (2) Every existing Zod route validator in api/src/routes/*.ts is replaced with the shared schema; existing route tests still pass. (3) Adding a new property to IssueProperties only requires editing the Zod schema; the mapper guard + OpenAPI fragment + API validator pick it up automatically.",
+        "priority": "medium",
+        "dependencies": [
+          "27"
+        ],
+        "status": "pending",
+        "subtasks": [],
+        "metadata": {
+          "created_for": "Phase 3+ rockstar move; not required for Phase 2 PRD."
+        }
+      },
+      {
+        "id": "30",
+        "title": "(stretch) Collaboration integrity observability \u2014 make the silent-data-loss class loud",
+        "description": "The scariest bug class in Ship is silent Yjs persistence failure. Phase 2 added two structural fixes (yjsToJson NULL guard, WS session re-validation); follow up with observability so future regressions surface immediately instead of being discovered by users.",
+        "details": "Add /health/collaboration endpoint exposing:\n\n- documents_content_null_count: COUNT(*) FROM documents WHERE content IS NULL AND yjs_state IS NOT NULL\n- documents_with_recent_persist: COUNT(*) WHERE updated_at > now() - interval '1 hour'\n- ws_session_4401_count_5m: rolling count of WS_CLOSE_SESSION_EXPIRED in last 5 minutes\n- ws_connections_open: current Map size of conns + eventConns\n- last_persist_failures: latest 10 entries from a new persist_failures log table (or in-memory ring buffer)\n\nPlus a Prometheus-compatible /metrics endpoint exposing the same as counters/gauges.\n\nAdd three integration tests that pin each guard:\n- Test that documents_content_null_count goes UP if you delete the isTipTapDoc guard.\n- Test that ws_session_4401_count increments when a session is deleted while a WS is open.\n- Test that failed_persist_count is exposed on the health endpoint when persistDocument throws.",
+        "testStrategy": "(1) /health/collaboration returns JSON with all 5 fields and HTTP 200. (2) /metrics returns Prometheus text format with the equivalent gauges. (3) Three new integration tests in api/src/__tests__/collaboration-health.test.ts pin the behavior.",
+        "priority": "medium",
+        "dependencies": [
+          "27"
+        ],
+        "status": "pending",
+        "subtasks": [],
+        "metadata": {
+          "created_for": "Phase 3+ rockstar move; not required for Phase 2 PRD."
+        }
       }
     ],
     "metadata": {
