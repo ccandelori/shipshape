@@ -1,0 +1,68 @@
+name: test
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+
+# Audit Phase 1 noted no CI gate existed — every type-check / test failure
+# could ship to master unnoticed until someone happened to run `pnpm test`
+# locally. This workflow runs the same gates a reviewer would: type-check
+# across all packages, and the api unit test suite (which contains the
+# Phase 2 critical-path regression coverage in
+# api/src/__tests__/phase2-regressions.test.ts).
+#
+# The api tests require a live Postgres for the small subset that hit the
+# DB (DB-1 index existence, content-preservation integration). The service
+# container below provides one with the same credentials the dev compose
+# stack uses, so the same migrations + seeds run identically.
+
+jobs:
+  type-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:shared
+      - run: pnpm type-check
+
+  api-tests:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ship
+          POSTGRES_PASSWORD: ship_dev_password
+          POSTGRES_DB: ship_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://ship:ship_dev_password@localhost:5432/ship_dev
+      NODE_ENV: test
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:shared
+      - run: pnpm --filter @ship/api exec tsx src/db/migrate.ts
+      - run: pnpm --filter @ship/api test
