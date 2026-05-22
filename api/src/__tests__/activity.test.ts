@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
+import { pgResult } from '../test-utils/pgMock.js';
 
 // Mock pool before importing routes
 vi.mock('../db/client.js', () => ({
@@ -45,18 +46,13 @@ describe('Activity API', () => {
 
         // Mock entity exists check
         vi.mocked(pool.query)
-          .mockResolvedValueOnce({
-            rows: [{ id: programId }],
-            rowCount: 1,
-          } as any)
+          .mockResolvedValueOnce(pgResult([{ id: programId }]))
           // Mock activity query
-          .mockResolvedValueOnce({
-            rows: [
+          .mockResolvedValueOnce(pgResult([
               { date: '2024-01-01', count: 5 },
               { date: '2024-01-02', count: 3 },
               { date: '2024-01-03', count: 0 },
-            ],
-          } as any);
+            ]));
 
         const response = await request(app)
           .get(`/activity/program/${programId}`)
@@ -82,16 +78,11 @@ describe('Activity API', () => {
         const workspaceId = 'test-workspace-id';
 
         vi.mocked(pool.query)
-          .mockResolvedValueOnce({
-            rows: [{ id: projectId }],
-            rowCount: 1,
-          } as any)
-          .mockResolvedValueOnce({
-            rows: [
+          .mockResolvedValueOnce(pgResult([{ id: projectId }]))
+          .mockResolvedValueOnce(pgResult([
               { date: '2024-01-10', count: 12 },
               { date: '2024-01-11', count: 8 },
-            ],
-          } as any);
+            ]));
 
         const response = await request(app)
           .get(`/activity/project/${projectId}`)
@@ -115,15 +106,10 @@ describe('Activity API', () => {
         const workspaceId = 'test-workspace-id';
 
         vi.mocked(pool.query)
-          .mockResolvedValueOnce({
-            rows: [{ id: sprintId }],
-            rowCount: 1,
-          } as any)
-          .mockResolvedValueOnce({
-            rows: [
+          .mockResolvedValueOnce(pgResult([{ id: sprintId }]))
+          .mockResolvedValueOnce(pgResult([
               { date: '2024-01-20', count: 15 },
-            ],
-          } as any);
+            ]));
 
         const response = await request(app)
           .get(`/activity/sprint/${sprintId}`)
@@ -145,13 +131,8 @@ describe('Activity API', () => {
         const programId = 'empty-program';
 
         vi.mocked(pool.query)
-          .mockResolvedValueOnce({
-            rows: [{ id: programId }],
-            rowCount: 1,
-          } as any)
-          .mockResolvedValueOnce({
-            rows: [],
-          } as any);
+          .mockResolvedValueOnce(pgResult([{ id: programId }]))
+          .mockResolvedValueOnce(pgResult([]));
 
         const response = await request(app)
           .get(`/activity/program/${programId}`)
@@ -180,10 +161,7 @@ describe('Activity API', () => {
       it('returns 404 when entity does not exist', async () => {
         const nonExistentId = 'non-existent-id';
 
-        vi.mocked(pool.query).mockResolvedValueOnce({
-          rows: [],
-          rowCount: 0,
-        } as any);
+        vi.mocked(pool.query).mockResolvedValueOnce(pgResult([]));
 
         const response = await request(app)
           .get(`/activity/program/${nonExistentId}`)
@@ -198,10 +176,7 @@ describe('Activity API', () => {
         const programId = 'other-workspace-program';
 
         // Entity exists but not in user's workspace
-        vi.mocked(pool.query).mockResolvedValueOnce({
-          rows: [],
-          rowCount: 0,
-        } as any);
+        vi.mocked(pool.query).mockResolvedValueOnce(pgResult([]));
 
         const response = await request(app)
           .get(`/activity/program/${programId}`)
@@ -235,13 +210,8 @@ describe('Activity API', () => {
         const workspaceId = 'test-workspace-id';
 
         vi.mocked(pool.query)
-          .mockResolvedValueOnce({
-            rows: [{ id: programId }],
-            rowCount: 1,
-          } as any)
-          .mockResolvedValueOnce({
-            rows: [],
-          } as any);
+          .mockResolvedValueOnce(pgResult([{ id: programId }]))
+          .mockResolvedValueOnce(pgResult([]));
 
         await request(app)
           .get(`/activity/program/${programId}`)
@@ -266,10 +236,7 @@ describe('Activity API', () => {
         const programId = 'program-123';
 
         vi.mocked(pool.query)
-          .mockResolvedValueOnce({
-            rows: [{ id: programId }],
-            rowCount: 1,
-          } as any)
+          .mockResolvedValueOnce(pgResult([{ id: programId }]))
           .mockResolvedValueOnce({
             rows: Array.from({ length: 30 }, (_, i) => ({
               date: `2024-01-${String(i + 1).padStart(2, '0')}`,
@@ -297,13 +264,8 @@ describe('Activity API', () => {
         const programId = 'program-123';
 
         vi.mocked(pool.query)
-          .mockResolvedValueOnce({
-            rows: [{ id: programId }],
-            rowCount: 1,
-          } as any)
-          .mockResolvedValueOnce({
-            rows: [],
-          } as any);
+          .mockResolvedValueOnce(pgResult([{ id: programId }]))
+          .mockResolvedValueOnce(pgResult([]));
 
         await request(app)
           .get(`/activity/program/${programId}`)
@@ -324,13 +286,8 @@ describe('Activity API', () => {
         const projectId = 'project-456';
 
         vi.mocked(pool.query)
-          .mockResolvedValueOnce({
-            rows: [{ id: projectId }],
-            rowCount: 1,
-          } as any)
-          .mockResolvedValueOnce({
-            rows: [],
-          } as any);
+          .mockResolvedValueOnce(pgResult([{ id: projectId }]))
+          .mockResolvedValueOnce(pgResult([]));
 
         await request(app)
           .get(`/activity/project/${projectId}`)
@@ -349,13 +306,8 @@ describe('Activity API', () => {
         const sprintId = 'sprint-789';
 
         vi.mocked(pool.query)
-          .mockResolvedValueOnce({
-            rows: [{ id: sprintId }],
-            rowCount: 1,
-          } as any)
-          .mockResolvedValueOnce({
-            rows: [],
-          } as any);
+          .mockResolvedValueOnce(pgResult([{ id: sprintId }]))
+          .mockResolvedValueOnce(pgResult([]));
 
         await request(app)
           .get(`/activity/sprint/${sprintId}`)

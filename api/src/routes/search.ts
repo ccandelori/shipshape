@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { pool } from '../db/client.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { isWorkspaceAdmin } from '../middleware/visibility.js';
+import { optionalQueryString, queryInt } from '../utils/queryParams.js';
 
 type RouterType = ReturnType<typeof Router>;
 export const searchRouter: RouterType = Router();
@@ -16,7 +17,7 @@ function escapeLikePattern(str: string): string {
 // GET /api/search/mentions?q=:query
 searchRouter.get('/mentions', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const searchQuery = (req.query.q as string) || '';
+    const searchQuery = optionalQueryString(req, 'q') ?? '';
     const workspaceId = req.workspaceId!;
     const userId = req.userId!;
 
@@ -81,11 +82,11 @@ searchRouter.get('/mentions', authMiddleware, async (req: Request, res: Response
 // GET /api/search/learnings?q=:query&program_id=:program_id
 searchRouter.get('/learnings', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const searchQuery = (req.query.q as string) || '';
-    const programId = req.query.program_id as string | undefined;
+    const searchQuery = optionalQueryString(req, 'q') ?? '';
+    const programId = optionalQueryString(req, 'program_id');
     const workspaceId = req.workspaceId!;
     const userId = req.userId!;
-    const limit = Math.min(parseInt(req.query.limit as string) || 10, 50);
+    const limit = queryInt(req, 'limit', 10, { max: 50 });
 
     // SECURITY: Escape wildcard characters to prevent SQL wildcard injection
     const sanitizedQuery = escapeLikePattern(searchQuery);
