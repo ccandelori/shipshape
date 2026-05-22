@@ -67,7 +67,7 @@ export function MultiPersonCombobox({
               {selectedPeople.map((person) => (
                 <span
                   key={person.user_id}
-                  className="inline-flex items-center gap-1 rounded bg-accent/20 px-1.5 py-0.5 text-xs text-foreground"
+                  className="inline-flex items-center gap-1 rounded bg-accent-soft px-1.5 py-0.5 text-xs text-foreground"
                 >
                   <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-accent text-[8px] font-medium text-white">
                     {getInitials(person.name)}

@@ -222,8 +222,11 @@ export function AccountabilityGrid({ showArchived = false }: AccountabilityGridP
                 return (
                   <div
                     key={project.id}
+                    role="button"
+                    tabIndex={0}
+                    aria-label={`Open project ${project.title}`}
                     className={cn(
-                      "flex w-[180px] items-center border-b border-border px-3 cursor-pointer transition-all duration-200",
+                      "flex w-[180px] items-center border-b border-border px-3 cursor-pointer transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset",
                       isExpanded ? "h-10 bg-background" : "h-2"
                     )}
                     style={{
@@ -232,7 +235,15 @@ export function AccountabilityGrid({ showArchived = false }: AccountabilityGridP
                     }}
                     onMouseEnter={() => setExpandedProjectId(project.id)}
                     onMouseLeave={() => setExpandedProjectId(null)}
+                    onFocus={() => setExpandedProjectId(project.id)}
+                    onBlur={() => setExpandedProjectId(null)}
                     onClick={() => navigate(`/documents/${project.id}`)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        navigate(`/documents/${project.id}`);
+                      }
+                    }}
                     title={project.title}
                   >
                     {isExpanded && (
