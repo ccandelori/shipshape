@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { apiGet } from '@/lib/api';
+import { HttpError } from '@/lib/httpError';
 
 export interface PlanItem {
   text: string;
