@@ -55,11 +55,27 @@ function extractTextWithMarks(element: Y.XmlElement, inheritedMarks: any[] = [])
   return result;
 }
 
+// TipTap document shape returned by yjsToJson. Narrowed (vs `any`) so a
+// future bug that drops the return statement is caught by the type system
+// instead of silently producing `undefined` → pg NULL.
+// See orientation/baselines/runtime-errors/evidence/yjs-to-json-null.md
+// for the live repro that motivated this contract.
+export type TipTapDoc = { type: 'doc'; content: any[] };
+
+export function isTipTapDoc(value: unknown): value is TipTapDoc {
+  return (
+    typeof value === 'object' &&
+    value !== null &&
+    (value as { type?: unknown }).type === 'doc' &&
+    Array.isArray((value as { content?: unknown }).content)
+  );
+}
+
 /**
  * Convert Yjs XmlFragment to TipTap JSON
  * This is used when reading documents that were edited via the collaborative editor
  */
-export function yjsToJson(fragment: Y.XmlFragment): any {
+export function yjsToJson(fragment: Y.XmlFragment): TipTapDoc {
   const content: any[] = [];
 
   for (let i = 0; i < fragment.length; i++) {
