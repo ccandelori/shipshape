@@ -2,6 +2,7 @@ import { Router, Request, Response } from 'express';
 import { pool } from '../db/client.js';
 import { getVisibilityContext, VISIBILITY_FILTER_SQL } from '../middleware/visibility.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { requireParam, requireQueryString, optionalQueryString, queryInt } from '../utils/queryParams.js';
 import { TEMPLATE_HEADINGS, extractText, hasContent } from '../utils/document-content.js';
 
 type RouterType = ReturnType<typeof Router>;
@@ -1362,7 +1363,7 @@ router.get('/reviews', authMiddleware, async (req: Request, res: Response) => {
   try {
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
-    const sprintCount = Math.min(parseInt(req.query.sprint_count as string, 10) || 5, 20);
+    const sprintCount = queryInt(req, 'sprint_count', 5, { max: 20 });
     const showArchived = req.query.showArchived === 'true';
 
     // Check admin access

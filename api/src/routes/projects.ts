@@ -3,6 +3,7 @@ import { pool } from '../db/client.js';
 import { z } from 'zod';
 import { getVisibilityContext, VISIBILITY_FILTER_SQL } from '../middleware/visibility.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { requireParam, requireQueryString, optionalQueryString, queryInt } from '../utils/queryParams.js';
 import { DEFAULT_PROJECT_PROPERTIES, computeICEScore } from '@ship/shared';
 import { checkDocumentCompleteness } from '../utils/extractHypothesis.js';
 import { logDocumentChange, getLatestDocumentFieldHistory } from '../utils/document-crud.js';
@@ -313,8 +314,8 @@ const VALID_SORT_FIELDS = ['ice_score', 'impact', 'confidence', 'ease', 'title',
 router.get('/', authMiddleware, async (req: Request, res: Response) => {
   try {
     const includeArchived = req.query.archived === 'true';
-    const sortField = (req.query.sort as string) || 'ice_score';
-    const sortDir = (req.query.dir as string) === 'asc' ? 'ASC' : 'DESC';
+    const sortField = optionalQueryString(req, 'sort') ?? 'ice_score';
+    const sortDir = optionalQueryString(req, 'dir') === 'asc' ? 'ASC' : 'DESC';
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -419,7 +420,7 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
 // Get single project
 router.get('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -600,7 +601,7 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
 // Update project
 router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -758,13 +759,13 @@ router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
 
     // Broadcast celebration when plan is added
     if (data.plan && data.plan.trim() !== '') {
-      broadcastToUser(userId, 'accountability:updated', { type: 'project_plan', targetId: id as string });
+      broadcastToUser(userId, 'accountability:updated', { type: 'project_plan', targetId: id });
     }
 
     // Log plan changes to document_history for approval workflow tracking
     if (data.plan !== undefined && data.plan !== currentProps.plan) {
       await logDocumentChange(
-        id as string,
+        id,
         'plan',
         currentProps.plan || null,
         data.plan || null,
@@ -854,7 +855,7 @@ router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
 // Delete project
 router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -896,7 +897,7 @@ router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
 // GET /api/projects/:id/retro - Returns pre-filled draft or existing retro
 router.get('/:id/retro', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -995,7 +996,7 @@ router.get('/:id/retro', authMiddleware, async (req: Request, res: Response) => 
 // POST /api/projects/:id/retro - Creates finalized project retro
 router.post('/:id/retro', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1049,12 +1050,12 @@ router.post('/:id/retro', authMiddleware, async (req: Request, res: Response) =>
     );
 
     // Broadcast celebration when project retro is completed
-    broadcastToUser(userId, 'accountability:updated', { type: 'project_retro', targetId: id as string });
+    broadcastToUser(userId, 'accountability:updated', { type: 'project_retro', targetId: id });
 
     // Log initial retro content to document_history for approval workflow tracking
     if (content) {
       await logDocumentChange(
-        id as string,
+        id,
         'retro_content',
         null,
         JSON.stringify(content),
@@ -1129,7 +1130,7 @@ function extractSprintFromRow(row: any) {
 // GET /api/projects/:id/issues - List issues for a project
 router.get('/:id/issues', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1204,7 +1205,7 @@ router.get('/:id/issues', authMiddleware, async (req: Request, res: Response) =>
 // Note: "weeks" is the user-facing terminology, "sprints" is internal
 router.get('/:id/weeks', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1263,7 +1264,7 @@ router.get('/:id/weeks', authMiddleware, async (req: Request, res: Response) => 
 // GET /api/projects/:id/sprints - List sprints for a project (deprecated, use /weeks)
 router.get('/:id/sprints', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1322,7 +1323,7 @@ router.get('/:id/sprints', authMiddleware, async (req: Request, res: Response) =
 // POST /api/projects/:id/sprints - Create a sprint associated with a project
 router.post('/:id/sprints', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1493,7 +1494,7 @@ router.post('/:id/sprints', authMiddleware, async (req: Request, res: Response) 
 // PATCH /api/projects/:id/retro - Updates existing project retro
 router.patch('/:id/retro', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1573,7 +1574,7 @@ router.patch('/:id/retro', authMiddleware, async (req: Request, res: Response) =
       const newContent = JSON.stringify(content);
       if (oldContent !== newContent) {
         await logDocumentChange(
-          id as string,
+          id,
           'retro_content',
           oldContent,
           newContent,
@@ -1607,7 +1608,7 @@ router.patch('/:id/retro', authMiddleware, async (req: Request, res: Response) =
 // POST /api/projects/:id/approve-plan - Approve project plan
 router.post('/:id/approve-plan', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1638,7 +1639,7 @@ router.post('/:id/approve-plan', authMiddleware, async (req: Request, res: Respo
     }
 
     // Get the latest plan history entry for version tracking
-    const historyEntry = await getLatestDocumentFieldHistory(id as string, 'plan');
+    const historyEntry = await getLatestDocumentFieldHistory(id, 'plan');
     const versionId = historyEntry?.id || null;
 
     // Update project properties with approval
@@ -1671,7 +1672,7 @@ router.post('/:id/approve-plan', authMiddleware, async (req: Request, res: Respo
 // POST /api/projects/:id/approve-retro - Approve project retro
 router.post('/:id/approve-retro', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1702,7 +1703,7 @@ router.post('/:id/approve-retro', authMiddleware, async (req: Request, res: Resp
     }
 
     // Get the latest retro content history entry for version tracking
-    const historyEntry = await getLatestDocumentFieldHistory(id as string, 'retro_content');
+    const historyEntry = await getLatestDocumentFieldHistory(id, 'retro_content');
     const versionId = historyEntry?.id || null;
 
     // Update project properties with retro approval

@@ -54,9 +54,7 @@ async function fetchMyWeek(weekNumber?: number): Promise<MyWeekResponse> {
   const params = weekNumber ? `?week_number=${weekNumber}` : '';
   const res = await apiGet(`/api/dashboard/my-week${params}`);
   if (!res.ok) {
-    const error = new Error('Failed to fetch my week data') as Error & { status: number };
-    error.status = res.status;
-    throw error;
+    throw new HttpError('Failed to fetch my week data', res.status);
   }
   return res.json();
 }

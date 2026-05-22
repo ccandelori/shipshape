@@ -3,6 +3,7 @@ import { pool } from '../db/client.js';
 import { z } from 'zod';
 import { getVisibilityContext, VISIBILITY_FILTER_SQL } from '../middleware/visibility.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { requireParam, requireQueryString, optionalQueryString, queryInt } from '../utils/queryParams.js';
 import {
   logDocumentChange,
   getTimestampUpdates,
@@ -114,7 +115,13 @@ function extractIssueFromRow(row: any) {
 // List issues with filters
 router.get('/', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { state, priority, assignee_id, program_id, sprint_id, source, parent_filter } = req.query;
+    const state = optionalQueryString(req, 'state');
+    const priority = optionalQueryString(req, 'priority');
+    const assignee_id = optionalQueryString(req, 'assignee_id');
+    const program_id = optionalQueryString(req, 'program_id');
+    const sprint_id = optionalQueryString(req, 'sprint_id');
+    const source = optionalQueryString(req, 'source');
+    const parent_filter = optionalQueryString(req, 'parent_filter');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -137,7 +144,7 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
       WHERE d.workspace_id = $1 AND d.document_type = 'issue'
         AND ${VISIBILITY_FILTER_SQL('d', '$2', '$3')}
     `;
-    const params: (string | boolean | null)[] = [workspaceId, userId, isAdmin];
+    const params: (string | string[] | boolean | null)[] = [workspaceId, userId, isAdmin];
 
     // Exclude archived and deleted issues by default
     query += ` AND d.archived_at IS NULL AND d.deleted_at IS NULL`;
@@ -145,19 +152,19 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
     // Filter by source if specified (internal or external)
     if (source) {
       query += ` AND d.properties->>'source' = $${params.length + 1}`;
-      params.push(source as string);
+      params.push(source);
     }
     // No default filtering - show all issues regardless of source
 
     if (state) {
-      const states = (state as string).split(',');
+      const states = state.split(',');
       query += ` AND d.properties->>'state' = ANY($${params.length + 1})`;
-      params.push(states as any);
+      params.push(states);
     }
 
     if (priority) {
       query += ` AND d.properties->>'priority' = $${params.length + 1}`;
-      params.push(priority as string);
+      params.push(priority);
     }
 
     if (assignee_id) {
@@ -165,7 +172,7 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
         query += ` AND (d.properties->>'assignee_id' IS NULL OR d.properties->>'assignee_id' = '')`;
       } else {
         query += ` AND d.properties->>'assignee_id' = $${params.length + 1}`;
-        params.push(assignee_id as string);
+        params.push(assignee_id);
       }
     }
 
@@ -175,7 +182,7 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
         SELECT 1 FROM document_associations da
         WHERE da.document_id = d.id AND da.related_id = $${params.length + 1} AND da.relationship_type = 'program'
       )`;
-      params.push(program_id as string);
+      params.push(program_id);
     }
 
     // Filter by sprint via junction table
@@ -184,7 +191,7 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
         SELECT 1 FROM document_associations da
         WHERE da.document_id = d.id AND da.related_id = $${params.length + 1} AND da.relationship_type = 'sprint'
       )`;
-      params.push(sprint_id as string);
+      params.push(sprint_id);
     }
 
     // Filter by parent/sub-issue status
@@ -414,7 +421,7 @@ router.get('/by-ticket/:number', authMiddleware, async (req: Request, res: Respo
 // Get sub-issues (children) of an issue
 router.get('/:id/children', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -492,7 +499,7 @@ router.get('/:id/children', authMiddleware, async (req: Request, res: Response) 
 // Get single issue
 router.get('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1010,7 +1017,7 @@ router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
 // Get issue history
 router.get('/:id/history', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1331,7 +1338,7 @@ router.post('/bulk', authMiddleware, async (req: Request, res: Response) => {
 // System-generated accountability issues cannot be deleted
 router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 

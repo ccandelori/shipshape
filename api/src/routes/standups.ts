@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { v4 as uuidv4 } from 'uuid';
 import { getVisibilityContext, VISIBILITY_FILTER_SQL } from '../middleware/visibility.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { requireParam, requireQueryString, optionalQueryString, queryInt } from '../utils/queryParams.js';
 
 type RouterType = ReturnType<typeof Router>;
 const router: RouterType = Router();
@@ -341,7 +342,7 @@ const updateStandupSchema = z.object({
  */
 router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -457,7 +458,7 @@ router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
  */
 router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 

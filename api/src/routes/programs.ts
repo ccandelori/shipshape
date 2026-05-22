@@ -3,6 +3,7 @@ import { pool } from '../db/client.js';
 import { z } from 'zod';
 import { getVisibilityContext, VISIBILITY_FILTER_SQL } from '../middleware/visibility.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { requireParam, requireQueryString, optionalQueryString, queryInt } from '../utils/queryParams.js';
 import { logAuditEvent } from '../services/audit.js';
 
 type RouterType = ReturnType<typeof Router>;
@@ -102,7 +103,7 @@ router.get('/', authMiddleware, async (req: Request, res: Response) => {
 // Get single program
 router.get('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -195,7 +196,7 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
 // Update program
 router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -313,7 +314,7 @@ router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
 // Delete program
 router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -355,7 +356,7 @@ router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
 // Get program issues
 router.get('/:id/issues', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -434,7 +435,7 @@ router.get('/:id/issues', authMiddleware, async (req: Request, res: Response) =>
 // Get program projects (documents with document_type = 'project' that belong to this program)
 router.get('/:id/projects', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -517,7 +518,7 @@ router.get('/:id/projects', authMiddleware, async (req: Request, res: Response) 
 // Returns sprints with sprint_number and owner_id - dates/status computed on frontend
 router.get('/:id/sprints', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -613,7 +614,7 @@ router.get('/:id/sprints', authMiddleware, async (req: Request, res: Response) =
 router.get('/:id/merge-preview', authMiddleware, async (req: Request, res: Response) => {
   try {
     const sourceId = req.params.id;
-    const targetId = req.query.target_id as string;
+    const targetId = requireQueryString(req, 'target_id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
