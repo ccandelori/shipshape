@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { pgResult } from '../test-utils/pgMock.js';
 
 // Mock pool before importing the module
 vi.mock('../db/client.js', () => ({
@@ -30,9 +31,7 @@ describe('transformIssueLinks', () => {
       };
 
       // Mock issue lookup
-      vi.mocked(pool.query).mockResolvedValueOnce({
-        rows: [{ id: 'issue-uuid-42', ticket_number: 42 }],
-      } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([{ id: 'issue-uuid-42', ticket_number: 42 }]));
 
       const result = await transformIssueLinks(content, workspaceId) as any;
 
@@ -65,9 +64,7 @@ describe('transformIssueLinks', () => {
         ],
       };
 
-      vi.mocked(pool.query).mockResolvedValueOnce({
-        rows: [{ id: 'issue-uuid-100', ticket_number: 100 }],
-      } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([{ id: 'issue-uuid-100', ticket_number: 100 }]));
 
       const result = await transformIssueLinks(content, workspaceId) as any;
 
@@ -97,9 +94,7 @@ describe('transformIssueLinks', () => {
         ],
       };
 
-      vi.mocked(pool.query).mockResolvedValueOnce({
-        rows: [{ id: 'issue-uuid-500', ticket_number: 500 }],
-      } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([{ id: 'issue-uuid-500', ticket_number: 500 }]));
 
       const result = await transformIssueLinks(content, workspaceId) as any;
 
@@ -129,13 +124,11 @@ describe('transformIssueLinks', () => {
         ],
       };
 
-      vi.mocked(pool.query).mockResolvedValueOnce({
-        rows: [
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([
           { id: 'issue-uuid-10', ticket_number: 10 },
           { id: 'issue-uuid-20', ticket_number: 20 },
           { id: 'issue-uuid-30', ticket_number: 30 },
-        ],
-      } as any);
+        ]));
 
       const result = await transformIssueLinks(content, workspaceId) as any;
 
@@ -157,9 +150,7 @@ describe('transformIssueLinks', () => {
         ],
       };
 
-      vi.mocked(pool.query).mockResolvedValueOnce({
-        rows: [],
-      } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([]));
 
       await transformIssueLinks(content, workspaceId);
 
@@ -180,9 +171,7 @@ describe('transformIssueLinks', () => {
         ],
       };
 
-      vi.mocked(pool.query).mockResolvedValueOnce({
-        rows: [],
-      } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([]));
 
       await transformIssueLinks(content, workspaceId);
 
@@ -213,9 +202,7 @@ describe('transformIssueLinks', () => {
       };
 
       // Mock database lookup (implementation still queries even for marked text)
-      vi.mocked(pool.query).mockResolvedValueOnce({
-        rows: [{ id: 'issue-uuid-99', ticket_number: 99 }],
-      } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([{ id: 'issue-uuid-99', ticket_number: 99 }]));
 
       const result = await transformIssueLinks(content, workspaceId) as any;
 
@@ -243,9 +230,7 @@ describe('transformIssueLinks', () => {
       };
 
       // No matching issues found
-      vi.mocked(pool.query).mockResolvedValueOnce({
-        rows: [],
-      } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([]));
 
       const result = await transformIssueLinks(content, workspaceId) as any;
 
@@ -268,9 +253,7 @@ describe('transformIssueLinks', () => {
       };
 
       // Only #50 exists
-      vi.mocked(pool.query).mockResolvedValueOnce({
-        rows: [{ id: 'issue-uuid-50', ticket_number: 50 }],
-      } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([{ id: 'issue-uuid-50', ticket_number: 50 }]));
 
       const result = await transformIssueLinks(content, workspaceId) as any;
 
@@ -357,9 +340,7 @@ describe('transformIssueLinks', () => {
         ],
       };
 
-      vi.mocked(pool.query).mockResolvedValueOnce({
-        rows: [{ id: 'issue-uuid-25', ticket_number: 25 }],
-      } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([{ id: 'issue-uuid-25', ticket_number: 25 }]));
 
       const result = await transformIssueLinks(content, workspaceId) as any;
 
@@ -385,9 +366,7 @@ describe('transformIssueLinks', () => {
         ],
       };
 
-      vi.mocked(pool.query).mockResolvedValueOnce({
-        rows: [{ id: 'issue-uuid-77', ticket_number: 77 }],
-      } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([{ id: 'issue-uuid-77', ticket_number: 77 }]));
 
       const result = await transformIssueLinks(content, workspaceId) as any;
 
@@ -421,12 +400,10 @@ describe('transformIssueLinks', () => {
         ],
       };
 
-      vi.mocked(pool.query).mockResolvedValueOnce({
-        rows: [
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([
           { id: 'issue-uuid-1', ticket_number: 1 },
           { id: 'issue-uuid-2', ticket_number: 2 },
-        ],
-      } as any);
+        ]));
 
       await transformIssueLinks(content, workspaceId);
 
@@ -450,9 +427,7 @@ describe('transformIssueLinks', () => {
         ],
       };
 
-      vi.mocked(pool.query).mockResolvedValueOnce({
-        rows: [],
-      } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([]));
 
       await transformIssueLinks(content, workspaceId);
 
@@ -474,9 +449,7 @@ describe('transformIssueLinks', () => {
       };
 
       // Issue exists but in different workspace
-      vi.mocked(pool.query).mockResolvedValueOnce({
-        rows: [],
-      } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([]));
 
       const result = await transformIssueLinks(content, workspaceId) as any;
 
@@ -498,12 +471,10 @@ describe('transformIssueLinks', () => {
         ],
       };
 
-      vi.mocked(pool.query).mockResolvedValueOnce({
-        rows: [
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([
           { id: 'issue-uuid-5', ticket_number: 5 },
           { id: 'issue-uuid-6', ticket_number: 6 },
-        ],
-      } as any);
+        ]));
 
       const result = await transformIssueLinks(content, workspaceId) as any;
 
@@ -547,9 +518,7 @@ describe('transformIssueLinks', () => {
         ],
       };
 
-      vi.mocked(pool.query).mockResolvedValueOnce({
-        rows: [],
-      } as any);
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([]));
 
       await transformIssueLinks(content, workspaceId);
 
