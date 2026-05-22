@@ -171,62 +171,81 @@ async function checkMissingStandups(
     [workspaceId, userId, currentSprintNumber]
   );
 
-  // Check each sprint for missing standup today
-  for (const sprint of activeSprintsResult.rows) {
-    const standupResult = await pool.query(
-      `SELECT id FROM documents
+  // C-3 batch (was N+1 across active sprints): two awaited queries per sprint
+  // (today-standup existence + last-standup-date) replaced with two set-based
+  // queries keyed by `parent_id = ANY($3)`. Active-sprint count is typically
+  // 1-3 today; under a multi-program user it grows linearly. The set-based
+  // form is O(1) round-trip regardless.
+  const sprintIds = activeSprintsResult.rows.map((s) => s.id as string);
+  if (sprintIds.length === 0) {
+    return items;
+  }
+
+  // 1. Sprints with a standup posted today.
+  const todayStandupsResult = await pool.query<{ parent_id: string }>(
+    `SELECT DISTINCT parent_id FROM documents
+     WHERE workspace_id = $1
+       AND document_type = 'standup'
+       AND (properties->>'author_id')::uuid = $2
+       AND parent_id = ANY($3::uuid[])
+       AND created_at >= $4::date
+       AND created_at < ($4::date + interval '1 day')`,
+    [workspaceId, userId, sprintIds, todayStr]
+  );
+  const sprintsWithStandupToday = new Set(todayStandupsResult.rows.map((r) => r.parent_id));
+
+  // 2. Last-standup-date per sprint (only for sprints missing today's standup).
+  const sprintsMissingStandup = sprintIds.filter((id) => !sprintsWithStandupToday.has(id));
+  const lastDateBySprint = new Map<string, Date | null>();
+  if (sprintsMissingStandup.length > 0) {
+    const lastStandupsResult = await pool.query<{ parent_id: string; last_standup_date: Date | null }>(
+      `SELECT parent_id, MAX(created_at::date) as last_standup_date
+       FROM documents
        WHERE workspace_id = $1
          AND document_type = 'standup'
          AND (properties->>'author_id')::uuid = $2
-         AND parent_id = $3
-         AND created_at >= $4::date
-         AND created_at < ($4::date + interval '1 day')`,
-      [workspaceId, userId, sprint.id, todayStr]
+         AND parent_id = ANY($3::uuid[])
+       GROUP BY parent_id`,
+      [workspaceId, userId, sprintsMissingStandup]
     );
-
-    if (standupResult.rows.length === 0) {
-      // Calculate days since last standup
-      const lastStandupResult = await pool.query(
-        `SELECT MAX(created_at::date) as last_standup_date
-         FROM documents
-         WHERE workspace_id = $1
-           AND document_type = 'standup'
-           AND (properties->>'author_id')::uuid = $2
-           AND parent_id = $3`,
-        [workspaceId, userId, sprint.id]
-      );
-
-      const lastStandupDate = lastStandupResult.rows[0]?.last_standup_date;
-      let daysSinceLastStandup = 0;
-      const sprintTitle = sprint.title || `Week ${sprint.properties?.sprint_number || 'N'}`;
-      const issueCount = parseInt(sprint.issue_count, 10) || 0;
-
-      // Format: "Post standup for {sprint_title} ({issue_count} issues)"
-      let message = `Post standup for ${sprintTitle}`;
-      if (issueCount > 0) {
-        message += ` (${issueCount} issue${issueCount === 1 ? '' : 's'} assigned)`;
-      }
-
-      if (lastStandupDate) {
-        const lastDate = new Date(lastStandupDate);
-        const todayDate = new Date(todayStr);
-        daysSinceLastStandup = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
-        if (daysSinceLastStandup > 1) {
-          message += ` - ${daysSinceLastStandup} days since last`;
-        }
-      }
-
-      items.push({
-        type: 'standup',
-        targetId: sprint.id,
-        targetTitle: sprintTitle,
-        targetType: 'sprint',
-        dueDate: todayStr,
-        message,
-        daysSinceLastStandup,
-        issueCount,
-      });
+    for (const row of lastStandupsResult.rows) {
+      lastDateBySprint.set(row.parent_id, row.last_standup_date);
     }
+  }
+
+  // 3. Emit missing-standup items for sprints not in sprintsWithStandupToday.
+  for (const sprint of activeSprintsResult.rows) {
+    if (sprintsWithStandupToday.has(sprint.id)) continue;
+
+    const lastStandupDate = lastDateBySprint.get(sprint.id);
+    let daysSinceLastStandup = 0;
+    const sprintTitle = sprint.title || `Week ${sprint.properties?.sprint_number || 'N'}`;
+    const issueCount = parseInt(sprint.issue_count, 10) || 0;
+
+    let message = `Post standup for ${sprintTitle}`;
+    if (issueCount > 0) {
+      message += ` (${issueCount} issue${issueCount === 1 ? '' : 's'} assigned)`;
+    }
+
+    if (lastStandupDate) {
+      const lastDate = new Date(lastStandupDate);
+      const todayDate = new Date(todayStr);
+      daysSinceLastStandup = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+      if (daysSinceLastStandup > 1) {
+        message += ` - ${daysSinceLastStandup} days since last`;
+      }
+    }
+
+    items.push({
+      type: 'standup',
+      targetId: sprint.id,
+      targetTitle: sprintTitle,
+      targetType: 'sprint',
+      dueDate: todayStr,
+      message,
+      daysSinceLastStandup,
+      issueCount,
+    });
   }
 
   return items;
