@@ -149,7 +149,9 @@ Document the self-test in a new `orientation/improvements/shipshape.md`.
 
 ### Environment
 
-- **Postgres lives in Docker** (`ship-postgres-1`). Container env: `POSTGRES_USER=ship`, `POSTGRES_PASSWORD=ship_dev_password`, `POSTGRES_DB=ship_dev`. Connect via `docker exec ship-postgres-1 psql -U ship -d ship_dev`.
+- **Postgres lives in Docker, currently running under OrbStack** (Cameron migrated from Docker Desktop late on 2026-05-22). Container: `ship-postgres-1`. Env: `POSTGRES_USER=ship`, `POSTGRES_PASSWORD=ship_dev_password`, `POSTGRES_DB=ship_dev`. Connect via `docker exec ship-postgres-1 psql -U ship -d ship_dev`.
+- **OrbStack socket gotcha.** If `docker ps` returns "no such file or directory" pointing at `~/.docker/run/docker.sock`, the shell context is still on Docker Desktop. Fix: `docker context use orbstack`. Check with `docker context ls` — the `*` should be on `orbstack`, endpoint `unix:///Users/sheep/.orbstack/run/docker.sock`.
+- **OrbStack-fresh volume reminder.** The Docker Desktop → OrbStack migration created a fresh `postgres_data` volume; the original seed data did NOT carry across. After a fresh OrbStack start: `docker compose up -d && pnpm --filter @ship/api exec tsx src/db/migrate.ts && pnpm db:seed`. After this re-seed, `SELECT COUNT(*) FROM users` should be 11; documents = 257.
 - **Dev API port** is 3000. Web is 5173 by default (changes if another worktree holds it).
 - **Seed credentials**: `dev@ship.local` / `admin123`. Documented in README and surfaced by `pnpm db:seed` output.
 - **For benchmark runs** start API with `E2E_TEST=1 pnpm dev:api` — this enables the `X-Bench: 1` rate-limit bypass in `api/src/app.ts:92`. Without it, autocannon at c=25 will hit the dev rate limit (1000/min).
