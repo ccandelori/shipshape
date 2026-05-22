@@ -201,15 +201,21 @@ export async function authMiddleware(
       }
     }
 
-    // Update last activity
-    await pool.query(
-      'UPDATE sessions SET last_activity = $1 WHERE id = $2',
-      [now, sessionId]
-    );
-
-    // Refresh cookie with sliding expiration (throttled to avoid overhead)
-    // Only refresh if more than 60 seconds since last activity
+    // Update last activity — throttled to match the cookie-refresh threshold
+    // below. Without the throttle, every authenticated request triggers a WAL
+    // fsync on the sessions table, which dominates the API's write QPS under
+    // load. The 60s window matches the cookie refresh, so the worst-case
+    // accuracy of last_activity is ±60s — same as it was for the cookie.
     const COOKIE_REFRESH_THRESHOLD_MS = 60 * 1000;
+    if (inactivityMs > COOKIE_REFRESH_THRESHOLD_MS) {
+      await pool.query(
+        'UPDATE sessions SET last_activity = $1 WHERE id = $2',
+        [now, sessionId]
+      );
+    }
+
+    // Refresh cookie with sliding expiration (throttled with the same 60s
+    // window as the DB write above).
     if (inactivityMs > COOKIE_REFRESH_THRESHOLD_MS) {
       res.cookie('session_id', sessionId, {
         httpOnly: true,

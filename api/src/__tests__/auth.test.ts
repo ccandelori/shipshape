@@ -27,7 +27,10 @@ function createMockReqRes(cookies: Record<string, string> = {}) {
 
 describe('authMiddleware', () => {
   beforeEach(() => {
-    vi.clearAllMocks();
+    // resetAllMocks (vs clearAllMocks) also drains queued
+    // mockResolvedValueOnce calls so that the throttled-write code path
+    // in auth.ts doesn't leak unconsumed mocks across tests.
+    vi.resetAllMocks();
   });
 
   describe('session validation', () => {
@@ -71,8 +74,8 @@ describe('authMiddleware', () => {
             is_super_admin: false,
           }],
         } as any)
-        .mockResolvedValueOnce(pgResult([{ id: 'membership-1' }]))
-        .mockResolvedValueOnce(pgResult([]));
+        .mockResolvedValueOnce(pgResult([{ id: 'membership-1' }]) as any)
+        .mockResolvedValueOnce(pgResult([]) as any);
 
       await authMiddleware(req, res, next);
       expect(req.sessionId).toBe('valid-session');
@@ -150,7 +153,7 @@ describe('authMiddleware', () => {
             is_super_admin: false,
           }],
         } as any)
-        .mockResolvedValueOnce(pgResult([]));
+        .mockResolvedValueOnce(pgResult([]) as any);
 
       await authMiddleware(req, res, next);
       expect(pool.query).toHaveBeenCalledWith(
@@ -175,7 +178,7 @@ describe('authMiddleware', () => {
             is_super_admin: false,
           }],
         } as any)
-        .mockResolvedValueOnce(pgResult([]));
+        .mockResolvedValueOnce(pgResult([]) as any);
 
       await authMiddleware(req, res, next);
       expect(res.status).toHaveBeenCalledWith(403);
@@ -202,7 +205,7 @@ describe('authMiddleware', () => {
             is_super_admin: true,
           }],
         } as any)
-        .mockResolvedValueOnce(pgResult([]));
+        .mockResolvedValueOnce(pgResult([]) as any);
 
       await authMiddleware(req, res, next);
       expect(req.isSuperAdmin).toBe(true);
@@ -241,8 +244,8 @@ describe('authMiddleware', () => {
             is_super_admin: false,
           }],
         } as any)
-        .mockResolvedValueOnce(pgResult([{ id: 'membership-1' }]))
-        .mockResolvedValueOnce(pgResult([]));
+        .mockResolvedValueOnce(pgResult([{ id: 'membership-1' }]) as any)
+        .mockResolvedValueOnce(pgResult([]) as any);
 
       await authMiddleware(req, res, next);
       expect(res.cookie).toHaveBeenCalledWith('session_id', 'valid-session', {
@@ -271,8 +274,8 @@ describe('authMiddleware', () => {
             is_super_admin: false,
           }],
         } as any)
-        .mockResolvedValueOnce(pgResult([{ id: 'membership-1' }]))
-        .mockResolvedValueOnce(pgResult([]));
+        .mockResolvedValueOnce(pgResult([{ id: 'membership-1' }]) as any)
+        .mockResolvedValueOnce(pgResult([]) as any);
 
       await authMiddleware(req, res, next);
       expect(res.cookie).not.toHaveBeenCalled();
@@ -309,7 +312,7 @@ describe('authMiddleware', () => {
           }],
         } as any)
         // Mock update last_used_at
-        .mockResolvedValueOnce(pgResult([]));
+        .mockResolvedValueOnce(pgResult([]) as any);
 
       await authMiddleware(req, res, next);
       expect(req.userId).toBe('user-123');
@@ -322,7 +325,7 @@ describe('authMiddleware', () => {
       const { req, res, next } = createMockReqResWithAuth('Bearer invalid_token');
 
       // Mock token not found
-      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([]));
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([]) as any);
 
       await authMiddleware(req, res, next);
       expect(res.status).toHaveBeenCalledWith(401);
@@ -338,7 +341,7 @@ describe('authMiddleware', () => {
       const { req, res, next } = createMockReqResWithAuth('Bearer ship_revokedtoken');
 
       // Mock token found but revoked (revoked_at is set)
-      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([])); // No results means revoked/expired
+      vi.mocked(pool.query).mockResolvedValueOnce(pgResult([]) as any); // No results means revoked/expired
 
       await authMiddleware(req, res, next);
       expect(res.status).toHaveBeenCalledWith(401);
@@ -367,7 +370,7 @@ describe('authMiddleware', () => {
             is_super_admin: false,
           }],
         } as any)
-        .mockResolvedValueOnce(pgResult([]));
+        .mockResolvedValueOnce(pgResult([]) as any);
 
       await authMiddleware(req, res, next);
       // Should use token auth, not session
