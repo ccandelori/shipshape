@@ -31,6 +31,8 @@
     "db:seed": "pnpm --filter @ship/api db:seed",
     "db:migrate": "pnpm --filter @ship/api db:migrate",
     "db:orphan-check": "pnpm --filter @ship/api db:orphan-check",
+    "shipshape": "pnpm exec tsx scripts/shipshape/run.ts",
+    "shipshape:ci": "pnpm exec tsx scripts/shipshape/run-ci.ts",
     "prepare": "husky",
     "postinstall": "git config merge.ours.driver true && (command -v comply >/dev/null 2>&1 || echo '\\n⚠️  comply CLI not installed - pre-commit hooks require it\\n   Install with: pip install comply-cli\\n')"
   },
