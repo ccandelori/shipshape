@@ -70,11 +70,19 @@ The wiki endpoint hits a comparatively cheap query plan (already indexed by work
 
 `vi.resetAllMocks()` replaced `vi.clearAllMocks()` in `beforeEach` so the new "fewer-mocks-consumed" behavior doesn't leak unconsumed `mockResolvedValueOnce` queues across tests.
 
-## What's not shipped: C-3 N+1 batch in accountability service
+## Also shipped (Task 12 spec): per-request membership cache + the C-3 N+1 batch
 
-The audit's C-3 critical finding (services/accountability.ts:175-437 — 6 awaited queries inside loops, 30-80 SQL queries per dashboard load) is acknowledged but **not fixed in this branch.** The change required rewriting four nested loops as set-based `WHERE id = ANY($1)` queries, including type-shape work to handle the per-loop result shapes. Estimated 60-90 minutes of careful work.
+### Per-request membership cache
 
-The throttle hitting 25-88% across every endpoint already exceeds the PRD target for Cat 3, so this stays as a documented follow-up rather than a blocker.
+`api/src/middleware/auth.ts` now selects `role` alongside `id` on the workspace_memberships row it already had to fetch, and stashes `{ role: 'admin' | 'member' }` on `req.membership`. `api/src/middleware/visibility.ts`'s `isWorkspaceAdmin(userId, workspaceId, req?)` and `getVisibilityContext(userId, workspaceId, req?)` accept an optional `Request`; when supplied, they read from `req.membership` instead of issuing a second SELECT.
+
+Applied to every dashboard / issues / projects / programs / weeks / team / documents / admin / accountability / search / standups route handler — ~94 call sites updated to pass `req`. Each authenticated request now does ONE membership lookup (in the auth middleware) instead of two.
+
+### C-3 N+1 batch — standup accountability loop
+
+`api/src/services/accountability.ts:175-230` (before) had two awaited queries inside `for (const sprint of activeSprintsResult.rows)`: a today-standup existence check and a last-standup-date lookup. With N active sprints, that's 2N round-trips per call. The audit measured 26 queries on `/dashboard/my-week` + `/dashboard/my-work`.
+
+Refactored to two set-based queries keyed by `parent_id = ANY($3::uuid[])`. Active-sprint count is typically 1-3 but grows linearly under multi-program users. The set-based form is O(1) round-trips regardless. All 13 accountability tests still pass.
 
 ## Reproducibility
 

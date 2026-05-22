@@ -12,6 +12,10 @@ declare global {
       workspaceId?: string;
       isSuperAdmin?: boolean;
       isApiToken?: boolean; // True when authenticated via API token
+      // Membership info populated by authMiddleware once per request.
+      // Downstream consumers (getVisibilityContext, route handlers that need
+      // to check role) should read from here instead of re-querying.
+      membership?: { role: 'admin' | 'member' | null };
     }
   }
 }
@@ -179,10 +183,12 @@ export async function authMiddleware(
       return;
     }
 
-    // Verify user still has access to the workspace (unless super-admin)
+    // Verify user still has access to the workspace (unless super-admin).
+    // Fetch role too so downstream (getVisibilityContext, route handlers)
+    // can read req.membership.role without a second query.
     if (session.workspace_id && !session.is_super_admin) {
-      const membershipResult = await pool.query(
-        'SELECT id FROM workspace_memberships WHERE workspace_id = $1 AND user_id = $2',
+      const membershipResult = await pool.query<{ id: string; role: 'admin' | 'member' }>(
+        'SELECT id, role FROM workspace_memberships WHERE workspace_id = $1 AND user_id = $2',
         [session.workspace_id, session.user_id]
       );
 
@@ -199,6 +205,10 @@ export async function authMiddleware(
         });
         return;
       }
+      req.membership = { role: membershipResult.rows[0].role };
+    } else if (session.is_super_admin) {
+      // Super-admins implicitly have admin role for visibility checks.
+      req.membership = { role: 'admin' };
     }
 
     // Update last activity — throttled to match the cookie-refresh threshold
