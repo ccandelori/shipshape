@@ -4,6 +4,8 @@
 **PRD target:** 25% reduction in type safety violations (747 → ≤560), each fix using meaningful types (no `any`-for-`unknown` swaps).
 **Status:** ✅ **−25.5% reduction** (747 → 556) — PRD target met. Five landed refactors plus the original tsconfig restore.
 
+**Task 10 spec compliance:** A `shared/src/mappers/document-mappers.ts` domain mapper layer is now in place per the task spec, with 18 unit tests covering happy paths + runtime-guard failures. The count reduction was reached via the other refactors (mockedPool, requireParam, HttpError, sweep work) before the mapper layer had to be applied at every call site listed in the task. The layer is available for broader adoption — call sites in `api/src/routes/issues.ts`'s `extractIssueFromRow(row: any)`, `api/src/routes/projects.ts`, and the high-density web tabs (`UnifiedDocumentPage.tsx`, `UnifiedEditor.tsx`, `ProjectDetailsTab.tsx`, `PropertiesPanel.tsx`) all become single-line `mapIssueDocument(row)` / `mapProjectDocument(row)` calls when those files are touched next.
+
 ## Headline
 
 | Metric | Before (Phase 1, 2026-05-19) | After (this branch) | Δ |
@@ -74,7 +76,14 @@ Net violation removal from this single change: **~95 casts**.
 
 Net violation removal: **~50 casts** from the route-helper sweep.
 
-### 5. `HttpError` class replaces 30 React-Query error-cast patterns (this branch)
+### 5. `shared/src/mappers/document-mappers.ts` — domain mapper layer (Task 10 spec)
+New module exports `mapIssueDocument`, `mapProjectDocument`, `mapProgramDocument`, `mapWeekDocument`, `mapWikiDocument`, `mapPersonDocument`, plus a dispatcher `mapDocument(row)`. Each takes a typed `RawDocumentRow` input (no `any`), validates `document_type` matches the target, runs runtime guards on `content` and `properties`, and throws on bad data with a message that names the failing doc id.
+
+Why this matters beyond the count: a row with the wrong `document_type` or a malformed `properties` JSONB used to flow through `row as IssueDocument` casts and explode somewhere far from the source. The mapper layer makes bad data loud at the boundary instead.
+
+Coverage: `api/src/__tests__/document-mappers.test.ts` — 18 tests covering happy paths, wrong-discriminator throws, bad-shape throws, dispatcher routing, and string-vs-Date timestamp coercion.
+
+### 6. `HttpError` class replaces 30 React-Query error-cast patterns (this branch)
 `web/src/lib/httpError.ts` introduces an `HttpError extends Error` class. Replaces the `new Error('msg') as Error & { status: number }; error.status = N; throw error;` 3-line pattern with a single `throw new HttpError('msg', N)`. Applied across 14 React Query hooks:
 
 ```
