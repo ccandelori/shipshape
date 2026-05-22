@@ -469,9 +469,8 @@ export function PropertiesPanel({
     // pattern at the call site: zero `as` casts, runtime guard makes a
     // missing/wrong field loud at the boundary instead of silently
     // returning undefined.
-    if ('accountable_id' in document) {
-      const accountableId = (document as { accountable_id?: string | null }).accountable_id;
-      if (accountableId === user.id) return true;
+    if ('accountable_id' in document && document.accountable_id === user.id) {
+      return true;
     }
 
     // For sprints, also check program_accountable_id (inherited from program)
@@ -578,10 +577,11 @@ export function PropertiesPanel({
       }
 
       case 'program': {
+        // PanelDocument discriminated union narrows `document` to ProgramDocument here.
         const programProps = panelProps as ProgramPanelProps;
         return (
           <ProgramSidebar
-            program={document as ProgramDocument}
+            program={document}
             people={programProps.people || []}
             onUpdate={onUpdate as (updates: Partial<ProgramDocument>) => Promise<void>}
             highlightedFields={highlightedFields}
@@ -591,27 +591,26 @@ export function PropertiesPanel({
 
       case 'weekly_plan':
       case 'weekly_retro': {
-        // Weekly plan and retro documents get a minimal sidebar with history panel
-        // Names are fetched via WeeklyDocumentSidebar component
+        // PanelDocument discriminated union narrows `document` to
+        // WeeklyPlanDocument | WeeklyRetroDocument here.
         return (
           <WeeklyDocumentSidebar
-            document={document as WeeklyPlanDocument | WeeklyRetroDocument}
+            document={document}
             weeklyReviewState={weeklyReviewState}
           />
         );
       }
 
-      default:
-        // TypeScript narrows to never here since all cases are handled
-        // Cast to BaseDocument to access document_type for the fallback display
-        return (
-          <div className="p-4">
-            <p className="text-xs text-muted">
-              Document type: {(document as BaseDocument).document_type}
-            </p>
-          </div>
-        );
     }
+    // PanelDocument is exhaustive (wiki, issue, project, sprint, program,
+    // weekly_plan, weekly_retro). If a future document_type is added to
+    // PanelDocument without a switch case, TS narrows the variable below
+    // away from `never` and the assignment fails compilation — forcing the
+    // contributor to handle the new variant rather than silently rendering
+    // a fallback.
+    const _exhaustive: never = document;
+    void _exhaustive;
+    return null;
   }, [document, panelProps, onUpdate, highlightedFields, canApprove, userNames, handleApprovalUpdate, weeklyReviewState]);
 
   return panel;
