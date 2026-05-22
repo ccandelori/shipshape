@@ -19,6 +19,35 @@
 
 ---
 
+## ShipShape — GFA Week 4 Submission (Cameron Candelori)
+
+This fork is the deliverable for the **GFA Week 4 — ShipShape** project (Auditing and Improving a Production TypeScript Codebase).
+
+- **Audit Report:** [`orientation/audit-report.md`](orientation/audit-report.md) (executive) + [`orientation/audit-report-detailed.md`](orientation/audit-report-detailed.md) (full prose, 1,091 lines)
+- **Phase 2 per-category improvements:** [`orientation/improvements/`](orientation/improvements/) — 8 docs covering each of 7 PRD categories + CI workflow
+- **Submission checklist + grader pointer:** [`SUBMISSION.md`](SUBMISSION.md)
+- **Raw evidence:** [`orientation/baselines/`](orientation/baselines/) — autocannon + axe + EXPLAIN ANALYZE artifacts
+- **Discovery:** [`orientation/discovery.md`](orientation/discovery.md) (3 things learned)
+- **Demo video:** see `SUBMISSION.md` for the hosted link
+- **AI cost analysis:** [`orientation/ai-cost-analysis.md`](orientation/ai-cost-analysis.md)
+- **Social post drafts:** [`orientation/social-post.md`](orientation/social-post.md)
+
+Phase 2 PRD scoreboard:
+
+| # | Category | Target | Status |
+|---|---|---|---|
+| 1 | Type Safety | 25% violation reduction | ✅ 25.5% (747 → 556) |
+| 2 | Bundle Size | 20% initial-load reduction | ✅ 76% (587 → 142 kB gzip) |
+| 3 | API Response Time | 20% P95 on ≥2 endpoints | ✅ 35-88% on every endpoint |
+| 4 | DB Query Efficiency | 50% slowest query | ✅ 73% on dashboard slowest |
+| 5 | Test Coverage | 3 critical-path tests | ✅ 30 new tests (3 + 18 mappers + 12 Task 14) |
+| 6 | Runtime Error Handling | 3 gaps, ≥1 data-loss | ✅ 3 gaps (silent NULL + verbose errors + WS expiry) |
+| 7 | Accessibility | 10+ Lighthouse pts OR Critical/Serious fixed | ✅ 0/0 Critical/Serious across all 8 routes |
+
+Everything else (upstream Ship behavior, deployment, etc.) is unchanged from the parent repo's HEAD.
+
+---
+
 ## What is Ship?
 
 Ship is a project management tool that combines documentation, issue tracking, and plan-driven weekly workflows in one place. Instead of switching between a wiki, a task tracker, and a spreadsheet, everything lives together.

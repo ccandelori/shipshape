@@ -1,0 +1,136 @@
+# GFA Week 4 — ShipShape Final Submission
+
+Top-level pointer file for graders. Every deliverable the brief requires is linked here with a one-line "what to look at." If you only have time for one file, read [`orientation/audit-report.md`](orientation/audit-report.md).
+
+---
+
+## At-a-glance scoreboard
+
+| # | Category | PRD target | Result | Evidence |
+|---|---|---|---|---|
+| 1 | Type Safety | 25% violation reduction | ✅ **25.5%** (747 → 556) | [`orientation/improvements/type-safety.md`](orientation/improvements/type-safety.md) |
+| 2 | Bundle Size | 20% initial-load OR 15% total | ✅ **76% entry chunk** (587 → 142 kB gzip) | [`orientation/improvements/bundle-size.md`](orientation/improvements/bundle-size.md) + [`orientation/baselines/bundle/after-build.txt`](orientation/baselines/bundle/after-build.txt) |
+| 3 | API Response Time | 20% P95 reduction on ≥2 endpoints | ✅ **35-88%** on every measured endpoint (P90/P97.5 bracket P95) | [`orientation/improvements/api-response-time.md`](orientation/improvements/api-response-time.md) + [`orientation/baselines/api-response-time/after-*-c25.json`](orientation/baselines/api-response-time/) |
+| 4 | DB Query Efficiency | 50% slowest query OR 20% query count | ✅ **73%** on dashboard slowest query; 3 sibling queries newly index-served | [`orientation/improvements/database-query-efficiency.md`](orientation/improvements/database-query-efficiency.md) + [`orientation/baselines/db-efficiency/after-*.txt`](orientation/baselines/db-efficiency/) |
+| 5 | Test Coverage | 3 critical-path tests OR 3 flaky fixes | ✅ **30 new tests** (3 regressions + 12 Task 14 + 18 mapper) | [`orientation/improvements/test-coverage.md`](orientation/improvements/test-coverage.md) |
+| 6 | Runtime Error Handling | 3 gaps, ≥1 user-facing data loss | ✅ **3 gaps**: silent NULL persist, verbose error leak, WS session expiry | [`orientation/improvements/runtime-error-handling.md`](orientation/improvements/runtime-error-handling.md) |
+| 7 | Accessibility | 10+ Lighthouse OR all Critical/Serious on 3 pages | ✅ **0 Critical / 0 Serious** on **all 8** scanned routes (was 4 Critical + 4 Serious) | [`orientation/improvements/accessibility.md`](orientation/improvements/accessibility.md) + [`orientation/baselines/accessibility/after-axe-summary.md`](orientation/baselines/accessibility/after-axe-summary.md) |
+| + | CI workflow (cross-cutting) | (not a category) | ✅ `.github/workflows/test.yml` runs type-check + api-tests; closes presearch risk #1 | [`orientation/improvements/ci-workflow.md`](orientation/improvements/ci-workflow.md) |
+
+---
+
+## Required deliverables (per the brief)
+
+### 1. GitHub Repository
+
+This repository. Master is the integration branch with all category branches merged via `--no-ff` so each PRD category has a labeled branch in history.
+
+```bash
+git log --oneline --merges master | head -20
+```
+
+shows the per-category merge commits: `feat/phase2-errors`, `feat/phase2-db`, `feat/phase2-bundle`, `feat/phase2-a11y`, `feat/phase2-typesafety`, `feat/phase2-api`, `feat/phase2-tests`, `feat/phase2-ci`, plus follow-ups (`feat/phase2-task14-tests`, `feat/phase2-task10-mappers`, `feat/phase2-task12-membership-cache`, `feat/phase2-task16-a11y`, `fix/phase2-web-type-check`, `fix/phase2-blocker-followup`).
+
+### 2. Audit Report
+
+- Executive: [`orientation/audit-report.md`](orientation/audit-report.md)
+- Detailed: [`orientation/audit-report-detailed.md`](orientation/audit-report-detailed.md) — 1,091 lines, methodology + raw numbers + per-finding evidence
+- Orientation Checklist (Appendix A): [`orientation/README.md`](orientation/README.md) — 855 lines, all 8 PDF sections complete
+
+### 3. Improvement Documentation
+
+Seven category docs + one cross-cutting doc, all at the Task 18 expected filenames in [`orientation/improvements/`](orientation/improvements/):
+
+| File | Category |
+|---|---|
+| `type-safety.md` | 1 |
+| `bundle-size.md` | 2 |
+| `api-response-time.md` | 3 |
+| `database-query-efficiency.md` | 4 |
+| `test-coverage.md` | 5 |
+| `runtime-error-handling.md` | 6 |
+| `accessibility.md` | 7 |
+| `ci-workflow.md` | cross-cutting |
+
+Each contains: before measurement (link to baseline file), root cause, fix description, after measurement (same methodology), reproduction recipe, tradeoffs.
+
+### 4. Discovery Write-up
+
+[`orientation/discovery.md`](orientation/discovery.md) — three things learned, captured in the Kickoff page-12 **WHAT · WHERE · WHY · THE POINT · THEN** format. Most surprising: Ship persists every editable document twice (binary CRDT + JSON snapshot in the same row) — an architectural pattern, not a TypeScript feature.
+
+### 5. Demo Video (3-5 minutes)
+
+[FILL IN HOSTED URL HERE]
+
+Source assets:
+- Slides (HTML): [`orientation/demo-deck/html/index.html`](orientation/demo-deck/html/index.html)
+- Slidev fallback: [`orientation/demo-deck/slides.md`](orientation/demo-deck/slides.md)
+- Read-aloud script: [`orientation/demo-deck/script.md`](orientation/demo-deck/script.md)
+
+> Note from the auditor: recording ran ~10 min vs. the 5-min target. Re-recorded version coming for submission.
+
+### 6. AI Cost Analysis
+
+[`orientation/ai-cost-analysis.md`](orientation/ai-cost-analysis.md) — Claude Code spend on this project + reflection on AI effectiveness for codebase comprehension.
+
+### 7. Deployed Application
+
+Public URL of the improved fork: [FILL IN HOSTED URL HERE]
+
+Backend health check: [FILL IN HEALTH URL HERE]
+
+### 8. Social Post
+
+[`orientation/social-post.md`](orientation/social-post.md) — both an X and a LinkedIn draft tagged `@GauntletAI`. Post-deploy, paste the URLs here.
+
+---
+
+## How to verify locally
+
+```bash
+# Postgres + seed
+docker compose up -d
+pnpm db:seed
+
+# Type-check gate (mirrors the CI workflow)
+pnpm install
+pnpm build:shared
+pnpm type-check    # → exit 0 across api/web/shared
+
+# Test gate
+pnpm --filter @ship/api test    # → 35 files, 494 tests pass
+
+# Bundle gate
+pnpm --filter @ship/web build   # → entry chunk 142.66 kB gzip
+
+# Accessibility re-scan (with dev:api + dev:web running)
+pnpm dev &
+sleep 5
+pnpm db:seed
+node orientation/baselines/accessibility/axe-scan-after.mjs
+# → 0/0 Critical/Serious on all 8 routes
+```
+
+---
+
+## What's deliberately not tracked
+
+- `.agents/`, `.codex/`, `AGENTS.md` — peer-agent scratch and Codex instructions; not part of the deliverable
+- `.env.example` — local env template; Ship's own `.gitignore` excludes `.env*`
+- `api/coverage/`, `web/coverage/` — generated vitest coverage artifacts
+- `orientation/next-session.md` — auditor's working memo between Phase 1 and Phase 2
+- `orientation/audit-edge-cases-notes.md` — auditor's own notes on baseline measurement edge cases
+
+Each is intentionally left untracked to keep the deliverable surface clean.
+
+---
+
+## Grading hint
+
+The strongest evidence sits in three places:
+
+1. **The 8 axe Critical/Serious findings going to 0/0** — `orientation/baselines/accessibility/after-axe-summary.md`. Mechanical proof of a hard PRD gate.
+2. **The dashboard query going from a 88%-wasted bitmap scan to an index seek** — `orientation/baselines/db-efficiency/after-dashboard-issues.txt`. Same workload, EXPLAIN ANALYZE before/after.
+3. **The 587 → 142 kB gzip entry chunk** — `orientation/baselines/bundle/after-build.txt`. Vite output, same vite.config.ts, same dependencies.
+
+Everything else has receipts; those are the three I'd lead with.
