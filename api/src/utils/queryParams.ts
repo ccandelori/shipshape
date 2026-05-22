@@ -1,6 +1,31 @@
 import type { Request } from 'express'
 
 /**
+ * Type-safe access to Express `req.params` route parameters.
+ *
+ * Express types `req.params[k]` as `string | undefined` because the
+ * ParamsDictionary signature is keyed dynamically. Every route in this
+ * codebase was previously doing `req.params.id as string` or
+ * `id as string` after a destructure, which silently widens the undefined
+ * away. If a route file someday declares the path as `/:id?` (optional
+ * param) or the middleware chain skips param parsing, the runtime sees
+ * undefined and downstream code crashes.
+ *
+ * `requireParam` throws a typed Error with statusCode=400 if missing, so
+ * the global error handler (api/src/app.ts) returns JSON 400 instead of
+ * the default Express HTML.
+ */
+export function requireParam(req: Request, key: string): string {
+  const value = req.params[key]
+  if (typeof value !== 'string' || value === '') {
+    throw Object.assign(new Error(`Missing required route parameter: ${key}`), {
+      statusCode: 400,
+    })
+  }
+  return value
+}
+
+/**
  * Type-safe access to Express `req.query` string parameters.
  *
  * Express types `req.query[k]` as `string | string[] | ParsedQs | ParsedQs[] | undefined`.

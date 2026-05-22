@@ -11,6 +11,7 @@ import {
 import { logDocumentChange, getLatestDocumentFieldHistory } from '../utils/document-crud.js';
 import { broadcastToUser } from '../collaboration/index.js';
 import { extractText } from '../utils/document-content.js';
+import { requireParam, requireQueryString, optionalQueryString, queryInt } from '../utils/queryParams.js';
 
 type RouterType = ReturnType<typeof Router>;
 const router: RouterType = Router();
@@ -88,7 +89,7 @@ async function broadcastAccountabilityUpdateToSprintOwner(
 router.get('/lookup-person', authMiddleware, async (req: Request, res: Response) => {
   try {
     const workspaceId = req.workspaceId!;
-    const userId = req.query.user_id as string;
+    const userId = requireQueryString(req, 'user_id');
 
     if (!userId) {
       res.status(400).json({ error: 'user_id is required' });
@@ -120,8 +121,8 @@ router.get('/lookup-person', authMiddleware, async (req: Request, res: Response)
 router.get('/lookup', authMiddleware, async (req: Request, res: Response) => {
   try {
     const workspaceId = req.workspaceId!;
-    const projectId = req.query.project_id as string;
-    const sprintNumber = parseInt(req.query.sprint_number as string, 10);
+    const projectId = requireQueryString(req, 'project_id');
+    const sprintNumber = queryInt(req, 'sprint_number', 0);
 
     if (!projectId || isNaN(sprintNumber)) {
       res.status(400).json({ error: 'project_id and sprint_number are required' });
@@ -740,7 +741,7 @@ router.get('/my-week', authMiddleware, async (req: Request, res: Response) => {
 // Automatically takes a plan snapshot when sprint becomes active (start_date reached)
 router.get('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -797,7 +798,7 @@ router.get('/:id', authMiddleware, async (req: Request, res: Response) => {
     // Take snapshot when: sprint is active (start_date reached) AND no snapshot exists yet
     if (workspaceStartDate && isSprintActive(sprintNumber, workspaceStartDate) && !props.planned_issue_ids) {
       // Take the snapshot
-      const sprintId = id as string; // Safe: Express route param is always a string
+      const sprintId = id; // Safe: Express route param is always a string
       const plannedIssueIds = await takeSprintSnapshot(sprintId);
       const snapshotTakenAt = new Date().toISOString();
 
@@ -1018,7 +1019,7 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
 // When sprint_number changes, the plan snapshot is cleared and will be retaken when the new date arrives
 router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1200,7 +1201,7 @@ router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
 // POST /api/weeks/:id/start
 router.post('/:id/start', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1235,7 +1236,7 @@ router.post('/:id/start', authMiddleware, async (req: Request, res: Response) =>
     }
 
     // Take the scope snapshot
-    const sprintId = id as string;
+    const sprintId = id;
     const plannedIssueIds = await takeSprintSnapshot(sprintId);
     const snapshotTakenAt = new Date().toISOString();
 
@@ -1253,7 +1254,7 @@ router.post('/:id/start', authMiddleware, async (req: Request, res: Response) =>
     );
 
     // Broadcast celebration when sprint is started
-    broadcastToUser(req.userId!, 'accountability:updated', { type: 'week_start', targetId: id as string });
+    broadcastToUser(req.userId!, 'accountability:updated', { type: 'week_start', targetId: id });
 
     // Re-query to get full sprint with owner info
     const result = await pool.query(
@@ -1306,7 +1307,7 @@ router.post('/:id/start', authMiddleware, async (req: Request, res: Response) =>
 // Delete sprint
 router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1348,7 +1349,7 @@ router.delete('/:id', authMiddleware, async (req: Request, res: Response) => {
 // PATCH /api/weeks/:id/plan
 router.patch('/:id/plan', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1437,7 +1438,7 @@ router.patch('/:id/plan', authMiddleware, async (req: Request, res: Response) =>
     // Log changes to document_history for approval workflow tracking
     if (data.plan !== undefined && data.plan !== currentProps.plan) {
       await logDocumentChange(
-        id as string,
+        id,
         'plan',
         currentProps.plan || null,
         data.plan || null,
@@ -1449,7 +1450,7 @@ router.patch('/:id/plan', authMiddleware, async (req: Request, res: Response) =>
       const newCriteria = data.success_criteria ? JSON.stringify(data.success_criteria) : null;
       if (oldCriteria !== newCriteria) {
         await logDocumentChange(
-          id as string,
+          id,
           'success_criteria',
           oldCriteria,
           newCriteria,
@@ -1460,7 +1461,7 @@ router.patch('/:id/plan', authMiddleware, async (req: Request, res: Response) =>
 
     // Broadcast celebration when plan is added
     if (data.plan && data.plan.trim() !== '') {
-      broadcastToUser(req.userId!, 'accountability:updated', { type: 'weekly_plan', targetId: id as string });
+      broadcastToUser(req.userId!, 'accountability:updated', { type: 'weekly_plan', targetId: id });
     }
 
     // Re-query to get full sprint with owner info
@@ -1509,7 +1510,7 @@ router.patch('/:id/plan', authMiddleware, async (req: Request, res: Response) =>
 // Get sprint issues
 router.get('/:id/issues', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1608,7 +1609,7 @@ router.get('/:id/issues', authMiddleware, async (req: Request, res: Response) =>
 // Returns: { originalScope, currentScope, scopeChangePercent, scopeChanges }
 router.get('/:id/scope-changes', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1832,7 +1833,7 @@ function formatStandupResponse(row: any) {
  */
 router.get('/:id/standups', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1925,7 +1926,7 @@ router.get('/:id/standups', authMiddleware, async (req: Request, res: Response) 
  */
 router.post('/:id/standups', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -1988,7 +1989,7 @@ router.post('/:id/standups', authMiddleware, async (req: Request, res: Response)
     const author = authorResult.rows[0];
 
     // Broadcast celebration when standup is created
-    broadcastToUser(userId, 'accountability:updated', { type: 'standup', targetId: id as string });
+    broadcastToUser(userId, 'accountability:updated', { type: 'standup', targetId: id });
 
     res.status(201).json({
       id: standup.id,
@@ -2156,7 +2157,7 @@ async function generatePrefilledReviewContent(sprintData: any, issues: any[]) {
 // GET /api/weeks/:id/review - Get or generate pre-filled sprint review
 router.get('/:id/review', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -2270,7 +2271,7 @@ router.get('/:id/review', authMiddleware, async (req: Request, res: Response) =>
 // POST /api/weeks/:id/review - Create finalized sprint review
 router.post('/:id/review', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -2345,7 +2346,7 @@ router.post('/:id/review', authMiddleware, async (req: Request, res: Response) =
     );
 
     // Broadcast celebration when sprint review is created
-    broadcastToUser(userId, 'accountability:updated', { type: 'weekly_review', targetId: id as string });
+    broadcastToUser(userId, 'accountability:updated', { type: 'weekly_review', targetId: id });
 
     // Log initial review content to document_history for approval workflow tracking
     const review = result.rows[0];
@@ -2383,7 +2384,7 @@ router.post('/:id/review', authMiddleware, async (req: Request, res: Response) =
 // PATCH /api/weeks/:id/review - Update existing sprint review
 router.patch('/:id/review', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -2683,7 +2684,7 @@ router.post('/:id/carryover', authMiddleware, async (req: Request, res: Response
 // POST /api/weeks/:id/approve-plan - Approve sprint plan
 router.post('/:id/approve-plan', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
     const parsedComment = parseApprovalComment(req.body);
@@ -2716,14 +2717,14 @@ router.post('/:id/approve-plan', authMiddleware, async (req: Request, res: Respo
     const programAccountableId = sprint.program_accountable_id;
 
     // Check authorization: must be program's accountable_id, supervisor (reports_to), OR workspace admin
-    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+    const ownerReportsTo = await getSprintOwnerReportsTo(id, workspaceId);
     if (programAccountableId !== userId && ownerReportsTo !== userId && !isAdmin) {
       res.status(403).json({ error: 'Only the supervisor, program accountable person, or admin can approve plans' });
       return;
     }
 
     // Get the latest plan history entry for version tracking
-    const historyEntry = await getLatestDocumentFieldHistory(id as string, 'plan');
+    const historyEntry = await getLatestDocumentFieldHistory(id, 'plan');
     const versionId = historyEntry?.id || null;
 
     // Update sprint properties with approval
@@ -2756,7 +2757,7 @@ router.post('/:id/approve-plan', authMiddleware, async (req: Request, res: Respo
     // If approval comment changed, log to history for auditability.
     if (previousComment !== resolvedComment) {
       await logDocumentChange(
-        id as string,
+        id,
         'plan_approval',
         previousApproval ? JSON.stringify(previousApproval) : null,
         JSON.stringify(newApproval),
@@ -2766,7 +2767,7 @@ router.post('/:id/approve-plan', authMiddleware, async (req: Request, res: Respo
 
     await broadcastAccountabilityUpdateToSprintOwner(
       sprint.sprint_owner_id,
-      id as string,
+      id,
       'plan_approved'
     );
 
@@ -2783,7 +2784,7 @@ router.post('/:id/approve-plan', authMiddleware, async (req: Request, res: Respo
 // POST /api/weeks/:id/unapprove-plan - Revoke plan approval (logged to history)
 router.post('/:id/unapprove-plan', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -2805,7 +2806,7 @@ router.post('/:id/unapprove-plan', authMiddleware, async (req: Request, res: Res
     }
 
     const sprint = sprintResult.rows[0];
-    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+    const ownerReportsTo = await getSprintOwnerReportsTo(id, workspaceId);
     if (sprint.program_accountable_id !== userId && ownerReportsTo !== userId && !isAdmin) {
       res.status(403).json({ error: 'Only the supervisor, program accountable person, or admin can unapprove plans' });
       return;
@@ -2816,7 +2817,7 @@ router.post('/:id/unapprove-plan', authMiddleware, async (req: Request, res: Res
 
     // Log the unapproval to document_history (preserves audit trail)
     await logDocumentChange(
-      id as string,
+      id,
       'plan_approval',
       previousApproval ? JSON.stringify(previousApproval) : null,
       null,
@@ -2842,7 +2843,7 @@ router.post('/:id/unapprove-plan', authMiddleware, async (req: Request, res: Res
 // POST /api/weeks/:id/approve-review - Approve sprint review (rating required)
 router.post('/:id/approve-review', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const { rating } = req.body || {};
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
@@ -2887,7 +2888,7 @@ router.post('/:id/approve-review', authMiddleware, async (req: Request, res: Res
     const programAccountableId = sprint.program_accountable_id;
 
     // Check authorization: must be program's accountable_id, supervisor (reports_to), OR workspace admin
-    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+    const ownerReportsTo = await getSprintOwnerReportsTo(id, workspaceId);
     if (programAccountableId !== userId && ownerReportsTo !== userId && !isAdmin) {
       res.status(403).json({ error: 'Only the supervisor, program accountable person, or admin can approve reviews' });
       return;
@@ -2943,7 +2944,7 @@ router.post('/:id/approve-review', authMiddleware, async (req: Request, res: Res
     // If approval comment changed, log to history for auditability.
     if (previousComment !== resolvedComment) {
       await logDocumentChange(
-        id as string,
+        id,
         'review_approval',
         previousApproval ? JSON.stringify(previousApproval) : null,
         JSON.stringify(newApproval),
@@ -2953,7 +2954,7 @@ router.post('/:id/approve-review', authMiddleware, async (req: Request, res: Res
 
     await broadcastAccountabilityUpdateToSprintOwner(
       sprint.sprint_owner_id,
-      id as string,
+      id,
       'review_approved'
     );
 
@@ -2971,7 +2972,7 @@ router.post('/:id/approve-review', authMiddleware, async (req: Request, res: Res
 // POST /api/weeks/:id/request-plan-changes - Request changes on sprint plan
 router.post('/:id/request-plan-changes', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const { feedback } = req.body || {};
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
@@ -3009,7 +3010,7 @@ router.post('/:id/request-plan-changes', authMiddleware, async (req: Request, re
     const programAccountableId = sprint.program_accountable_id;
 
     // Check authorization: must be program's accountable_id, supervisor (reports_to), OR workspace admin
-    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+    const ownerReportsTo = await getSprintOwnerReportsTo(id, workspaceId);
     if (programAccountableId !== userId && ownerReportsTo !== userId && !isAdmin) {
       res.status(403).json({ error: 'Only the supervisor, program accountable person, or admin can request changes' });
       return;
@@ -3046,7 +3047,7 @@ router.post('/:id/request-plan-changes', authMiddleware, async (req: Request, re
       if (ownerUserId) {
         broadcastToUser(ownerUserId, 'accountability:updated', {
           type: 'changes_requested_plan',
-          targetId: id as string,
+          targetId: id,
         });
       }
     }
@@ -3064,7 +3065,7 @@ router.post('/:id/request-plan-changes', authMiddleware, async (req: Request, re
 // POST /api/weeks/:id/request-retro-changes - Request changes on sprint retro
 router.post('/:id/request-retro-changes', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id } = req.params;
+    const id = requireParam(req, 'id');
     const { feedback } = req.body || {};
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
@@ -3102,7 +3103,7 @@ router.post('/:id/request-retro-changes', authMiddleware, async (req: Request, r
     const programAccountableId = sprint.program_accountable_id;
 
     // Check authorization: must be program's accountable_id, supervisor (reports_to), OR workspace admin
-    const ownerReportsTo = await getSprintOwnerReportsTo(id as string, workspaceId);
+    const ownerReportsTo = await getSprintOwnerReportsTo(id, workspaceId);
     if (programAccountableId !== userId && ownerReportsTo !== userId && !isAdmin) {
       res.status(403).json({ error: 'Only the supervisor, program accountable person, or admin can request changes' });
       return;
@@ -3138,7 +3139,7 @@ router.post('/:id/request-retro-changes', authMiddleware, async (req: Request, r
       if (ownerUserId) {
         broadcastToUser(ownerUserId, 'accountability:updated', {
           type: 'changes_requested_retro',
-          targetId: id as string,
+          targetId: id,
         });
       }
     }

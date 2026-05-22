@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { pgResult, mockedPool } from "../test-utils/pgMock.js";
 
 // Mock pool before importing routes
 const { mockClient } = vi.hoisted(() => {
@@ -41,7 +42,7 @@ describe('Issues History API', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     // Reset mockClient defaults after clearAllMocks
-    mockClient.query.mockResolvedValue({ rows: [] } as any);
+    mockClient.query.mockResolvedValue(pgResult([]));
     mockClient.release.mockReturnValue(undefined);
     vi.mocked(pool).connect = vi.fn().mockResolvedValue(mockClient) as any;
     app = express();
@@ -53,11 +54,11 @@ describe('Issues History API', () => {
     it('creates history entry with valid data', async () => {
       const issueId = 'issue-123';
 
-      vi.mocked(pool.query)
+      mockedPool()
         // Issue access check
-        .mockResolvedValueOnce({ rows: [{ id: issueId }] } as any)
+        .mockResolvedValueOnce(pgResult([{ id: issueId }]))
         // Insert history
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce(pgResult([]));
 
       const res = await request(app)
         .post(`/api/issues/${issueId}/history`)
@@ -75,9 +76,9 @@ describe('Issues History API', () => {
     it('creates history entry without automated_by', async () => {
       const issueId = 'issue-123';
 
-      vi.mocked(pool.query)
-        .mockResolvedValueOnce({ rows: [{ id: issueId }] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+      mockedPool()
+        .mockResolvedValueOnce(pgResult([{ id: issueId }]))
+        .mockResolvedValueOnce(pgResult([]));
 
       const res = await request(app)
         .post(`/api/issues/${issueId}/history`)
@@ -130,8 +131,8 @@ describe('Issues History API', () => {
     });
 
     it('returns 404 for non-existent issue', async () => {
-      vi.mocked(pool.query)
-        .mockResolvedValueOnce({ rows: [] } as any);
+      mockedPool()
+        .mockResolvedValueOnce(pgResult([]));
 
       const res = await request(app)
         .post('/api/issues/nonexistent/history')
@@ -148,9 +149,9 @@ describe('Issues History API', () => {
     it('accepts null values', async () => {
       const issueId = 'issue-123';
 
-      vi.mocked(pool.query)
-        .mockResolvedValueOnce({ rows: [{ id: issueId }] } as any)
-        .mockResolvedValueOnce({ rows: [] } as any);
+      mockedPool()
+        .mockResolvedValueOnce(pgResult([{ id: issueId }]))
+        .mockResolvedValueOnce(pgResult([]));
 
       const res = await request(app)
         .post(`/api/issues/${issueId}/history`)
@@ -191,9 +192,9 @@ describe('Issues History API', () => {
         },
       ];
 
-      vi.mocked(pool.query)
+      mockedPool()
         // Issue access check
-        .mockResolvedValueOnce({ rows: [{ id: issueId }] } as any)
+        .mockResolvedValueOnce(pgResult([{ id: issueId }]))
         // Get history
         .mockResolvedValueOnce({ rows: historyEntries } as any);
 
@@ -208,8 +209,8 @@ describe('Issues History API', () => {
     });
 
     it('returns 404 for non-existent issue', async () => {
-      vi.mocked(pool.query)
-        .mockResolvedValueOnce({ rows: [] } as any);
+      mockedPool()
+        .mockResolvedValueOnce(pgResult([]));
 
       const res = await request(app)
         .get('/api/issues/nonexistent/history');
@@ -246,24 +247,24 @@ describe('Issues History API', () => {
       // Client queries (within transaction)
       vi.mocked(mockClient.query)
         // Get existing issue
-        .mockResolvedValueOnce({ rows: [existingIssue] } as any)
+        .mockResolvedValueOnce(pgResult([existingIssue]))
         // Check for children (cascade warning check)
-        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce(pgResult([]))
         // BEGIN
-        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce(pgResult([]))
         // Log state change (document_history insert)
-        .mockResolvedValueOnce({ rows: [] } as any)
+        .mockResolvedValueOnce(pgResult([]))
         // Update issue
-        .mockResolvedValueOnce({ rows: [updatedRow] } as any)
+        .mockResolvedValueOnce(pgResult([updatedRow]))
         // Fetch updated issue after UPDATE
-        .mockResolvedValueOnce({ rows: [updatedRow] } as any)
+        .mockResolvedValueOnce(pgResult([updatedRow]))
         // COMMIT
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce(pgResult([]));
 
       // Pool queries (post-commit, non-transactional)
-      vi.mocked(pool.query)
+      mockedPool()
         // Get belongs_to associations
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce(pgResult([]));
 
       const res = await request(app)
         .patch(`/api/issues/${issueId}`)

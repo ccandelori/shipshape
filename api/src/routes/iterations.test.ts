@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { pgResult, mockedPool } from "../test-utils/pgMock.js";
 
 // Mock pool before importing routes
 vi.mock('../db/client.js', () => ({
@@ -53,13 +54,13 @@ describe('Iterations API', () => {
         updated_at: new Date(),
       };
 
-      vi.mocked(pool.query)
+      mockedPool()
         // Sprint check
-        .mockResolvedValueOnce({ rows: [{ id: sprintId }] } as any)
+        .mockResolvedValueOnce(pgResult([{ id: sprintId }]))
         // Insert iteration
-        .mockResolvedValueOnce({ rows: [mockIteration] } as any)
+        .mockResolvedValueOnce(pgResult([mockIteration]))
         // Get author
-        .mockResolvedValueOnce({ rows: [{ id: 'user-123', name: 'Test User', email: 'test@example.com' }] } as any);
+        .mockResolvedValueOnce(pgResult([{ id: 'user-123', name: 'Test User', email: 'test@example.com' }]));
 
       const res = await request(app)
         .post(`/api/weeks/${sprintId}/iterations`)
@@ -100,9 +101,9 @@ describe('Iterations API', () => {
     });
 
     it('returns 404 for non-existent sprint', async () => {
-      vi.mocked(pool.query)
+      mockedPool()
         // Sprint check - not found
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce(pgResult([]));
 
       const res = await request(app)
         .post('/api/weeks/nonexistent/iterations')
@@ -120,12 +121,11 @@ describe('Iterations API', () => {
     it('returns iterations for sprint', async () => {
       const sprintId = 'sprint-123';
 
-      vi.mocked(pool.query)
+      mockedPool()
         // Sprint check
-        .mockResolvedValueOnce({ rows: [{ id: sprintId }] } as any)
+        .mockResolvedValueOnce(pgResult([{ id: sprintId }]))
         // Get iterations
-        .mockResolvedValueOnce({
-          rows: [
+        .mockResolvedValueOnce(pgResult([
             {
               id: 'iter-1',
               sprint_id: sprintId,
@@ -140,8 +140,7 @@ describe('Iterations API', () => {
               created_at: new Date(),
               updated_at: new Date(),
             },
-          ],
-        } as any);
+          ]));
 
       const res = await request(app)
         .get(`/api/weeks/${sprintId}/iterations`);
@@ -153,9 +152,9 @@ describe('Iterations API', () => {
     });
 
     it('returns 404 for non-existent sprint', async () => {
-      vi.mocked(pool.query)
+      mockedPool()
         // Sprint check - not found
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce(pgResult([]));
 
       const res = await request(app)
         .get('/api/weeks/nonexistent/iterations');
@@ -165,18 +164,18 @@ describe('Iterations API', () => {
     });
 
     it('filters by status', async () => {
-      vi.mocked(pool.query)
+      mockedPool()
         // Sprint check
-        .mockResolvedValueOnce({ rows: [{ id: 'sprint-123' }] } as any)
+        .mockResolvedValueOnce(pgResult([{ id: 'sprint-123' }]))
         // Get iterations - should have status filter applied
-        .mockResolvedValueOnce({ rows: [] } as any);
+        .mockResolvedValueOnce(pgResult([]));
 
       const res = await request(app)
         .get('/api/weeks/sprint-123/iterations?status=fail');
 
       expect(res.status).toBe(200);
       // Verify the query was called with the status filter
-      const lastCall = vi.mocked(pool.query).mock.calls.pop();
+      const lastCall = mockedPool().mock.calls.pop();
       expect(lastCall?.[0]).toContain('status = $');
     });
   });
