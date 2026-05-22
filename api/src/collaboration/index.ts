@@ -7,7 +7,7 @@ import * as encoding from 'lib0/encoding';
 import * as decoding from 'lib0/decoding';
 import { pool } from '../db/client.js';
 import { extractHypothesisFromContent, extractSuccessCriteriaFromContent, extractVisionFromContent, extractGoalsFromContent } from '../utils/extractHypothesis.js';
-import { yjsToJson, jsonToYjs } from '../utils/yjsConverter.js';
+import { yjsToJson, jsonToYjs, isTipTapDoc } from '../utils/yjsConverter.js';
 import { SESSION_TIMEOUT_MS, ABSOLUTE_SESSION_TIMEOUT_MS } from '@ship/shared';
 import cookie from 'cookie';
 
@@ -88,11 +88,11 @@ function recordMessage(ws: WebSocket): void {
 // Store documents and awareness by room name
 const docs = new Map<string, Y.Doc>();
 const awareness = new Map<string, awarenessProtocol.Awareness>();
-const conns = new Map<WebSocket, { docName: string; awarenessClientId: number; userId: string; workspaceId: string }>();
+const conns = new Map<WebSocket, { docName: string; awarenessClientId: number; userId: string; workspaceId: string; sessionId: string }>();
 
 // Global events connections (separate from document collaboration)
 // These persist across navigation and are used for real-time notifications
-const eventConns = new Map<WebSocket, { userId: string; workspaceId: string }>();
+const eventConns = new Map<WebSocket, { userId: string; workspaceId: string; sessionId: string }>();
 
 // Debounce persistence (save every 2 seconds after changes)
 const pendingSaves = new Map<string, NodeJS.Timeout>();
@@ -166,13 +166,33 @@ async function persistDocument(docName: string, doc: Y.Doc) {
       goals: goals,
     };
 
-    // Persist yjs_state, content (JSON backup), and updated properties
+    // Persist yjs_state, content (JSON backup), and updated properties.
     // The content column is kept in sync with yjs_state to serve as a fallback
-    // and to support API reads that don't go through the collaboration server
-    await pool.query(
-      `UPDATE documents SET yjs_state = $1, content = $2, properties = $3, updated_at = now() WHERE id = $4`,
-      [Buffer.from(state), JSON.stringify(content), JSON.stringify(updatedProps), docId]
-    );
+    // and to support API reads that don't go through the collaboration server.
+    //
+    // Why the shape guard: a buggy yjsToJson can return undefined, which
+    // JSON.stringify turns into the JS value `undefined`, which pg coerces
+    // to SQL NULL — silently emptying the content column while yjs_state
+    // survives. REST reads then return empty docs (silent data loss).
+    // Skip the content update when the conversion didn't produce a valid
+    // TipTap doc; keep yjs_state and properties writes so collaboration
+    // continues. See evidence/yjs-to-json-null.md for the live repro.
+    if (isTipTapDoc(content)) {
+      await pool.query(
+        `UPDATE documents SET yjs_state = $1, content = $2, properties = $3, updated_at = now() WHERE id = $4`,
+        [Buffer.from(state), JSON.stringify(content), JSON.stringify(updatedProps), docId]
+      );
+    } else {
+      console.error(
+        `[Collaboration] yjsToJson returned non-TipTap shape for doc ${docId}; preserving existing content column. Got:`,
+        typeof content,
+        content
+      );
+      await pool.query(
+        `UPDATE documents SET yjs_state = $1, properties = $2, updated_at = now() WHERE id = $3`,
+        [Buffer.from(state), JSON.stringify(updatedProps), docId]
+      );
+    }
   } catch (err) {
     console.error('Failed to persist document:', err);
   }
@@ -343,8 +363,12 @@ function handleMessage(ws: WebSocket, message: Uint8Array, docName: string, doc:
   }
 }
 
-// Validate session from cookie header - returns userId/workspaceId or null
-async function validateWebSocketSession(request: IncomingMessage): Promise<{ userId: string; workspaceId: string } | null> {
+// Validate session from cookie header - returns userId/workspaceId/sessionId or null.
+// sessionId is returned so callers can attach it to a long-lived WebSocket and
+// re-validate periodically (see startWsSessionRevalidationTick).
+type WsSession = { userId: string; workspaceId: string; sessionId: string };
+
+async function validateWebSocketSession(request: IncomingMessage): Promise<WsSession | null> {
   const cookieHeader = request.headers.cookie;
   if (!cookieHeader) return null;
 
@@ -386,10 +410,69 @@ async function validateWebSocketSession(request: IncomingMessage): Promise<{ use
       [now, sessionId]
     );
 
-    return { userId: session.user_id, workspaceId: session.workspace_id };
+    return { userId: session.user_id, workspaceId: session.workspace_id, sessionId };
   } catch {
     return null;
   }
+}
+
+// Application-defined close code returned to clients whose session was
+// revoked (logged-out elsewhere) or expired while their WebSocket was open.
+// Browser code in web/src/lib/yjsCollabProvider.ts and events client should
+// surface a session-expired UI on this code rather than auto-reconnecting.
+export const WS_CLOSE_SESSION_EXPIRED = 4401;
+const WS_SESSION_REVALIDATION_INTERVAL_MS = 60_000;
+
+// Periodic session re-validation tick.
+// Why: HTTP upgrade only validates the session once. If a session is destroyed
+// (logout, admin revoke, inactivity/absolute timeout), the open WS keeps
+// writing edits to documents.content via persistDocument — a real security &
+// data-integrity issue caught live in
+// orientation/baselines/runtime-errors/evidence/ws-session-expiry.md.
+//
+// This tick batches every distinct sessionId across both collab and events
+// connections (single SQL round-trip), then closes any WebSocket whose session
+// is gone or whose absolute/inactivity timeouts have lapsed.
+export function startWsSessionRevalidationTick(intervalMs: number = WS_SESSION_REVALIDATION_INTERVAL_MS) {
+  return setInterval(async () => {
+    try {
+      const sessionIds = new Set<string>();
+      conns.forEach((c) => sessionIds.add(c.sessionId));
+      eventConns.forEach((c) => sessionIds.add(c.sessionId));
+      if (sessionIds.size === 0) return;
+
+      const result = await pool.query(
+        `SELECT id, last_activity, created_at FROM sessions WHERE id = ANY($1::text[])`,
+        [Array.from(sessionIds)]
+      );
+
+      const validSessions = new Map<string, { lastActivity: Date; createdAt: Date }>();
+      for (const row of result.rows) {
+        validSessions.set(row.id, {
+          lastActivity: new Date(row.last_activity),
+          createdAt: new Date(row.created_at),
+        });
+      }
+
+      const now = Date.now();
+      const closeIfExpired = (ws: WebSocket, sessionId: string, where: 'collab' | 'events') => {
+        const row = validSessions.get(sessionId);
+        let reason: string | null = null;
+        if (!row) reason = 'session_missing';
+        else if (now - row.createdAt.getTime() > ABSOLUTE_SESSION_TIMEOUT_MS) reason = 'absolute_timeout';
+        else if (now - row.lastActivity.getTime() > SESSION_TIMEOUT_MS) reason = 'inactivity_timeout';
+        if (reason && ws.readyState === WebSocket.OPEN) {
+          console.warn(`[${where}] Closing WS for sessionId=${sessionId.slice(0, 8)}… reason=${reason}`);
+          ws.close(WS_CLOSE_SESSION_EXPIRED, reason);
+        }
+      };
+
+      conns.forEach((c, ws) => closeIfExpired(ws, c.sessionId, 'collab'));
+      eventConns.forEach((c, ws) => closeIfExpired(ws, c.sessionId, 'events'));
+    } catch (err) {
+      console.error('[Collaboration] Session re-validation tick failed:', err);
+    }
+  }, intervalMs);
 }
 
 // Check if user can access a document for collaboration (visibility check)
@@ -680,13 +763,13 @@ export function setupCollaboration(server: Server) {
     });
   });
 
-  wss.on('connection', async (ws: WebSocket, _request: IncomingMessage, docName: string, sessionData: { userId: string; workspaceId: string }) => {
+  wss.on('connection', async (ws: WebSocket, _request: IncomingMessage, docName: string, sessionData: WsSession) => {
     const doc = await getOrCreateDoc(docName);
     const aw = getAwareness(docName, doc);
 
     // Track this connection with user info for visibility change handling
     const clientId = doc.clientID;
-    conns.set(ws, { docName, awarenessClientId: clientId, userId: sessionData.userId, workspaceId: sessionData.workspaceId });
+    conns.set(ws, { docName, awarenessClientId: clientId, userId: sessionData.userId, workspaceId: sessionData.workspaceId, sessionId: sessionData.sessionId });
 
     // If this doc was loaded fresh from JSON (API-created or API-updated content),
     // tell the browser to clear its IndexedDB cache before sync to prevent stale content merge
@@ -786,8 +869,8 @@ export function setupCollaboration(server: Server) {
   });
 
   // Handle events WebSocket connections (for real-time notifications)
-  eventsWss.on('connection', (ws: WebSocket, sessionData: { userId: string; workspaceId: string }) => {
-    eventConns.set(ws, { userId: sessionData.userId, workspaceId: sessionData.workspaceId });
+  eventsWss.on('connection', (ws: WebSocket, sessionData: WsSession) => {
+    eventConns.set(ws, { userId: sessionData.userId, workspaceId: sessionData.workspaceId, sessionId: sessionData.sessionId });
     console.log(`[Events] User ${sessionData.userId} connected (${eventConns.size} total connections)`);
 
     // Send initial connected message
@@ -828,6 +911,13 @@ export function setupCollaboration(server: Server) {
       console.log(`[Events] User ${sessionData.userId} disconnected (${eventConns.size} total connections)`);
     });
   });
+
+  // Periodic re-validation of every open WS session against the DB.
+  // Catches sessions destroyed (logout / admin revoke) or expired between
+  // HTTP upgrade and now — without this, a destroyed session keeps writing
+  // edits via WS until the browser closes. See ERR-3 in
+  // orientation/improvements/runtime-errors.md.
+  startWsSessionRevalidationTick();
 
   console.log('Yjs collaboration server attached');
   console.log('Events WebSocket server attached');
