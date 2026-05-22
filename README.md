@@ -36,7 +36,7 @@ Phase 2 PRD scoreboard:
 
 | # | Category | Target | Status |
 |---|---|---|---|
-| 1 | Type Safety | 25% violation reduction | ✅ 25.5% (747 → 556) |
+| 1 | Type Safety | 25% violation reduction | ✅ 26.6% (747 → 548) |
 | 2 | Bundle Size | 20% initial-load reduction | ✅ 76% (587 → 142 kB gzip) |
 | 3 | API Response Time | 20% P95 on ≥2 endpoints | ✅ 35-88% on every endpoint |
 | 4 | DB Query Efficiency | 50% slowest query | ✅ 73% on dashboard slowest |

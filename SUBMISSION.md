@@ -8,7 +8,7 @@ Top-level pointer file for graders. Every deliverable the brief requires is link
 
 | # | Category | PRD target | Result | Evidence |
 |---|---|---|---|---|
-| 1 | Type Safety | 25% violation reduction | ✅ **25.5%** (747 → 556) | [`orientation/improvements/type-safety.md`](orientation/improvements/type-safety.md) |
+| 1 | Type Safety | 25% violation reduction | ✅ **26.6%** (747 → 548) | [`orientation/improvements/type-safety.md`](orientation/improvements/type-safety.md) |
 | 2 | Bundle Size | 20% initial-load OR 15% total | ✅ **76% entry chunk** (587 → 142 kB gzip) | [`orientation/improvements/bundle-size.md`](orientation/improvements/bundle-size.md) + [`orientation/baselines/bundle/after-build.txt`](orientation/baselines/bundle/after-build.txt) |
 | 3 | API Response Time | 20% P95 reduction on ≥2 endpoints | ✅ **35-88%** on every measured endpoint (P90/P97.5 bracket P95) | [`orientation/improvements/api-response-time.md`](orientation/improvements/api-response-time.md) + [`orientation/baselines/api-response-time/after-*-c25.json`](orientation/baselines/api-response-time/) |
 | 4 | DB Query Efficiency | 50% slowest query OR 20% query count | ✅ **73%** on dashboard slowest query; 3 sibling queries newly index-served | [`orientation/improvements/database-query-efficiency.md`](orientation/improvements/database-query-efficiency.md) + [`orientation/baselines/db-efficiency/after-*.txt`](orientation/baselines/db-efficiency/) |

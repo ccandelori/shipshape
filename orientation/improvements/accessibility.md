@@ -165,7 +165,11 @@ cd web && BUNDLE_ANALYZE=0 VITE_API_URL= npx vite build
 # Manual color test for A11Y-3: open DevTools → Inspect → Accessibility panel → contrast
 ```
 
-The Phase 1 baseline scan artifacts live in `orientation/baselines/accessibility/`. After-scan re-runs were skipped because the changes are surgical to audit-quoted classes (re-running pa11y/axe on the same routes would just confirm the four cited violations are gone — the cited ratios change from 2.26:1 / 2.55:1 / 1.6:1 to 6.8:1 / 13.6:1, which is math, not measurement).
+After-scan re-run **was performed** (this was a stale claim — Task 16's follow-up sweep ran the same axe-core scan against all 8 baseline routes and recorded 0 Critical / 0 Serious / 0 Moderate / 0 Minor across the board). Artifacts live alongside the Phase 1 baseline:
+
+- Phase 1 baseline: `orientation/baselines/accessibility/axe-*.json` + `axe-summary.md` (2026-05-20)
+- Phase 2 after-fix: `orientation/baselines/accessibility/after-axe-*.json` + `after-axe-summary.md` (2026-05-22)
+- After-scan driver: `orientation/baselines/accessibility/axe-scan-after.mjs` (mirrors the baseline script, reads `WEB` env for port flexibility)
 
 ## Tradeoffs
 
