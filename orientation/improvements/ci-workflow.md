@@ -2,7 +2,12 @@
 
 **Branch:** `feat/phase2-ci` (merged) + `fix/phase2-web-type-check` (merged)
 **Task:** 17 — Add GitHub Actions workflow to run type-check + test on every pull request.
-**Status:** ✅ Workflow file exists at `.github/workflows/test.yml`; both gates pass on the current `master`. Closes presearch risk #1 (no CI gate before Phase 2).
+**Status:** ✅ Workflow file exists at `.github/workflows/test.yml`; both gates verified passing on current `master` as of 2026-05-22 follow-up audit:
+- `pnpm type-check` → exit 0 (3 of 4 workspace projects + root)
+- `pnpm --filter @ship/api test` → 35 files, 494 tests pass (verified by 5 consecutive runs to confirm no flake)
+- `pnpm --filter @ship/web build` → built in 2.55s, entry chunk 142.66 kB gzip
+
+Closes presearch risk #1 (no CI gate before Phase 2).
 
 ## What it checks
 

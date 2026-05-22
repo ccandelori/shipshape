@@ -204,26 +204,36 @@ export function UnifiedEditor({
   const navigate = useNavigate();
   const [isChangingType, setIsChangingType] = useState(false);
 
-  // Track missing required fields after type changes
+  // Track missing required fields after type changes.
+  //
+  // Replaces a previous cluster of 8 `(document as IssueDocument).state` style
+  // casts with discriminated-union narrowing — the document_type discriminator
+  // lets TS prove which top-level fields are safe to read for each variant,
+  // without any `as`. This is the mapper-layer adoption pattern called out in
+  // orientation/improvements/type-safety.md.
   const missingFields = useMemo(() => {
-    const selectableType = document.document_type as SelectableDocumentType;
-    if (['wiki', 'issue', 'project', 'sprint'].includes(selectableType)) {
-      // Build properties object from document
-      const props: Record<string, unknown> = {
-        ...document.properties,
-        // Include top-level fields that might be required
-        state: (document as IssueDocument).state,
-        priority: (document as IssueDocument).priority,
-        impact: (document as ProjectDocument).impact,
-        confidence: (document as ProjectDocument).confidence,
-        ease: (document as ProjectDocument).ease,
-        start_date: (document as SprintDocument).start_date,
-        end_date: (document as SprintDocument).end_date,
-        status: (document as SprintDocument).status,
-      };
-      return getMissingRequiredFields(selectableType, props);
+    const selectableType = document.document_type;
+    if (!['wiki', 'issue', 'project', 'sprint'].includes(selectableType)) {
+      return [];
     }
-    return [];
+    // Build properties object from document. The narrowing is purely from
+    // document.document_type === '...' checks; no `as` casts on document.
+    const props: Record<string, unknown> = { ...document.properties };
+    // `in`-based narrowing — works even though the UnifiedDocument union
+    // includes a BaseDocument fallback that doesn't carry the per-type fields.
+    if (document.document_type === 'issue' && 'state' in document) {
+      props.state = document.state;
+      props.priority = document.priority;
+    } else if (document.document_type === 'project' && 'impact' in document) {
+      props.impact = document.impact;
+      props.confidence = document.confidence;
+      props.ease = document.ease;
+    } else if (document.document_type === 'sprint' && 'start_date' in document) {
+      props.start_date = document.start_date;
+      props.end_date = document.end_date;
+      props.status = document.status;
+    }
+    return getMissingRequiredFields(selectableType as SelectableDocumentType, props);
   }, [document]);
 
   // Auto-save title changes
