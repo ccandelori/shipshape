@@ -1,0 +1,22 @@
+[
+ {
+  "RuleID": "curl-auth-header",
+  "Description": "Discovered a potential authorization token provided in a curl command header, which could compromise the curl accessed resource.",
+  "StartLine": 50,
+  "EndLine": 52,
+  "StartColumn": 14,
+  "EndColumn": 142,
+  "Match": "curl -sS -c /tmp/ship-cookies.txt http://localhost:3000/api/csrf-token)\",\n      \"Read(//private/tmp/**)\",\n      \"Bash(curl -sS -b /tmp/ship-cookies.txt -c /tmp/ship-cookies.txt -H 'Content-Type: application/json' -H 'X-CSRF-Token: REDACTED'",
+  "Secret": "REDACTED",
+  "File": ".claude/settings.local.json",
+  "SymlinkFile": "",
+  "Commit": "",
+  "Entropy": 2.866248,
+  "Author": "",
+  "Email": "",
+  "Date": "",
+  "Message": "",
+  "Tags": [],
+  "Fingerprint": ".claude/settings.local.json:curl-auth-header:50"
+ }
+]

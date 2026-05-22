@@ -79,6 +79,15 @@ Public URL of the improved fork: [FILL IN HOSTED URL HERE]
 
 Backend health check: [FILL IN HEALTH URL HERE]
 
+### 7.5 Compliance scan (security)
+
+[`orientation/compliance-scan.md`](orientation/compliance-scan.md) — local-equivalent of upstream's `comply opensource` (gitleaks + AI + trivy bundle). The Treasury `comply` toolkit is internal; this scan ran gitleaks 8.30.1 directly:
+
+- **28 Phase 2 commits / 1.08 MB scanned → 0 findings.** Artifact: [`orientation/compliance/gitleaks-phase2-commits.json`](orientation/compliance/gitleaks-phase2-commits.json) (empty array).
+- **Full working tree / 25.4 MB scanned → 1 finding**, analysed and categorised as a pre-existing false positive on the documented dev seed credential in `.claude/settings.local.json` (already in `.gitignore`, not modified by Phase 2). Artifact: [`orientation/compliance/gitleaks-fulltree.json`](orientation/compliance/gitleaks-fulltree.json).
+
+Cross-references to every section of [`docs/claude-reference/security.md`](docs/claude-reference/security.md) are included in the scan doc, including the two documented behavior deltas (auth middleware `last_activity` throttle + new WS re-validation tick) — neither weakens security, ERR-3 strengthens it.
+
 ### 8. Social Post
 
 [`orientation/social-post.md`](orientation/social-post.md) — both an X and a LinkedIn draft tagged `@GauntletAI`. Post-deploy, paste the URLs here.
