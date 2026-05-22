@@ -107,7 +107,10 @@ export function useSelection<T>({
     setSelectedIds(prev => {
       const next = new Set(prev);
       for (let i = start; i <= end; i++) {
-        next.add(itemIds[i]);
+        const id = itemIds[i];
+        if (id !== undefined) {
+          next.add(id);
+        }
       }
       return next;
     });
@@ -133,7 +136,9 @@ export function useSelection<T>({
 
   // Move focus without changing selection
   const moveFocus = useCallback((direction: 'up' | 'down' | 'home' | 'end') => {
-    if (itemIds.length === 0) {
+    const firstId = itemIds[0];
+    const lastId = itemIds[itemIds.length - 1];
+    if (firstId === undefined || lastId === undefined) {
       return;
     }
 
@@ -143,19 +148,26 @@ export function useSelection<T>({
       let newFocusedId: string | null = prev;
       switch (direction) {
         case 'up':
-          if (currentIdx <= 0) newFocusedId = itemIds[0];
-          else newFocusedId = itemIds[currentIdx - 1];
+          if (currentIdx <= 0) {
+            newFocusedId = firstId;
+          } else {
+            newFocusedId = itemIds[currentIdx - 1] ?? prev;
+          }
           break;
         case 'down':
-          if (currentIdx === -1) newFocusedId = itemIds[0];
-          else if (currentIdx >= itemIds.length - 1) newFocusedId = itemIds[itemIds.length - 1];
-          else newFocusedId = itemIds[currentIdx + 1];
+          if (currentIdx === -1) {
+            newFocusedId = firstId;
+          } else if (currentIdx >= itemIds.length - 1) {
+            newFocusedId = lastId;
+          } else {
+            newFocusedId = itemIds[currentIdx + 1] ?? prev;
+          }
           break;
         case 'home':
-          newFocusedId = itemIds[0];
+          newFocusedId = firstId;
           break;
         case 'end':
-          newFocusedId = itemIds[itemIds.length - 1];
+          newFocusedId = lastId;
           break;
         default:
           newFocusedId = prev;
