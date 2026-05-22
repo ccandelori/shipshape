@@ -9,6 +9,44 @@
 
 ---
 
+## Status update — 2026-05-22 evening: Phase 3 work landed on two branches
+
+Three Taskmaster tasks closed in this session:
+
+| Task | Branch | Commits | Status |
+|---|---|---|---|
+| **27** ShipShape orchestrator (`pnpm shipshape`) | `feat/phase3-shipshape` | `dd0152e` | done |
+| **28** ShipShape lite mode + GitHub Actions wiring | `feat/phase3-shipshape` | `4b096f1` | done |
+| **30** Collaboration integrity observability | `feat/phase3-collab-observability` | `6bbde42` | done |
+
+Task 29 (Zod typed contracts) was deferred — the task spec itself flags a 1–2 day refactor and that's too much risk against the Sunday deadline.
+
+**Verified locally:**
+- `pnpm shipshape` → 5 PASS + 2 SKIP (Cat 3 + 7 require dev stack), wall-clock 17–20s, exit 0
+- Self-test (regress + restore): 15 `: any` markers push Cat 1 to 563 → exit 1; remove fixture → exit 0
+- `pnpm shipshape:ci` → 5 PASS, ~17s, exit 0 against localhost Postgres
+- `pnpm --filter @ship/api type-check` + web + shared: all exit 0
+- `pnpm --filter @ship/api test`: 36 files / 497 tests (was 35 / 494 — collaboration-health adds 3)
+- Phase 3 docs in `orientation/improvements/`: `shipshape.md` + `collab-observability.md`
+- `orientation/shipshape-report.md` checked in (overall PASS)
+- `SUBMISSION.md` + `README.md` updated with Phase 3 callouts pointing to both branches
+
+**What's still ahead of `master`:**
+The two Phase 3 branches haven't been merged yet. Recommended order:
+```bash
+git merge --no-ff feat/phase3-shipshape           # Task 27 + 28
+git merge --no-ff feat/phase3-collab-observability  # Task 30
+pnpm shipshape                                     # final scorecard on merged master
+```
+
+After that, the Sunday submission punch list shrinks to the original §"Open questions queued for Cameron" set: deploy URL, demo re-record, AI cost figures, push master, post social.
+
+---
+
+### (Original handoff continues below for the cold-start path it documented.)
+
+---
+
 ## Where Phase 2 ended (everything you need before context-clear)
 
 ### The numbers that should be in your head

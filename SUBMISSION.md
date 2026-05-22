@@ -101,6 +101,56 @@ Cross-references to every section of [`docs/claude-reference/security.md`](docs/
 
 ---
 
+## Phase 3 — institutional-memory work (post-PRD)
+
+The seven categories above hit their PRD targets, but those numbers are a snapshot. Phase 3 turns the audit into a permanent gate: any future PR that silently regresses one of the seven categories now fails CI loudly, and the silent-data-loss class introduced in Phase 2 fix work is now observable at runtime.
+
+Phase 3 lives on two unmerged feature branches off `master`:
+
+| Branch | Commits | What it ships | Doc |
+|---|---|---|---|
+| `feat/phase3-shipshape` | 2 | `pnpm shipshape` (full) + `pnpm shipshape:ci` (lite) orchestrators; `shipshape-ci` job in `.github/workflows/test.yml`; per-PR report artifact | [`orientation/improvements/shipshape.md`](orientation/improvements/shipshape.md) |
+| `feat/phase3-collab-observability` | 1 | `GET /health/collaboration` (JSON) + `GET /metrics` (Prometheus) exposing six integrity signals; 3 new integration tests | [`orientation/improvements/collab-observability.md`](orientation/improvements/collab-observability.md) |
+
+### What `pnpm shipshape` does
+
+Reproduces every Phase 2 measurement and emits [`orientation/shipshape-report.md`](orientation/shipshape-report.md) — a versioned scoreboard with one row per category, pinned to the PRD threshold. Exits nonzero if **any** of the 7 categories regresses below threshold. Suitable as a release gate.
+
+```bash
+pnpm shipshape          # full audit  (~20s; needs Postgres; optionally needs dev:api + dev:web)
+pnpm shipshape:ci       # lite mode   (Cat 1 + 2 + 4-static + 5 + 6; no dev stack needed)
+```
+
+Lite mode runs in CI on every PR and uploads the generated report as a workflow artifact. Self-test recorded in [`orientation/improvements/shipshape.md`](orientation/improvements/shipshape.md): 15 `: any` markers added → Cat 1 fails (548 → 563 past the 560 threshold) → `pnpm shipshape` exits 1; remove the fixture → PASS, exit 0.
+
+### What the observability endpoints do
+
+Make the silent-data-loss class loud. Both surfaces (JSON + Prom) expose six signals:
+
+| Signal | Type | Regression class it catches |
+|---|---|---|
+| `documents_content_null_count` | gauge (SQL) | C-1 silent persist (yjsToJson NULL guard regression) |
+| `documents_with_recent_persist` | gauge (SQL) | Liveness — 0 while active = silently broken persistence |
+| `ws_connections_open` | gauge | Connection-leak detection |
+| `ws_session_4401_count_5m` + `_total` | gauge + counter | C-2 session expiry (re-validation tick regression) |
+| `persist_failure_count_total` + `last_persist_failures` | counter + ring buffer | persistDocument throws (previously logged-only) |
+
+Three integration tests in `api/src/__tests__/collaboration-health.test.ts` pin one regression class each. Suite went 35/494 (Phase 2) → 36/497 (Phase 3).
+
+### How Phase 3 reaches `master`
+
+Both branches are ready to merge. Recommended order:
+
+```bash
+git merge --no-ff feat/phase3-shipshape           # Task 27 + 28 land first
+git merge --no-ff feat/phase3-collab-observability  # Task 30 lands second
+pnpm shipshape                                     # final scorecard before push
+```
+
+After merge, `pnpm shipshape` on master will produce a fresh `orientation/shipshape-report.md` checked into the tracked tree — the first scorecard of "everything is a document AND every gate has a number."
+
+---
+
 ## How to verify locally
 
 Run the per-package commands directly — they are the authoritative gate and don't depend on root-script wrappers. The root wrappers (`pnpm type-check`, `pnpm run type-check`) call `pnpm --recursive run type-check`; if your environment has a stale pnpm store or registry-reach issues, the wrapper may surface `[ERROR] fetch failed` before any compile runs. In that case, run `pnpm install` first (or use the per-package commands below — they bypass the recursive wrapper entirely).
@@ -132,6 +182,15 @@ sleep 5
 pnpm db:seed
 node orientation/baselines/accessibility/axe-scan-after.mjs
 # → 0/0 Critical/Serious on all 8 routes
+
+# 6) Phase 3 — single-command verification (only after both Phase 3 branches are merged)
+pnpm shipshape                          # → 5 PASS + 2 SKIP (Cat 3 + 7 need dev stack); exit 0
+pnpm shipshape:ci                       # → 5 PASS; exit 0; report at orientation/shipshape-report.md
+
+# 7) Phase 3 — observability surface (only after collab-observability is merged)
+curl -s localhost:3000/health/collaboration | jq .  # JSON snapshot of 6 signals
+curl -s localhost:3000/metrics                       # Prometheus text exposition
+pnpm --filter @ship/api exec vitest run src/__tests__/collaboration-health.test.ts  # 3/3 pass
 ```
 
 > **Honest note on the root wrapper.** During the Phase 2 follow-up audits we saw `pnpm type-check` exit with `[ERROR] fetch failed` on one reviewer's machine and exit 0 cleanly on the author's machine — same SHA, same lockfile. That's a pnpm-store / network-reach environmental difference, not a code regression. The per-package commands above run `tsc --noEmit` directly with no network call and are the reproducible gate.
