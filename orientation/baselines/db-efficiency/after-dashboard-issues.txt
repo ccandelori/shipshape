@@ -1,0 +1,17 @@
+                                                                        QUERY PLAN                                                                        
+----------------------------------------------------------------------------------------------------------------------------------------------------------
+ Sort  (cost=8.18..8.18 rows=1 width=258) (actual time=0.024..0.024 rows=12 loops=1)
+   Sort Key: updated_at DESC
+   Sort Method: quicksort  Memory: 28kB
+   Buffers: shared hit=7
+   ->  Index Scan using idx_documents_issue_assignee_id on documents d  (cost=0.14..8.17 rows=1 width=258) (actual time=0.010..0.015 rows=12 loops=1)
+         Index Cond: (((properties ->> 'assignee_id'::text))::uuid = '860398ef-2ff2-4961-b1ec-31269249d795'::uuid)
+         Filter: ((workspace_id = 'fe16602c-8efa-4547-b960-4c24bb9c5ea8'::uuid) AND ((properties ->> 'state'::text) <> ALL ('{done,cancelled}'::text[])))
+         Rows Removed by Filter: 6
+         Buffers: shared hit=4
+ Planning:
+   Buffers: shared hit=446
+ Planning Time: 0.528 ms
+ Execution Time: 0.040 ms
+(13 rows)
+
