@@ -47,9 +47,7 @@ export const documentContextKeys = {
 async function fetchDocumentContext(id: string): Promise<DocumentContext> {
   const res = await apiGet(`/api/documents/${id}/context`);
   if (!res.ok) {
-    const error = new Error('Failed to fetch document context') as Error & { status: number };
-    error.status = res.status;
-    throw error;
+    throw new HttpError('Failed to fetch document context', res.status);
   }
   return res.json();
 }

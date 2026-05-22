@@ -127,9 +127,7 @@ async function fetchIssues(filters?: IssueFilters): Promise<Issue[]> {
 
   const res = await apiGet(url);
   if (!res.ok) {
-    const error = new Error('Failed to fetch issues') as Error & { status: number };
-    error.status = res.status;
-    throw error;
+    throw new HttpError('Failed to fetch issues', res.status);
   }
   const data = await res.json();
   let issues = (data as Record<string, unknown>[]).map(transformIssue);
@@ -159,9 +157,7 @@ async function createIssueApi(data: CreateIssueData): Promise<Issue> {
 
   const res = await apiPost('/api/issues', apiData);
   if (!res.ok) {
-    const error = new Error('Failed to create issue') as Error & { status: number };
-    error.status = res.status;
-    throw error;
+    throw new HttpError('Failed to create issue', res.status);
   }
   const apiIssue = await res.json();
   return transformIssue(apiIssue);
@@ -179,9 +175,7 @@ async function updateIssueApi(id: string, updates: Partial<Issue>): Promise<Issu
         throw new CascadeWarningError(body as CascadeWarning);
       }
     }
-    const error = new Error('Failed to update issue') as Error & { status: number };
-    error.status = res.status;
-    throw error;
+    throw new HttpError('Failed to update issue', res.status);
   }
   const apiIssue = await res.json();
   return transformIssue(apiIssue);
@@ -321,9 +315,7 @@ interface BulkUpdateResponse {
 async function bulkUpdateIssuesApi(data: BulkUpdateRequest): Promise<BulkUpdateResponse> {
   const res = await apiPost('/api/issues/bulk', data);
   if (!res.ok) {
-    const error = new Error('Failed to bulk update issues') as Error & { status: number };
-    error.status = res.status;
-    throw error;
+    throw new HttpError('Failed to bulk update issues', res.status);
   }
   return res.json();
 }

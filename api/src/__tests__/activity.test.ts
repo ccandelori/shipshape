@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import request from 'supertest';
 import express from 'express';
-import { pgResult } from '../test-utils/pgMock.js';
+import { pgResult, mockedPool } from '../test-utils/pgMock.js';
 
 // Mock pool before importing routes
 vi.mock('../db/client.js', () => ({
@@ -45,8 +45,8 @@ describe('Activity API', () => {
         const workspaceId = 'test-workspace-id';
 
         // Mock entity exists check
-        vi.mocked(pool.query)
-          .mockResolvedValueOnce(pgResult([{ id: programId }]) as any)
+        mockedPool()
+          .mockResolvedValueOnce(pgResult([{ id: programId }]))
           // Mock activity query
           .mockResolvedValueOnce(pgResult([
               { date: '2024-01-01', count: 5 },
@@ -77,8 +77,8 @@ describe('Activity API', () => {
         const projectId = 'project-456';
         const workspaceId = 'test-workspace-id';
 
-        vi.mocked(pool.query)
-          .mockResolvedValueOnce(pgResult([{ id: projectId }]) as any)
+        mockedPool()
+          .mockResolvedValueOnce(pgResult([{ id: projectId }]))
           .mockResolvedValueOnce(pgResult([
               { date: '2024-01-10', count: 12 },
               { date: '2024-01-11', count: 8 },
@@ -105,8 +105,8 @@ describe('Activity API', () => {
         const sprintId = 'sprint-789';
         const workspaceId = 'test-workspace-id';
 
-        vi.mocked(pool.query)
-          .mockResolvedValueOnce(pgResult([{ id: sprintId }]) as any)
+        mockedPool()
+          .mockResolvedValueOnce(pgResult([{ id: sprintId }]))
           .mockResolvedValueOnce(pgResult([
               { date: '2024-01-20', count: 15 },
             ]) as any);
@@ -130,9 +130,9 @@ describe('Activity API', () => {
       it('returns empty array for entity with no activity', async () => {
         const programId = 'empty-program';
 
-        vi.mocked(pool.query)
-          .mockResolvedValueOnce(pgResult([{ id: programId }]) as any)
-          .mockResolvedValueOnce(pgResult([]) as any);
+        mockedPool()
+          .mockResolvedValueOnce(pgResult([{ id: programId }]))
+          .mockResolvedValueOnce(pgResult([]));
 
         const response = await request(app)
           .get(`/activity/program/${programId}`)
@@ -161,7 +161,7 @@ describe('Activity API', () => {
       it('returns 404 when entity does not exist', async () => {
         const nonExistentId = 'non-existent-id';
 
-        vi.mocked(pool.query).mockResolvedValueOnce(pgResult([]) as any);
+        mockedPool().mockResolvedValueOnce(pgResult([]));
 
         const response = await request(app)
           .get(`/activity/program/${nonExistentId}`)
@@ -176,7 +176,7 @@ describe('Activity API', () => {
         const programId = 'other-workspace-program';
 
         // Entity exists but not in user's workspace
-        vi.mocked(pool.query).mockResolvedValueOnce(pgResult([]) as any);
+        mockedPool().mockResolvedValueOnce(pgResult([]));
 
         const response = await request(app)
           .get(`/activity/program/${programId}`)
@@ -190,7 +190,7 @@ describe('Activity API', () => {
       it('returns 500 on database error', async () => {
         const programId = 'program-error';
 
-        vi.mocked(pool.query).mockRejectedValueOnce(
+        mockedPool().mockRejectedValueOnce(
           new Error('Database connection failed')
         );
 
@@ -209,9 +209,9 @@ describe('Activity API', () => {
         const programId = 'program-123';
         const workspaceId = 'test-workspace-id';
 
-        vi.mocked(pool.query)
-          .mockResolvedValueOnce(pgResult([{ id: programId }]) as any)
-          .mockResolvedValueOnce(pgResult([]) as any);
+        mockedPool()
+          .mockResolvedValueOnce(pgResult([{ id: programId }]))
+          .mockResolvedValueOnce(pgResult([]));
 
         await request(app)
           .get(`/activity/program/${programId}`)
@@ -235,8 +235,8 @@ describe('Activity API', () => {
       it('queries exactly 30 days of activity', async () => {
         const programId = 'program-123';
 
-        vi.mocked(pool.query)
-          .mockResolvedValueOnce(pgResult([{ id: programId }]) as any)
+        mockedPool()
+          .mockResolvedValueOnce(pgResult([{ id: programId }]))
           .mockResolvedValueOnce({
             rows: Array.from({ length: 30 }, (_, i) => ({
               date: `2024-01-${String(i + 1).padStart(2, '0')}`,
@@ -263,15 +263,15 @@ describe('Activity API', () => {
       it('program query includes direct documents, projects, and sprints', async () => {
         const programId = 'program-123';
 
-        vi.mocked(pool.query)
-          .mockResolvedValueOnce(pgResult([{ id: programId }]) as any)
-          .mockResolvedValueOnce(pgResult([]) as any);
+        mockedPool()
+          .mockResolvedValueOnce(pgResult([{ id: programId }]))
+          .mockResolvedValueOnce(pgResult([]));
 
         await request(app)
           .get(`/activity/program/${programId}`)
           .expect(200);
 
-        const activityQuery = vi.mocked(pool.query).mock.calls[1]![0] as string;
+        const activityQuery = mockedPool().mock.calls[1]![0] as string;
 
         // Verify query structure includes all relevant associations via document_associations
         expect(activityQuery).toContain('program_projects');
@@ -285,15 +285,15 @@ describe('Activity API', () => {
       it('project query includes direct documents and sprints', async () => {
         const projectId = 'project-456';
 
-        vi.mocked(pool.query)
-          .mockResolvedValueOnce(pgResult([{ id: projectId }]) as any)
-          .mockResolvedValueOnce(pgResult([]) as any);
+        mockedPool()
+          .mockResolvedValueOnce(pgResult([{ id: projectId }]))
+          .mockResolvedValueOnce(pgResult([]));
 
         await request(app)
           .get(`/activity/project/${projectId}`)
           .expect(200);
 
-        const activityQuery = vi.mocked(pool.query).mock.calls[1]![0] as string;
+        const activityQuery = mockedPool().mock.calls[1]![0] as string;
 
         expect(activityQuery).toContain('project_sprints');
         // Project and sprint associations use document_associations junction table
@@ -305,15 +305,15 @@ describe('Activity API', () => {
       it('sprint query includes direct documents only', async () => {
         const sprintId = 'sprint-789';
 
-        vi.mocked(pool.query)
-          .mockResolvedValueOnce(pgResult([{ id: sprintId }]) as any)
-          .mockResolvedValueOnce(pgResult([]) as any);
+        mockedPool()
+          .mockResolvedValueOnce(pgResult([{ id: sprintId }]))
+          .mockResolvedValueOnce(pgResult([]));
 
         await request(app)
           .get(`/activity/sprint/${sprintId}`)
           .expect(200);
 
-        const activityQuery = vi.mocked(pool.query).mock.calls[1]![0] as string;
+        const activityQuery = mockedPool().mock.calls[1]![0] as string;
 
         // Issues linked via junction table
         expect(activityQuery).toContain('document_associations');
