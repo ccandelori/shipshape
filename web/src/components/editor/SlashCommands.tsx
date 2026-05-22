@@ -677,6 +677,12 @@ export function createSlashCommands({ onCreateSubDocument, onNavigateToDocument,
                   interactive: true,
                   trigger: 'manual',
                   placement: 'bottom-start',
+                  // Suppress aria-expanded on the reference. The "reference" here
+                  // is the document body (we pass a virtual rect via
+                  // getReferenceClientRect), not an interactive control. Tippy's
+                  // default aria-expanded handling fails axe's aria-allowed-attr
+                  // check on the editor wrapper div under the same .tiptap-wrapper.
+                  aria: { content: null, expanded: false },
                 });
               },
 

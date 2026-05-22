@@ -2,15 +2,41 @@
 
 **Branch:** `feat/phase2-a11y`
 **PRD target:** 10+ Lighthouse score gain on lowest page OR fix all Critical/Serious violations on 3 most-important pages.
-**Status:** ✅ 3 audit-cited Critical/Serious violations resolved across the entire frontend. A11Y-1 (modal focus trap) is component-level so fixes apply everywhere those modals render; A11Y-2 (keyboard nav) fixes the AccountabilityGrid surface used on Team and Dashboard pages; A11Y-3 (contrast tokens) fixes audit-quoted 2.26:1 and 2.55:1 ratios.
+**Task 16 target:** all 8 baseline Critical/Serious axe findings closed, after-scan saved.
+**Status:** ✅ **All 8 axe Critical/Serious findings resolved across every scanned route.** After-scan: `Critical=0, Serious=0, Moderate=0, Minor=0` on all 8 routes (login, docs, my-week, issues, projects, settings, team-allocation, editor-wiki).
 
-## Fixes
+## Before → after (axe-core deep scan, same script + same routes)
+
+| Route | Before (Critical + Serious) | After |
+|---|---|---:|
+| `/login` | 0 + 0 | 0 + 0 |
+| `/docs` | 1 + 1 | **0 + 0** |
+| `/my-week` | 0 + 1 | **0 + 0** |
+| `/issues` | 0 + 0 | 0 + 0 |
+| `/projects` | 0 + 1 | **0 + 0** |
+| `/settings` | 1 + 0 | **0 + 0** |
+| `/team-allocation` | 0 + 0 | 0 + 0 |
+| `/documents/<wiki-id>` | 2 + 1 | **0 + 0** |
+| **TOTALS** | **4 + 4** | **0 + 0** |
+
+Raw artifacts:
+- Phase 1 baseline: `orientation/baselines/accessibility/axe-*.json` + `axe-summary.md`
+- Phase 2 after-fix: `orientation/baselines/accessibility/after-axe-*.json` + `after-axe-summary.md`
+- After-scan script: `orientation/baselines/accessibility/axe-scan-after.mjs` (mirrors the baseline script, writes to `after-*.json` and reads `WEB` env for port flexibility).
+
+## Fixes — Task 16 (closes the remaining 5 axe findings + 3 audit-cited bugs)
 
 | # | Fix | WCAG | Before | After |
 |---|---|---|---|---|
 | A11Y-1 | 3 custom modals → Radix Dialog.Root | 2.1.2 No Keyboard Trap; 4.1.2 Name, Role, Value | Custom `aria-modal` with no focus trap, no `aria-labelledby` — federal AT users caught in trap | Radix provides focus trap automatically; `Dialog.Title` gives `aria-labelledby` for free |
 | A11Y-2 | AccountabilityGrid project rows: `<div onClick>` → `role=button` + `tabIndex=0` + `onKeyDown` | 2.1.1 Keyboard | Keyboard-only users could not navigate or open project details | Tab navigates, Enter / Space activates; focus-visible ring; focus mirrors hover-expand |
 | A11Y-3 | Tailwind opacity-modifier contrast fails → pre-blended `text-muted-soft` + `bg-accent-soft` tokens | 1.4.3 Contrast (Minimum) | `text-muted/50` = 2.26:1, `bg-accent/20` w/ text-foreground = 2.55:1 | `text-muted-soft` (#a8a8a8) = 6.8:1; `bg-accent-soft` (#15314a) + text-foreground = 13.6:1 |
+| A11Y-4 | DocumentTree fallback `<li>` "X more..." rows missing `role="treeitem"` (axe `aria-required-children` + `listitem`, /docs + /editor-wiki) | 4.1.2 / 1.3.1 | `<ul role="tree">` had bare `<li>` children with no `role="treeitem"`, breaking the tree's required-children contract | Added `role="treeitem"` + `aria-selected={false}` to the "N more…" and "No workspace documents" fallback `<li>` |
+| A11Y-5 | Tippy.js `aria-expanded` on editor wrapper (axe `aria-allowed-attr`, /editor-wiki) | 4.1.2 Name, Role, Value | Tippy auto-set `aria-expanded` on the editor's inner div, which has no role that allows the attribute | Passed `aria: { content: null, expanded: false }` to the 3 tippy popups (SlashCommands, MentionExtension, EmojiExtension) — popups still work, no rogue ARIA attrs |
+| A11Y-6 | `<select>` rows in WorkspaceSettings missing accessible name (axe `select-name`, /settings) | 4.1.2 | Role selects had no label, aria-label, or labelledby | Added `aria-label="Role for {member.name}"` |
+| A11Y-7 | More opacity-modifier contrast sites flagged by axe (axe `color-contrast`, /my-week + /projects) | 1.4.3 | "Current" badge: `bg-accent/20 text-accent` = 2.55:1; "ICE score" cell same; filter pill `bg-muted/30 text-muted` = 3.65:1; numeric counter `text-muted/50` = 2.26:1 | "Current" + ICE cell: `bg-accent-soft text-foreground` = 13.6:1; filter pill: `bg-border text-muted-soft` = 6.8:1; numeric counter: `text-muted-soft` = 6.8:1 |
+| A11Y-8 | `text-accent` used as foreground on dark bg (axe `color-contrast`, /my-week + /editor-wiki) | 1.4.3 | `#005ea2` foreground on `#0d0d0d` bg = 2.82:1 | New `text-accent-fg` token (`#5fa5d3`) = 6.4:1; applied to MyWeekPage "today" day label and UnifiedDocumentPage "Go to Documents" button |
+| A11Y-9 | `opacity-40` row wrapper collapsed inner text contrast to 1.84:1 (axe `color-contrast`, /my-week) | 1.4.3 | The future-row de-emphasis applied opacity to the entire row including text + borders | Replaced `opacity-40` with `border-dashed` — keeps the "future" visual cue without applying global opacity that murders text contrast |
 
 ---
 

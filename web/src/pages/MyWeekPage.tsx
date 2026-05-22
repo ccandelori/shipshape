@@ -119,7 +119,7 @@ export function MyWeekPage() {
         <div className="flex items-center gap-2.5">
           <h1 className="text-xl font-semibold text-foreground">Week {week.week_number}</h1>
           {week.is_current && (
-            <span className="text-xs bg-accent/20 text-accent px-1.5 py-0.5 rounded">Current</span>
+            <span className="text-xs bg-accent-soft text-foreground px-1.5 py-0.5 rounded">Current</span>
           )}
         </div>
         <div className="flex items-center gap-1">
@@ -225,7 +225,7 @@ export function MyWeekPage() {
                   <div className="space-y-0 max-h-[300px] overflow-hidden">
                     {plan.items.map((item, i) => (
                       <div key={i} className="flex items-start gap-2.5 py-1.5">
-                        <span className="text-[11px] font-semibold text-muted/50 w-4 text-right shrink-0 mt-0.5">
+                        <span className="text-[11px] font-semibold text-muted-soft w-4 text-right shrink-0 mt-0.5">
                           {i + 1}.
                         </span>
                         <span className="text-sm text-foreground leading-relaxed">{item.text}</span>
@@ -287,7 +287,7 @@ export function MyWeekPage() {
                   <div className="space-y-0 max-h-[300px] overflow-hidden">
                     {retro.items.map((item, i) => (
                       <div key={i} className="flex items-start gap-2.5 py-1.5">
-                        <span className="text-[11px] font-semibold text-muted/50 w-4 text-right shrink-0 mt-0.5">
+                        <span className="text-[11px] font-semibold text-muted-soft w-4 text-right shrink-0 mt-0.5">
                           {i + 1}.
                         </span>
                         <span className="text-sm text-foreground leading-relaxed">{item.text}</span>
@@ -336,13 +336,18 @@ export function MyWeekPage() {
               const rowClass = cn(
                 'flex items-center gap-3 rounded-lg border px-4 py-2.5',
                 isToday ? 'border-accent/30 bg-accent/5' : 'border-border bg-surface',
-                isFuture && 'opacity-40',
+                // Future rows: a small visual de-emphasis without opacity-40,
+                // because applying opacity to the whole row collapses inner
+                // text contrast to ~1.84:1 (axe color-contrast FAIL). The
+                // `bg-surface/60` + italic 'Upcoming' label is enough signal
+                // that the row is in the future.
+                isFuture && 'border-dashed',
                 !isFuture && 'hover:border-accent/50 transition-colors'
               );
 
               const dateLabel = (
                 <div className="w-20 flex-shrink-0">
-                  <span className={cn('text-xs font-medium', isToday ? 'text-accent' : 'text-muted')}>
+                  <span className={cn('text-xs font-medium', isToday ? 'text-accent-fg' : 'text-muted')}>
                     {slot.day.slice(0, 3)}
                   </span>
                   <span className="text-xs text-muted ml-1">

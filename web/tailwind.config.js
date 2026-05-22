@@ -22,6 +22,11 @@ export default {
         // top). #15314a is the same "tinted with accent" look as a real color;
         // text-foreground on it = 13.6:1 (AAA easy).
         'accent-soft': '#15314a',
+        // accent-fg: foreground-only variant for `text-accent` on dark bg.
+        // #005ea2 on #0d0d0d = 2.82:1 (FAIL); #5fa5d3 = 6.4:1 (AA pass).
+        // Use `text-accent-fg` anywhere text-accent appears as a foreground
+        // color on background; keep `bg-accent` + `text-white` combos as-is.
+        'accent-fg': '#5fa5d3',
       },
       fontFamily: {
         sans: [
