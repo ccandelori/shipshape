@@ -1,8 +1,8 @@
 # Cross-cutting — Minimal CI workflow
 
-**Branch:** `feat/phase2-ci` (merged) + `fix/phase2-web-type-check` (merged)
-**Task:** 17 — Add GitHub Actions workflow to run type-check + test on every pull request.
-**Status:** ✅ Workflow file exists at `.github/workflows/test.yml`. The underlying per-package commands the workflow runs all exit 0 on current `master`. **The root wrapper `pnpm type-check` is environment-sensitive — see "Honest note" below.**
+**Branch:** `feat/phase2-ci` (merged) + `fix/phase2-web-type-check` (merged) + `feat/phase3-shipshape` (Phase 3 extension)
+**Task:** 17 (Phase 2) + 28 (Phase 3) — Add GitHub Actions workflow to run type-check, tests, and the `pnpm shipshape:ci` quality gate on every pull request.
+**Status:** ✅ Workflow file exists at `.github/workflows/test.yml`. The underlying per-package commands the workflow runs all exit 0 on current `master`. Phase 3 added a third job (`shipshape-ci`) that runs the Cat 1/2/4-static/5/6 subset and uploads the generated `shipshape-report.md` as a workflow artifact. **The root wrapper `pnpm type-check` is environment-sensitive — see "Honest note" below.**
 
 Per-package commands the workflow runs (these are the authoritative gates):
 
@@ -34,7 +34,7 @@ The per-package commands are the **reproducible** gate. The root wrapper is a co
 
 ## What it checks
 
-Two jobs run on every push to master and every pull request to master:
+Three jobs run on every push to master and every pull request to master (Phase 3 added the third):
 
 ### `type-check`
 - `pnpm install --frozen-lockfile`
@@ -50,6 +50,32 @@ This is the gate the user audit caught me failing — at the time the workflow l
 - `pnpm --filter @ship/api test` (full vitest suite — 464 tests, including the 3 phase2-regressions tests added in Cat 5)
 
 The Postgres service container uses the same `ship` / `ship_dev_password` / `ship_dev` credentials as `docker-compose.yml` so the migrations + seeds work identically to local dev. PostgreSQL 16 (matching the local dev container) rather than the task-spec'd 15.
+
+### `shipshape-ci` (Phase 3 / Task 28)
+
+- `needs: [type-check, api-tests]` — only runs once both upstream gates pass
+- Same Postgres service container as `api-tests` (re-bound for the index existence check)
+- `pnpm install --frozen-lockfile`
+- `pnpm build:shared`
+- `pnpm --filter @ship/api exec tsx src/db/migrate.ts` (so migration-038 indexes exist in pg_indexes)
+- `apt-get install postgresql-client` (the runner doesn't ship `psql`)
+- `pnpm shipshape:ci` — runs the lite-mode orchestrator
+- `actions/upload-artifact@v4` — uploads `orientation/shipshape-report.md` so every PR has a downloadable scoreboard (30-day retention)
+
+The lite-mode orchestrator runs five of the seven PRD categories:
+
+| Cat | What | Why in CI |
+|---|---|---|
+| 1 | type-safety ripgrep count vs 747 baseline (target ≤ 560) | catches `as any` / `: any` regressions before merge |
+| 2 | bundle `pnpm --filter @ship/web build` entry chunk ≤ 200 KB gzip | catches a `lazy()` wrapper being removed |
+| 4 (static) | all 4 migration-038 indexes present in pg_indexes | catches an accidental migration revert |
+| 5 | full vitest suite (494 / 35 files) | catches any test regression |
+| 6 | filtered critical-path subset (phase2-regressions + Task 14 + mappers) | redundant safety on the high-value tests |
+
+Cat 3 (autocannon) and Cat 7 (axe) stay as `pnpm shipshape` full-run for now — both need a longer-running runner with the dev stack actually up. Tracked as a follow-up.
+
+`SHIPSHAPE_NO_RESEED=1` is set in the job env so the orchestrator skips the
+post-run seed restore — CI tears the container down anyway.
 
 ## Why this matters
 
@@ -82,7 +108,7 @@ If both exit 0, the CI workflow will also pass on the same SHA.
 
 ## Workflow file location
 
-`.github/workflows/test.yml` — 68 lines. Reads cleanly top-to-bottom; the inline comment at the top explains the design intent for future maintainers.
+`.github/workflows/test.yml`. Reads cleanly top-to-bottom; the inline comment at the top explains the design intent for future maintainers. Phase 3 added the `shipshape-ci` job below `api-tests`.
 
 ## What unblocks once CI lands on a hosted runner
 

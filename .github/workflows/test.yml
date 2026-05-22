@@ -66,3 +66,52 @@ jobs:
       - run: pnpm build:shared
       - run: pnpm --filter @ship/api exec tsx src/db/migrate.ts
       - run: pnpm --filter @ship/api test
+
+  shipshape-ci:
+    # Phase 3 / Task 28 — lite-mode quality gate. Runs Cat 1 (type-safety
+    # ripgrep count), Cat 2 (bundle build), Cat 4 static (migration-038 index
+    # existence in pg_indexes), Cat 5 (full vitest), and Cat 6 (critical-path
+    # subset). Skips Cat 3 (autocannon needs E2E_TEST=1 pnpm dev:api up) and
+    # Cat 7 (axe needs pnpm dev:web + chromium).
+    runs-on: ubuntu-latest
+    needs: [type-check, api-tests]
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ship
+          POSTGRES_PASSWORD: ship_dev_password
+          POSTGRES_DB: ship_dev
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      DATABASE_URL: postgresql://ship:ship_dev_password@localhost:5432/ship_dev
+      NODE_ENV: test
+      SHIPSHAPE_NO_RESEED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install postgres client
+        run: sudo apt-get update && sudo apt-get install -y postgresql-client
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build:shared
+      - run: pnpm --filter @ship/api exec tsx src/db/migrate.ts
+      - run: pnpm shipshape:ci
+      - name: Upload shipshape report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: shipshape-report
+          path: orientation/shipshape-report.md
+          retention-days: 30

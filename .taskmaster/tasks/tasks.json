@@ -1982,27 +1982,27 @@
         "dependencies": [
           "27"
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
             "title": "Add scripts/shipshape/run-ci.ts with the lite-mode check selection",
-            "status": "pending"
+            "status": "done"
           },
           {
             "id": 2,
             "title": "Add pnpm shipshape:ci script alias to root package.json",
-            "status": "pending"
+            "status": "done"
           },
           {
             "id": 3,
             "title": "Update .github/workflows/test.yml to invoke pnpm shipshape:ci + upload artifact",
-            "status": "pending"
+            "status": "done"
           },
           {
             "id": 4,
             "title": "Update orientation/improvements/ci-workflow.md with the new gate description",
-            "status": "pending"
+            "status": "done"
           }
         ],
         "metadata": {
