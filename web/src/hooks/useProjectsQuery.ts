@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiGet, apiPost, apiPatch, apiDelete } from '@/lib/api';
+import { HttpError } from '@/lib/httpError';
 import { computeICEScore } from '@ship/shared';
 
 // Inferred project status based on sprint relationships

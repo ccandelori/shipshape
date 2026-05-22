@@ -11,11 +11,15 @@ interface VisibilityDropdownProps {
 const options = [
   { value: 'private' as const, label: 'Private', icon: LockIcon },
   { value: 'workspace' as const, label: 'Workspace', icon: GlobeIcon },
-];
+] as const;
+
+// `as const` narrows the tuple so options[0] / options[1] are non-undefined
+// under noUncheckedIndexedAccess.
+const DEFAULT_OPTION = options[1];
 
 export function VisibilityDropdown({ value, onChange, disabled = false }: VisibilityDropdownProps) {
   const [open, setOpen] = useState(false);
-  const selected = options.find((o) => o.value === value) || options[1];
+  const selected = options.find((o) => o.value === value) ?? DEFAULT_OPTION;
   const SelectedIcon = selected.icon;
 
   return (

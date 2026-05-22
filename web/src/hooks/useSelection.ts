@@ -178,11 +178,12 @@ export function useSelection<T>({
 
   // Extend selection with arrow keys (Shift+Arrow)
   const extendSelection = useCallback((direction: 'up' | 'down' | 'home' | 'end') => {
-    if (itemIds.length === 0) return;
+    const firstId = itemIds[0];
+    if (!firstId) return;
 
     // Determine anchor point (where selection started)
     // Priority: lastSelectedId > focusedId > hoveredId > first item
-    const anchor = lastSelectedId || focusedId || hoveredId || itemIds[0];
+    const anchor = lastSelectedId || focusedId || hoveredId || firstId;
     const anchorIdx = itemIds.indexOf(anchor);
     if (anchorIdx === -1) return;
 
@@ -219,12 +220,14 @@ export function useSelection<T>({
     setSelectedIds(() => {
       const next = new Set<string>();
       for (let i = start; i <= end; i++) {
-        next.add(itemIds[i]);
+        const id = itemIds[i];
+        if (id) next.add(id);
       }
       return next;
     });
 
-    setFocusedId(itemIds[newIdx]);
+    const newFocus = itemIds[newIdx];
+    if (newFocus) setFocusedId(newFocus);
 
     // Keep lastSelectedId at anchor for continued range operations
     if (!lastSelectedId) {

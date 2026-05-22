@@ -1,5 +1,6 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiGet } from '@/lib/api';
+import { HttpError } from '@/lib/httpError';
 
 export interface StandupStatus {
   due: boolean;

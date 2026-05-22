@@ -105,7 +105,9 @@ interface TimelineDay {
 }
 
 function buildTimeline(actionItems: ActionItem[], weekNumber: number): TimelineDay[] {
-  const days: TimelineDay[] = [
+  // Tuple type so indexes 0-6 narrow to TimelineDay (not TimelineDay | undefined)
+  // under noUncheckedIndexedAccess.
+  const days: [TimelineDay, TimelineDay, TimelineDay, TimelineDay, TimelineDay, TimelineDay, TimelineDay] = [
     { label: 'Mon', rituals: [] },
     { label: 'Tue', rituals: [] },
     { label: 'Wed', rituals: [] },

@@ -132,7 +132,7 @@ export function DashboardPage() {
       {overdueItems.length > 0 && (
         <div className="bg-red-600 text-white px-6 py-3">
           <div className="mx-auto max-w-6xl">
-            {overdueItems.length === 1 ? (
+            {overdueItems.length === 1 && overdueItems[0] ? (
               <Link
                 to={`/documents/${overdueItems[0].sprint_id}`}
                 className="flex items-center gap-2 hover:underline"
