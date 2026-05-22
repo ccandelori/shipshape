@@ -322,6 +322,7 @@ function MembersTab({
                       <span className="text-muted">-</span>
                     ) : (
                       <select
+                        aria-label={`Role for ${member.name || member.email}`}
                         value={member.role || 'member'}
                         onChange={(e) => onUpdateRole(member.userId, e.target.value as 'admin' | 'member')}
                         disabled={isLastAdmin}

@@ -1,0 +1,23 @@
+{
+  "capturedAt": "2026-05-22T15:24:42.494Z",
+  "route": "/login",
+  "url": "http://localhost:5173/login",
+  "tags": [
+    "wcag2a",
+    "wcag2aa",
+    "wcag21a",
+    "wcag21aa",
+    "section508"
+  ],
+  "counts": {
+    "critical": 0,
+    "serious": 0,
+    "moderate": 0,
+    "minor": 0
+  },
+  "violationsTotal": 0,
+  "violations": [],
+  "passes": 23,
+  "incomplete": 0,
+  "inapplicable": 38
+}

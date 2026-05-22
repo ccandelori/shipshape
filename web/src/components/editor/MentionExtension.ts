@@ -218,6 +218,7 @@ export function createMentionExtension(options: CreateMentionExtensionOptions = 
               interactive: true,
               trigger: 'manual',
               placement: 'bottom-start',
+              aria: { content: null, expanded: false },
             });
           },
 

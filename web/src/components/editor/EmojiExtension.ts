@@ -228,6 +228,7 @@ export const EmojiExtension = Node.create({
                 interactive: true,
                 trigger: 'manual',
                 placement: 'bottom-start',
+                aria: { content: null, expanded: false },
               });
             },
 
