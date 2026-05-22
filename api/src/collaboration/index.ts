@@ -433,42 +433,71 @@ const WS_SESSION_REVALIDATION_INTERVAL_MS = 60_000;
 // This tick batches every distinct sessionId across both collab and events
 // connections (single SQL round-trip), then closes any WebSocket whose session
 // is gone or whose absolute/inactivity timeouts have lapsed.
+// Minimal WS surface for the closer to work against. The real `WebSocket`
+// from `ws` satisfies this; tests can pass an in-memory mock with the
+// same shape.
+export interface ClosableWebSocketLike {
+  readyState: number;
+  close(code: number, reason: string): void;
+}
+
+// Pure decision function: given a sessionId and the latest DB snapshot,
+// decide which WS connections need to close and why. Extracted from the
+// interval body so tests can drive it without setInterval.
+export async function revalidateWsSessions(args: {
+  conns: Map<ClosableWebSocketLike, { sessionId: string }>;
+  eventConns: Map<ClosableWebSocketLike, { sessionId: string }>;
+  fetchSessions: (ids: string[]) => Promise<Array<{ id: string; last_activity: Date; created_at: Date }>>;
+  now?: number;
+}): Promise<Array<{ sessionId: string; reason: string }>> {
+  const closed: Array<{ sessionId: string; reason: string }> = [];
+  const sessionIds = new Set<string>();
+  args.conns.forEach((c) => sessionIds.add(c.sessionId));
+  args.eventConns.forEach((c) => sessionIds.add(c.sessionId));
+  if (sessionIds.size === 0) return closed;
+
+  const rows = await args.fetchSessions(Array.from(sessionIds));
+  const validSessions = new Map<string, { lastActivity: Date; createdAt: Date }>();
+  for (const row of rows) {
+    validSessions.set(row.id, {
+      lastActivity: new Date(row.last_activity),
+      createdAt: new Date(row.created_at),
+    });
+  }
+
+  const now = args.now ?? Date.now();
+  const closeIfExpired = (ws: ClosableWebSocketLike, sessionId: string, where: 'collab' | 'events') => {
+    const row = validSessions.get(sessionId);
+    let reason: string | null = null;
+    if (!row) reason = 'session_missing';
+    else if (now - row.createdAt.getTime() > ABSOLUTE_SESSION_TIMEOUT_MS) reason = 'absolute_timeout';
+    else if (now - row.lastActivity.getTime() > SESSION_TIMEOUT_MS) reason = 'inactivity_timeout';
+    if (reason && ws.readyState === WebSocket.OPEN) {
+      console.warn(`[${where}] Closing WS for sessionId=${sessionId.slice(0, 8)}… reason=${reason}`);
+      ws.close(WS_CLOSE_SESSION_EXPIRED, reason);
+      closed.push({ sessionId, reason });
+    }
+  };
+
+  args.conns.forEach((c, ws) => closeIfExpired(ws, c.sessionId, 'collab'));
+  args.eventConns.forEach((c, ws) => closeIfExpired(ws, c.sessionId, 'events'));
+  return closed;
+}
+
 export function startWsSessionRevalidationTick(intervalMs: number = WS_SESSION_REVALIDATION_INTERVAL_MS) {
   return setInterval(async () => {
     try {
-      const sessionIds = new Set<string>();
-      conns.forEach((c) => sessionIds.add(c.sessionId));
-      eventConns.forEach((c) => sessionIds.add(c.sessionId));
-      if (sessionIds.size === 0) return;
-
-      const result = await pool.query(
-        `SELECT id, last_activity, created_at FROM sessions WHERE id = ANY($1::text[])`,
-        [Array.from(sessionIds)]
-      );
-
-      const validSessions = new Map<string, { lastActivity: Date; createdAt: Date }>();
-      for (const row of result.rows) {
-        validSessions.set(row.id, {
-          lastActivity: new Date(row.last_activity),
-          createdAt: new Date(row.created_at),
-        });
-      }
-
-      const now = Date.now();
-      const closeIfExpired = (ws: WebSocket, sessionId: string, where: 'collab' | 'events') => {
-        const row = validSessions.get(sessionId);
-        let reason: string | null = null;
-        if (!row) reason = 'session_missing';
-        else if (now - row.createdAt.getTime() > ABSOLUTE_SESSION_TIMEOUT_MS) reason = 'absolute_timeout';
-        else if (now - row.lastActivity.getTime() > SESSION_TIMEOUT_MS) reason = 'inactivity_timeout';
-        if (reason && ws.readyState === WebSocket.OPEN) {
-          console.warn(`[${where}] Closing WS for sessionId=${sessionId.slice(0, 8)}… reason=${reason}`);
-          ws.close(WS_CLOSE_SESSION_EXPIRED, reason);
-        }
-      };
-
-      conns.forEach((c, ws) => closeIfExpired(ws, c.sessionId, 'collab'));
-      eventConns.forEach((c, ws) => closeIfExpired(ws, c.sessionId, 'events'));
+      await revalidateWsSessions({
+        conns: conns as unknown as Map<ClosableWebSocketLike, { sessionId: string }>,
+        eventConns: eventConns as unknown as Map<ClosableWebSocketLike, { sessionId: string }>,
+        fetchSessions: async (ids) => {
+          const result = await pool.query<{ id: string; last_activity: Date; created_at: Date }>(
+            `SELECT id, last_activity, created_at FROM sessions WHERE id = ANY($1::text[])`,
+            [ids]
+          );
+          return result.rows;
+        },
+      });
     } catch (err) {
       console.error('[Collaboration] Session re-validation tick failed:', err);
     }
