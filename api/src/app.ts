@@ -264,7 +264,7 @@ export function createApp(corsOrigin: string = 'http://localhost:5173'): express
       return res.status(403).json({ error: 'Invalid or missing CSRF token.' });
     }
     console.error(`[${err?.statusCode || 500}] unhandled error on ${req.method} ${req.path}:`, err);
-    res.status(err?.statusCode || 500).json({ error: 'Internal server error.' });
+    return res.status(err?.statusCode || 500).json({ error: 'Internal server error.' });
   });
 
   return app;
