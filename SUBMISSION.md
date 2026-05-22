@@ -60,7 +60,9 @@ Each contains: before measurement (link to baseline file), root cause, fix descr
 
 ### 5. Demo Video (3-5 minutes)
 
-[FILL IN HOSTED URL HERE]
+**Status:** ⏳ Recorded once (~10 min, overshot 5-min target). Re-record + host pending — see [`orientation/demo-video.md`](orientation/demo-video.md) for the re-record outline.
+
+Hosted URL: **[NOT YET POSTED]**
 
 Source assets:
 - Slides (HTML): [`orientation/demo-deck/html/index.html`](orientation/demo-deck/html/index.html)
@@ -71,13 +73,16 @@ Source assets:
 
 ### 6. AI Cost Analysis
 
-[`orientation/ai-cost-analysis.md`](orientation/ai-cost-analysis.md) — Claude Code spend on this project + reflection on AI effectiveness for codebase comprehension.
+**Status:** ⏳ Doc scaffold + qualitative analysis shipped; actual $ figures and personal reflection paragraph pending Cameron's billing-dashboard pull.
+
+[`orientation/ai-cost-analysis.md`](orientation/ai-cost-analysis.md)
 
 ### 7. Deployed Application
 
-Public URL of the improved fork: [FILL IN HOSTED URL HERE]
+**Status:** ⏳ Deploy + smoke test pending. See [`orientation/deployment.md`](orientation/deployment.md) for the runbook.
 
-Backend health check: [FILL IN HEALTH URL HERE]
+Public URL of the improved fork: **[NOT YET DEPLOYED]**
+Backend health check: **[NOT YET DEPLOYED]**
 
 ### 7.5 Compliance scan (security)
 
@@ -90,29 +95,38 @@ Cross-references to every section of [`docs/claude-reference/security.md`](docs/
 
 ### 8. Social Post
 
-[`orientation/social-post.md`](orientation/social-post.md) — both an X and a LinkedIn draft tagged `@GauntletAI`. Post-deploy, paste the URLs here.
+**Status:** ⏳ Drafts shipped (X + LinkedIn); posted-link slots empty.
+
+[`orientation/social-post.md`](orientation/social-post.md) — both an X and a LinkedIn draft tagged `@GauntletAI`. Post-deploy, paste the URLs there.
 
 ---
 
 ## How to verify locally
 
+Run the per-package commands directly — they are the authoritative gate and don't depend on root-script wrappers. The root wrappers (`pnpm type-check`, `pnpm run type-check`) call `pnpm --recursive run type-check`; if your environment has a stale pnpm store or registry-reach issues, the wrapper may surface `[ERROR] fetch failed` before any compile runs. In that case, run `pnpm install` first (or use the per-package commands below — they bypass the recursive wrapper entirely).
+
 ```bash
-# Postgres + seed
+# 1) Postgres + seed
 docker compose up -d
+pnpm install                          # required after fresh clone; ensures workspace links resolve
 pnpm db:seed
 
-# Type-check gate (mirrors the CI workflow)
-pnpm install
-pnpm build:shared
-pnpm type-check    # → exit 0 across api/web/shared
+# 2) Type-check gate (authoritative — per-package, no recursive wrapper)
+pnpm --filter @ship/shared type-check   # → exit 0
+pnpm --filter @ship/shared build        # builds dist/ so api + web can resolve @ship/shared
+pnpm --filter @ship/api    type-check   # → exit 0
+pnpm --filter @ship/web    type-check   # → exit 0
 
-# Test gate
-pnpm --filter @ship/api test    # → 35 files, 494 tests pass
+# (Equivalent root wrapper, when network/store is healthy:)
+#   pnpm type-check                     # → exit 0 across api/web/shared
 
-# Bundle gate
-pnpm --filter @ship/web build   # → entry chunk 142.66 kB gzip
+# 3) Test gate
+pnpm --filter @ship/api test            # → 35 files, 494 tests pass
 
-# Accessibility re-scan (with dev:api + dev:web running)
+# 4) Bundle gate
+pnpm --filter @ship/web build           # → entry chunk 142.66 kB gzip
+
+# 5) Accessibility re-scan (with dev:api + dev:web running)
 pnpm dev &
 sleep 5
 pnpm db:seed
@@ -120,7 +134,23 @@ node orientation/baselines/accessibility/axe-scan-after.mjs
 # → 0/0 Critical/Serious on all 8 routes
 ```
 
+> **Honest note on the root wrapper.** During the Phase 2 follow-up audits we saw `pnpm type-check` exit with `[ERROR] fetch failed` on one reviewer's machine and exit 0 cleanly on the author's machine — same SHA, same lockfile. That's a pnpm-store / network-reach environmental difference, not a code regression. The per-package commands above run `tsc --noEmit` directly with no network call and are the reproducible gate.
+
 ---
+
+## Push status
+
+As of writing, `master` is **45 commits ahead** of `origin/master` and **not pushed**. The Phase 2 work lives entirely in those 45 local commits.
+
+The brief's "GitHub Repository" deliverable is not satisfied until those commits are pushed to the public fork (`labs.gauntletai.com/cameroncandelori/shipshape.git`). One reason for the delay: pushing publishes the deploy-blocking placeholders (no hosted URL, no posted social link). The current plan is:
+
+1. Cameron deploys the fork (Task 22) → fills in the URL in `SUBMISSION.md` + `orientation/deployment.md`.
+2. Cameron re-records demo to ≤5 min, uploads (YouTube unlisted / Loom) → URL into `SUBMISSION.md` + `orientation/demo-video.md`.
+3. Cameron pulls actual Claude spend → fills in `orientation/ai-cost-analysis.md`.
+4. Cameron pushes `master` → `origin/master`. Should be a single `git push origin master`.
+5. Cameron posts the X + LinkedIn drafts → fills in `orientation/social-post.md` "Posted" section.
+
+`git log --oneline origin/master..master | wc -l` shows the current delta. The PR/merge history is preserved across `--no-ff` merges so each Phase 2 category has a labeled branch entry.
 
 ## What's deliberately not tracked
 

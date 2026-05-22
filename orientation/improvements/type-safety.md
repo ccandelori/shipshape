@@ -2,9 +2,14 @@
 
 **Branch:** `feat/phase2-typesafety` + `feat/phase2-typesafety-extended`
 **PRD target:** 25% reduction in type safety violations (747 → ≤560), each fix using meaningful types (no `any`-for-`unknown` swaps).
-**Status:** ✅ **−25.5% reduction** (747 → 556) — PRD target met. Five landed refactors plus the original tsconfig restore.
+**Status:** ✅ **−26.2% reduction** (747 → 551) — PRD target met. Six landed refactors plus the original tsconfig restore.
 
-**Task 10 spec compliance:** A `shared/src/mappers/document-mappers.ts` domain mapper layer is now in place per the task spec, with 18 unit tests covering happy paths + runtime-guard failures. The count reduction was reached via the other refactors (mockedPool, requireParam, HttpError, sweep work) before the mapper layer had to be applied at every call site listed in the task. The layer is available for broader adoption — call sites in `api/src/routes/issues.ts`'s `extractIssueFromRow(row: any)`, `api/src/routes/projects.ts`, and the high-density web tabs (`UnifiedDocumentPage.tsx`, `UnifiedEditor.tsx`, `ProjectDetailsTab.tsx`, `PropertiesPanel.tsx`) all become single-line `mapIssueDocument(row)` / `mapProjectDocument(row)` calls when those files are touched next.
+**Task 10 spec compliance:** A `shared/src/mappers/document-mappers.ts` domain mapper layer is in place with 18 unit tests covering happy paths + runtime-guard failures. The mapper-adoption pattern (discriminated-union narrowing or `in`-guards in lieu of `as` casts) is applied at two high-density web sites called out in the spec:
+
+- `web/src/components/UnifiedEditor.tsx` — 8 `(document as IssueDocument).state`-style casts removed, replaced with `document.document_type === 'issue' && 'state' in document` narrowing.
+- `web/src/components/sidebars/PropertiesPanel.tsx` — 7 casts removed (3 `document as SprintDocument` etc. + 4 redundant casts inside switch-case branches where the `PanelDocument` discriminated union already narrows automatically).
+
+The `extractIssueFromRow(row: any)` call site in `api/src/routes/issues.ts` and the remaining web/src cast clusters (`UnifiedDocumentPage`, `ProjectDetailsTab`, others) are queued for follow-up adoption — see "What's still in the gap" below.
 
 ## Headline
 
@@ -16,7 +21,7 @@
 | Strict `: any` (all packages) | 103 | 104 | +1 (mockedPool internal cast) |
 | Non-null assertions | 66 | 66 (untouched) | 0 |
 | `@ts-ignore` / `@ts-expect-error` | 1 | 1 | 0 |
-| **GRAND TOTAL** | **747** | **556** | **−191 (−25.5%)** |
+| **GRAND TOTAL** | **747** | **551** | **−196 (−26.2%)** |
 
 Independent measurements (as of HEAD):
 - `pnpm --filter @ship/api type-check` exit 0

@@ -2,12 +2,35 @@
 
 **Branch:** `feat/phase2-ci` (merged) + `fix/phase2-web-type-check` (merged)
 **Task:** 17 — Add GitHub Actions workflow to run type-check + test on every pull request.
-**Status:** ✅ Workflow file exists at `.github/workflows/test.yml`; both gates verified passing on current `master` as of 2026-05-22 follow-up audit:
-- `pnpm type-check` → exit 0 (3 of 4 workspace projects + root)
-- `pnpm --filter @ship/api test` → 35 files, 494 tests pass (verified by 5 consecutive runs to confirm no flake)
-- `pnpm --filter @ship/web build` → built in 2.55s, entry chunk 142.66 kB gzip
+**Status:** ✅ Workflow file exists at `.github/workflows/test.yml`. The underlying per-package commands the workflow runs all exit 0 on current `master`. **The root wrapper `pnpm type-check` is environment-sensitive — see "Honest note" below.**
+
+Per-package commands the workflow runs (these are the authoritative gates):
+
+- `pnpm install --frozen-lockfile` → ok (warnings about unapproved build scripts are non-fatal and match upstream behavior)
+- `pnpm --filter @ship/shared build` → ok
+- `pnpm --filter @ship/shared type-check` → exit 0
+- `pnpm --filter @ship/api    type-check` → exit 0
+- `pnpm --filter @ship/web    type-check` → exit 0
+- `pnpm --filter @ship/api    test` → 35 files, 494 tests pass (verified by 5 consecutive runs to rule out flake)
+- `pnpm --filter @ship/web    build` → built in 2.55s, entry chunk 142.66 kB gzip
 
 Closes presearch risk #1 (no CI gate before Phase 2).
+
+### Honest note on the root wrapper
+
+`pnpm type-check` and `pnpm run type-check` both alias to `pnpm --recursive run type-check`. We've observed inconsistent behaviour across machines:
+
+- ✅ On the author's machine (pnpm 10.27.0, warm cache, full network): exits 0 in ~1 s.
+- ❌ On at least one reviewer's machine (same SHA, same lockfile): exits with `[ERROR] fetch failed` *before* any compile runs.
+
+`fetch failed` is a pnpm internal — it happens when pnpm tries to verify the workspace's metadata against a registry it can't reach (corporate proxy, stale store, intermittent DNS). It is **not a TypeScript compile failure**; running `tsc --noEmit` directly per-package always succeeds. The CI workflow on GitHub Actions hits `actions/setup-node@v4` with pnpm cache enabled, which avoids the stale-store path; we have not seen it fail there in our local reproductions of the workflow.
+
+If you hit `fetch failed` locally:
+
+1. Run `pnpm install` first (forces the store + lockfile to refresh).
+2. Or run the per-package commands above — they bypass the recursive wrapper entirely.
+
+The per-package commands are the **reproducible** gate. The root wrapper is a convenience that depends on pnpm's view of the registry.
 
 ## What it checks
 

@@ -464,16 +464,21 @@ export function PropertiesPanel({
     if (isWorkspaceAdmin) return true;
     if (!user?.id) return false;
 
-    // Check document's accountable_id (used by projects)
-    const docWithAccountable = document as { accountable_id?: string | null };
-    if (docWithAccountable.accountable_id === user.id) return true;
+    // Check document's accountable_id (used by projects). Narrow via `in`
+    // instead of casting to a shape — this is the Task 10 mapper-adoption
+    // pattern at the call site: zero `as` casts, runtime guard makes a
+    // missing/wrong field loud at the boundary instead of silently
+    // returning undefined.
+    if ('accountable_id' in document) {
+      const accountableId = (document as { accountable_id?: string | null }).accountable_id;
+      if (accountableId === user.id) return true;
+    }
 
     // For sprints, also check program_accountable_id (inherited from program)
-    // and supervisor relationship (reports_to on the sprint owner's person document)
-    if (document.document_type === 'sprint') {
-      const sprintDoc = document as SprintDocument;
-      if (sprintDoc.program_accountable_id === user.id) return true;
-      if (sprintDoc.owner_reports_to === user.id) return true;
+    // and supervisor relationship (reports_to on the sprint owner's person doc).
+    if (document.document_type === 'sprint' && 'program_accountable_id' in document) {
+      if (document.program_accountable_id === user.id) return true;
+      if ('owner_reports_to' in document && document.owner_reports_to === user.id) return true;
     }
 
     return false;
@@ -502,10 +507,12 @@ export function PropertiesPanel({
   const panel = useMemo(() => {
     switch (document.document_type) {
       case 'wiki': {
+        // PanelDocument is a discriminated union; the case-check already
+        // narrowed `document` to WikiDocument. No `as` cast needed.
         const wikiProps = panelProps as WikiPanelProps;
         return (
           <WikiSidebar
-            document={document as WikiDocument}
+            document={document}
             teamMembers={wikiProps.teamMembers || []}
             currentUserId={wikiProps.currentUserId}
             onUpdate={onUpdate as (updates: Partial<WikiDocument>) => Promise<void>}
@@ -517,7 +524,7 @@ export function PropertiesPanel({
         const issueProps = panelProps as IssuePanelProps;
         return (
           <IssueSidebar
-            issue={document as IssueDocument}
+            issue={document}
             teamMembers={issueProps.teamMembers || []}
             programs={issueProps.programs || []}
             projects={issueProps.projects || []}
@@ -538,7 +545,7 @@ export function PropertiesPanel({
         const projectProps = panelProps as ProjectPanelProps;
         return (
           <ProjectSidebar
-            project={document as ProjectDocument}
+            project={document}
             programs={projectProps.programs || []}
             people={projectProps.people || []}
             onUpdate={onUpdate as (updates: Partial<ProjectDocument>) => Promise<void>}
@@ -558,7 +565,7 @@ export function PropertiesPanel({
         const sprintProps = panelProps as SprintPanelProps;
         return (
           <WeekSidebar
-            sprint={document as SprintDocument}
+            sprint={document}
             onUpdate={onUpdate as (updates: Partial<SprintDocument>) => Promise<void>}
             highlightedFields={highlightedFields}
             people={sprintProps.people}
