@@ -33,6 +33,7 @@ import accountabilityRoutes from './routes/accountability.js';
 import aiRoutes from './routes/ai.js';
 import weeklyPlansRoutes, { weeklyRetrosRouter } from './routes/weekly-plans.js';
 import { documentCommentsRouter, commentsRouter } from './routes/comments.js';
+import healthCollaborationRoutes from './routes/health-collaboration.js';
 import { setupSwagger } from './swagger.js';
 import { initializeCAIA } from './services/caia.js';
 
@@ -171,6 +172,11 @@ export function createApp(corsOrigin: string = 'http://localhost:5173'): express
   app.get('/health', (_req, res) => {
     res.json({ status: 'ok' });
   });
+
+  // Phase 3 / Task 30 — collaboration integrity observability.
+  // /health/collaboration returns JSON; /metrics returns Prometheus text.
+  // No CSRF — read-only, intended for monitoring sidecars + ops dashboards.
+  app.use('/', healthCollaborationRoutes);
 
   // API documentation (no auth needed)
   setupSwagger(app);

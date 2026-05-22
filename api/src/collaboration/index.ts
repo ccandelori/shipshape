@@ -10,6 +10,7 @@ import { extractHypothesisFromContent, extractSuccessCriteriaFromContent, extrac
 import { yjsToJson, jsonToYjs, isTipTapDoc } from '../utils/yjsConverter.js';
 import { SESSION_TIMEOUT_MS, ABSOLUTE_SESSION_TIMEOUT_MS } from '@ship/shared';
 import cookie from 'cookie';
+import { recordPersistFailure, recordWsSession4401 } from './observability.js';
 
 const messageSync = 0;
 const messageAwareness = 1;
@@ -93,6 +94,12 @@ const conns = new Map<WebSocket, { docName: string; awarenessClientId: number; u
 // Global events connections (separate from document collaboration)
 // These persist across navigation and are used for real-time notifications
 const eventConns = new Map<WebSocket, { userId: string; workspaceId: string; sessionId: string }>();
+
+// Read-only snapshot of current WS connection count. Used by the
+// /health/collaboration observability endpoint (Task 30).
+export function getCollabConnectionCount(): { collab: number; events: number; total: number } {
+  return { collab: conns.size, events: eventConns.size, total: conns.size + eventConns.size };
+}
 
 // Debounce persistence (save every 2 seconds after changes)
 const pendingSaves = new Map<string, NodeJS.Timeout>();
@@ -195,6 +202,7 @@ async function persistDocument(docName: string, doc: Y.Doc) {
     }
   } catch (err) {
     console.error('Failed to persist document:', err);
+    recordPersistFailure(docName, docId, err);
   }
 }
 
@@ -475,6 +483,7 @@ export async function revalidateWsSessions(args: {
     if (reason && ws.readyState === WebSocket.OPEN) {
       console.warn(`[${where}] Closing WS for sessionId=${sessionId.slice(0, 8)}… reason=${reason}`);
       ws.close(WS_CLOSE_SESSION_EXPIRED, reason);
+      recordWsSession4401();
       closed.push({ sessionId, reason });
     }
   };
