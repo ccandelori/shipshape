@@ -1,0 +1,36 @@
+=== Sprint lookup by sprint_number (week dashboard / team grid hot path) ===
+                                                               QUERY PLAN                                                                
+-----------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using idx_documents_sprint_number on documents  (cost=0.14..8.16 rows=1 width=246) (actual time=0.006..0.012 rows=5 loops=1)
+   Index Cond: (((properties ->> 'sprint_number'::text))::integer = 12)
+   Buffers: shared hit=5
+ Planning:
+   Buffers: shared hit=361 dirtied=1
+ Planning Time: 0.536 ms
+ Execution Time: 0.024 ms
+(7 rows)
+
+=== Project ownership lookup (dashboard /my-work projects panel) ===
+                                                                 QUERY PLAN                                                                 
+--------------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using idx_documents_project_owner_id on documents  (cost=0.14..8.15 rows=1 width=246) (actual time=0.007..0.008 rows=2 loops=1)
+   Index Cond: (((properties ->> 'owner_id'::text))::uuid = '91de7477-57f5-43b2-9212-f30929b9a132'::uuid)
+   Buffers: shared hit=3
+ Planning:
+   Buffers: shared hit=15
+ Planning Time: 0.085 ms
+ Execution Time: 0.013 ms
+(7 rows)
+
+=== Issue state filter (issues list when filtering by state) ===
+                                                               QUERY PLAN                                                               
+----------------------------------------------------------------------------------------------------------------------------------------
+ Index Scan using idx_documents_issue_state on documents  (cost=0.14..8.16 rows=1 width=246) (actual time=0.008..0.022 rows=11 loops=1)
+   Index Cond: ((properties ->> 'state'::text) = 'in_progress'::text)
+   Buffers: shared hit=6
+ Planning:
+   Buffers: shared hit=21
+ Planning Time: 0.066 ms
+ Execution Time: 0.025 ms
+(7 rows)
+
