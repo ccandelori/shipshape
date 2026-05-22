@@ -18,10 +18,11 @@
 | `@ts-ignore` / `@ts-expect-error` | 1 | 1 | 0 |
 | **GRAND TOTAL** | **747** | **556** | **−191 (−25.5%)** |
 
-Independent measurements:
+Independent measurements (as of HEAD):
 - `pnpm --filter @ship/api type-check` exit 0
-- `pnpm --filter @ship/api test` → 31 files, 464 tests pass
-- `pnpm --filter @ship/web type-check` still surfaces ~80 noUncheckedIndexedAccess errors from the tsconfig restore (documented below — they're the next batch of work, all real bugs)
+- `pnpm --filter @ship/web type-check` exit 0 — all 82 `noUncheckedIndexedAccess` / `noImplicitReturns` errors surfaced by the tsconfig restore have been fixed (see `fix/phase2-web-type-check` merged into master)
+- `pnpm --filter @ship/api test` → 35 files, 494 tests pass
+- `pnpm --filter @ship/web build` → built successfully; entry chunk holds at 142.66 kB gzip
 
 Methodology: identical to baseline (`orientation/baselines/type-safety/counts.txt`):
 ```bash
@@ -105,8 +106,8 @@ The PRD target is met. Honest accounting of work that further reduces the count 
 | Path | Estimated reduction | Notes |
 |---|---:|---|
 | Eliminate remaining `as any` in `transformIssueLinks.test.ts` (15 sites of `await transformIssueLinks(...) as any`) | 15 | Requires narrowing `transformIssueLinks` return type from `Promise<unknown>` to `Promise<TipTapDoc \| unknown>` with a result guard, OR a `TipTap-shaped` test helper |
-| `document as IssueDocument` / `as ProjectDocument` etc. in web/src (`UnifiedEditor`, `UnifiedDocumentPage`, `ProjectDetailsTab`, `PropertiesPanel`) | 60+ | Requires discriminated-union narrowing pattern via `if (document.document_type === 'issue') { … }`. Mechanical but touches UI logic |
-| Finish `noUncheckedIndexedAccess` narrowings exposed by the tsconfig restore (~80 web errors) | (compile errors, not in audit count) | The errors are real bugs (DOM data attributes, lookups with no bounds check). Each fix is small but they're scattered |
+| `document as IssueDocument` / `as ProjectDocument` etc. in the remaining web/src files (`UnifiedDocumentPage`, `ProjectDetailsTab`, remaining call sites in `UnifiedEditor`/`PropertiesPanel`) | 60+ | Requires discriminated-union narrowing pattern via `if (document.document_type === 'issue') { … }`. Mechanical but touches UI logic. **Partial adoption shipped** in this branch — see Section 5 below |
+| (Resolved) `noUncheckedIndexedAccess` narrowings | — | The 82 errors surfaced by the tsconfig restore were all fixed in `fix/phase2-web-type-check`. Web type-check exits 0. |
 
 ## Reproducibility
 

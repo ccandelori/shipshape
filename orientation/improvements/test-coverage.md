@@ -6,7 +6,7 @@
 - 3 critical-path **regression** tests pinning the Phase 2 fixes from Cat 6 and DB-1.
 - 3 critical-path **integration** tests covering the Task 14 spec topics: WebSocket session timeout, document body/properties drift, cascade-delete safety.
 
-Total new coverage: 12 tests across 4 files. Full suite: **476 tests pass** (was 464 before this category).
+Total new coverage: 30 tests across 5 files (12 critical-path + 18 mapper-layer regression tests). Full suite: **494 tests pass** (was 464 before this category) across 35 files. Verified by 5 consecutive full-suite runs at HEAD.
 
 ## What was added
 
@@ -42,7 +42,7 @@ pnpm --filter @ship/api test src/__tests__/phase2-regressions.test.ts
 #       Tests   3 passed (3)
 ```
 
-Full suite stays green: `pnpm --filter @ship/api test` → 30 files, 461 + 3 = 464 tests.
+Full suite stays green: `pnpm --filter @ship/api test` → 35 files, 494 tests (pre-existing 464 + 12 Task 14 + 18 mapper-layer regression).
 
 ## Why these three
 

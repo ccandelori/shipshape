@@ -233,9 +233,14 @@ function WeeklyDocumentSidebar({
   weeklyReviewState?: WeeklyReviewActionsState | null;
 }) {
   const docProperties = document.properties || {};
-  const weekNumber = docProperties.week_number as number | undefined;
-  const personId = docProperties.person_id as string | undefined;
-  const projectId = docProperties.project_id as string | undefined;
+  // Narrow JSONB property reads via typeof guards instead of `as Type` casts
+  // (Task 10 mapper-adoption pattern at a high-density site).
+  const rawWeek = docProperties.week_number;
+  const weekNumber = typeof rawWeek === 'number' ? rawWeek : undefined;
+  const rawPerson = docProperties.person_id;
+  const personId = typeof rawPerson === 'string' ? rawPerson : undefined;
+  const rawProject = docProperties.project_id;
+  const projectId = typeof rawProject === 'string' ? rawProject : undefined;
 
   const isRetro = document.document_type === 'weekly_retro';
   const isReviewMode = weeklyReviewState?.isReviewMode ?? false;
