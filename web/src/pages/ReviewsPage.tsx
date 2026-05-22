@@ -92,6 +92,17 @@ interface ReviewCell {
   retroDocId: string | null;
 }
 
+const EMPTY_REVIEW_CELL: ReviewCell = {
+  planApproval: null,
+  reviewApproval: null,
+  reviewRating: null,
+  hasPlan: false,
+  hasRetro: false,
+  sprintId: null,
+  planDocId: null,
+  retroDocId: null,
+};
+
 interface ReviewsData {
   people: ReviewPerson[];
   weeks: Week[];
@@ -212,9 +223,10 @@ export function ReviewsPage() {
     setData(prev => {
       if (!prev) return prev;
       const updated = { ...prev, reviews: { ...prev.reviews } };
-      updated.reviews[personId] = { ...updated.reviews[personId] };
-      updated.reviews[personId][weekNumber] = {
-        ...updated.reviews[personId][weekNumber],
+      const personReviews = updated.reviews[personId] ?? {};
+      updated.reviews[personId] = { ...personReviews };
+      updated.reviews[personId]![weekNumber] = {
+        ...(updated.reviews[personId]![weekNumber] ?? EMPTY_REVIEW_CELL),
         planApproval: {
           state: 'approved',
           approved_by: null,
@@ -245,9 +257,10 @@ export function ReviewsPage() {
     setData(prev => {
       if (!prev) return prev;
       const updated = { ...prev, reviews: { ...prev.reviews } };
-      updated.reviews[personId] = { ...updated.reviews[personId] };
-      updated.reviews[personId][weekNumber] = {
-        ...updated.reviews[personId][weekNumber],
+      const personReviews = updated.reviews[personId] ?? {};
+      updated.reviews[personId] = { ...personReviews };
+      updated.reviews[personId]![weekNumber] = {
+        ...(updated.reviews[personId]![weekNumber] ?? EMPTY_REVIEW_CELL),
         [approvalField]: { state: 'changes_requested', approved_by: null, approved_at: new Date().toISOString(), feedback },
       };
       return updated;
@@ -270,9 +283,10 @@ export function ReviewsPage() {
     setData(prev => {
       if (!prev) return prev;
       const updated = { ...prev, reviews: { ...prev.reviews } };
-      updated.reviews[personId] = { ...updated.reviews[personId] };
-      updated.reviews[personId][weekNumber] = {
-        ...updated.reviews[personId][weekNumber],
+      const personReviews = updated.reviews[personId] ?? {};
+      updated.reviews[personId] = { ...personReviews };
+      updated.reviews[personId]![weekNumber] = {
+        ...(updated.reviews[personId]![weekNumber] ?? EMPTY_REVIEW_CELL),
         reviewApproval: {
           state: 'approved',
           approved_by: null,
