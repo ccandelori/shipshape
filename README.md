@@ -44,6 +44,16 @@ Phase 2 PRD scoreboard:
 | 6 | Runtime Error Handling | 3 gaps, ≥1 data-loss | ✅ 3 gaps (silent NULL + verbose errors + WS expiry) |
 | 7 | Accessibility | 10+ Lighthouse pts OR Critical/Serious fixed | ✅ 0/0 Critical/Serious across all 8 routes |
 
+### Phase 3 — institutional-memory work
+
+Turns the audit into a permanent gate. Lives on two unmerged feature branches off `master`:
+
+| What | Run | Doc |
+|---|---|---|
+| `pnpm shipshape` — full-mode quality scoreboard, exits nonzero on any category regression | `pnpm shipshape` (~20s) → [`orientation/shipshape-report.md`](orientation/shipshape-report.md) | [`orientation/improvements/shipshape.md`](orientation/improvements/shipshape.md) |
+| `pnpm shipshape:ci` — lite-mode gate wired into `.github/workflows/test.yml`; per-PR report uploaded as a workflow artifact | `pnpm shipshape:ci` (~17s) | same |
+| `/health/collaboration` (JSON) + `/metrics` (Prometheus) — runtime visibility for the silent-data-loss class fixed in Phase 2 | `curl localhost:3000/health/collaboration` | [`orientation/improvements/collab-observability.md`](orientation/improvements/collab-observability.md) |
+
 Everything else (upstream Ship behavior, deployment, etc.) is unchanged from the parent repo's HEAD.
 
 ---
