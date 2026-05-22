@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
 import { apiGet, apiPost } from '@/lib/api';
 import { usePrograms } from '@/hooks/useProgramsQuery';
 import { useToast } from '@/components/ui/Toast';
@@ -81,16 +82,6 @@ export function MergeProgramDialog({ isOpen, onClose, sourceId, sourceName }: Me
     return () => { cancelled = true; };
   }, [targetId, sourceId]);
 
-  // Handle escape key
-  useEffect(() => {
-    if (!isOpen || isMerging) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isMerging, onClose]);
-
   const handleMerge = async () => {
     if (!targetId || confirmText !== sourceName) return;
 
@@ -122,10 +113,6 @@ export function MergeProgramDialog({ isOpen, onClose, sourceId, sourceName }: Me
     }
   };
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget && !isMerging) onClose();
-  };
-
   if (!isOpen) return null;
 
   const totalEntities = preview
@@ -135,17 +122,30 @@ export function MergeProgramDialog({ isOpen, onClose, sourceId, sourceName }: Me
   const confirmMatch = confirmText === sourceName;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      role="dialog"
-      aria-modal="true"
-      onClick={handleBackdropClick}
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open && !isMerging) onClose();
+      }}
     >
-      <div className="w-full max-w-md rounded-lg bg-background p-6 shadow-lg">
-        <h2 className="mb-1 text-lg font-semibold text-foreground">Merge Program</h2>
-        <p className="mb-4 text-sm text-muted">
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
+        <Dialog.Content
+          className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-lg bg-background p-6 shadow-lg focus:outline-none"
+          onEscapeKeyDown={(e) => {
+            if (isMerging) e.preventDefault();
+          }}
+          onPointerDownOutside={(e) => {
+            if (isMerging) e.preventDefault();
+          }}
+          onInteractOutside={(e) => {
+            if (isMerging) e.preventDefault();
+          }}
+        >
+        <Dialog.Title className="mb-1 text-lg font-semibold text-foreground">Merge Program</Dialog.Title>
+        <Dialog.Description className="mb-4 text-sm text-muted">
           Move all content from <strong>{sourceName}</strong> into another program.
-        </p>
+        </Dialog.Description>
 
         {/* Target selection */}
         <div className="mb-4">
@@ -257,7 +257,8 @@ export function MergeProgramDialog({ isOpen, onClose, sourceId, sourceName }: Me
             )}
           </button>
         </div>
-      </div>
-    </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }

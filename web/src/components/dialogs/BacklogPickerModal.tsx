@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import * as Dialog from '@radix-ui/react-dialog';
 import { useIssuesQuery, useUpdateIssue, getSprintId, getProjectId, getProgramId } from '@/hooks/useIssuesQuery';
 import { Issue } from '@/contexts/IssuesContext';
 import { cn } from '@/lib/cn';
@@ -105,18 +106,6 @@ export function BacklogPickerModal({ isOpen, onClose, context, onIssuesAdded }: 
     return { availableIssues: filtered, alreadyInContext: inContext };
   }, [allIssues, context, searchQuery]);
 
-  // Handle Escape key
-  useEffect(() => {
-    if (!isOpen || isAdding) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, isAdding, onClose]);
-
   // Reset state when modal opens
   useEffect(() => {
     if (isOpen) {
@@ -203,28 +192,34 @@ export function BacklogPickerModal({ isOpen, onClose, context, onIssuesAdded }: 
     }
   }, [selectedIds, availableIssues, context, contextName, onClose, onIssuesAdded, showToast]);
 
-  // Handle click outside dialog
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === e.currentTarget && !isAdding) {
-      onClose();
-    }
-  };
-
   if (!isOpen) return null;
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50"
-      role="dialog"
-      aria-modal="true"
-      onClick={handleBackdropClick}
+    <Dialog.Root
+      open={isOpen}
+      onOpenChange={(open) => {
+        if (!open && !isAdding) onClose();
+      }}
     >
-      <div className="w-full max-w-3xl h-[80vh] flex flex-col rounded-lg bg-background shadow-lg">
+      <Dialog.Portal>
+        <Dialog.Overlay className="fixed inset-0 z-50 bg-black/50" />
+        <Dialog.Content
+          className="fixed left-1/2 top-1/2 z-50 w-full max-w-3xl h-[80vh] -translate-x-1/2 -translate-y-1/2 flex flex-col rounded-lg bg-background shadow-lg focus:outline-none"
+          onEscapeKeyDown={(e) => {
+            if (isAdding) e.preventDefault();
+          }}
+          onPointerDownOutside={(e) => {
+            if (isAdding) e.preventDefault();
+          }}
+          onInteractOutside={(e) => {
+            if (isAdding) e.preventDefault();
+          }}
+        >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-border px-6 py-4">
           <div>
-            <h2 className="text-lg font-semibold text-foreground">Add to {contextName}</h2>
-            <p className="text-sm text-muted">Select issues from the backlog to add to this {contextType}</p>
+            <Dialog.Title className="text-lg font-semibold text-foreground">Add to {contextName}</Dialog.Title>
+            <Dialog.Description className="text-sm text-muted">Select issues from the backlog to add to this {contextType}</Dialog.Description>
           </div>
           <button
             onClick={onClose}
@@ -353,7 +348,8 @@ export function BacklogPickerModal({ isOpen, onClose, context, onIssuesAdded }: 
             </button>
           </div>
         </div>
-      </div>
-    </div>
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   );
 }
