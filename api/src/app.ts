@@ -150,14 +150,23 @@ export function createApp(corsOrigin: string = 'http://localhost:5173'): express
   app.use(express.urlencoded({ extended: true, limit: '10mb' })); // For HTML form submissions
   app.use(cookieParser(sessionSecret));
 
-  // Session middleware for CSRF token storage
+  // Session middleware for CSRF token storage.
+  //
+  // cookie.secure defaults to true in production (correct for HTTPS deploys
+  // behind CloudFront / nginx-with-TLS). For HTTP-only deploys — e.g. a demo
+  // droplet without a domain or TLS yet — set SHIP_COOKIES_SECURE=0 in the
+  // environment so the cookie is sent over HTTP. Anything other than '0'
+  // keeps the secure-in-production default.
+  const cookiesSecure = process.env.SHIP_COOKIES_SECURE === '0'
+    ? false
+    : process.env.NODE_ENV === 'production';
   app.use(session({
     secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: cookiesSecure,
       sameSite: 'strict',
       maxAge: 15 * 60 * 1000, // 15 minutes
     },
