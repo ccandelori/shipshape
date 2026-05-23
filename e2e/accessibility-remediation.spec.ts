@@ -153,17 +153,23 @@ test.describe('Phase 1: Critical Violations', () => {
       await issueLink.click()
       await page.waitForLoadState('networkidle')
 
-      // MUST have at least one combobox (status, assignee, etc.)
-      const combobox = page.locator('[aria-haspopup="listbox"], [role="combobox"]').first()
+      // Scope the combobox lookup to the properties sidebar specifically.
+      // Without this anchor, `.first()` was picking up the issues-list filter
+      // combobox (e.g. #issues-program-filter-listbox) that's still on the
+      // DOM during the route transition, and the subsequent listbox-visible
+      // assertion would race against the wrong popup (Task 31).
+      const propsPanel = page.getByTestId('properties-panel')
+      await expect(propsPanel).toBeVisible({ timeout: 5000 })
+
+      const combobox = propsPanel.locator('[aria-haspopup="listbox"], [role="combobox"]').first()
       await expect(combobox).toBeVisible({ timeout: 5000 })
 
-      // MUST have aria-controls pointing to the listbox
-      const ariaControls = await combobox.getAttribute('aria-controls')
-      expect(ariaControls).toBeTruthy()
+      // Auto-waiting matchers so attribute reads don't race the combobox mount.
+      await expect(combobox).toHaveAttribute('aria-controls', /.+/)
+      await expect(combobox).toHaveAttribute('aria-expanded', /.*/)
 
-      // MUST have aria-expanded attribute
-      const ariaExpanded = await combobox.getAttribute('aria-expanded')
-      expect(ariaExpanded).not.toBeNull()
+      // Now safe to capture the controls id for the listbox lookup below.
+      const ariaControls = await combobox.getAttribute('aria-controls')
 
       // Click to open and verify listbox appears
       await combobox.click()

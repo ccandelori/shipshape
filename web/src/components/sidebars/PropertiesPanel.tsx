@@ -613,7 +613,10 @@ export function PropertiesPanel({
     return null;
   }, [document, panelProps, onUpdate, highlightedFields, canApprove, userNames, handleApprovalUpdate, weeklyReviewState]);
 
-  return panel;
+  // Wrap in a stable test anchor so E2E tests can scope queries to the
+  // properties sidebar specifically (e.g. distinguish a properties-side
+  // combobox from a filter combobox on the parent list page).
+  return <div data-testid="properties-panel">{panel}</div>;
 }
 
 // Re-export types for convenience
