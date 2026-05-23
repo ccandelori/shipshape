@@ -35,6 +35,7 @@ import weeklyPlansRoutes, { weeklyRetrosRouter } from './routes/weekly-plans.js'
 import { documentCommentsRouter, commentsRouter } from './routes/comments.js';
 import healthCollaborationRoutes from './routes/health-collaboration.js';
 import { setupSwagger } from './swagger.js';
+import { COOKIE_SECURE } from './utils/cookieSecure.js';
 import { initializeCAIA } from './services/caia.js';
 
 // Validate SESSION_SECRET in production
@@ -150,14 +151,15 @@ export function createApp(corsOrigin: string = 'http://localhost:5173'): express
   app.use(express.urlencoded({ extended: true, limit: '10mb' })); // For HTML form submissions
   app.use(cookieParser(sessionSecret));
 
-  // Session middleware for CSRF token storage
+  // Session middleware for CSRF token storage. cookie.secure flag shared
+  // with the auth session_id cookie via COOKIE_SECURE — see utils/cookieSecure.
   app.use(session({
     secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: COOKIE_SECURE,
       sameSite: 'strict',
       maxAge: 15 * 60 * 1000, // 15 minutes
     },

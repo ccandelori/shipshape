@@ -120,3 +120,6 @@ vendor/
 
 # Vite PWA dev artifacts
 web/dev-dist/
+
+# Droplet deploy bundles (built by scripts/deploy-droplet.sh)
+.deploy/
