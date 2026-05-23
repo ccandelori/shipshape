@@ -35,6 +35,7 @@ import weeklyPlansRoutes, { weeklyRetrosRouter } from './routes/weekly-plans.js'
 import { documentCommentsRouter, commentsRouter } from './routes/comments.js';
 import healthCollaborationRoutes from './routes/health-collaboration.js';
 import { setupSwagger } from './swagger.js';
+import { COOKIE_SECURE } from './utils/cookieSecure.js';
 import { initializeCAIA } from './services/caia.js';
 
 // Validate SESSION_SECRET in production
@@ -150,23 +151,15 @@ export function createApp(corsOrigin: string = 'http://localhost:5173'): express
   app.use(express.urlencoded({ extended: true, limit: '10mb' })); // For HTML form submissions
   app.use(cookieParser(sessionSecret));
 
-  // Session middleware for CSRF token storage.
-  //
-  // cookie.secure defaults to true in production (correct for HTTPS deploys
-  // behind CloudFront / nginx-with-TLS). For HTTP-only deploys — e.g. a demo
-  // droplet without a domain or TLS yet — set SHIP_COOKIES_SECURE=0 in the
-  // environment so the cookie is sent over HTTP. Anything other than '0'
-  // keeps the secure-in-production default.
-  const cookiesSecure = process.env.SHIP_COOKIES_SECURE === '0'
-    ? false
-    : process.env.NODE_ENV === 'production';
+  // Session middleware for CSRF token storage. cookie.secure flag shared
+  // with the auth session_id cookie via COOKIE_SECURE — see utils/cookieSecure.
   app.use(session({
     secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: cookiesSecure,
+      secure: COOKIE_SECURE,
       sameSite: 'strict',
       maxAge: 15 * 60 * 1000, // 15 minutes
     },

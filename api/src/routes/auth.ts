@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import type { Router as RouterType } from 'express';
 import bcrypt from 'bcryptjs';
+import { COOKIE_SECURE } from '../utils/cookieSecure.js';
 import crypto from 'crypto';
 import { pool } from '../db/client.js';
 import { authMiddleware } from '../middleware/auth.js';
@@ -184,7 +185,7 @@ router.post('/login', async (req: Request, res: Response): Promise<void> => {
     // Set cookie with hardened security options
     res.cookie('session_id', sessionId, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: COOKIE_SECURE,
       sameSite: 'strict', // Strict for government applications
       maxAge: SESSION_TIMEOUT_MS,
       path: '/',
@@ -240,7 +241,7 @@ router.post('/logout', authMiddleware, async (req: Request, res: Response): Prom
     // Clear cookie with same options used when setting it
     res.clearCookie('session_id', {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: COOKIE_SECURE,
       sameSite: 'strict',
       path: '/',
     });
@@ -363,7 +364,7 @@ router.post('/extend-session', authMiddleware, async (req: Request, res: Respons
     // Refresh cookie with new maxAge (sliding expiration)
     res.cookie('session_id', req.sessionId, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: COOKIE_SECURE,
       sameSite: 'strict',
       maxAge: SESSION_TIMEOUT_MS,
       path: '/',

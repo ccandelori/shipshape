@@ -1,6 +1,7 @@
 import { Router, Request, Response } from 'express';
 import type { Router as RouterType } from 'express';
 import bcrypt from 'bcryptjs';
+import { COOKIE_SECURE } from '../utils/cookieSecure.js';
 import { v4 as uuidv4 } from 'uuid';
 import { pool } from '../db/client.js';
 import { ERROR_CODES, HTTP_STATUS, SESSION_TIMEOUT_MS } from '@ship/shared';
@@ -245,7 +246,7 @@ router.post('/:token/accept', async (req: Request, res: Response): Promise<void>
     // Set cookie
     res.cookie('session_id', sessionId, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: COOKIE_SECURE,
       sameSite: 'lax',
       maxAge: SESSION_TIMEOUT_MS,
     });
