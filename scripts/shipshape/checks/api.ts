@@ -8,6 +8,7 @@
 // if either is missing — we don't want the full audit to error on a fresh
 // machine that hasn't seeded a session.
 
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { CategoryCheck } from '../types.ts';
@@ -17,6 +18,12 @@ const REGRESSION_FACTOR = 1.1; // allow at most 10% slowdown vs after-* number
 const DURATION_S = 10; // shorter than the 30s baseline to keep `pnpm shipshape` < 5min
 const CONCURRENCY = 25;
 const API_URL = process.env.SHIPSHAPE_API_URL ?? 'http://localhost:3000';
+
+// Permissive enough for Express signed session cookies (URL-encoded "s%3A<id>.<sig>")
+// while excluding every shell metacharacter. SHIPSHAPE_SESSION_COOKIE is operator-
+// supplied via env, so we treat it as untrusted input before it touches any shell
+// string. The autocannon call uses execFileSync (no shell) for defense in depth.
+const SESSION_COOKIE_RE = /^[A-Za-z0-9._%-]{16,1024}$/;
 
 const ENDPOINTS = [
   { path: '/api/auth/me', slug: 'api_auth_me' },
@@ -60,20 +67,53 @@ const api: CategoryCheck = (_ctx) =>
             'Cat 3 needs a session_id cookie for an admin user. Get one by logging in to web at :5173 then DevTools → Cookies → session_id. Export as SHIPSHAPE_SESSION_COOKIE and re-run.',
         };
       }
+      if (!SESSION_COOKIE_RE.test(cookie)) {
+        return {
+          actual: 'SHIPSHAPE_SESSION_COOKIE has unexpected shape',
+          status: 'skip' as const,
+          notes:
+            'Expected 16-1024 chars of [A-Za-z0-9._%-] (URL-safe base64 or URL-encoded signed cookie). Refusing to pass non-conforming input to the shell — re-export the value as it appears in DevTools.',
+        };
+      }
+
+      // Validate API_URL — must be a parseable http(s) URL. SHIPSHAPE_API_URL
+      // is also operator-supplied; reject anything that would inject into the
+      // curl burst probe's shell command.
+      let apiUrlParsed: URL;
+      try {
+        apiUrlParsed = new URL(API_URL);
+      } catch {
+        return {
+          actual: `SHIPSHAPE_API_URL not a valid URL: ${API_URL}`,
+          status: 'skip' as const,
+          notes: 'Set SHIPSHAPE_API_URL to a full http(s) URL like http://localhost:3000.',
+        };
+      }
+      if (apiUrlParsed.protocol !== 'http:' && apiUrlParsed.protocol !== 'https:') {
+        return {
+          actual: `SHIPSHAPE_API_URL must be http(s); got ${apiUrlParsed.protocol}`,
+          status: 'skip' as const,
+        };
+      }
+      // Reconstruct from parsed components so any pre-shell metacharacters
+      // in the original env are dropped.
+      const safeApiBase = `${apiUrlParsed.protocol}//${apiUrlParsed.host}${apiUrlParsed.pathname.replace(/\/+$/, '')}`;
 
       // Health probe — fail fast if API isn't running.
-      const probe = shTry(`curl -sf --max-time 3 ${API_URL}/health`);
+      const probe = shTry(`curl -sf --max-time 3 ${safeApiBase}/health`);
       if (probe.code !== 0) {
         return {
-          actual: `API not reachable at ${API_URL}`,
+          actual: `API not reachable at ${safeApiBase}`,
           status: 'skip' as const,
           notes: `Start the API with: E2E_TEST=1 pnpm dev:api (so the X-Bench rate-limit bypass is active).`,
         };
       }
 
-      // Confirm X-Bench bypass is active — burst probe.
+      // Confirm X-Bench bypass is active — burst probe. cookie + safeApiBase
+      // have both been validated against the regex / URL parser above, so
+      // shell interpolation here can't introduce metacharacters.
       const burst = shTry(
-        `for i in $(seq 1 30); do curl -s -o /dev/null -w '%{http_code} ' -H 'Cookie: session_id=${cookie}' -H 'X-Bench: 1' ${API_URL}/api/auth/me; done`
+        `for i in $(seq 1 30); do curl -s -o /dev/null -w '%{http_code} ' -H 'Cookie: session_id=${cookie}' -H 'X-Bench: 1' ${safeApiBase}/api/auth/me; done`
       );
       if (/429/.test(burst.stdout)) {
         return {
@@ -87,30 +127,57 @@ const api: CategoryCheck = (_ctx) =>
 
       // Run autocannon against each endpoint sequentially (parallel runs would
       // contend on the same DB connection pool and skew percentiles).
+      // baseline is null on a crash so we don't pretend 0/0 was the target.
       const per: Array<{
         slug: string;
         path: string;
         current: AutocannonJson | null;
-        baseline: { p90: number; p97_5: number };
+        baseline: { p90: number; p97_5: number } | null;
         regressedFields: string[];
       }> = [];
 
       for (const ep of ENDPOINTS) {
         const outFile = path.join(CACHE_DIR, `api-${ep.slug}-c${CONCURRENCY}.json`);
-        const cmd =
-          `pnpm exec autocannon ` +
-          `-c ${CONCURRENCY} -d ${DURATION_S} ` +
-          `-H "Cookie: session_id=${cookie}" -H "X-Bench: 1" ` +
-          `--json "${API_URL}${ep.path}"`;
-        const res = shTry(cmd, { cwd: REPO_ROOT });
-        await fs.writeFile(outFile, res.stdout, 'utf8');
 
-        if (res.code !== 0) {
-          per.push({ slug: ep.slug, path: ep.path, current: null, baseline: { p90: 0, p97_5: 0 }, regressedFields: ['autocannon crashed'] });
+        // execFileSync with array args — no shell, so even if cookie / URL
+        // bypassed validation, they couldn't introduce metacharacters here.
+        let stdout: string;
+        let crashed = false;
+        try {
+          stdout = execFileSync(
+            'pnpm',
+            [
+              'exec',
+              'autocannon',
+              '-c', String(CONCURRENCY),
+              '-d', String(DURATION_S),
+              '-H', `Cookie: session_id=${cookie}`,
+              '-H', 'X-Bench: 1',
+              '--json',
+              `${safeApiBase}${ep.path}`,
+            ],
+            { cwd: REPO_ROOT, encoding: 'utf8', maxBuffer: 50 * 1024 * 1024, stdio: ['ignore', 'pipe', 'pipe'] }
+          );
+        } catch (e) {
+          const err = e as { stdout?: string | Buffer; status?: number };
+          stdout =
+            typeof err.stdout === 'string' ? err.stdout : (err.stdout?.toString('utf8') ?? '');
+          crashed = true;
+        }
+        await fs.writeFile(outFile, stdout, 'utf8');
+
+        if (crashed) {
+          per.push({
+            slug: ep.slug,
+            path: ep.path,
+            current: null,
+            baseline: null,
+            regressedFields: ['autocannon crashed'],
+          });
           continue;
         }
 
-        const current = JSON.parse(res.stdout) as AutocannonJson;
+        const current = JSON.parse(stdout) as AutocannonJson;
         const baseline = await readBaselineP90P975(ep.slug);
         const regressedFields: string[] = [];
         if (current.latency.p90 > baseline.p90 * REGRESSION_FACTOR) {

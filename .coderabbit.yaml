@@ -1,0 +1,86 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+#
+# CodeRabbit configuration — focus reviews on production code.
+# Excludes documentation, generated artifacts, audit baselines, lock files,
+# coverage, and other non-code surface so reviews stay signal-dense.
+#
+# Kept IN scope: TS/JS, SQL migrations, GitHub Actions workflows, vitest
+# tests, Playwright e2e, and the shipshape orchestrator scripts.
+
+language: "en-US"
+
+reviews:
+  profile: "chill"
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+  review_status: true
+  collapse_walkthrough: false
+
+  path_filters:
+    # ── Documentation (all Markdown is doc here) ────────────────────────
+    - "!**/*.md"
+    - "!**/*.mdx"
+    - "!docs/**"
+    - "!orientation/**"
+
+    # ── Generated / lock files ──────────────────────────────────────────
+    - "!**/pnpm-lock.yaml"
+    - "!**/package-lock.json"
+    - "!**/yarn.lock"
+    - "!**/*.tsbuildinfo"
+
+    # ── Build + coverage output ─────────────────────────────────────────
+    - "!**/dist/**"
+    - "!**/build/**"
+    - "!**/.next/**"
+    - "!**/coverage/**"
+    - "!**/.turbo/**"
+    - "!**/.vite/**"
+
+    # ── Task / audit / scratch state ────────────────────────────────────
+    - "!.taskmaster/**"
+    - "!.agents/**"
+    - "!.codex/**"
+    - "!.claude/**"
+    - "!plans/**"
+    - "!research/**"
+
+    # ── Binary / media ──────────────────────────────────────────────────
+    - "!**/*.png"
+    - "!**/*.jpg"
+    - "!**/*.jpeg"
+    - "!**/*.gif"
+    - "!**/*.svg"
+    - "!**/*.ico"
+    - "!**/*.pdf"
+    - "!**/*.webp"
+    - "!**/*.woff"
+    - "!**/*.woff2"
+
+    # ── Logs + reports + snapshots ──────────────────────────────────────
+    - "!**/*.log"
+    - "!**/__snapshots__/**"
+    - "!**/*.snap"
+    - "!**/playwright-report/**"
+    - "!**/test-results/**"
+
+    # ── Terraform state / lock (config is reviewed; state is not) ───────
+    - "!terraform/**/*.tfstate"
+    - "!terraform/**/*.tfstate.backup"
+    - "!terraform/**/.terraform.lock.hcl"
+    - "!terraform/**/.terraform/**"
+
+    # ── Re-include items the broad orientation/** rule would have hidden
+    # but which are actually first-class code (none today, but this is
+    # the place to add them if they appear).
+
+  auto_review:
+    enabled: true
+    drafts: false
+    base_branches:
+      - "master"
+      - "main"
+
+chat:
+  auto_reply: true
