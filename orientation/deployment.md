@@ -40,7 +40,8 @@ The `feat/droplet-deploy` branch adds one small code change to enable non-AWS de
                  │  /                → static /opt/ship/current/web/dist
                  │  /assets/*        → static, cache-immutable
                  │  /api/*           → proxy localhost:3000
-                 │  /collaboration/* → proxy localhost:3000 (WS)
+                 │  /collaboration/* → proxy localhost:3000 (WS — Yjs docs)
+                 │  /events          → proxy localhost:3000 (WS — realtime notifications)
                  │  /health          → proxy localhost:3000
                  └────────────┬───────────────────────────────────┘
                               │
