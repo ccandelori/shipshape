@@ -2068,6 +2068,20 @@
         "metadata": {
           "created_for": "Phase 3+ E2E reliability — surfaced on master @ e3dbdc2 after the dbContainer timeout fix."
         }
+      },
+      {
+        "id": "33",
+        "title": "(flake) my-week stale-data tests don't wait for /my-week to reflect plan/retro edits after navigating back",
+        "description": "Two tests in e2e/my-week-stale-data.spec.ts flake intermittently with `expect(locator).toBeVisible() failed`: 'plan edits are visible on /my-week after navigating back' (line 28) and 'retro edits are visible on /my-week after navigating back' (line 63). Both surface in the Phase 3 full E2E run and survived both the dbContainer-timeout fix and the Tasks 31/32 work — they're a separate test-design race around cache invalidation on the /my-week page.",
+        "details": "Files: e2e/my-week-stale-data.spec.ts (lines 28 and 63)\nFailure mode: the test edits a plan/retro, navigates back to /my-week, and asserts the edit is visible. Sometimes /my-week shows stale data and the assertion times out on toBeVisible.\n\nLikely causes:\n(a) The plan/retro write returns before the API/UI cache is invalidated, and the navigation back reads stale state.\n(b) A debounced save (collaboration provider commits Yjs state on a 2s debounce per api/src/collaboration/index.ts:98) means the edit isn't persisted by the time navigation completes — only the local Yjs state reflects it, not the API-served /my-week query.\n(c) The /my-week endpoint caches per-user data and isn't invalidated by the document write.\n\nFix candidates:\n- (a/c): explicit cache invalidation on plan/retro write, or query-keyed refetch after navigation.\n- (b): the test should wait for the debounced persist to complete before navigating away (e.g. wait for the editor's data-testid='sync-status' element to show 'Saved', already present per Editor.tsx:858).\n\nThe sync-status testid is the strongest signal — option (b) is the most likely fix and is test-side rather than handler-side.\n\nWhy it surfaced: caught in the full E2E run on master @ 17c4ba8 and in the regression sweep on fix/e2e-test-flakes @ 68c2cb4 (both times as 2 flakes, both passing on retry). Pre-existing.",
+        "testStrategy": "(1) Reproduce locally with --repeat-each=10 --retries=0 to confirm the flake rate. (2) Apply the chosen fix — likely a wait for the sync-status element to show 'Saved' before navigating back. (3) Re-soak 10x: expect 0 flakes.",
+        "priority": "low",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [],
+        "metadata": {
+          "created_for": "Phase 3+ E2E reliability — third flake observed during fix/e2e-test-flakes work."
+        }
       }
     ],
     "metadata": {
