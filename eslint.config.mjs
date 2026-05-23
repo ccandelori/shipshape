@@ -73,22 +73,42 @@ export default tseslint.config(
   // ── JS base ──────────────────────────────────────────────────────────
   js.configs.recommended,
 
+  // ── no-undef off everywhere ─────────────────────────────────────────
+  // TypeScript catches undeclared variables at compile time for .ts/.tsx;
+  // for .js/.mjs scripts the globals overrides below set process/console/
+  // document/etc. ESLint's no-undef adds noise without catching anything
+  // tsc + a 30-line globals list don't already catch.
+  {
+    rules: { 'no-undef': 'off' },
+  },
+
   // ── TS base (without type-checking — fast, runs on every file) ──────
   // The type-checked rules below run as a second pass against tsconfigs.
   ...tseslint.configs.recommended,
 
   // ── TS strict + typed-lint rules on api/web/shared source ────────────
+  // Skips e2e/* and api/src/test/* (both excluded from their package
+  // tsconfigs, can't run typed-lint without parse errors). Those still
+  // get the base TS rules from `tseslint.configs.recommended` above.
   {
     files: ['api/src/**/*.ts', 'web/src/**/*.{ts,tsx}', 'shared/src/**/*.ts'],
+    ignores: ['api/src/test/**', 'api/src/test-utils/**', '**/*.test.ts', '**/*.test.tsx'],
     languageOptions: {
       parserOptions: {
-        // Allow type-checked rules without forcing a single root tsconfig —
-        // each package has its own. typescript-eslint v8 supports an array.
-        project: ['./api/tsconfig.json', './web/tsconfig.json', './shared/tsconfig.json'],
+        // projectService autodiscovers the right tsconfig for each file
+        // (typescript-eslint v8+). Avoids the maintenance burden of listing
+        // every project + the EXCLUDE-mismatch trap (api/src/test was
+        // excluded from api/tsconfig and would error here without projectService).
+        projectService: true,
         tsconfigRootDir: import.meta.dirname,
       },
     },
     rules: {
+      // TypeScript's own compiler catches undeclared variables at build time;
+      // ESLint's no-undef is unreliable on TS source (misses ambient types,
+      // doesn't understand declaration merging, fights with DOM/Node globals).
+      // Disable across all TS source. tsc --noEmit is the gate.
+      'no-undef': 'off',
       // ── Cat 1 — Type Safety ──────────────────────────────────────────
       // WARN-level so the existing 548-violation baseline doesn't block;
       // shipshape Cat 1 is the authoritative count gate.
@@ -206,11 +226,25 @@ export default tseslint.config(
     },
   },
 
-  // ── Node globals for api + shared + scripts ──────────────────────────
+  // ── Node globals for api + shared + scripts + .mjs helpers ──────────
   {
-    files: ['api/src/**/*.ts', 'shared/src/**/*.ts', 'scripts/**/*.ts', 'e2e/**/*.ts'],
+    files: [
+      'api/src/**/*.ts',
+      'shared/src/**/*.ts',
+      'scripts/**/*.{ts,js,mjs}',
+      'e2e/**/*.ts',
+      'orientation/**/*.{js,mjs}', // axe-scan-after.mjs, keyboard-walks.mjs, etc.
+      '*.mjs',
+      '*.js',
+    ],
     languageOptions: {
-      globals: { ...globals.node },
+      globals: { ...globals.node, ...globals.browser }, // .mjs scripts use both (playwright opens a browser)
+    },
+    rules: {
+      // TypeScript handles undeclared-variable checking for .ts files; for
+      // plain .js/.mjs scripts we rely on globals (set above) + no-undef.
+      // Disable no-undef on .ts (typescript-eslint convention) but keep it
+      // on .js/.mjs where TS isn't involved.
     },
   },
 
