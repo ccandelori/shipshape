@@ -2063,7 +2063,7 @@
         "testStrategy": "(1) Run the test 10x in a row before fix; observe flakes. (2) Apply the chosen fix. (3) Re-run 10x: 0 flakes. (4) If (b) is the cause, document the cache-lag behavior as a known property of the allocation grid endpoint so future tests don't hit it.",
         "priority": "low",
         "dependencies": [],
-        "status": "pending",
+        "status": "done",
         "subtasks": [],
         "metadata": {
           "created_for": "Phase 3+ E2E reliability — surfaced on master @ e3dbdc2 after the dbContainer timeout fix."
