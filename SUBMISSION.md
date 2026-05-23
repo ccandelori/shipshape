@@ -79,10 +79,14 @@ Source assets:
 
 ### 7. Deployed Application
 
-**Status:** ⏳ Deploy + smoke test pending. See [`orientation/deployment.md`](orientation/deployment.md) for the runbook.
+**Status:** 🟢 Live. See [`orientation/deployment.md`](orientation/deployment.md) for the runbook + bootstrap recipe.
 
-Public URL of the improved fork: **[NOT YET DEPLOYED]**
-Backend health check: **[NOT YET DEPLOYED]**
+Public URL of the improved fork: **http://143.198.163.184/**
+Backend health check: `curl -sf http://143.198.163.184/health` → `{"status":"ok"}`
+
+DigitalOcean Basic 2 GB droplet, NYC1, Ubuntu 24.04. Node + Postgres 16 + nginx + WS upgrade for `/collaboration` (Yjs sync) and `/events` (realtime notifications). systemd-managed `ship-api.service`; one-command redeploy via `bash scripts/deploy-droplet.sh`. HTTP-only for the demo (certbot installed; needs a domain to issue TLS).
+
+Setup flow on first visit: the app lands on `/setup`, prompts for admin account creation, and routes to `/my-week` after submission. The deployed DB has no seed data — graders create their own admin and explore an empty workspace, or run the seed via `ssh ship@143.198.163.184 'cd /opt/ship/current/api && set -a; . /etc/ship/env; set +a; node dist/db/seed.js'` (see deployment.md).
 
 ### 7.5 Compliance scan (security)
 
@@ -199,17 +203,18 @@ pnpm --filter @ship/api exec vitest run src/__tests__/collaboration-health.test.
 
 ## Push status
 
-As of writing, `master` is **45 commits ahead** of `origin/master` and **not pushed**. The Phase 2 work lives entirely in those 45 local commits.
+`master` was at one point 76 commits ahead of `origin/master`, holding Phase 2 + Phase 3 + the DigitalOcean droplet code paths + ESLint config + E2E flake fixes. All pushed in a single `git push origin master` after the deploy went live.
 
-The brief's "GitHub Repository" deliverable is not satisfied until those commits are pushed to the public fork (`labs.gauntletai.com/cameroncandelori/shipshape.git`). One reason for the delay: pushing publishes the deploy-blocking placeholders (no hosted URL, no posted social link). The current plan is:
+The brief's "GitHub Repository" deliverable is satisfied — the public fork at `labs.gauntletai.com/cameroncandelori/shipshape.git` is current with master. `--no-ff` merges preserve labeled branch entries for each PRD category (`feat/phase2-typesafety`, `feat/phase2-api`, ...) and Phase 3 / deploy work (`feat/phase3-shipshape`, `feat/phase3-collab-observability`, `feat/droplet-deploy`, `feat/eslint-config`, `fix/e2e-test-flakes`).
 
-1. Cameron deploys the fork (Task 22) → fills in the URL in `SUBMISSION.md` + `orientation/deployment.md`.
-2. Cameron re-records demo to ≤5 min, uploads (YouTube unlisted / Loom) → URL into `SUBMISSION.md` + `orientation/demo-video.md`.
-3. Cameron pulls actual Claude spend → fills in `orientation/ai-cost-analysis.md`.
-4. Cameron pushes `master` → `origin/master`. Should be a single `git push origin master`.
-5. Cameron posts the X + LinkedIn drafts → fills in `orientation/social-post.md` "Posted" section.
+`git log --oneline --merges master | head -25` shows the merge history.
 
-`git log --oneline origin/master..master | wc -l` shows the current delta. The PR/merge history is preserved across `--no-ff` merges so each Phase 2 category has a labeled branch entry.
+Remaining submission tasks (not blocking the push, but still TODO before final submission):
+
+1. ✅ Deployed fork URL — **DONE.** Live at http://143.198.163.184/.
+2. ⏳ Demo video re-record to ≤5 min, host (YouTube unlisted / Loom) → URL into `SUBMISSION.md` + `orientation/demo-video.md`.
+3. ⏳ Pull actual Claude spend → fill in `orientation/ai-cost-analysis.md`.
+4. ⏳ Post the X + LinkedIn drafts → fill in `orientation/social-post.md` "Posted" section.
 
 ## What's deliberately not tracked
 
