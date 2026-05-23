@@ -2040,6 +2040,34 @@
         "metadata": {
           "created_for": "Phase 3+ rockstar move; not required for Phase 2 PRD."
         }
+      },
+      {
+        "id": "31",
+        "title": "(flake) accessibility-remediation combobox ARIA test reads state before combobox finishes opening",
+        "description": "The combobox ARIA attribute test in e2e/accessibility-remediation.spec.ts:145 flakes intermittently and passes on retry. Read of aria-expanded / aria-controls happens before the combobox open transition completes, so attributes are null at read time.",
+        "details": "File: e2e/accessibility-remediation.spec.ts\nTest title: 'combobox has required ARIA attributes' (around line 145)\nFailure mode: imperative get → assert reads state before the combobox finishes opening; aria-expanded or aria-controls is not yet on the DOM.\n\nFix: switch to Playwright auto-waiting matchers, which retry up to the test timeout until the assertion holds. Replace:\n  const expanded = await combobox.getAttribute('aria-expanded');\n  expect(expanded).toBe('true');\nwith:\n  await expect(combobox).toHaveAttribute('aria-expanded', 'true');\n  await expect(combobox).toHaveAttribute('aria-controls', /listbox-/);\n\nWhy it surfaced: caught in the Phase 3 full E2E run after the playwright timeout was bumped to 120s — this flake is NOT a dbContainer-class issue and survived the timeout fix. Pre-existing test-design race.",
+        "testStrategy": "(1) Run the test 10x in a row before the fix; observe flakes. (2) Apply the toHaveAttribute change. (3) Re-run 10x: expect 0 flakes.",
+        "priority": "low",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [],
+        "metadata": {
+          "created_for": "Phase 3+ E2E reliability — surfaced on master @ e3dbdc2 after the dbContainer timeout fix."
+        }
+      },
+      {
+        "id": "32",
+        "title": "(flake) weekly-accountability allocation grid reads API before plan→week assignment has propagated",
+        "description": "The 'Allocation grid shows person with assigned issues and plan/retro status' test in e2e/weekly-accountability.spec.ts:384 flakes intermittently. The assertion expect(week1Data.planId).toBe(plan.id) at line 469 reads the allocation API before the plan-to-week assignment write has been reflected in the read path.",
+        "details": "File: e2e/weekly-accountability.spec.ts\nTest title: 'Allocation grid shows person with assigned issues and plan/retro status' (line 384; assertion at line 469)\nFailure mode: weekly_plan is created and assigned to a week, then the test reads the allocation grid API and asserts the week's planId is set. The read sometimes returns the pre-assignment state.\n\nRoot cause options to investigate:\n(a) The assignment write is async / fire-and-forget and not awaited before the read.\n(b) The allocation grid endpoint reads from a cache that lags behind the write.\n(c) The test queries with a slightly different week boundary than the write.\n\nFix candidates:\n- (a): await the assignment write's response before issuing the read.\n- (b): poll the grid API with a bounded retry until planId matches, or invalidate the cache.\n- (c): use the response of the assignment write to derive the read key.\n\nWhy it surfaced: caught in the Phase 3 full E2E run. Survived the dbContainer timeout fix — this is a separate test-design / cache-coherence issue.",
+        "testStrategy": "(1) Run the test 10x in a row before fix; observe flakes. (2) Apply the chosen fix. (3) Re-run 10x: 0 flakes. (4) If (b) is the cause, document the cache-lag behavior as a known property of the allocation grid endpoint so future tests don't hit it.",
+        "priority": "low",
+        "dependencies": [],
+        "status": "pending",
+        "subtasks": [],
+        "metadata": {
+          "created_for": "Phase 3+ E2E reliability — surfaced on master @ e3dbdc2 after the dbContainer timeout fix."
+        }
       }
     ],
     "metadata": {
