@@ -450,6 +450,24 @@ test.describe('Project Allocation Grid API', () => {
     });
     const plan = await planResponse.json();
 
+    // POST /api/weekly-plans uses (person_id, week_number)-based uniqueness —
+    // it does NOT scope by project_id. If a prior test in this worker
+    // created a plan for the same person+week (different project), this POST
+    // returns that existing document with the stale project_id, and the
+    // allocation-grid query below (which filters strictly by project_id)
+    // won't pick it up. PATCH explicitly so the grid sees this test's project
+    // regardless of test order (Task 32 / fix/e2e-test-flakes).
+    await page.request.patch(`${apiServer.url}/api/documents/${plan.id}`, {
+      headers: { 'x-csrf-token': csrfToken },
+      data: {
+        properties: {
+          person_id: personId,
+          week_number: 1,
+          project_id: projectId,
+        },
+      },
+    });
+
     // Get allocation grid
     const gridResponse = await page.request.get(
       `${apiServer.url}/api/weekly-plans/project-allocation-grid/${projectId}`
