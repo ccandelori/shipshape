@@ -71,8 +71,13 @@ export default defineConfig({
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
   },
-  // Longer timeout for container startup
-  timeout: 60000,
+  // Longer timeout for container startup. The dbContainer fixture allows up
+  // to 120s for Postgres to come up (see isolated-env.ts withStartupTimeout);
+  // under parallel Docker load the first test in each worker can wait close
+  // to that ceiling. A 60s per-test budget meant cold-start tests timed out
+  // before their fixture was ready, producing apparent assertion failures
+  // that were actually environmental. Aligned at 120s.
+  timeout: 120000,
   // Global setup builds API and Web once before all workers
   globalSetup: './e2e/global-setup.ts',
   projects: [
