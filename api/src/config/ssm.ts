@@ -40,6 +40,16 @@ export async function loadProductionSecrets(): Promise<void> {
     return; // Use .env files for local dev
   }
 
+  // Skip SSM if the required secrets are already in process.env. This lets the
+  // app run on non-AWS hosts (e.g. a DigitalOcean droplet using a systemd
+  // EnvironmentFile, or any platform where secrets come from elsewhere) while
+  // keeping AWS Elastic Beanstalk deployments unchanged — EB doesn't pre-set
+  // DATABASE_URL, so it falls through to the SSM path below.
+  if (process.env.DATABASE_URL && process.env.SESSION_SECRET) {
+    console.log('DATABASE_URL + SESSION_SECRET already set; skipping SSM secret loading');
+    return;
+  }
+
   const environment = process.env.ENVIRONMENT || 'prod';
   const basePath = `/ship/${environment}`;
 
