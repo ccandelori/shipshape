@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest'
 import request from 'supertest'
 import crypto from 'crypto'
 import { createApp } from '../app.js'
@@ -422,9 +422,19 @@ describe('Sprints API', () => {
   })
 
   describe('Sprint Lifecycle', () => {
+    // Per-test state: insert a fresh sprint before each test, drop it after.
+    //
+    // Why beforeEach (and not beforeAll): the previous beforeAll variant
+    // shared one sprint across both lifecycle tests, which made the test
+    // sensitive to inter-test state — the second PATCH could mutate the
+    // sprint such that the first test's effect was overwritten if the
+    // tests reordered (or the row could be invisible to a later query
+    // if the pool reused a connection mid-replication-lag). Per-test
+    // isolation eliminates that whole class of flake. Cost: ~2 extra
+    // INSERTs per file, negligible against the file's 41-test suite.
     let testSprintId: string
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       const sprintResult = await pool.query(
         `INSERT INTO documents (workspace_id, document_type, title, visibility, created_by, properties)
          VALUES ($1, 'sprint', 'Lifecycle Sprint', 'workspace', $2, $3)
@@ -432,12 +442,39 @@ describe('Sprints API', () => {
         [testWorkspaceId, testUserId, JSON.stringify({ sprint_number: 10 })]
       )
       testSprintId = sprintResult.rows[0].id
-      // Create program association
       await pool.query(
         `INSERT INTO document_associations (document_id, related_id, relationship_type)
          VALUES ($1, $2, 'program')`,
         [testSprintId, testProgramId]
       )
+
+      // Defensive verification: read the sprint back through the same
+      // workspace JOIN the route handler uses. If this assertion fires,
+      // we surface the real isolation issue with a clearer message than
+      // a downstream 404 from the API call.
+      const verify = await pool.query(
+        `SELECT d.id FROM documents d
+         JOIN workspaces w ON d.workspace_id = w.id
+         WHERE d.id = $1 AND d.workspace_id = $2 AND d.document_type = 'sprint'`,
+        [testSprintId, testWorkspaceId]
+      )
+      if (verify.rows.length !== 1) {
+        throw new Error(
+          `Sprint Lifecycle beforeEach: sprint ${testSprintId} is not visible via ` +
+            `the route's SELECT pattern after INSERT — workspace ${testWorkspaceId} ` +
+            `may have been TRUNCATEd between the INSERT and the read.`
+        )
+      }
+    })
+
+    afterEach(async () => {
+      // Clean up so each test's INSERT starts from a known-empty state for
+      // this sprint id (workspace-scoped — doesn't touch other tests' data).
+      await pool.query(
+        `DELETE FROM document_associations WHERE document_id = $1`,
+        [testSprintId]
+      )
+      await pool.query(`DELETE FROM documents WHERE id = $1`, [testSprintId])
     })
 
     it('should update sprint_number', async () => {
