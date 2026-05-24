@@ -2,7 +2,9 @@
 
 Forked, audited, and improved across all 7 PRD categories — every target met (the smallest delta is +6.6 percentage points over the floor; the largest is +56 over the floor). The audit + every fix is reproducible from a clean clone: `pnpm shipshape` regenerates the scoreboard against the same methodology Phase 2 measured against. Deployed at **http://143.198.163.184/**.
 
-If you only have 5 minutes, read [§Grading hint](#-grading-hint--if-youre-a-grader-with-5-minutes) at the bottom. If you have 20, the sections under [§How this was graded](#how-this-was-graded) walk through the evidence by rubric weight.
+> 🎛 **Live dashboard:** **[http://143.198.163.184/dashboard/](http://143.198.163.184/dashboard/)** — everything in this document, rendered as an interactive scoreboard with progressive disclosure, animated before/after charts, and a "Run live check" button that re-derives the numbers on demand. Build it locally with `pnpm dashboard:dev`.
+
+If you only have 5 minutes, open the [live dashboard](http://143.198.163.184/dashboard/) — the hero scoreboard answers "does it pass?" in one screen, and every card has a tooltip with the PRD criterion. If you prefer markdown, read [§Grading hint](#-grading-hint--if-youre-a-grader-with-5-minutes) at the bottom. If you have 20 minutes, the sections under [§How this was graded](#how-this-was-graded) walk through the evidence by rubric weight.
 
 ---
 
