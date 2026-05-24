@@ -10,6 +10,8 @@ The GFA Week 4 brief requires a deployed, publicly accessible URL of the improve
 
 **http://143.198.163.184/** — Ship on a single $12/mo droplet. HTTP only (no TLS yet; certbot is installed and a domain can be wired up later via `certbot --nginx`).
 
+**http://143.198.163.184/dashboard/** — ShipShape submission dashboard. Static Vite SPA at `/opt/ship/dashboard/`, served by nginx. Reads structured shipshape data from `/api/shipshape/latest` (anonymous) and can trigger a fresh shipshape run via `/api/shipshape/run` (bearer-token gated; disabled by default on the droplet — see "Live re-run" below).
+
 ## Health check / smoke test
 
 ```bash
@@ -23,7 +25,43 @@ curl -sI http://143.198.163.184/ | head -1
 
 # API + CSRF works (proves api routing through nginx)
 curl -s http://143.198.163.184/api/csrf-token | jq .token | head -c 32
+
+# Dashboard renders
+curl -sI http://143.198.163.184/dashboard/ | head -1
+# → HTTP/1.1 200 OK
+
+# Dashboard data feed (anonymous)
+curl -s http://143.198.163.184/api/shipshape/latest | jq '.shipshape.overallStatus'
+# → "pass"
 ```
+
+## Dashboard layout on disk
+
+```
+/opt/ship/
+├── current → releases/<ts>/      (API + web bundle; deployed by scripts/deploy-droplet.sh)
+├── releases/<ts>/                (versioned deploy bundles)
+├── dashboard/                    (Vite SPA — deployed by scripts/deploy-dashboard.sh)
+│   ├── index.html
+│   └── assets/                   (hashed JS + CSS, cache-immutable via nginx)
+└── dashboard-data/               (read by /api/shipshape/latest)
+    └── shipshape-report.json     (rsynced from local orientation/ on each deploy-dashboard.sh)
+```
+
+The dashboard is fully decoupled from `releases/`. Re-deploying the dashboard does not restart the API; re-deploying the API does not invalidate dashboard assets. The two scripts are independent.
+
+## Dashboard live re-run (off by default)
+
+The dashboard's "Run live" button POSTs to `/api/shipshape/run`, which is bearer-token gated and disabled unless `SHIPSHAPE_RUN_ENABLED=1` is set in `/etc/ship/env`. Reason: spawning shipshape requires the full repo (not just the deploy bundle), and the droplet doesn't carry it. To enable on a droplet that does have the repo mounted, add:
+
+```
+SHIPSHAPE_RUN_ENABLED=1
+SHIPSHAPE_DASHBOARD_TOKEN=<random>
+SHIPSHAPE_REPO_ROOT=/opt/ship/repo
+SHIPSHAPE_DATA_DIR=/opt/ship/dashboard-data
+```
+
+Local dev: same env vars in `api/.env.local`, then `pnpm dashboard:dev` + a fresh dashboard token pasted into the prompt on first "Run live" click (stored in localStorage afterwards).
 
 ## Why not AWS
 
