@@ -1,0 +1,227 @@
+@import url('https://rsms.me/inter/inter.css');
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11', 'ss01';
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  body {
+    @apply bg-slate-400 text-ink-700 font-sans;
+    background-image: linear-gradient(180deg, #B0B7CB 0%, #A8AFC2 40%, #9DA5BA 100%);
+    background-attachment: fixed;
+    min-height: 100vh;
+  }
+}
+
+@layer components {
+  .surface {
+    @apply bg-cream rounded-card shadow-tile;
+  }
+  .surface-soft {
+    @apply bg-cream-soft rounded-tile;
+  }
+  .surface-hover {
+    @apply transition-shadow hover:shadow-tile-hover;
+  }
+  .pill {
+    @apply inline-flex items-center gap-1.5 px-3 py-1 rounded-chip text-xs font-medium tracking-wide;
+  }
+  .pill-pass {
+    @apply bg-ink-700 text-cream;
+  }
+  .pill-fail {
+    @apply bg-coral-100 text-coral-600;
+  }
+  .pill-skip {
+    @apply bg-slate-200 text-slate-700;
+  }
+  .pill-muted {
+    @apply bg-slate-100 text-ink-500;
+  }
+  .pill-accent {
+    @apply bg-coral-100 text-coral-600;
+  }
+  .pill-outline {
+    @apply ring-1 ring-inset ring-ink-200 text-ink-500 bg-transparent;
+  }
+  .label-muted {
+    @apply text-xs font-medium uppercase tracking-[0.08em] text-ink-400;
+  }
+  .label-mono {
+    @apply font-mono text-[11px] uppercase tracking-[0.12em] text-ink-400;
+  }
+  .number-display {
+    @apply font-sans font-bold tracking-tight tabular-nums text-ink-700;
+  }
+  .hairline {
+    @apply border-ink-100;
+  }
+
+  /* Safety net: when a <code> renders inside a <pre> (fenced block),
+     strip the inline-pill styling. Inline code (in body text) keeps the
+     bg-cream-soft + text-ink-700 pill; block code inside <pre> gets the
+     dark-on-dark treatment via the <pre> wrapper. */
+  .markdown-document pre code {
+    @apply bg-transparent text-ink-100 px-0 py-0 ring-0;
+    box-shadow: none;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * PRINT — reflow to a single-column report.
+ * Strategy:
+ *   - on-screen, collapsed deep-dive / list-row bodies get `.collapsed-on-screen`
+ *     which is display:none ONLY in @media screen (so print sees them naturally)
+ *   - in print, the outer shell decoration is stripped, the grid flattens to
+ *     single-column, and cards lose their forced page-break-avoid so a tall
+ *     card can split across pages instead of pushing to a blank one
+ * -------------------------------------------------------------------------*/
+
+@page {
+  size: A4 portrait;
+  margin: 14mm 12mm;
+}
+
+/* On screen, hide bodies marked collapsed. In print, this rule doesn't fire
+   so the elements display naturally. */
+@media screen {
+  .collapsed-on-screen {
+    display: none;
+  }
+  .print-only {
+    display: none !important;
+  }
+}
+
+/* Full-report mode — sections start on a fresh page. */
+.report-section {
+  page-break-before: always;
+  break-before: page;
+  margin-top: 2rem;
+}
+.page-break-after {
+  page-break-after: always;
+  break-after: page;
+}
+
+@media print {
+  html, body {
+    background: #ffffff !important;
+    background-image: none !important;
+    color: #1B2030 !important;
+    font-size: 10.5pt;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  /* Drop the outer shell decoration; let cards print directly on the page.
+     Both selectors carry !important because Tailwind's bg-cream-soft has a
+     class-specificity equal to our element selectors and would otherwise win. */
+  body > div {
+    padding: 0 !important;
+    background: #ffffff !important;
+  }
+  body > div > div {
+    max-width: none !important;
+    background: #ffffff !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    border-radius: 0 !important;
+  }
+
+  /* Force single column. Tailwind's grid classes apply at all screen widths;
+     overriding them flattens the layout to a vertical stack. */
+  main, main > div, .grid, [class*="grid-cols"], [class*="lg:col-span"] {
+    display: block !important;
+    grid-template-columns: none !important;
+  }
+  main > div, main > section {
+    margin-bottom: 12pt !important;
+    width: 100% !important;
+  }
+
+  /* Cards become bordered tiles on white, no shadow, but DO allow breaks:
+     a tall deep-dive card should split across pages rather than push to a
+     fresh page and leave white space behind. Inner padding stays untouched
+     so it doesn't double-up with child px-6 spacing. */
+  .surface {
+    background: #ffffff !important;
+    box-shadow: none !important;
+    border: 1px solid #E7EAF1 !important;
+    border-radius: 6pt !important;
+    margin-bottom: 10pt !important;
+    page-break-inside: auto;
+    break-inside: auto;
+  }
+
+  /* Avoid splitting small, atomic groups: stat tiles, bullets, chart cards. */
+  .surface-soft, .bg-cream-soft {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  /* Kill text clamps and truncation in print — we want the full description. */
+  .truncate, .line-clamp-1, .line-clamp-2, .line-clamp-3 {
+    overflow: visible !important;
+    white-space: normal !important;
+    text-overflow: clip !important;
+    display: block !important;
+    -webkit-line-clamp: unset !important;
+  }
+
+  /* Interactive UI is noise on paper. */
+  .no-print, button.no-print, a.no-print {
+    display: none !important;
+  }
+  [data-print-hide] {
+    display: none !important;
+  }
+
+  /* Smaller hero numbers in print so they don't dominate the page. */
+  .text-mega {
+    font-size: 36pt !important;
+    line-height: 1 !important;
+  }
+  .text-hero {
+    font-size: 26pt !important;
+  }
+  h1 {
+    font-size: 22pt !important;
+    line-height: 1.1 !important;
+  }
+  h2 {
+    font-size: 16pt !important;
+    line-height: 1.2 !important;
+  }
+  h3 {
+    font-size: 13pt !important;
+    line-height: 1.2 !important;
+  }
+
+  /* Section spacing + heading orphans. */
+  section {
+    margin-bottom: 14pt;
+  }
+  h1, h2, h3 {
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  /* Lollipop SVG: scale to full content width on portrait pages. */
+  svg {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Print-only blocks. */
+  .print-only {
+    display: block !important;
+  }
+}

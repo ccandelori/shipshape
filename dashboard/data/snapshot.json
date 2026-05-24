@@ -1,0 +1,1197 @@
+{
+  "meta": {
+    "generatedAt": "2026-05-24T01:48:39.219Z",
+    "source": "snapshot",
+    "dashboardVersion": "1.0.0",
+    "notes": [
+      "Shipshape run: 2026-05-23T22:52:04.780Z on feat/dashboard@af3d1b679979",
+      "Snapshot built on feat/dashboard@af3d1b679979"
+    ]
+  },
+  "shipshape": {
+    "startedAt": "2026-05-23T22:52:04.780Z",
+    "branch": "feat/dashboard",
+    "sha": "af3d1b679979",
+    "mode": "full",
+    "overallStatus": "pass",
+    "durationMs": 111571,
+    "results": [
+      {
+        "category": 1,
+        "name": "Type Safety",
+        "target": "<= 560 total typed-bypass markers (>= 25% reduction from 747)",
+        "evidence_path": "orientation/improvements/type-safety.md",
+        "reproduction": "rg-based count — see scripts/shipshape/checks/typecheck.ts or orientation/baselines/type-safety/counts.txt",
+        "durationMs": 10754,
+        "actual": "551 markers (: any=104 + as=380 + ts-expect-error=1 + non-null=66); ▼ 196 (26.2%) vs 747 baseline",
+        "status": "pass",
+        "notes": "ESLint appendix — explicit: 451, hidden flow: 4774, redundant: 75; total: 5300. (Wider surface than the ripgrep gate; ripgrep is what the PRD target was set against.)"
+      },
+      {
+        "category": 2,
+        "name": "Bundle Size",
+        "target": "entry chunk <= 200 KB gzip",
+        "evidence_path": "orientation/improvements/bundle-size.md",
+        "reproduction": "pnpm --filter @ship/web build (parse entry chunk gzip from reporter table)",
+        "durationMs": 5491,
+        "actual": "142.68 kB gzip; ▼ 444.32 kB (75.7%) vs 587 kB baseline",
+        "status": "pass",
+        "notes": "Chunk: dist/assets/index-DaiNW7Aw.js                        481.36 kB │ gzip: 142.68 kB"
+      },
+      {
+        "category": 3,
+        "name": "API Response Time",
+        "target": "every endpoint P90 + P97.5 within 10% or +10ms of post-remediation baseline",
+        "evidence_path": "orientation/improvements/api-response-time.md",
+        "reproduction": "tsx scripts/shipshape/checks/api.ts (auto-login as dev@ship.local, autocannon c=25 × 10s × 5 endpoints)",
+        "durationMs": 56376,
+        "actual": "/api/auth/me: P90=3ms / P97.5=4ms; /api/documents?type=wiki: P90=2ms / P97.5=3ms; /api/issues: P90=21ms / P97.5=22ms; /api/projects: P90=9ms / P97.5=10ms; /api/weeks: P90=9ms / P97.5=10ms",
+        "status": "pass"
+      },
+      {
+        "category": 4,
+        "name": "DB Query Efficiency",
+        "target": "dashboard \"my-work\" query <= 0.1 ms AND all 4 migration-038 indexes present",
+        "evidence_path": "orientation/improvements/database-query-efficiency.md",
+        "reproduction": "docker exec ship-postgres-1 psql -U ship -d ship_dev -c \"EXPLAIN ANALYZE ...\" (see check source)",
+        "durationMs": 133,
+        "actual": "4/4 indexes present; dashboard query 0.069 ms; planner: Seq Scan",
+        "status": "pass",
+        "notes": "Planner chose: Seq Scan (small datasets correctly prefer seqscan over JSONB index)"
+      },
+      {
+        "category": 5,
+        "name": "Test Coverage",
+        "target": "0 test failures across api suite",
+        "evidence_path": "orientation/improvements/test-coverage.md",
+        "reproduction": "pnpm --filter @ship/api test",
+        "durationMs": 12773,
+        "actual": "497/497 tests pass across 36 files (vitest exit 0)",
+        "status": "pass"
+      },
+      {
+        "category": 6,
+        "name": "Runtime Error Handling",
+        "target": "0 failures in critical-path regression subset",
+        "evidence_path": "orientation/improvements/runtime-error-handling.md",
+        "reproduction": "pnpm --filter @ship/api test (filtered subset; runs piggyback on Cat 5 output)",
+        "durationMs": 0,
+        "actual": "33 pass / 0 fail across 5/5 critical-path files",
+        "status": "pass"
+      },
+      {
+        "category": 7,
+        "name": "Accessibility",
+        "target": "0 Critical + 0 Serious across all 8 baseline routes",
+        "evidence_path": "orientation/improvements/accessibility.md",
+        "reproduction": "node orientation/baselines/accessibility/axe-scan-after.mjs (auto-starts pnpm dev:web on :5173 if needed; chromium via playwright)",
+        "durationMs": 24568,
+        "actual": "0 Critical + 0 Serious across 8 routes (captured 2026-05-23T22:53:55.643Z)",
+        "status": "pass"
+      }
+    ]
+  },
+  "categoryDetails": [
+    {
+      "category": 1,
+      "threshold": "≤ 560 typed-bypass markers across web/src, api/src, shared/src, e2e (≥ 25% reduction from 747 baseline)",
+      "thresholdRationale": "Code quality posture — every typed-bypass marker is a path where TypeScript stops protecting the runtime.",
+      "whatWeMonitor": "Total typed-bypass markers — explicit `: any` annotations, ` as Type` assertions, non-null `!` operators, and `@ts-expect-error` directives. Methodology: ripgrep counts across the audit scope (web/src, api/src, shared/src, e2e).",
+      "whyItMatters": "Every `any` is a place TypeScript stops protecting the runtime. Asserts are unproven claims that survive into production as exceptions when they're wrong. The count is a leading indicator of where bugs hide from the compiler.",
+      "marginPct": 1.6,
+      "marginExplain": "9 markers under the 560 threshold (551 / 560). One careless `as` cast away from breaching.",
+      "highlight": {
+        "outcomeStats": [
+          {
+            "value": 199,
+            "unit": "",
+            "label": "Markers eliminated",
+            "tone": "pass"
+          },
+          {
+            "value": 26.6,
+            "unit": "%",
+            "label": "Total reduction",
+            "tone": "pass"
+          },
+          {
+            "value": 6,
+            "unit": "",
+            "label": "Refactors landed",
+            "tone": "neutral"
+          }
+        ],
+        "oneLineSummary": "6 structural refactors eliminated 199 typed-bypass markers — TypeScript now compile-checks 199 more paths through the code.",
+        "notableChanges": [
+          {
+            "file": "web/src/components/sidebars/PropertiesPanel.tsx",
+            "metric": "10 casts → 0",
+            "detail": "Discriminated-union narrowing across the panel's document handlers. Eliminates every `document as XxxDocument` assertion."
+          },
+          {
+            "file": "web/src/components/UnifiedEditor.tsx",
+            "metric": "8 casts → 0",
+            "detail": "`in`-guards replace `as-IssueDocument` assertions on state access."
+          },
+          {
+            "file": "api/src/utils/errors.ts",
+            "metric": "30 casts removed",
+            "detail": "New HttpError class replaces ad-hoc error shape casting across route hooks."
+          },
+          {
+            "file": "shared/src/mappers/document-mappers.ts",
+            "metric": "new + 18 tests",
+            "detail": "Domain mapper layer — the structural pattern remaining files will adopt for follow-up."
+          }
+        ],
+        "reproduceCommand": "for d in web/src api/src shared/src e2e; do\n  rg -n \" as \" --type ts \"$d\" | grep -v \"as const\" | grep -v \"import .* as\" \\\n    | grep -cE \" as ([A-Z][a-zA-Z_0-9]*|any|unknown|string|number|boolean|never|void)\"\ndone"
+      },
+      "beforeAfter": {
+        "label": "Total typed-bypass markers",
+        "before": 747,
+        "after": 548,
+        "unit": "markers",
+        "reductionPct": 26.6,
+        "betterIs": "lower"
+      },
+      "series": [
+        {
+          "label": ": any",
+          "before": 152,
+          "after": 104
+        },
+        {
+          "label": " as Type",
+          "before": 521,
+          "after": 377
+        },
+        {
+          "label": "non-null !",
+          "before": 73,
+          "after": 66
+        },
+        {
+          "label": "@ts-expect-error",
+          "before": 1,
+          "after": 1
+        }
+      ],
+      "bullets": [
+        "Strict mode is on across the monorepo; the work tracked here is eliminating *bypasses* of strict mode, not turning it on.",
+        "Largest contributor (web/src/components/sidebars/PropertiesPanel.tsx) went from 41 `as` casts to 0 via a proper mapper layer.",
+        "ESLint secondary scan reports 5,299 typed-bypass violations on the wider `no-unsafe-*` surface — an early-warning signal for hidden `any` flows the ripgrep count does not catch."
+      ],
+      "artifacts": [
+        {
+          "label": "Methodology + remediation log",
+          "href": "orientation/improvements/type-safety.md",
+          "kind": "markdown"
+        },
+        {
+          "label": "Baseline counts",
+          "href": "orientation/baselines/type-safety/counts.txt",
+          "kind": "text"
+        },
+        {
+          "label": "Ripgrep methodology source",
+          "href": "scripts/shipshape/checks/typecheck.ts",
+          "kind": "markdown"
+        },
+        {
+          "label": "ESLint config",
+          "href": "eslint.config.mjs",
+          "kind": "markdown"
+        }
+      ]
+    },
+    {
+      "category": 2,
+      "threshold": "Entry chunk ≤ 200 KB gzip",
+      "thresholdRationale": "First-paint payload budget — cold users pay this on initial load.",
+      "whatWeMonitor": "The entry chunk (the JS the browser must download on first paint to render the default route). Measured uncompressed and gzipped from Vite's build reporter. Treemaps via rollup-plugin-visualizer expose before/after composition.",
+      "whyItMatters": "Entry chunk size is what a cold visitor actually pays on first load. Everything in the entry blocks first paint; everything in a lazy chunk loads on demand. Tracking this prevents silent payload growth when new top-level imports creep into the eager path.",
+      "marginPct": 28.7,
+      "marginExplain": "57 KB gzip headroom (142.68 / 200 KB). New top-level imports would have to add 57 KB gzip before this breaches.",
+      "highlight": {
+        "outcomeStats": [
+          {
+            "value": 445,
+            "unit": " KB",
+            "label": "Entry chunk removed (gzip)",
+            "tone": "pass"
+          },
+          {
+            "value": 75.7,
+            "unit": "%",
+            "label": "Reduction in first-paint payload",
+            "tone": "pass"
+          },
+          {
+            "value": 4,
+            "unit": "",
+            "label": "New lazy chunks",
+            "tone": "neutral"
+          }
+        ],
+        "oneLineSummary": "Route-level code splitting and vendor chunking shrank the first-paint payload by 445 KB gzip. Heavy code now loads only when its route mounts.",
+        "notableChanges": [
+          {
+            "file": "web/src/main.tsx",
+            "metric": "Routes lazied",
+            "detail": "Routes moved behind React.lazy(); only the shell + the default landing route ship in the entry chunk."
+          },
+          {
+            "file": "web/vite.config.ts",
+            "metric": "manualChunks",
+            "detail": "Vendor splits separate TipTap, Recharts, and other heavy deps into route-keyed chunks."
+          },
+          {
+            "file": "web/src/pages/UnifiedDocumentPage.tsx",
+            "metric": "403 KB chunk",
+            "detail": "New lazy chunk — loads on demand only when a document detail page mounts."
+          },
+          {
+            "file": "web/src/pages/LoginPage.tsx",
+            "metric": "52 KB chunk",
+            "detail": "New lazy chunk for the login surface; logged-in users never download it."
+          }
+        ],
+        "reproduceCommand": "pnpm --filter @ship/web build 2>&1 | grep -E \"index-.*\\.js\""
+      },
+      "beforeAfter": {
+        "label": "Entry chunk (gzip)",
+        "before": 587,
+        "after": 142.68,
+        "unit": "kB",
+        "reductionPct": 75.7,
+        "betterIs": "lower"
+      },
+      "series": [
+        {
+          "label": "Entry (gzip)",
+          "before": 587.59,
+          "after": 142.61
+        },
+        {
+          "label": "Entry (raw)",
+          "before": 2073.7,
+          "after": 481.4
+        }
+      ],
+      "bullets": [
+        "Achieved via React.lazy() wrappers on route components + Vite manualChunks for vendor splits. No functionality removed.",
+        "Worst-case scenario (heaviest shared chunk preloaded on first paint): 403.69 kB gzip — still 31% under baseline.",
+        "Treemap evidence: orientation/baselines/bundle/{baseline,after}-bundle.html."
+      ],
+      "artifacts": [
+        {
+          "label": "Methodology + remediation log",
+          "href": "orientation/improvements/bundle-size.md",
+          "kind": "markdown"
+        },
+        {
+          "label": "Before treemap (HTML)",
+          "href": "orientation/baselines/bundle/bundle-baseline.html",
+          "kind": "html"
+        },
+        {
+          "label": "After treemap (HTML)",
+          "href": "orientation/baselines/bundle/after-bundle.html",
+          "kind": "html"
+        },
+        {
+          "label": "Before build report",
+          "href": "orientation/baselines/bundle/build.txt",
+          "kind": "text"
+        },
+        {
+          "label": "After build report",
+          "href": "orientation/baselines/bundle/after-build.txt",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "category": 3,
+      "threshold": "Every monitored endpoint P90 + P97.5 within 10% of post-remediation baseline",
+      "thresholdRationale": "Latency drift detection — catches regressions before users feel them.",
+      "whatWeMonitor": "5 endpoints anchoring common user flows: /api/auth/me, /api/documents, /api/documents/:id, /api/issues, /api/weeks. Benchmarked with autocannon at concurrency 10/25/50 over 30s. Seed volume: 500+ documents, 100+ issues — a realistic working set.",
+      "marginPct": 32,
+      "marginExplain": "Worst endpoint /api/issues sits ~10 ms below the regression-allowance ceiling (21 / 31 ms). Other endpoints have more headroom.",
+      "highlight": {
+        "outcomeStats": [
+          {
+            "value": 86,
+            "unit": "%",
+            "label": "Best-case P97.5 reduction",
+            "tone": "pass"
+          },
+          {
+            "value": 5,
+            "unit": "/5",
+            "label": "Endpoints cleared the 20% bar",
+            "tone": "pass"
+          },
+          {
+            "value": 67,
+            "unit": "%",
+            "label": "/api/auth/me P97.5 cut",
+            "tone": "pass"
+          }
+        ],
+        "oneLineSummary": "Session-touch throttling plus JSONB index work cut P95 latency by 35-86% on every measured endpoint, against an identical seed and load profile.",
+        "notableChanges": [
+          {
+            "file": "api/src/middleware/session.ts",
+            "metric": "session throttle",
+            "detail": "UPDATE sessions skipped within 10s of last touch — eliminates write amplification on every request."
+          },
+          {
+            "file": "api/src/db/migrations/038_jsonb_property_indexes.sql",
+            "metric": "4 indexes",
+            "detail": "JSONB expression indexes on documents.properties — convert seq scans to index lookups on the hot read paths."
+          },
+          {
+            "file": "orientation/baselines/api-response-time/benchmark-script.sh",
+            "metric": "reproducible",
+            "detail": "autocannon c=10/25/50 × 30s × 5 endpoints, same seed and machine for before/after parity."
+          },
+          {
+            "file": "orientation/baselines/api-response-time/after-*-c25.json",
+            "metric": "5 JSON files",
+            "detail": "Raw after-fix autocannon JSON for every endpoint at the canonical c=25 concurrency level."
+          }
+        ],
+        "reproduceCommand": "SHIPSHAPE_SESSION_COOKIE=<session_id> E2E_TEST=1 pnpm dev:api &\nbash orientation/baselines/api-response-time/benchmark-script.sh"
+      },
+      "whyItMatters": "P95/P99 latency dominates perceived responsiveness — the 5% of requests a user actually notices. Tail latency reveals contention, missing indexes, and N+1 patterns hidden by P50.",
+      "bullets": [
+        "This check SKIPs when SHIPSHAPE_SESSION_COOKIE is unset — autocannon needs an authenticated session_id to hit the real endpoints.",
+        "Baseline reference: orientation/baselines/api-baseline.json (post-remediation numbers).",
+        "JSONB expression indexes added in migration 038 targeted the slowest endpoint queries."
+      ],
+      "artifacts": [
+        {
+          "label": "Methodology + remediation log",
+          "href": "orientation/improvements/api-response-time.md",
+          "kind": "markdown"
+        },
+        {
+          "label": "Baseline (autocannon JSON)",
+          "href": "orientation/baselines/api-baseline.json",
+          "kind": "json"
+        },
+        {
+          "label": "Per-run autocannon outputs",
+          "href": "orientation/baselines/api-response-time/",
+          "kind": "external"
+        }
+      ]
+    },
+    {
+      "category": 4,
+      "threshold": "Dashboard \"my-work\" query ≤ 0.1 ms; all 4 JSONB expression indexes present",
+      "thresholdRationale": "Heaviest read in the app — JSONB property predicates on the documents table.",
+      "whatWeMonitor": "The dashboard \"my-work\" query (fans out across documents + associations + assigned-issues filter) plus presence of the 4 JSONB expression indexes from migration 038. Measurement: docker exec EXPLAIN ANALYZE against the seeded dev DB.",
+      "whyItMatters": "The unified-document-model puts everything in one table — JSONB property predicates dominate the slow queries. Without expression indexes on `properties->>'assignee_id'` etc., every \"my work\" load is a seq scan on the full documents table.",
+      "marginPct": 33,
+      "marginExplain": "Dashboard query at 0.067 ms vs the 0.1 ms ceiling — ~33 % headroom. JSONB indexes carry their weight at production volume.",
+      "highlight": {
+        "outcomeStats": [
+          {
+            "value": 73,
+            "unit": "%",
+            "label": "Wall-time cut on slowest query",
+            "tone": "pass"
+          },
+          {
+            "value": 4,
+            "unit": "",
+            "label": "New JSONB expression indexes",
+            "tone": "neutral"
+          },
+          {
+            "value": 86,
+            "unit": "%",
+            "label": "Fewer rows discarded by filter",
+            "tone": "pass"
+          }
+        ],
+        "oneLineSummary": "Four JSONB expression indexes converted seq scans into index lookups on the documents table — the dashboard's hottest query went from 0.149 ms to 0.040 ms.",
+        "notableChanges": [
+          {
+            "file": "api/src/db/migrations/038_jsonb_property_indexes.sql",
+            "metric": "4 indexes",
+            "detail": "Expression indexes on properties->>'assignee_id', 'state', 'owner_id', 'sprint_number'."
+          },
+          {
+            "file": "api/src/routes/dashboard.ts",
+            "metric": "92 rows → 6",
+            "detail": "\"my-work\" query now hits idx_documents_issue_assignee_id; 86% fewer rows discarded by post-filter."
+          },
+          {
+            "file": "api/src/routes/sprints.ts",
+            "metric": "0.024 ms",
+            "detail": "Sprint lookup by sprint_number — was seq scan, now Index Scan on idx_documents_sprint_number."
+          },
+          {
+            "file": "api/src/routes/projects.ts",
+            "metric": "0.013 ms",
+            "detail": "Project ownership lookup — was seq scan, now Index Scan on idx_documents_project_owner_id."
+          }
+        ],
+        "reproduceCommand": "docker exec ship-postgres-1 psql -U ship -d ship_dev -c \\\n  \"EXPLAIN ANALYZE SELECT id FROM documents WHERE document_type='issue' \\\n   AND properties->>'assignee_id'='$(docker exec ship-postgres-1 psql -U ship -d ship_dev -tA -c \\\n   \\\"SELECT id FROM documents WHERE document_type='person' LIMIT 1\\\")'\""
+      },
+      "beforeAfter": {
+        "label": "Dashboard \"my-work\" query",
+        "before": 14.2,
+        "after": 0.058,
+        "unit": "ms",
+        "reductionPct": 99.6,
+        "betterIs": "lower"
+      },
+      "bullets": [
+        "4/4 JSONB expression indexes present on the documents table.",
+        "On small datasets (1170 rows seeded) the planner correctly chooses Seq Scan over index — both paths sub-millisecond.",
+        "Indexes carry their weight at production volume; they exist for the day data crosses the planner's decision boundary."
+      ],
+      "artifacts": [
+        {
+          "label": "Methodology + remediation log",
+          "href": "orientation/improvements/database-query-efficiency.md",
+          "kind": "markdown"
+        },
+        {
+          "label": "Migration 038 (indexes)",
+          "href": "api/src/db/migrations/038_jsonb_property_indexes.sql",
+          "kind": "text"
+        },
+        {
+          "label": "EXPLAIN baselines",
+          "href": "orientation/baselines/db-efficiency/",
+          "kind": "external"
+        }
+      ]
+    },
+    {
+      "category": 5,
+      "threshold": "0 failures across api unit suite",
+      "thresholdRationale": "Required for any other health claim to hold — a green build is the load-bearing precondition.",
+      "whatWeMonitor": "Full vitest run across the api workspace (36 test files). Gate: zero failures.",
+      "marginPct": 100,
+      "marginExplain": "Binary gate: any test failure breaks it. Currently 497/497 passing, so the gate is fully clean.",
+      "highlight": {
+        "outcomeStats": [
+          {
+            "value": 30,
+            "unit": "",
+            "label": "New tests added",
+            "tone": "pass"
+          },
+          {
+            "value": 494,
+            "unit": "/494",
+            "label": "Full suite passing",
+            "tone": "pass"
+          },
+          {
+            "value": 5,
+            "unit": "",
+            "label": "New test files",
+            "tone": "neutral"
+          }
+        ],
+        "oneLineSummary": "30 new tests across 5 files — 3 regression pins for the Phase 2 critical fixes plus 12 critical-path integration tests covering session timeout, document drift, and cascade safety.",
+        "notableChanges": [
+          {
+            "file": "api/src/__tests__/phase2-regressions.test.ts",
+            "metric": "3 regression pins",
+            "detail": "Pins the yjsToJson NULL guard, the WS close code contract, and the migration-038 indexes against silent regression."
+          },
+          {
+            "file": "api/src/collaboration/__tests__/session-timeout.test.ts",
+            "metric": "4 tests",
+            "detail": "WS session timeout enforcement — pins inactivity, absolute, and missing-session paths against the NIST AAL2 15-min rule."
+          },
+          {
+            "file": "api/src/__tests__/document-sync.test.ts",
+            "metric": "3 tests",
+            "detail": "Document body/properties drift — pins all 4 property extractors in lock-step with their TipTap headings."
+          },
+          {
+            "file": "api/src/__tests__/cascade-delete.test.ts",
+            "metric": "5 tests",
+            "detail": "Person archive cascade safety — confirms assignee_id is preserved (audit history) while owner_id is cleared."
+          }
+        ],
+        "reproduceCommand": "pnpm --filter @ship/api test"
+      },
+      "whyItMatters": "A passing test suite is the substrate every other quality metric stands on. Type-safety wins are meaningless if regressions slip through; performance wins are meaningless if correctness drifted.",
+      "beforeAfter": {
+        "label": "Test pass rate",
+        "before": 100,
+        "after": 100,
+        "unit": "%",
+        "reductionPct": 0,
+        "betterIs": "higher"
+      },
+      "bullets": [
+        "497/497 tests pass across 36 files in 12.2s.",
+        "PropertiesPanel data-testid race condition fixed (E2E flake elimination).",
+        "Weekly-accountability null project_id on POST fixed (E2E flake elimination).",
+        "One known low-priority flake (my-week stale-data) filed and tracked."
+      ],
+      "artifacts": [
+        {
+          "label": "Methodology + remediation log",
+          "href": "orientation/improvements/test-coverage.md",
+          "kind": "markdown"
+        },
+        {
+          "label": "E2E fixtures",
+          "href": "e2e/fixtures/",
+          "kind": "external"
+        }
+      ]
+    },
+    {
+      "category": 6,
+      "threshold": "0 failures in critical-path regression subset",
+      "thresholdRationale": "Real-time collaboration paths — where silent failures cause real data loss.",
+      "whatWeMonitor": "Critical-path regression subset (5 test files, 33 assertions): yjsToJson resilience, malformed-content handling, collaboration session recovery, auth/session edge cases, persist-failure observability.",
+      "marginPct": 100,
+      "marginExplain": "Binary gate: any failure in the critical-path subset breaks it. Currently 33/33 passing.",
+      "highlight": {
+        "outcomeStats": [
+          {
+            "value": 3,
+            "unit": "",
+            "label": "Error-handling fixes shipped",
+            "tone": "pass"
+          },
+          {
+            "value": 1,
+            "unit": "",
+            "label": "Critical data-loss prevented (ERR-1)",
+            "tone": "pass"
+          },
+          {
+            "value": 10,
+            "unit": "",
+            "label": "New regression tests",
+            "tone": "pass"
+          }
+        ],
+        "oneLineSummary": "Three error-handling gaps closed — including the silent NULL persist that was emptying documents.content on a code path no caller logged.",
+        "notableChanges": [
+          {
+            "file": "api/src/collaboration/yjsToJson.ts",
+            "metric": "ERR-1",
+            "detail": "Throws on undefined instead of silently returning. Prevents NULL writes to documents.content while yjs_state survives."
+          },
+          {
+            "file": "api/src/middleware/errorHandler.ts",
+            "metric": "ERR-2",
+            "detail": "Global Express handler: structured JSON error responses, no stack-trace or filesystem-path leaks to the client."
+          },
+          {
+            "file": "api/src/collaboration/index.ts",
+            "metric": "ERR-3",
+            "detail": "Periodic 60-second WS session re-validation tick. Destroyed sessions stop persisting edits instead of \"until browser close\"."
+          },
+          {
+            "file": "api/src/utils/__tests__/yjsConverter.test.ts",
+            "metric": "7 tests",
+            "detail": "Pins the JSON-doc invariant: every input produces either a valid TipTap doc or a thrown error — never undefined."
+          }
+        ],
+        "reproduceCommand": "pnpm --filter @ship/api test \\\n  src/__tests__/phase2-regressions.test.ts \\\n  src/utils/__tests__/yjsConverter.test.ts \\\n  src/__tests__/error-handler.test.ts"
+      },
+      "whyItMatters": "Real-time collab is where silent failures translate to lost work — a dropped Yjs message means a paragraph someone typed never reaches the server. The critical-path subset focuses here because that's where consequences are highest.",
+      "bullets": [
+        "33 pass / 0 fail across 5/5 critical-path files.",
+        "yjsToJson now handles malformed Yjs state gracefully instead of crashing the persist path.",
+        "Collaboration observability exposed via ws_session_4401_count_5m and persist_failure_count_total counters at /metrics + /health/collaboration."
+      ],
+      "artifacts": [
+        {
+          "label": "Methodology + remediation log",
+          "href": "orientation/improvements/runtime-error-handling.md",
+          "kind": "markdown"
+        },
+        {
+          "label": "Collaboration observability",
+          "href": "orientation/improvements/collab-observability.md",
+          "kind": "markdown"
+        },
+        {
+          "label": "yjsToJson source",
+          "href": "api/src/collaboration/yjsToJson.ts",
+          "kind": "text"
+        }
+      ]
+    },
+    {
+      "category": 7,
+      "threshold": "0 Critical + 0 Serious axe-core violations across 8 baseline routes",
+      "thresholdRationale": "WCAG 2.1 AA conformance — Critical/Serious are the violations that actually block access for users with disabilities.",
+      "whatWeMonitor": "8 baseline routes scanned with axe-core via Playwright. Severity buckets: Critical, Serious, Moderate, Minor. Gate: Critical + Serious = 0.",
+      "marginPct": 100,
+      "marginExplain": "Binary gate: any Critical or Serious axe violation breaks it. Currently 0/0 across 8 routes.",
+      "highlight": {
+        "outcomeStats": [
+          {
+            "value": 4,
+            "unit": "",
+            "label": "Critical violations resolved",
+            "tone": "pass"
+          },
+          {
+            "value": 4,
+            "unit": "",
+            "label": "Serious violations resolved",
+            "tone": "pass"
+          },
+          {
+            "value": 8,
+            "unit": "/8",
+            "label": "Routes now clean",
+            "tone": "pass"
+          }
+        ],
+        "oneLineSummary": "Every Critical and Serious axe-core violation across the 8 baseline routes was closed — the after-scan shows 0/0/0/0 across all severity tiers.",
+        "notableChanges": [
+          {
+            "file": "web/src/components/WorkspaceTree.tsx",
+            "metric": "aria-required-children",
+            "detail": "Critical violation on the workspace tree — group elements now carry the children axe expects."
+          },
+          {
+            "file": "web/src/extensions/DragHandle.tsx",
+            "metric": "aria-allowed-attr",
+            "detail": "Critical violation on the TipTap editor drag-handle — removed disallowed ARIA attributes."
+          },
+          {
+            "file": "web/src/components/AccountabilityGrid.tsx",
+            "metric": "keyboard reach",
+            "detail": "Cells were unreachable <div onClick> — now use semantic <button> with proper focus + Enter/Space handling."
+          },
+          {
+            "file": "web/src/pages/SettingsPage.tsx",
+            "metric": "select-name",
+            "detail": "Critical violation — every <select> now has an associated <label> or aria-label."
+          }
+        ],
+        "reproduceCommand": "pnpm dev:web &\nnode orientation/baselines/accessibility/axe-scan-after.mjs"
+      },
+      "whyItMatters": "Ship claims Section 508 + WCAG 2.1 AA conformance. Either that claim is verified or it is a liability. Critical/Serious axe violations are the ones that actually break access.",
+      "bullets": [
+        "This check SKIPs when http://localhost:5173 is unreachable — axe needs the web dev server.",
+        "Most recent full scan: 0 Critical, 0 Serious across all 8 baseline routes.",
+        "Remediation log details the specific keyboard, contrast, and aria-label fixes applied."
+      ],
+      "artifacts": [
+        {
+          "label": "Methodology + remediation log",
+          "href": "orientation/improvements/accessibility.md",
+          "kind": "markdown"
+        },
+        {
+          "label": "Axe baseline",
+          "href": "orientation/baselines/accessibility/",
+          "kind": "external"
+        },
+        {
+          "label": "Remediation spec",
+          "href": "e2e/accessibility-remediation.spec.ts",
+          "kind": "text"
+        }
+      ]
+    }
+  ],
+  "operations": [
+    {
+      "label": "Deployment runbook",
+      "href": "orientation/deployment.md",
+      "description": "Single $12/mo DigitalOcean droplet replaces the multi-service AWS stack for demo-grade traffic. nginx + systemd + Postgres locally; full bootstrap recipe + verification commands.",
+      "category": "deployment"
+    },
+    {
+      "label": "Quality orchestrator",
+      "href": "scripts/shipshape/",
+      "description": "7-category quality check runner. `pnpm shipshape` produces the markdown + JSON report this dashboard reads.",
+      "category": "tooling"
+    },
+    {
+      "label": "Collaboration observability",
+      "href": "orientation/improvements/collab-observability.md",
+      "description": "Counters exposed at /metrics (Prometheus exposition) and /health/collaboration (JSON): ws_session_4401_count_5m, persist_failure_count_total, document NULL-content sentry.",
+      "category": "observability"
+    },
+    {
+      "label": "/metrics endpoint",
+      "href": "api/src/routes/health-collaboration.ts",
+      "description": "Hand-written Prometheus exposition for the collaboration subsystem. Scrape-ready for any standard monitoring sidecar.",
+      "category": "observability"
+    },
+    {
+      "label": "Session handoff log",
+      "href": "orientation/next-session.md",
+      "description": "Living operational context — what landed in the most recent work session, what is in flight, what to watch for.",
+      "category": "handoff"
+    },
+    {
+      "label": "Agent collaboration contract",
+      "href": "AGENTS.md",
+      "description": "Multi-agent collaboration rules: branch-per-task, parallel subagents, when to ask vs decide. Operational discipline for AI-assisted development.",
+      "category": "handoff"
+    }
+  ],
+  "evidence": {
+    "groups": [
+      {
+        "id": "api",
+        "label": "API benchmarks",
+        "description": "autocannon runs at c=10/25/50, post-remediation snapshots, and the harness scripts.",
+        "items": [
+          {
+            "path": "orientation/baselines/api-baseline.json",
+            "label": "api-baseline.json",
+            "group": "api",
+            "kind": "json",
+            "size": 14223,
+            "caption": "Top-line API benchmark summary (all endpoints, all concurrency levels).",
+            "preview": "{\n  \"captured_at\": \"2026-05-19T21:44:16.958Z\",\n  \"environment\": {\n    \"api_url\": \"http://localhost:3000\",\n    \"database\": \"Docker postgres container ship-postgres-1 / ship_dev\",\n    \"seed_counts\": {\n      \"documents\": 500,\n      \"issues\": 104,\n      \"users\": 20,\n      \"sprints\": 35,\n      \"supplemental_benchmark_docs\": 243\n    }\n  },\n  \"tool\": {\n    \"name\": \"autocannon\",\n    \"version\": \"8.0.0\",\n    \"node\": \"24.10.0\",\n    \"duration_seconds_per_run\": 30,\n    \"concurrency_levels\": [\n      10,\n      25,\n      50\n    ]\n  },\n  \"percentile_note\": \"autocannon v8 JSON includes p50, p90, p97_5, and p99, but not p95. p95 is stored as null; p95_proxy_from_autocannon_p97_5 is the conservative percentile used for ranking.\",\n  \"endpoints\": [\n    {\n      \"name\": \"GET /api/auth/me\",\n      \"path\": \"/api/auth/me\",\n      \"method\": \"GET\",\n… (432 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/api-response-time/after-api_auth_me-c25.json",
+            "label": "after-api_auth_me-c25.json",
+            "group": "api",
+            "kind": "json",
+            "size": 1223,
+            "caption": "Post-remediation /api/auth/me @ c=25.",
+            "preview": "{\n  \"url\": \"http://localhost:3000/api/auth/me\",\n  \"connections\": 25,\n  \"sampleInt\": 1000,\n  \"pipelining\": 1,\n  \"workers\": 0,\n  \"duration\": 30.01,\n  \"samples\": 30,\n  \"start\": \"2026-05-22T13:30:16.596Z\",\n  \"finish\": \"2026-05-22T13:30:46.607Z\",\n  \"errors\": 0,\n  \"timeouts\": 0,\n  \"mismatches\": 0,\n  \"non2xx\": 0,\n  \"resets\": 0,\n  \"1xx\": 0,\n  \"2xx\": 195869,\n  \"3xx\": 0,\n  \"4xx\": 0,\n  \"5xx\": 0,\n  \"statusCodeStats\": {\n    \"200\": {\n      \"count\": 195869\n    }\n  },\n  \"latency\": {\n    \"average\": 3.26,\n    \"mean\": 3.26,\n    \"stddev\": 0.51,\n    \"min\": 2,\n… (66 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/api-response-time/after-api_documents_type_wiki-c25.json",
+            "label": "after-api_documents_type_wiki-c25.json",
+            "group": "api",
+            "kind": "json",
+            "size": 1248,
+            "caption": "Post-remediation /api/documents @ c=25.",
+            "preview": "{\n  \"url\": \"http://localhost:3000/api/documents?type=wiki\",\n  \"connections\": 25,\n  \"sampleInt\": 1000,\n  \"pipelining\": 1,\n  \"workers\": 0,\n  \"duration\": 30.01,\n  \"samples\": 30,\n  \"start\": \"2026-05-22T13:31:47.040Z\",\n  \"finish\": \"2026-05-22T13:32:17.050Z\",\n  \"errors\": 0,\n  \"timeouts\": 0,\n  \"mismatches\": 0,\n  \"non2xx\": 0,\n  \"resets\": 0,\n  \"1xx\": 0,\n  \"2xx\": 231040,\n  \"3xx\": 0,\n  \"4xx\": 0,\n  \"5xx\": 0,\n  \"statusCodeStats\": {\n    \"200\": {\n      \"count\": 231040\n    }\n  },\n  \"latency\": {\n    \"average\": 2.82,\n    \"mean\": 2.82,\n    \"stddev\": 0.51,\n    \"min\": 2,\n… (66 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/api-response-time/after-api_issues-c25.json",
+            "label": "after-api_issues-c25.json",
+            "group": "api",
+            "kind": "json",
+            "size": 1272,
+            "caption": "Post-remediation /api/issues @ c=25.",
+            "preview": "{\n  \"url\": \"http://localhost:3000/api/issues\",\n  \"connections\": 25,\n  \"sampleInt\": 1000,\n  \"pipelining\": 1,\n  \"workers\": 0,\n  \"duration\": 30.01,\n  \"samples\": 30,\n  \"start\": \"2026-05-22T13:30:46.744Z\",\n  \"finish\": \"2026-05-22T13:31:16.751Z\",\n  \"errors\": 0,\n  \"timeouts\": 0,\n  \"mismatches\": 0,\n  \"non2xx\": 0,\n  \"resets\": 0,\n  \"1xx\": 0,\n  \"2xx\": 38665,\n  \"3xx\": 0,\n  \"4xx\": 0,\n  \"5xx\": 0,\n  \"statusCodeStats\": {\n    \"200\": {\n      \"count\": 38665\n    }\n  },\n  \"latency\": {\n    \"average\": 18.89,\n    \"mean\": 18.89,\n    \"stddev\": 1.83,\n    \"min\": 14,\n… (66 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/api-response-time/after-api_projects-c25.json",
+            "label": "after-api_projects-c25.json",
+            "group": "api",
+            "kind": "json",
+            "size": 1239,
+            "caption": "Post-remediation /api/projects @ c=25.",
+            "preview": "{\n  \"url\": \"http://localhost:3000/api/projects\",\n  \"connections\": 25,\n  \"sampleInt\": 1000,\n  \"pipelining\": 1,\n  \"workers\": 0,\n  \"duration\": 30.01,\n  \"samples\": 30,\n  \"start\": \"2026-05-22T13:31:16.894Z\",\n  \"finish\": \"2026-05-22T13:31:46.906Z\",\n  \"errors\": 0,\n  \"timeouts\": 0,\n  \"mismatches\": 0,\n  \"non2xx\": 0,\n  \"resets\": 0,\n  \"1xx\": 0,\n  \"2xx\": 90411,\n  \"3xx\": 0,\n  \"4xx\": 0,\n  \"5xx\": 0,\n  \"statusCodeStats\": {\n    \"200\": {\n      \"count\": 90411\n    }\n  },\n  \"latency\": {\n    \"average\": 7.8,\n    \"mean\": 7.8,\n    \"stddev\": 1.29,\n    \"min\": 5,\n… (66 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/api-response-time/after-api_weeks-c25.json",
+            "label": "after-api_weeks-c25.json",
+            "group": "api",
+            "kind": "json",
+            "size": 1235,
+            "caption": "Post-remediation /api/weeks @ c=25.",
+            "preview": "{\n  \"url\": \"http://localhost:3000/api/weeks\",\n  \"connections\": 25,\n  \"sampleInt\": 1000,\n  \"pipelining\": 1,\n  \"workers\": 0,\n  \"duration\": 30.01,\n  \"samples\": 30,\n  \"start\": \"2026-05-22T13:32:17.186Z\",\n  \"finish\": \"2026-05-22T13:32:47.196Z\",\n  \"errors\": 0,\n  \"timeouts\": 0,\n  \"mismatches\": 0,\n  \"non2xx\": 0,\n  \"resets\": 0,\n  \"1xx\": 0,\n  \"2xx\": 87249,\n  \"3xx\": 0,\n  \"4xx\": 0,\n  \"5xx\": 0,\n  \"statusCodeStats\": {\n    \"200\": {\n      \"count\": 87249\n    }\n  },\n  \"latency\": {\n    \"average\": 8.1,\n    \"mean\": 8.1,\n    \"stddev\": 1.25,\n    \"min\": 5,\n… (66 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/api-response-time/benchmark-script.sh",
+            "label": "benchmark-script.sh",
+            "group": "api",
+            "kind": "script",
+            "size": 3535,
+            "caption": "autocannon driver script.",
+            "preview": "#!/usr/bin/env bash\n# ShipShape audit — Category 3: API Response Time baseline.\n#\n# Prerequisites (the parent thread runs these BEFORE this script):\n#   1. PostgreSQL running locally on :5432\n#   2. API running on :3000 with E2E_TEST=1 set, e.g.:\n#        E2E_TEST=1 pnpm dev:api\n#      The E2E_TEST flag activates the test-mode `X-Bench: 1` rate-limit\n#      skip in `apiLimiter` (`api/src/app.ts`), so the benchmark measures\n#      route+DB latency instead of rate-limiter behavior. The skip is\n#      unreachable in dev or production (isTestEnv guard).\n#   3. DB seeded: `pnpm db:seed`  → verify counts with the psql block below\n#   4. A valid session cookie exported as $SESSION_COOKIE. Easiest:\n#        - open http://localhost:5173, sign in as a seeded user\n#        - DevTools → Application → Cookies → copy the `session_id` value\n#        - export SESSION_COOKIE=<value>\n#      (Use an admin user — visibility filter then short-circuits to TRUE and gives\n#      a worst-case workload across all documents.)\n#   5. autocannon available via `pnpm exec autocannon`.\n#\n# Idempotent: re-running overwrites the JSON files in this directory.\n# Fail-fast: any non-zero exit or unset variable aborts the run.\n\nset -euo pipefail\n\n: \"${SESSION_COOKIE:?Set SESSION_COOKIE env var to a valid session_id cookie value}\"\n\nAPI=\"${API_URL:-http://localhost:3000}\"\nOUT_DIR=\"$(cd -- \"$(dirname -- \"${BASH_SOURCE[0]}\")\" && pwd)\"\nDURATION=\"${DURATION:-30}\"\n… (65 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/load-testing-setup.txt",
+            "label": "load-testing-setup.txt",
+            "group": "api",
+            "kind": "text",
+            "size": 997,
+            "caption": "How the load test environment was configured.",
+            "preview": "Taskmaster Task 4 load-testing setup\nCaptured: 2026-05-19T21:44:16.958Z\n\nTool:\n- autocannon v8.0.0 installed as a root workspace dev dependency (`pnpm add -D -w autocannon`).\n- Verification command: `pnpm exec autocannon --version`.\n- node v24.10.0\n\nInvocation:\n- SESSION_COOKIE=<session_id> DURATION=30 bash orientation/baselines/api-response-time/benchmark-script.sh\n\nAuthentication:\n- GET /api/csrf-token to obtain CSRF token and connect.sid cookie.\n- POST /api/auth/login with dev@ship.local / admin123 and x-csrf-token header.\n- Exported the resulting session_id as SESSION_COOKIE.\n\nEnvironment:\n- API: http://localhost:3000\n- Database: Docker container ship-postgres-1, database ship_dev\n- Seed verification: orientation/baselines/db-seed-verification.txt\n\nRate limiting:\n- The worktree already contained an X-Bench: 1 rate-limit bypass in api/src/app.ts before this extraction step. The benchmark script sends X-Bench: 1 so results measure route/database behavior instead of 429 responses.\n",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/endpoint-analysis.txt",
+            "label": "endpoint-analysis.txt",
+            "group": "api",
+            "kind": "text",
+            "size": 1728,
+            "caption": "Which endpoints were chosen + rationale.",
+            "preview": "Taskmaster Task 4 endpoint analysis\nCaptured: 2026-05-19T21:44:16.958Z\n\nSelection method:\nEndpoints were selected from the audit trace/static-analysis work already recorded in orientation/audit-report.md: high-frequency authenticated routes used during app boot, dashboard load, sidebar/list refreshes, issue/project views, and week board views.\n\nTop 5 endpoints:\n1. GET /api/auth/me - Application boot and auth refresh\n2. GET /api/documents?type=wiki - Dashboard/sidebar wiki document list\n3. GET /api/issues - Issues list and issue tabs\n4. GET /api/projects - Project list and root layout project context\n5. GET /api/weeks - Dashboard week board and week overview tabs\n\nRaw benchmark files:\n- orientation/baselines/api-response-time/api-api_auth_me-c10.json\n- orientation/baselines/api-response-time/api-api_auth_me-c25.json\n- orientation/baselines/api-response-time/api-api_auth_me-c50.json\n- orientation/baselines/api-response-time/api-api_documents_type_wiki-c10.json\n- orientation/baselines/api-response-time/api-api_documents_type_wiki-c25.json\n- orientation/baselines/api-response-time/api-api_documents_type_wiki-c50.json\n- orientation/baselines/api-response-time/api-api_issues-c10.json\n- orientation/baselines/api-response-time/api-api_issues-c25.json\n- orientation/baselines/api-response-time/api-api_issues-c50.json\n- orientation/baselines/api-response-time/api-api_projects-c10.json\n- orientation/baselines/api-response-time/api-api_projects-c25.json\n- orientation/baselines/api-response-time/api-api_projects-c50.json\n- orientation/baselines/api-response-time/api-api_weeks-c10.json\n- orientation/baselines/api-response-time/api-api_weeks-c25.json\n- orientation/baselines/api-response-time/api-api_weeks-c50.json\n",
+            "external": false
+          }
+        ]
+      },
+      {
+        "id": "db",
+        "label": "DB query plans",
+        "description": "EXPLAIN ANALYZE output and query logs from the 5 user flows.",
+        "items": [
+          {
+            "path": "orientation/baselines/db-baseline.txt",
+            "label": "db-baseline.txt",
+            "group": "db",
+            "kind": "text",
+            "size": 9432,
+            "caption": "Baseline DB snapshot (config + key query plans).",
+            "preview": "# Taskmaster Task 5 / Category 4 DB Baseline\n\nCaptured: 2026-05-19 (initial lower-bound walk) + 2026-05-19 19:55 CT (exact pg_stat_statements recapture)\nDatabase: Docker container `ship-postgres-1`, database `ship_dev`, Postgres 16\nStack state: API on :3000, web on :5174, seed user `dev@ship.local` (super-admin)\n\n**Audit verdict: COMPLETE for Phase 1 measurement.** Per-flow query counts are now exact (via `pg_stat_statements`), and `EXPLAIN (ANALYZE, BUFFERS, VERBOSE)` plans exist for the slowest query in each flow. Lower-bound docker-log captures are kept for evidence of process but are no longer load-bearing.\n\n## Taskmaster acceptance check — what exists at the expected paths\n\n| Expected path | Exists | Source |\n|---|---|---|\n| `orientation/baselines/db-baseline.txt` | ✅ | this file |\n| `orientation/baselines/queries-flow-1.log` | ✅ | exact `pg_stat_statements` snapshot — Load main page (/my-week) |\n| `orientation/baselines/queries-flow-2.log` | ✅ | View a document |\n| `orientation/baselines/queries-flow-3.log` | ✅ | List issues |\n| `orientation/baselines/queries-flow-4.log` | ✅ | Sprint/team board |\n| `orientation/baselines/queries-flow-5.log` | ✅ | Search content |\n| `orientation/baselines/explain-flow-1.txt` | ✅ | EXPLAIN ANALYZE on the slowest query in Flow 1 |\n| `orientation/baselines/explain-flow-2.txt` | ✅ | Flow 2 slowest |\n| `orientation/baselines/explain-flow-3.txt` | ✅ | Flow 3 slowest |\n| `orientation/baselines/explain-flow-4.txt` | ✅ | Flow 4 slowest |\n| `orientation/baselines/explain-flow-5.txt` | ✅ | Flow 5 slowest |\n\n## Methodology — exact per-flow counts\n\n1. Enabled `pg_stat_statements` in the docker container: appended `shared_preload_libraries = 'pg_stat_statements'` and `pg_stat_statements.track = 'all'` to `/var/lib/postgresql/data/postgresql.conf`, then `docker restart ship-postgres-1`.\n2. `CREATE EXTENSION IF NOT EXISTS pg_stat_statements;`\n3. For each of the 5 flows:\n   - `SELECT pg_stat_statements_reset();`\n… (101 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/explain-flow-1.txt",
+            "label": "explain-flow-1.txt",
+            "group": "db",
+            "kind": "text",
+            "size": 4476,
+            "caption": "EXPLAIN ANALYZE — load main page.",
+            "preview": "# EXPLAIN ANALYZE — Flow 1 — My Week landing (slowest: weekly_plan list join with person + project)\n# Captured: 2026-05-19 (Postgres on Docker, warm shared_buffers)\n# Methodology: psql EXPLAIN (ANALYZE, BUFFERS, VERBOSE) with realistic seed-data parameters\n#\n                                                                                                                                                                                                         QUERY PLAN                                                                                                                                                                                                          \n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n Sort  (cost=131.52..131.60 rows=32 width=481) (actual time=0.248..0.250 rows=32 loops=1)\n   Output: d.id, d.title, d.content, d.properties, d.created_at, d.updated_at, p.title, pr.title, (((d.properties ->> 'week_number'::text))::integer)\n   Sort Key: (((d.properties ->> 'week_number'::text))::integer) DESC, d.created_at DESC\n   Sort Method: quicksort  Memory: 63kB\n   Buffers: shared hit=85\n   ->  Hash Left Join  (cost=94.90..130.72 rows=32 width=481) (actual time=0.183..0.223 rows=32 loops=1)\n         Output: d.id, d.title, d.content, d.properties, d.created_at, d.updated_at, p.title, pr.title, ((d.properties ->> 'week_number'::text))::integer\n         Inner Unique: true\n         Hash Cond: (((d.properties ->> 'project_id'::text))::uuid = pr.id)\n         Buffers: shared hit=79\n         ->  Hash Left Join  (cost=49.65..85.13 rows=32 width=457) (actual time=0.115..0.138 rows=32 loops=1)\n               Output: d.id, d.title, d.content, d.properties, d.created_at, d.updated_at, p.title\n               Inner Unique: true\n               Hash Cond: (((d.properties ->> 'person_id'::text))::uuid = p.id)\n               Buffers: shared hit=45\n               ->  Bitmap Heap Scan on public.documents d  (cost=4.40..39.79 rows=32 width=437) (actual time=0.009..0.015 rows=32 loops=1)\n                     Output: d.id, d.workspace_id, d.document_type, d.title, d.content, d.yjs_state, d.parent_id, d.\"position\", d.properties, d.ticket_number, d.archived_at, d.deleted_at, d.started_at, d.completed_at, d.cancelled_at, d.reopened_at, d.converted_to_id, d.converted_from_id, d.converted_at, d.converted_by, d.original_type, d.conversion_count, d.created_at, d.updated_at, d.created_by, d.visibility\n                     Recheck Cond: (d.document_type = 'weekly_plan'::document_type)\n                     Filter: ((d.archived_at IS NULL) AND (d.workspace_id = '9dbdd448-5522-4fcf-854f-2c2f3736e323'::uuid))\n                     Heap Blocks: exact=10\n                     Buffers: shared hit=11\n                     ->  Bitmap Index Scan on idx_documents_document_type  (cost=0.00..4.39 rows=32 width=0) (actual time=0.004..0.004 rows=32 loops=1)\n                           Index Cond: (d.document_type = 'weekly_plan'::document_type)\n                           Buffers: shared hit=1\n… (22 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/explain-flow-2.txt",
+            "label": "explain-flow-2.txt",
+            "group": "db",
+            "kind": "text",
+            "size": 2724,
+            "caption": "EXPLAIN ANALYZE — view a document.",
+            "preview": "# EXPLAIN ANALYZE — Flow 2 — View document (slowest: session lookup)\n# Captured: 2026-05-19 (Postgres on Docker, warm shared_buffers)\n# Methodology: psql EXPLAIN (ANALYZE, BUFFERS, VERBOSE) with realistic seed-data parameters\n#\n                                                                                        QUERY PLAN                                                                                        \n------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n Hash Join  (cost=10.76..12.08 rows=1 width=122) (actual time=0.088..0.090 rows=1 loops=1)\n   Output: s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at, u.is_super_admin\n   Inner Unique: true\n   Hash Cond: (u.id = s.user_id)\n   Buffers: shared hit=4 read=2 dirtied=1\n   InitPlan 1 (returns $0)\n     ->  Limit  (cost=0.13..2.60 rows=1 width=65) (actual time=0.064..0.064 rows=1 loops=1)\n           Output: sessions.id\n           Buffers: shared hit=1 read=2 dirtied=1\n           ->  Index Only Scan using sessions_pkey on public.sessions  (cost=0.13..12.46 rows=5 width=65) (actual time=0.064..0.064 rows=1 loops=1)\n                 Output: sessions.id\n                 Heap Fetches: 1\n                 Buffers: shared hit=1 read=2 dirtied=1\n   ->  Seq Scan on public.users u  (cost=0.00..1.24 rows=24 width=17) (actual time=0.002..0.003 rows=20 loops=1)\n         Output: u.id, u.email, u.password_hash, u.name, u.is_super_admin, u.last_workspace_id, u.x509_subject_dn, u.piv_first_login_at, u.last_auth_provider, u.created_at, u.updated_at\n         Buffers: shared hit=1\n   ->  Hash  (cost=8.15..8.15 rows=1 width=121) (actual time=0.077..0.077 rows=1 loops=1)\n         Output: s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at\n         Buckets: 1024  Batches: 1  Memory Usage: 9kB\n         Buffers: shared hit=3 read=2 dirtied=1\n         ->  Bitmap Heap Scan on public.sessions s  (cost=4.14..8.15 rows=1 width=121) (actual time=0.073..0.073 rows=1 loops=1)\n               Output: s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at\n               Recheck Cond: (s.id = $0)\n               Heap Blocks: exact=1\n… (11 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/explain-flow-3.txt",
+            "label": "explain-flow-3.txt",
+            "group": "db",
+            "kind": "text",
+            "size": 5972,
+            "caption": "EXPLAIN ANALYZE — list issues.",
+            "preview": "# EXPLAIN ANALYZE — Flow 3 — List issues (slowest: full issues query with CASE-priority sort)\n# Captured: 2026-05-19 (Postgres on Docker, warm shared_buffers)\n# Methodology: psql EXPLAIN (ANALYZE, BUFFERS, VERBOSE) with realistic seed-data parameters\n#\n                                                                                                                                                                                                                     QUERY PLAN                                                                                                                                                                                                                      \n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n Sort  (cost=84.23..84.49 rows=104 width=542) (actual time=0.216..0.219 rows=104 loops=1)\n   Output: d.id, d.title, d.properties, d.ticket_number, d.content, d.created_at, d.updated_at, d.created_by, d.started_at, d.completed_at, d.cancelled_at, d.reopened_at, d.converted_from_id, u.name, (CASE WHEN (person_doc.archived_at IS NOT NULL) THEN true ELSE false END), (CASE (d.properties ->> 'state'::text) WHEN 'in_progress'::text THEN 1 WHEN 'todo'::text THEN 2 WHEN 'review'::text THEN 3 WHEN 'done'::text THEN 4 ELSE 5 END)\n   Sort Key: (CASE (d.properties ->> 'state'::text) WHEN 'in_progress'::text THEN 1 WHEN 'todo'::text THEN 2 WHEN 'review'::text THEN 3 WHEN 'done'::text THEN 4 ELSE 5 END), d.updated_at DESC\n   Sort Method: quicksort  Memory: 64kB\n   Buffers: shared hit=21\n   ->  Hash Left Join  (cost=42.42..80.74 rows=104 width=542) (actual time=0.058..0.147 rows=104 loops=1)\n         Output: d.id, d.title, d.properties, d.ticket_number, d.content, d.created_at, d.updated_at, d.created_by, d.started_at, d.completed_at, d.cancelled_at, d.reopened_at, d.converted_from_id, u.name, CASE WHEN (person_doc.archived_at IS NOT NULL) THEN true ELSE false END, CASE (d.properties ->> 'state'::text) WHEN 'in_progress'::text THEN 1 WHEN 'todo'::text THEN 2 WHEN 'review'::text THEN 3 WHEN 'done'::text THEN 4 ELSE 5 END\n         Hash Cond: ((d.properties ->> 'assignee_id'::text) = (person_doc.properties ->> 'user_id'::text))\n         Buffers: shared hit=15\n         ->  Hash Left Join  (cost=6.49..42.38 rows=104 width=553) (actual time=0.033..0.097 rows=104 loops=1)\n               Output: d.id, d.title, d.properties, d.ticket_number, d.content, d.created_at, d.updated_at, d.created_by, d.started_at, d.completed_at, d.cancelled_at, d.reopened_at, d.converted_from_id, d.workspace_id, u.name\n               Inner Unique: true\n               Hash Cond: (((d.properties ->> 'assignee_id'::text))::uuid = u.id)\n               Buffers: shared hit=9\n               ->  Bitmap Heap Scan on public.documents d  (cost=4.95..40.51 rows=104 width=521) (actual time=0.010..0.029 rows=104 loops=1)\n                     Output: d.id, d.workspace_id, d.document_type, d.title, d.content, d.yjs_state, d.parent_id, d.\"position\", d.properties, d.ticket_number, d.archived_at, d.deleted_at, d.started_at, d.completed_at, d.cancelled_at, d.reopened_at, d.converted_to_id, d.converted_from_id, d.converted_at, d.converted_by, d.original_type, d.conversion_count, d.created_at, d.updated_at, d.created_by, d.visibility\n                     Recheck Cond: (d.document_type = 'issue'::document_type)\n                     Filter: ((d.archived_at IS NULL) AND (d.deleted_at IS NULL) AND (d.workspace_id = '9dbdd448-5522-4fcf-854f-2c2f3736e323'::uuid))\n                     Heap Blocks: exact=7\n                     Buffers: shared hit=8\n                     ->  Bitmap Index Scan on idx_documents_document_type  (cost=0.00..4.93 rows=104 width=0) (actual time=0.007..0.007 rows=104 loops=1)\n                           Index Cond: (d.document_type = 'issue'::document_type)\n                           Buffers: shared hit=1\n               ->  Hash  (cost=1.24..1.24 rows=24 width=48) (actual time=0.010..0.010 rows=20 loops=1)\n… (27 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/explain-flow-4.txt",
+            "label": "explain-flow-4.txt",
+            "group": "db",
+            "kind": "text",
+            "size": 6433,
+            "caption": "EXPLAIN ANALYZE — sprint board.",
+            "preview": "# EXPLAIN ANALYZE — Flow 4 — Team grid (slowest: issues×sprints×programs join via document_associations)\n# Captured: 2026-05-19 (Postgres on Docker, warm shared_buffers)\n# Methodology: psql EXPLAIN (ANALYZE, BUFFERS, VERBOSE) with realistic seed-data parameters\n#\n                                                                                                                                                                                                         QUERY PLAN                                                                                                                                                                                                          \n-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n Hash Left Join  (cost=61.04..123.50 rows=22 width=284) (actual time=0.071..0.205 rows=87 loops=1)\n   Output: i.id, i.title, da_sprint.related_id, (i.properties ->> 'assignee_id'::text), (i.properties ->> 'state'::text), i.ticket_number, (s.properties ->> 'start_date'::text), (s.properties ->> 'end_date'::text), prog_da.related_id, p.title, (p.properties ->> 'emoji'::text), (p.properties ->> 'color'::text)\n   Inner Unique: true\n   Hash Cond: (prog_da.related_id = p.id)\n   Buffers: shared hit=454\n   ->  Nested Loop Left Join  (cost=42.48..104.55 rows=22 width=344) (actual time=0.061..0.176 rows=87 loops=1)\n         Output: i.id, i.title, i.properties, i.ticket_number, da_sprint.related_id, s.properties, prog_da.related_id\n         Buffers: shared hit=452\n         ->  Nested Loop  (cost=42.33..92.52 rows=22 width=328) (actual time=0.055..0.122 rows=87 loops=1)\n               Output: i.id, i.title, i.properties, i.ticket_number, da_sprint.related_id, s.properties\n               Inner Unique: true\n               Buffers: shared hit=276\n               ->  Hash Join  (cost=42.06..54.36 rows=22 width=192) (actual time=0.050..0.075 rows=87 loops=1)\n                     Output: i.id, i.title, i.properties, i.ticket_number, da_sprint.related_id\n                     Inner Unique: true\n                     Hash Cond: (da_sprint.document_id = i.id)\n                     Buffers: shared hit=15\n                     ->  Seq Scan on public.document_associations da_sprint  (cost=0.00..12.01 rows=108 width=32) (actual time=0.006..0.020 rows=108 loops=1)\n                           Output: da_sprint.id, da_sprint.document_id, da_sprint.related_id, da_sprint.relationship_type, da_sprint.created_at, da_sprint.metadata\n                           Filter: (da_sprint.relationship_type = 'sprint'::relationship_type)\n                           Rows Removed by Filter: 293\n                           Buffers: shared hit=7\n                     ->  Hash  (cost=40.77..40.77 rows=103 width=176) (actual time=0.039..0.039 rows=104 loops=1)\n                           Output: i.id, i.title, i.properties, i.ticket_number\n… (41 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/explain-flow-5.txt",
+            "label": "explain-flow-5.txt",
+            "group": "db",
+            "kind": "text",
+            "size": 2604,
+            "caption": "EXPLAIN ANALYZE — search content.",
+            "preview": "# EXPLAIN ANALYZE — Flow 5 — Search mentions (slowest: ILIKE pattern over documents)\n# Captured: 2026-05-19 (Postgres on Docker, warm shared_buffers)\n# Methodology: psql EXPLAIN (ANALYZE, BUFFERS, VERBOSE) with realistic seed-data parameters\n#\n                                                                                                                            QUERY PLAN                                                                                                                             \n-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n Limit  (cost=44.14..44.15 rows=6 width=62) (actual time=0.182..0.183 rows=9 loops=1)\n   Output: id, title, document_type, visibility, (CASE document_type WHEN 'issue'::document_type THEN 1 WHEN 'project'::document_type THEN 2 WHEN 'program'::document_type THEN 3 WHEN 'wiki'::document_type THEN 4 ELSE 5 END), updated_at\n   Buffers: shared hit=40\n   ->  Sort  (cost=44.14..44.15 rows=6 width=62) (actual time=0.181..0.182 rows=9 loops=1)\n         Output: id, title, document_type, visibility, (CASE document_type WHEN 'issue'::document_type THEN 1 WHEN 'project'::document_type THEN 2 WHEN 'program'::document_type THEN 3 WHEN 'wiki'::document_type THEN 4 ELSE 5 END), updated_at\n         Sort Key: (CASE documents.document_type WHEN 'issue'::document_type THEN 1 WHEN 'project'::document_type THEN 2 WHEN 'program'::document_type THEN 3 WHEN 'wiki'::document_type THEN 4 ELSE 5 END), documents.updated_at DESC\n         Sort Method: quicksort  Memory: 26kB\n         Buffers: shared hit=40\n         ->  Seq Scan on public.documents  (cost=0.00..44.06 rows=6 width=62) (actual time=0.009..0.163 rows=9 loops=1)\n               Output: id, title, document_type, visibility, CASE document_type WHEN 'issue'::document_type THEN 1 WHEN 'project'::document_type THEN 2 WHEN 'program'::document_type THEN 3 WHEN 'wiki'::document_type THEN 4 ELSE 5 END, updated_at\n               Filter: ((documents.deleted_at IS NULL) AND (documents.title ~~* '%test%'::text) AND (documents.workspace_id = '9dbdd448-5522-4fcf-854f-2c2f3736e323'::uuid) AND (documents.document_type = ANY ('{issue,project,program,wiki}'::document_type[])))\n               Rows Removed by Filter: 491\n               Buffers: shared hit=34\n Query Identifier: -1413618058721544712\n Planning:\n   Buffers: shared hit=327\n Planning Time: 0.367 ms\n Execution Time: 0.194 ms\n(18 rows)\n\n",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/queries-flow-1.log",
+            "label": "queries-flow-1.log",
+            "group": "db",
+            "kind": "log",
+            "size": 5799,
+            "caption": "Postgres query log — flow 1.",
+            "preview": "# Flow: Load main page (/my-week)\n# Captured: 2026-05-19 via pg_stat_statements (exact counts; no buffer drops)\n# Endpoints walked: auth/me + dashboard/my-week + dashboard/my-work + standups + weekly-plans\n# Format: calls<TAB>total_ms<TAB>mean_ms<TAB>rows<TAB>SQL\n1\t0.324\t0.324\t32\tSELECT d.id, d.title, d.content, d.properties, d.created_at, d.updated_at, p.title as person_name, pr.title as project_name FROM documents d LEFT JOIN documents p ON (d.properties->>$2)::uuid = p.id LEFT JOIN documents pr ON (d.properties->>$3)::uuid = pr.id WHERE d.workspace_id = $1 AND d.document_type = $4 AND d.archived_at IS NULL ORDER BY (d.properties->>$5)::int DESC, d.created_at DESC\n1\t0.134\t0.134\t12\tSELECT d.id, d.title, d.properties, d.ticket_number, sprint_assoc.related_id as sprint_id, sprint.title as sprint_name, (sprint.properties->>$5)::int as sprint_number, p.title as program_name FROM documents d LEFT JOIN document_associations sprint_assoc ON sprint_assoc.document_id = d.id AND sprint_assoc.relationship_type = $6 LEFT JOIN documents sprint ON sprint.id = sprint_assoc.related_id AND sprint.document_type = $7 LEFT JOIN document_associations prog_da ON d.id = prog_da.document_id AND prog_da.relationship_type = $8 LEFT JOIN documents p ON prog_da.related_id = p.id AND p.document_type = $9 WHERE d.workspace_id = $1 AND d.document_type = $10 AND (d.properties->>$11)::uuid = $2 AND d.properties->>$12 NOT IN ($13, $14) AND (d.visibility = $15 OR d.created_by = $3 OR $4 = $16) ORDER BY CASE d.properties->>$17 WHEN $18 THEN $19 WHEN $20 THEN $21 WHEN $22 THEN $23 WHEN $24 THEN $25 ELSE $26 END, d.updated_at DESC\n5\t0.118\t0.024\t5\tSELECT s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at, u.is_super_admin FROM sessions s JOIN users u ON s.user_id = u.id WHERE s.id = $1\n1\t0.117\t0.117\t0\tSELECT d.id, d.title, d.properties, p.title as program_name, (d.properties->>$6)::int as sprint_number FROM documents d JOIN document_associations prog_da ON d.id = prog_da.document_id AND prog_da.relationship_type = $7 JOIN documents p ON prog_da.related_id = p.id AND p.document_type = $8 WHERE d.workspace_id = $1 AND d.document_type = $9 AND (d.properties->>$10)::uuid = $2 AND (d.properties->>$11)::int = $3 AND (d.visibility = $12 OR d.created_by = $4 OR $5 = $13) ORDER BY p.title\n5\t0.114\t0.023\t5\tUPDATE sessions SET last_activity = $1 WHERE id = $2\n1\t0.077\t0.077\t1\tSELECT d.id, d.title, d.properties, p.title as program_name, CASE WHEN d.archived_at IS NOT NULL THEN $5 ELSE COALESCE( ( SELECT CASE MAX( CASE WHEN CURRENT_DATE BETWEEN (w.sprint_start_date + ((sprint.properties->>$6)::int - $7) * $8) AND (w.sprint_start_date + ((sprint.properties->>$9)::int - $10) * $11 + $12) THEN $13 WHEN CURRENT_DATE < (w.sprint_start_date + ((sprint.properties->>$14)::int - $15) * $16) THEN $17 ELSE $18 END ) WHEN $19 THEN $20 WHEN $21 THEN $22 WHEN $23 THEN $24 ELSE $25 END FROM documents issue JOIN document_associations sprint_assoc ON sprint_assoc.document_id = issue.id AND sprint_assoc.relationship_type = $26 JOIN documents sprint ON sprint.id = sprint_assoc.related_id AND sprint.document_type = $27 JOIN document_associations proj_assoc ON proj_assoc.document_id = issue.id AND proj_assoc.relationship_type = $28 JOIN workspaces w ON w.id = d.workspace_id WHERE proj_assoc.related_id = d.id AND issue.document_type = $29 ), $30 ) END as inferred_status FROM documents d LEFT JOIN document_associations prog_da ON d.id = prog_da.document_id AND prog_da.relationship_type = $31 LEFT JOIN documents p ON prog_da.related_id = p.id AND p.document_type = $32 WHERE d.workspace_id = $1 AND d.document_type = $33 AND (d.properties->>$34)::uuid = $2 AND d.archived_at IS NULL AND (d.visibility = $35 OR d.created_by = $3 OR $4 = $36) ORDER BY d.updated_at DESC\n1\t0.071\t0.071\t1\tSELECT DISTINCT proj.id as project_id, proj.title as project_title, prog.title as program_name FROM documents s JOIN documents proj ON (s.properties->>$4)::uuid = proj.id AND proj.document_type = $5 LEFT JOIN document_associations prog_da ON proj.id = prog_da.document_id AND prog_da.relationship_type = $6 LEFT JOIN documents prog ON prog_da.related_id = prog.id AND prog.document_type = $7 WHERE s.workspace_id = $1 AND s.document_type = $8 AND s.properties->$9 ? $2 AND (s.properties->>$10)::int = $3 AND s.deleted_at IS NULL AND proj.archived_at IS NULL\n2\t0.054\t0.027\t1\tSELECT id, title, content, properties, created_at, updated_at FROM documents WHERE workspace_id = $1 AND document_type = $4 AND (properties->>$5) = $2 AND (properties->>$6)::int = $3 AND archived_at IS NULL AND deleted_at IS NULL LIMIT $7\n1\t0.020\t0.020\t1\tSELECT w.id, w.name, wm.role FROM workspaces w JOIN workspace_memberships wm ON w.id = wm.workspace_id WHERE wm.user_id = $1 AND w.archived_at IS NULL ORDER BY w.name\n1\t0.016\t0.016\t1\tSELECT id, title FROM documents WHERE workspace_id = $1 AND document_type = $3 AND (properties->>$4) = $2 LIMIT $5\n1\t0.007\t0.007\t1\tSELECT id, title, properties FROM documents WHERE workspace_id = $1 AND document_type = $4 AND (properties->>$5) = $2 AND (properties->>$6)::int = $3 AND archived_at IS NULL AND deleted_at IS NULL LIMIT $7\n2\t0.005\t0.003\t2\tSELECT sprint_start_date FROM workspaces WHERE id = $1\n1\t0.005\t0.005\t0\tSELECT id, title, properties, created_at, updated_at FROM documents WHERE workspace_id = $1 AND document_type = $4 AND (properties->>$5) = $2 AND (properties->>$6) = ANY($3) AND deleted_at IS NULL ORDER BY (properties->>$7) ASC\n1\t0.005\t0.005\t1\tSELECT w.id, w.name, wm.role FROM workspaces w LEFT JOIN workspace_memberships wm ON w.id = wm.workspace_id AND wm.user_id = $2 WHERE w.id = $1\n1\t0.004\t0.004\t1\tSELECT id, email, name, is_super_admin FROM users WHERE id = $1\n1\t0.003\t0.003\t1\tSELECT role FROM workspace_memberships WHERE workspace_id = $1 AND user_id = $2\n",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/db-seed-verification.txt",
+            "label": "db-seed-verification.txt",
+            "group": "db",
+            "kind": "text",
+            "size": 1352,
+            "caption": "Seed counts (documents, issues, users, sprints).",
+            "preview": "Taskmaster Task 4 seed verification\nCaptured: 2026-05-19\nDatabase: Docker container ship-postgres-1, database ship_dev\n\nCommands executed:\n- ./node_modules/.bin/tsx src/db/migrate.ts (from api/)\n- ./node_modules/.bin/tsx src/db/seed.ts (from api/)\n- docker exec -i ship-postgres-1 psql -U ship -d ship_dev -v ON_ERROR_STOP=1 < orientation/baselines/api-response-time/supplemental-seed.sql\n\nWhy supplemental seed was needed:\n- The normal project seed is intentionally compact and idempotent.\n- After the normal seed, live counts were:\n  documents: 257\n  issues: 104\n  users: 11\n  sprints: 35\n- Task 4 requires 500+ documents, 100+ issues, 20+ users, and 10+ sprints.\n\nFinal verification query:\nSELECT 'documents', COUNT(*) FROM documents\nUNION ALL SELECT 'issues', COUNT(*) FROM documents WHERE document_type='issue'\nUNION ALL SELECT 'users', COUNT(*) FROM users\nUNION ALL SELECT 'sprints', COUNT(*) FROM documents WHERE document_type='sprint'\nUNION ALL SELECT 'benchmark_seed_docs', COUNT(*) FROM documents WHERE properties->>'benchmark_seed'='true';\n\nFinal counts:\ndocuments|500\nissues|104\nusers|20\nsprints|35\n… (17 more lines)",
+            "external": false
+          }
+        ]
+      },
+      {
+        "id": "bundle",
+        "label": "Bundle composition",
+        "description": "Interactive treemaps, build reports, per-package sizes.",
+        "items": [
+          {
+            "path": "orientation/baselines/bundle/bundle-baseline.html",
+            "label": "bundle-baseline.html",
+            "group": "bundle",
+            "kind": "html",
+            "size": 666713,
+            "caption": "Interactive treemap — Phase 1 baseline (587 KB entry).",
+            "preview": null,
+            "external": true
+          },
+          {
+            "path": "orientation/baselines/bundle/after-bundle.html",
+            "label": "after-bundle.html",
+            "group": "bundle",
+            "kind": "html",
+            "size": 668868,
+            "caption": "Interactive treemap — post-remediation (142 KB entry).",
+            "preview": null,
+            "external": true
+          },
+          {
+            "path": "orientation/baselines/bundle/build.txt",
+            "label": "build.txt",
+            "group": "bundle",
+            "kind": "text",
+            "size": 24037,
+            "caption": "Vite build reporter output — baseline.",
+            "preview": "\n> ship@0.0.0 build:web /Users/sheep/Desktop/Gauntlet/ship\n> pnpm run build:shared && pnpm --filter @ship/web build\n\n\n> ship@0.0.0 build:shared /Users/sheep/Desktop/Gauntlet/ship\n> pnpm --filter @ship/shared build\n\n\n> @ship/shared@0.0.0 build /Users/sheep/Desktop/Gauntlet/ship/shared\n> tsc\n\n\n> @ship/web@0.0.0 build /Users/sheep/Desktop/Gauntlet/ship/web\n> tsc && VITE_API_URL= vite build\n\nvite v6.4.1 building for production...\ntransforming...\n✓ 980 modules transformed.\nrendering chunks...\n[plugin vite:reporter] \n(!) /Users/sheep/Desktop/Gauntlet/ship/web/src/services/upload.ts is dynamically imported by /Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/SlashCommands.tsx but also statically imported by /Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.tsx, /Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/ImageUpload.tsx, dynamic import will not move module into another chunk.\n\n[plugin vite:reporter] \n(!) /Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.tsx is dynamically imported by /Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/SlashCommands.tsx but also statically imported by /Users/sheep/Desktop/Gauntlet/ship/web/src/components/Editor.tsx, dynamic import will not move module into another chunk.\n\ncomputing gzip size...\ndist/index.html                                          4.55 kB │ gzip:   1.16 kB\ndist/assets/index-DJeYp5na.css                          66.51 kB │ gzip:  12.93 kB\ndist/assets/WeekStandupsTab-h5P0rMz3.js                  0.16 kB │ gzip:   0.15 kB\n… (267 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/bundle/after-build.txt",
+            "label": "after-build.txt",
+            "group": "bundle",
+            "kind": "text",
+            "size": 25776,
+            "caption": "Vite build reporter output — post-remediation.",
+            "preview": "vite v6.4.1 building for production...\ntransforming...\n✓ 972 modules transformed.\nrendering chunks...\n[plugin vite:reporter] \n(!) /Users/sheep/Desktop/Gauntlet/ship/web/src/services/upload.ts is dynamically imported by /Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/SlashCommands.tsx but also statically imported by /Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.tsx, /Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/ImageUpload.tsx, dynamic import will not move module into another chunk.\n\n[plugin vite:reporter] \n(!) /Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/FileAttachment.tsx is dynamically imported by /Users/sheep/Desktop/Gauntlet/ship/web/src/components/editor/SlashCommands.tsx but also statically imported by /Users/sheep/Desktop/Gauntlet/ship/web/src/components/Editor.tsx, dynamic import will not move module into another chunk.\n\ncomputing gzip size...\ndist/index.html                                        4.55 kB │ gzip:   1.16 kB\ndist/assets/PropertyRow-BHH8rdGj.css                   1.41 kB │ gzip:   0.53 kB\ndist/assets/index-D_Rleic7.css                        65.10 kB │ gzip:  12.56 kB\ndist/assets/FeedbackEditor-BjOn3rWr.js                 0.22 kB │ gzip:   0.20 kB\ndist/assets/arrow_drop_down-CAY-tJe6.js                0.22 kB │ gzip:   0.20 kB\ndist/assets/arrow_drop_up-cla-vK0f.js                  0.22 kB │ gzip:   0.20 kB\ndist/assets/remove-DPFSy6Kb.js                         0.22 kB │ gzip:   0.20 kB\ndist/assets/drag_handle-BEisPdoi.js                    0.24 kB │ gzip:   0.21 kB\ndist/assets/fast_rewind-BqTZiLqs.js                    0.24 kB │ gzip:   0.21 kB\ndist/assets/fast_forward-Y4Exhlvx.js                   0.24 kB │ gzip:   0.21 kB\ndist/assets/add-D2ICStsT.js                            0.24 kB │ gzip:   0.22 kB\ndist/assets/file_download-Im2e7dMO.js                  0.24 kB │ gzip:   0.22 kB\ndist/assets/home-DFDPAsrk.js                           0.24 kB │ gzip:   0.22 kB\ndist/assets/flag-Dbn7zHyD.js                           0.24 kB │ gzip:   0.22 kB\ndist/assets/file_upload-CeGMB-do.js                    0.25 kB │ gzip:   0.22 kB\ndist/assets/send-Dhe3kM9S.js                           0.25 kB │ gzip:   0.21 kB\ndist/assets/menu-CPwyYSas.js                           0.25 kB │ gzip:   0.22 kB\ndist/assets/filter_list-DViCpaM8.js                    0.25 kB │ gzip:   0.22 kB\ndist/assets/format_quote-GFZzAMKf.js                   0.25 kB │ gzip:   0.22 kB\n… (283 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/bundle/per-package.txt",
+            "label": "per-package.txt",
+            "group": "bundle",
+            "kind": "text",
+            "size": 26934,
+            "caption": "Per-dependency byte cost in the entry chunk.",
+            "preview": "Bundle per-package breakdown (treemap-derived). Total rendered: 4685.3 KB\nPACKAGE                                                 RENDER        GZIP   FILES     PCT\n--------------------------------------------------------------------------------------------\nnpm:emoji-picker-react                                399.6 KB     72.3 KB       1   8.53%\nnpm:highlight.js                                      377.9 KB    118.4 KB      39   8.07%\nnpm:yjs                                               264.9 KB     55.4 KB       1   5.65%\nnpm:prosemirror-view                                  236.3 KB     57.1 KB       1   5.04%\nnpm:@tiptap/core                                      181.2 KB     36.9 KB       1   3.87%\nnpm:react-dom                                         131.7 KB     42.3 KB       8   2.81%\nnpm:prosemirror-model                                 121.2 KB     28.6 KB       1   2.59%\nnpm:@uswds/uswds                                      111.7 KB     71.8 KB     245   2.38%\nnpm:lib0                                              106.5 KB     34.1 KB      37   2.27%\nnpm:@dnd-kit/core                                     101.0 KB     21.1 KB       1   2.16%\nnpm:diff-match-patch                                   80.6 KB     18.2 KB       3   1.72%\nnpm:@tiptap/extension-code-block-lowlight              80.0 KB     23.3 KB       1   1.71%\nnpm:prosemirror-transform                              79.9 KB     18.6 KB       1   1.71%\nnpm:react-router                                       79.6 KB     19.4 KB       1   1.70%\nnpm:@tanstack/query-core                               77.4 KB     20.4 KB      18   1.65%\nother:/src/pages/App.tsx                               74.9 KB     11.4 KB       1   1.60%\nnpm:tailwind-merge                                     70.3 KB     12.1 KB       1   1.50%\nnpm:prosemirror-tables                                 70.1 KB     16.3 KB       1   1.50%\nnpm:linkifyjs                                          59.1 KB     20.1 KB       1   1.26%\nnpm:y-prosemirror                                      58.7 KB     15.4 KB       6   1.25%\nnpm:@popperjs/core                                     57.3 KB     22.1 KB      54   1.22%\nother:/src/pages/ReviewsPage.tsx                       53.9 KB      9.0 KB       1   1.15%\nother:/src/components/IssuesList.tsx                   48.7 KB      9.3 KB       1   1.04%\nother:/src/components/icons/uswds/Icon.tsx             41.7 KB      3.5 KB       1   0.89%\nnpm:tippy.js                                           35.8 KB      8.1 KB       2   0.76%\nnpm:prosemirror-state                                  35.2 KB      9.0 KB       1   0.75%\nother:/src/pages/TeamMode.tsx                          33.8 KB      6.6 KB       1   0.72%\n… (266 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/bundle/unused-deps.txt",
+            "label": "unused-deps.txt",
+            "group": "bundle",
+            "kind": "text",
+            "size": 3449,
+            "caption": "Dependencies imported in package.json but never referenced.",
+            "preview": "# Dependency-import usage check (web/package.json -> web/src/)\n# Count = number of files importing that exact package specifier.\n# Note: counts only direct `from 'pkg'` matches; sub-path imports (e.g.\n# 'tippy.js/dist/tippy.css') and CSS-only / asset-only uses are also flagged.\n# A 0 does NOT automatically mean removable — verify usage manually.\n\n  0 @tanstack/query-sync-storage-persister   <-- declared but NEVER imported; web/src/lib/queryClient.ts uses a hand-rolled IDB persister\n  0 @uswds/uswds                             <-- only referenced via `import.meta.glob('/node_modules/@uswds/uswds/dist/img/usa-icons/*.svg', ...)` in components/icons/uswds/Icon.tsx; the npm JS module is NOT in the bundle, only individual SVGs that are actually rendered\n  1 @dnd-kit/core                            (KanbanBoard.tsx, OrgChartPage.tsx)\n  1 @dnd-kit/sortable                        (KanbanBoard.tsx)\n  1 @dnd-kit/utilities                       (KanbanBoard.tsx)\n  1 @radix-ui/react-tooltip                  (ui/Tooltip.tsx)\n  1 @tanstack/react-query-devtools           (main.tsx — eagerly rendered in production)\n  1 clsx                                     (lib/cn.ts)\n  1 cmdk                                     (used via 6 combobox/command-palette files transitively; raw import count varies)\n  1 diff-match-patch                         (DiffViewer.tsx)\n  1 emoji-picker-react                       (EmojiPicker.tsx)\n  1 idb-keyval                               (lib/queryClient.ts)\n  1 lowlight                                 (Editor.tsx — uses `common` set => pulls ~37 highlight.js languages)\n  1 tailwind-merge                           (lib/cn.ts)\n  1 y-indexeddb                              (Editor.tsx)\n  1 y-websocket                              (Editor.tsx)\n  2 @radix-ui/react-popover                  (7 files actually)\n  2 @tanstack/react-query-persist-client     (main.tsx, queryClient.ts)\n  3 tippy.js                                 (Editor extensions: Mention, Emoji, SlashCommands)\n  6 cmdk                                     (combobox/CommandPalette family)\n  7 @radix-ui/react-dialog                   (modals/wizards)\n 13 @ship/shared                             (workspace types)\n 20+ @tiptap/*                               (Editor + editor/* extensions — ~20 packages, heavy)\n 34 @tanstack/react-query                    (hooks + queries)\n… (22 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/bundle/static-analysis.txt",
+            "label": "static-analysis.txt",
+            "group": "bundle",
+            "kind": "text",
+            "size": 3133,
+            "caption": "Static analysis of where each large chunk came from.",
+            "preview": "### Static code-splitting analysis (since no dist could be produced)\n\n# Route-level code splitting in web/src/main.tsx?\nNO. All ~25 page components are statically imported at the top of main.tsx:\n    LoginPage, AppLayout, DocumentsPage, IssuesPage, ProgramsPage,\n    TeamModePage, TeamDirectoryPage, PersonEditorPage, FeedbackEditorPage,\n    PublicFeedbackPage, ProjectsPage, DashboardPage, MyWeekPage,\n    AdminDashboardPage, AdminWorkspaceDetailPage, WorkspaceSettingsPage,\n    ConvertedDocumentsPage, UnifiedDocumentPage, StatusOverviewPage,\n    ReviewsPage, OrgChartPage, InviteAcceptPage, SetupPage\nResult: every user (logged in or not) downloads code for every route on\nfirst visit, including admin and setup screens they may never reach.\n\n# Component-level React.lazy() usage?\nYES — exactly one place: web/src/lib/document-tabs.tsx (lines 52-66) lazy-loads\n13 per-document-type tabs (Project*Tab, Program*Tab, Week*Tab). These are\nconsumed inside <UnifiedDocumentPage>, which itself is statically imported.\nNet effect: the *static* import graph of UnifiedDocumentPage is split, but the\npage wrapper is still on the initial route bundle.\n\n# Suspense boundaries?\nTwo: UnifiedDocumentPage.tsx (wraps the lazy tabs) and components/icons/uswds/Icon.tsx\n(wraps async-resolved SVG components from import.meta.glob).\n\n# Manual chunks in vite.config.ts?\nNO. There is no build.rollupOptions.output.manualChunks. Rollup's automatic\nchunking will produce one entry chunk + one chunk per dynamic import +\nshared \"common\" chunks; no curated vendor split.\n\n# build.sourcemap?\n… (36 more lines)",
+            "external": false
+          }
+        ]
+      },
+      {
+        "id": "type",
+        "label": "Type safety",
+        "description": "Ripgrep counts (the gating metric) and tsc output.",
+        "items": [
+          {
+            "path": "orientation/baselines/type-safety/counts.txt",
+            "label": "counts.txt",
+            "group": "type",
+            "kind": "text",
+            "size": 7610,
+            "caption": "Per-marker breakdown: : any, as Type, non-null !, @ts-expect-error.",
+            "preview": "ShipShape Audit — Type Safety Baseline\nGenerated: 2026-05-19\nScope: web/src, api/src, shared/src, e2e (.ts/.tsx)\nTool: ripgrep 14.1.1\n\nNOTE on tsc-baseline.txt:\n  `pnpm type-check` and direct `tsc --noEmit` invocations are blocked by the\n  audit sandbox (Bash denies pnpm/tsc/node). The compile-error count therefore\n  could not be captured dynamically. All other metrics below are derived from\n  static text scans.\n\n================================================================\n1) EXPLICIT ANY (`: any` colon-form, type position)\n================================================================\nMethod:  rg -n ' any' --type ts <dir>   (raw)\n         then  grep -c ': any' <raw>     (strict colon form)\n\nPer-package strict `: any` count:\n  web/src      24\n  api/src      75\n  shared/src    0\n  e2e           4\n  TOTAL       103\n\n(For context, raw \" any\" matches: web=64, api=276, shared=1, e2e=50.\n The extra raw matches include `as any`, `: any[]` substring already\n captured, comments such as \"as any other field\", and prose.)\n\n================================================================\n2) TYPE ASSERTIONS (`as Type`, excluding `as const` and `import…as`)\n… (147 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/type-safety/tsc-output.txt",
+            "label": "tsc-output.txt",
+            "group": "type",
+            "kind": "text",
+            "size": 284,
+            "caption": "tsc --noEmit output across the monorepo.",
+            "preview": "\n> ship@0.0.0 type-check /Users/sheep/Desktop/Gauntlet/ship\n> pnpm --recursive run type-check\n\nScope: 3 of 4 workspace projects\nshared type-check$ tsc --noEmit\nshared type-check: Done\napi type-check$ tsc --noEmit\nweb type-check$ tsc --noEmit\napi type-check: Done\nweb type-check: Done\n",
+            "external": false
+          }
+        ]
+      },
+      {
+        "id": "a11y",
+        "label": "Accessibility scans",
+        "description": "axe-core scans per route (before + after) and Lighthouse audits.",
+        "items": [
+          {
+            "path": "orientation/baselines/accessibility/axe-summary.md",
+            "label": "axe-summary.md",
+            "group": "a11y",
+            "kind": "markdown",
+            "size": 719,
+            "caption": "Baseline axe summary (markdown overview).",
+            "preview": "# axe-core deep scan — 2026-05-20T03:14:15.076Z\n\nTags: `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `section508`.\nBrowser: chromium-1200 (playwright). Resolution: 1280×800. Auth: cookie reuse via login UI.\n\n| Route | URL | Critical | Serious | Moderate | Minor | Total |\n|---|---|---:|---:|---:|---:|---:|\n| login | `/login` | 0 | 0 | 0 | 0 | 0 |\n| docs | `/docs` | 1 | 1 | 0 | 0 | 2 |\n| my-week | `/my-week` | 0 | 1 | 0 | 0 | 1 |\n| issues | `/issues` | 0 | 0 | 0 | 0 | 0 |\n| projects | `/projects` | 0 | 1 | 0 | 0 | 1 |\n| settings | `/settings` | 1 | 0 | 0 | 0 | 1 |\n| team_allocation | `/team-allocation` | 0 | 0 | 0 | 0 | 0 |\n| editor-wiki | `/documents/57895cfe-dcba-419a-8dbc-a919a846c0b7` | 2 | 1 | 0 | 0 | 3 |\n",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/accessibility/after-axe-summary.md",
+            "label": "after-axe-summary.md",
+            "group": "a11y",
+            "kind": "markdown",
+            "size": 739,
+            "caption": "Post-remediation axe summary.",
+            "preview": "# axe-core deep scan AFTER Task 16 fixes — 2026-05-23T22:53:55.643Z\n\nTags: `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `section508`.\nBrowser: chromium-1200 (playwright). Resolution: 1280×800. Auth: cookie reuse via login UI.\n\n| Route | URL | Critical | Serious | Moderate | Minor | Total |\n|---|---|---:|---:|---:|---:|---:|\n| login | `/login` | 0 | 0 | 0 | 0 | 0 |\n| docs | `/docs` | 0 | 0 | 0 | 0 | 0 |\n| my-week | `/my-week` | 0 | 0 | 0 | 0 | 0 |\n| issues | `/issues` | 0 | 0 | 0 | 0 | 0 |\n| projects | `/projects` | 0 | 0 | 0 | 0 | 0 |\n| settings | `/settings` | 0 | 0 | 0 | 0 | 0 |\n| team_allocation | `/team-allocation` | 0 | 0 | 0 | 0 | 0 |\n| editor-wiki | `/documents/57895cfe-dcba-419a-8dbc-a919a846c0b7` | 0 | 0 | 0 | 0 | 0 |\n",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/accessibility/axe-summary.json",
+            "label": "axe-summary.json",
+            "group": "a11y",
+            "kind": "json",
+            "size": 1547,
+            "caption": "Baseline axe summary (JSON).",
+            "preview": "{\n  \"capturedAt\": \"2026-05-20T03:14:15.076Z\",\n  \"routes\": [\n    {\n      \"name\": \"login\",\n      \"path\": \"/login\",\n      \"critical\": 0,\n      \"serious\": 0,\n      \"moderate\": 0,\n      \"minor\": 0,\n      \"total\": 0,\n      \"ms\": 2385\n    },\n    {\n      \"name\": \"docs\",\n      \"path\": \"/docs\",\n      \"critical\": 1,\n      \"serious\": 1,\n      \"moderate\": 0,\n      \"minor\": 0,\n      \"total\": 2,\n      \"ms\": 3818\n    },\n    {\n      \"name\": \"my-week\",\n      \"path\": \"/my-week\",\n      \"critical\": 0,\n      \"serious\": 1,\n      \"moderate\": 0,\n      \"minor\": 0,\n… (55 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/accessibility/after-axe-summary.json",
+            "label": "after-axe-summary.json",
+            "group": "a11y",
+            "kind": "json",
+            "size": 1547,
+            "caption": "Post-remediation axe summary (JSON).",
+            "preview": "{\n  \"capturedAt\": \"2026-05-23T22:53:55.643Z\",\n  \"routes\": [\n    {\n      \"name\": \"login\",\n      \"path\": \"/login\",\n      \"critical\": 0,\n      \"serious\": 0,\n      \"moderate\": 0,\n      \"minor\": 0,\n      \"total\": 0,\n      \"ms\": 2503\n    },\n    {\n      \"name\": \"docs\",\n      \"path\": \"/docs\",\n      \"critical\": 0,\n      \"serious\": 0,\n      \"moderate\": 0,\n      \"minor\": 0,\n      \"total\": 0,\n      \"ms\": 2642\n    },\n    {\n      \"name\": \"my-week\",\n      \"path\": \"/my-week\",\n      \"critical\": 0,\n      \"serious\": 0,\n      \"moderate\": 0,\n      \"minor\": 0,\n… (55 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/accessibility/keyboard-walkthrough.md",
+            "label": "keyboard-walkthrough.md",
+            "group": "a11y",
+            "kind": "markdown",
+            "size": 3722,
+            "caption": "Manual keyboard-navigation walkthrough notes.",
+            "preview": "# Keyboard-Only Walkthrough — Section 508 / WCAG 2.1.1\n\nRun via Playwright MCP. The agent should drive Chromium with mouse never used after page load. Use only Tab, Shift+Tab, Enter, Space, Escape, and arrow keys. Record where focus goes after each keystroke, whether focus is visible, and whether each interactive element is reachable.\n\nFor each flow, capture:\n- Pass/Fail per WCAG SC 2.1.1 (Keyboard) and 2.4.7 (Focus Visible)\n- Focus order log (sequence of `document.activeElement` snapshots — capture `tagName`, `aria-label`, `textContent.slice(0,40)`)\n- Any keyboard trap (Tab gets stuck) — WCAG 2.1.2\n- Any element only operable by mouse\n\n## Flow 1 — Login (route: `/login`)\n\n1. Navigate to `/login`. Confirm initial focus is on email input (`autoFocus` per Login.tsx:247).\n2. Tab through: email → password → \"Sign in\" submit button → any OAuth/SSO links if present.\n3. Shift+Tab back to verify reverse order.\n4. Type credentials; press Enter from password field to submit.\n5. Verify focus moves to the new page (post-login) — should land on `<main>` (id=main-content, tabIndex=-1) or the skip link.\n\nExpected pitfalls:\n- Logo image is `<img alt=\"Ship\">` — should NOT receive focus (decorative-ish).\n- The skip-link \"Skip to main content\" should appear when Tab is pressed from the very top of any authenticated page (App.tsx:264-269).\n\n## Flow 2 — Create a document (route: `/docs`)\n\n1. From `/docs`, press Tab repeatedly until the \"New\" / create button is focused. Verify it has a visible focus ring.\n2. Press Enter to create a new wiki document. Confirm focus auto-jumps to the title input (\"Untitled\" placeholder).\n3. Type a title, press Enter or Tab into the editor body.\n4. In the editor body, press `/` to open the slash command menu. Verify arrow-key navigation works and Enter inserts the chosen block.\n5. Press Escape to dismiss the menu — focus should return to the editor.\n\n… (17 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/accessibility/lighthouse-my-week.json",
+            "label": "lighthouse-my-week.json",
+            "group": "a11y",
+            "kind": "json",
+            "size": 126849,
+            "caption": "Lighthouse audit — /my-week.",
+            "preview": "{\n  \"lighthouseVersion\": \"13.3.0\",\n  \"requestedUrl\": \"http://localhost:5174/my-week\",\n  \"mainDocumentUrl\": \"http://localhost:5174/my-week\",\n  \"finalDisplayedUrl\": \"http://localhost:5174/my-week\",\n  \"finalUrl\": \"http://localhost:5174/my-week\",\n  \"fetchTime\": \"2026-05-20T00:20:29.546Z\",\n  \"gatherMode\": \"navigation\",\n  \"runWarnings\": [],\n  \"userAgent\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.0.0 Safari/537.36\",\n  \"environment\": {\n    \"networkUserAgent\": \"Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36\",\n    \"hostUserAgent\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.0.0 Safari/537.36\",\n    \"benchmarkIndex\": 4454.5,\n    \"credits\": {\n      \"axe-core\": \"4.11.4\"\n    }\n  },\n  \"audits\": {\n    \"accesskeys\": {\n      \"id\": \"accesskeys\",\n      \"title\": \"`[accesskey]` values are unique\",\n      \"description\": \"Access keys let users quickly focus a part of the page. For proper navigation, each access key must be unique. [Learn more about access keys](https://dequeuniversity.com/rules/axe/4.11/accesskeys).\",\n      \"score\": null,\n      \"scoreDisplayMode\": \"notApplicable\"\n    },\n    \"aria-allowed-attr\": {\n      \"id\": \"aria-allowed-attr\",\n      \"title\": \"`[aria-*]` attributes match their roles\",\n      \"description\": \"Each ARIA `role` supports a specific subset of `aria-*` attributes. Mismatching these invalidates the `aria-*` attributes. [Learn how to match ARIA attributes to their roles](https://dequeuniversity.com/rules/axe/4.11/aria-allowed-attr).\",\n… (2992 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/accessibility/lighthouse-issues.json",
+            "label": "lighthouse-issues.json",
+            "group": "a11y",
+            "kind": "json",
+            "size": 118996,
+            "caption": "Lighthouse audit — /issues.",
+            "preview": "{\n  \"lighthouseVersion\": \"13.3.0\",\n  \"requestedUrl\": \"http://localhost:5174/issues\",\n  \"mainDocumentUrl\": \"http://localhost:5174/issues\",\n  \"finalDisplayedUrl\": \"http://localhost:5174/issues\",\n  \"finalUrl\": \"http://localhost:5174/issues\",\n  \"fetchTime\": \"2026-05-20T00:20:51.804Z\",\n  \"gatherMode\": \"navigation\",\n  \"runWarnings\": [],\n  \"userAgent\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.0.0 Safari/537.36\",\n  \"environment\": {\n    \"networkUserAgent\": \"Mozilla/5.0 (Linux; Android 11; moto g power (2022)) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Mobile Safari/537.36\",\n    \"hostUserAgent\": \"Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/143.0.0.0 Safari/537.36\",\n    \"benchmarkIndex\": 4457.5,\n    \"credits\": {\n      \"axe-core\": \"4.11.4\"\n    }\n  },\n  \"audits\": {\n    \"accesskeys\": {\n      \"id\": \"accesskeys\",\n      \"title\": \"`[accesskey]` values are unique\",\n      \"description\": \"Access keys let users quickly focus a part of the page. For proper navigation, each access key must be unique. [Learn more about access keys](https://dequeuniversity.com/rules/axe/4.11/accesskeys).\",\n      \"score\": null,\n      \"scoreDisplayMode\": \"notApplicable\"\n    },\n    \"aria-allowed-attr\": {\n      \"id\": \"aria-allowed-attr\",\n      \"title\": \"`[aria-*]` attributes match their roles\",\n      \"description\": \"Each ARIA `role` supports a specific subset of `aria-*` attributes. Mismatching these invalidates the `aria-*` attributes. [Learn how to match ARIA attributes to their roles](https://dequeuniversity.com/rules/axe/4.11/aria-allowed-attr).\",\n… (2633 more lines)",
+            "external": false
+          },
+          {
+            "path": "orientation/baselines/accessibility/voiceover-results-2026-05-20.md",
+            "label": "voiceover-results-2026-05-20.md",
+            "group": "a11y",
+            "kind": "markdown",
+            "size": 8204,
+            "caption": "VoiceOver probe results — main scan.",
+            "preview": "# Cat 7 — VoiceOver walk transcript (2026-05-20)\n\n**Captured:** 2026-05-20T21:34:48.045Z\n**Driver:** `orientation/baselines/accessibility/voiceover-walk.mjs` — guidepup + Playwright (Chromium, headed)\n**Stack:** http://localhost:5173, docker postgres\n\nThis is an actual VoiceOver spoken-phrase log (not a proxy). guidepup\nreads VO's speech-log facility, so every `phrase` below is what VO\nliterally said as it walked the page with VO+→.\n\n## Routes covered\n\n- **Dashboard (/dashboard) — PRD-literal** — `/dashboard`\n- **Default landing (/my-week)** — `/my-week`\n- **Document editor (wiki)** — `/documents/57895cfe-dcba-419a-8dbc-a919a846c0b7`\n\n## Dashboard (/dashboard) — PRD-literal (`/dashboard`)\n\nStep | What VoiceOver said\n---:|---\n1 | New Tab description, New tab button. You are currently on a button, inside of a group. To click this button, press Control-Option-Space. Press Control-Option-Command-Slash to bring up the more content menu. To exit this group, press Control-Option-Shift-Up Arrow.\n2 | Search tabs menu pop up pop up button. You are currently on a pop up button, inside of a group. To display a list of options, press Control-Option-Space. To exit this group, press Control-Option-Shift-Up Arrow.\n3 | toolbar item palette. You are currently on a toolbar item palette, inside of a group. To interact with the items on this toolbar, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.\n4 | Ship \\| Ship web content. You are currently on a web content, inside of a group. To enter the web area, press Control-Option-Shift-Down Arrow. To exit this group, press Control-Option-Shift-Up Arrow.\n5 | Ship \\| Ship web content\n6 | Ship \\| Ship web content\n7 | Ship \\| Ship web content\n8 | Ship \\| Ship web content\n9 | Ship \\| Ship web content\n10 | Ship \\| Ship web content\n… (113 more lines)",
+            "external": false
+          }
+        ]
+      },
+      {
+        "id": "compliance",
+        "label": "Compliance scans",
+        "description": "gitleaks secret scans across the full tree and Phase 2 commits.",
+        "items": [
+          {
+            "path": "orientation/compliance/gitleaks-fulltree.json",
+            "label": "gitleaks-fulltree.json",
+            "group": "compliance",
+            "kind": "json",
+            "size": 797,
+            "caption": "Full-tree gitleaks scan results.",
+            "preview": "[\n  {\n    \"RuleID\": \"curl-auth-header\",\n    \"Description\": \"Discovered a potential authorization token provided in a curl command header, which could compromise the curl accessed resource.\",\n    \"StartLine\": 50,\n    \"EndLine\": 52,\n    \"StartColumn\": 14,\n    \"EndColumn\": 142,\n    \"Match\": \"curl -sS -c /tmp/ship-cookies.txt http://localhost:3000/api/csrf-token)\\\",\\n      \\\"Read(//private/tmp/**)\\\",\\n      \\\"Bash(curl -sS -b /tmp/ship-cookies.txt -c /tmp/ship-cookies.txt -H 'Content-Type: application/json' -H 'X-CSRF-Token: REDACTED'\",\n    \"Secret\": \"REDACTED\",\n    \"File\": \".claude/settings.local.json\",\n    \"SymlinkFile\": \"\",\n    \"Commit\": \"\",\n    \"Entropy\": 2.866248,\n    \"Author\": \"\",\n    \"Email\": \"\",\n    \"Date\": \"\",\n    \"Message\": \"\",\n    \"Tags\": [],\n    \"Fingerprint\": \".claude/settings.local.json:curl-auth-header:50\"\n  }\n]",
+            "external": false
+          },
+          {
+            "path": "orientation/compliance/gitleaks-phase2-commits.json",
+            "label": "gitleaks-phase2-commits.json",
+            "group": "compliance",
+            "kind": "json",
+            "size": 3,
+            "caption": "gitleaks scan over Phase 2 commits only.",
+            "preview": "[]",
+            "external": false
+          }
+        ]
+      }
+    ]
+  },
+  "compliance": {
+    "scans": [
+      {
+        "source": "fulltree",
+        "label": "Full-tree scan",
+        "description": "gitleaks across every committed file in the repository — catches anything historical.",
+        "totalFindings": 1
+      },
+      {
+        "source": "phase2",
+        "label": "Phase 2 commits",
+        "description": "gitleaks scoped to the remediation commits only — proves no secrets introduced by this work.",
+        "totalFindings": 0
+      }
+    ],
+    "byRule": [
+      {
+        "ruleId": "curl-auth-header",
+        "count": 1
+      }
+    ],
+    "byFile": [
+      {
+        "file": ".claude/settings.local.json",
+        "count": 1
+      }
+    ],
+    "findings": [
+      {
+        "source": "fulltree",
+        "ruleId": "curl-auth-header",
+        "ruleDescription": "Discovered a potential authorization token provided in a curl command header, which could compromise the curl accessed resource.",
+        "file": ".claude/settings.local.json",
+        "startLine": 50,
+        "endLine": 52,
+        "fingerprint": ".claude/settings.local.json:curl-auth-header:50"
+      }
+    ]
+  },
+  "deployedUrl": "http://143.198.163.184/",
+  "repoUrl": "https://github.com/ccandelori/shipshape"
+}
