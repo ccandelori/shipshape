@@ -34,6 +34,7 @@ import aiRoutes from './routes/ai.js';
 import weeklyPlansRoutes, { weeklyRetrosRouter } from './routes/weekly-plans.js';
 import { documentCommentsRouter, commentsRouter } from './routes/comments.js';
 import healthCollaborationRoutes from './routes/health-collaboration.js';
+import shipshapeRoutes from './routes/shipshape.js';
 import { setupSwagger } from './swagger.js';
 import { COOKIE_SECURE } from './utils/cookieSecure.js';
 import { initializeCAIA } from './services/caia.js';
@@ -179,6 +180,10 @@ export function createApp(corsOrigin: string = 'http://localhost:5173'): express
   // /health/collaboration returns JSON; /metrics returns Prometheus text.
   // No CSRF — read-only, intended for monitoring sidecars + ops dashboards.
   app.use('/', healthCollaborationRoutes);
+
+  // Dashboard live-data: anonymous /latest + /runs/:id reads, bearer-gated /run.
+  // CSRF intentionally bypassed — POST /run uses Authorization header, not cookies.
+  app.use('/api/shipshape', shipshapeRoutes);
 
   // API documentation (no auth needed)
   setupSwagger(app);
