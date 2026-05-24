@@ -1,0 +1,17 @@
+{
+  "name": "shipshape-audit-demo",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "slidev build",
+    "dev": "slidev --open",
+    "export": "slidev export"
+  },
+  "dependencies": {
+    "@slidev/cli": "latest",
+    "@slidev/theme-default": "latest",
+    "@slidev/theme-seriph": "^0.25.0",
+    "slidev-theme-dracula": "^0.2.0",
+    "slidev-theme-field-manual": "^0.1.0"
+  }
+}

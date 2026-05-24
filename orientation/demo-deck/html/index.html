@@ -1,0 +1,483 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>ShipShape Audit — Phase 1 Findings</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<div class="progress"></div>
+<div class="deck">
+
+<!-- ============================================================
+     SLIDE 1 — Cover
+     ============================================================ -->
+<section class="slide cover active">
+  <h1>ShipShape Audit</h1>
+  <h2>Phase 1 — Findings</h2>
+  <div class="meta">
+    <p>US-Department-of-the-Treasury/ship · commit <code>076a18371</code></p>
+    <p>Cameron Candelori · GFA Week 4 · 2026-05-20</p>
+  </div>
+  <aside class="notes">This briefing summarises the Phase 1 findings of the ShipShape audit, performed against US-Department-of-the-Treasury/ship at commit 076a18371. The PRD-required baseline measurements were taken across all seven categories. Four critical defects were identified and reproduced under live conditions.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 2 — Executive Summary
+     ============================================================ -->
+<section class="slide">
+  <h1>Executive Summary</h1>
+  <p>Four critical defects were identified and reproduced under live conditions.</p>
+  <table>
+    <thead><tr><th style="width:3em">#</th><th>Defect</th><th style="width:14em">Severity</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><code>yjsToJson()</code> returns <code>undefined</code> under fault conditions; the <code>pg</code> driver coerces this to SQL NULL, silently nulling <code>documents.content</code>.</td><td><span class="sev sev-critical">Critical · silent data loss</span></td></tr>
+      <tr><td>2</td><td>WebSocket session authentication is performed only at HTTP upgrade; a revoked or expired session continues to persist edits via the WebSocket.</td><td><span class="sev sev-critical">Critical · security exposure</span></td></tr>
+      <tr><td>3</td><td><code>services/accountability.ts</code> contains six N+1 query patterns; dashboard load issues 30&ndash;80 SQL queries per request at production volume.</td><td><span class="sev sev-critical">Critical · performance</span></td></tr>
+      <tr><td>4</td><td>No global Express error middleware exists; uncaught exceptions return <code>Content-Type: text/html</code>, breaking frontend JSON parsing.</td><td><span class="sev sev-critical">Critical · error handling</span></td></tr>
+    </tbody>
+  </table>
+  <p class="muted">Reproduction protocols and evidence are documented under <code>orientation/baselines/runtime-errors/evidence/</code>.</p>
+  <aside class="notes">Four critical defects, all reproduced under live conditions. The detailed methodology, evidence files, and reproduction protocols are referenced at the end of this briefing. Defect 1 was reproduced via a documented defect-injection-then-revert protocol; defects 2, 3, and 4 were reproduced against the audited commit unmodified.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 3 — Audit Scope
+     ============================================================ -->
+<section class="slide">
+  <h1>Audit Scope</h1>
+  <p>Phase 1 of the GFA Week 4 ShipShape PRD specifies baseline measurements across seven categories. Remediation is not permitted during the 36-hour audit window.</p>
+  <table>
+    <thead><tr><th style="width:3em"></th><th style="width:14em">Category</th><th>Phase 1 baseline</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Type Safety</td><td>747 violations · <code>pnpm type-check</code> exit 0</td></tr>
+      <tr><td>2</td><td>Bundle Size</td><td>2,074 KB / 588 KB gzipped main chunk</td></tr>
+      <tr><td>3</td><td>API Response Time</td><td>P95 = 46.6 ms on <code>/api/issues</code> at c=50</td></tr>
+      <tr><td>4</td><td>DB Query Efficiency</td><td>26 / 7 / 5 / 21 / 5 queries per PRD-prescribed flow</td></tr>
+      <tr><td>5</td><td>Test Coverage</td><td>API 40.34% lines · web suite non-passing on audited commit</td></tr>
+      <tr><td>6</td><td>Runtime Errors</td><td>12 scenarios captured live · 4 critical defects</td></tr>
+      <tr><td>7</td><td>Accessibility</td><td>Lighthouse minimum 0.96 · 9 axe Critical+Serious violations</td></tr>
+    </tbody>
+  </table>
+  <p><strong>Phase 1 gate: met on 2026-05-20.</strong></p>
+  <aside class="notes">The audit follows the seven PRD categories. The hard gate is pass-fail on whether baseline measurements exist for all seven. The gate was met. Each category is presented in three slides: methodology, baseline metric table, and findings with severity. Category 6, which contains the four critical defects, is expanded to six slides.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 4 — Category 1 Methodology
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 1 · Type Safety <span class="muted">— Methodology</span></h1>
+  <p>Static text analysis was performed with <code>ripgrep 14.1.1</code> across <code>web/src</code>, <code>api/src</code>, <code>shared/src</code>, and <code>e2e/</code> (TypeScript files only).</p>
+  <p>Five violation classes were enumerated, with filters applied to discount SQL column aliases, <code>import * as</code> statements, and English-prose matches.</p>
+  <p><code>pnpm type-check</code> was executed live on 2026-05-19 across all three workspace packages.</p>
+  <aside class="notes">Type safety was measured via static analysis. Five violation classes were counted with filters applied to discount false positives. The TypeScript compiler was run live across the three workspace packages on the audited commit.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 5 — Category 1 Baseline
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 1 · Type Safety <span class="muted">— Baseline</span></h1>
+  <table class="metric">
+    <thead><tr><th>Metric</th><th>Baseline</th></tr></thead>
+    <tbody>
+      <tr><td><code>: any</code> (colon-form)</td><td>103</td></tr>
+      <tr><td><code>as &lt;Type&gt;</code> (excluding <code>as const</code> and imports)</td><td>577</td></tr>
+      <tr><td><code>!</code> (non-null assertions)</td><td>~66</td></tr>
+      <tr><td><code>@ts-ignore</code></td><td>0</td></tr>
+      <tr><td><code>@ts-expect-error</code></td><td>1</td></tr>
+      <tr><td>Strict mode enabled (root)</td><td>Yes</td></tr>
+      <tr><td><code>pnpm type-check</code> error count</td><td>0</td></tr>
+      <tr><td><strong>Total combined violations</strong></td><td><strong>747</strong> <em>(≈498 production / ≈249 test)</em></td></tr>
+    </tbody>
+  </table>
+  <aside class="notes">747 total violations were identified. The compiler accepts the codebase as type-correct — the violations are surface-level constructs that erode the type system's guarantees rather than compile errors. The production-vs-test split was derived by re-running the ripgrep filter with a test-file path predicate.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 6 — Category 1 Findings
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 1 · Type Safety <span class="muted">— Findings</span></h1>
+  <table>
+    <thead><tr><th style="width:3em">#</th><th>Finding</th><th style="width:7em">Severity</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><code>web/tsconfig.json</code> is a standalone configuration that omits <code>noUncheckedIndexedAccess</code>, <code>noImplicitReturns</code>, and <code>noFallthroughCasesInSwitch</code> flags enforced at the workspace root.</td><td><span class="sev sev-high">High</span></td></tr>
+      <tr><td>2</td><td>Approximately 160 <code>as any</code> casts are concentrated in four <code>pg</code>-mock test files (<code>api/src/services/accountability.test.ts</code> and three siblings).</td><td><span class="sev sev-medium">Medium</span></td></tr>
+      <tr><td>3</td><td>Production route handlers cast <code>req.query.&lt;name&gt; as string</code> throughout <code>weeks.ts</code>, <code>team.ts</code>, <code>projects.ts</code>, and <code>claude.ts</code>, masking the <code>string | string[] | undefined</code> union.</td><td><span class="sev sev-high">High</span></td></tr>
+      <tr><td>4</td><td>Approximately 80 <code>document.properties as &lt;T&gt;</code> casts appear in <code>web/src</code> page and editor components, propagated by the untyped JSONB column in the shared <code>Document</code> type.</td><td><span class="sev sev-medium">Medium</span></td></tr>
+    </tbody>
+  </table>
+  <aside class="notes">The highest-severity Cat 1 finding is the web package tsconfig omission, which permits a class of compile errors that the rest of the workspace catches. The test-side concentration of "as any" represents lower runtime risk but masks future schema changes.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 7 — Category 2 Methodology
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 2 · Bundle Size <span class="muted">— Methodology</span></h1>
+  <p>A live production build was executed via <code>pnpm build:web</code>. Bundle output, per-chunk sizes, and per-package attribution were captured.</p>
+  <p>An interactive treemap was generated by <code>rollup-plugin-visualizer</code> and is regenerable from a clean checkout via a committed shell script (<code>bash orientation/baselines/bundle/regenerate.sh</code>).</p>
+  <p>The visualization is gated behind the <code>BUNDLE_ANALYZE=1</code> environment variable so production builds remain unaffected.</p>
+  <aside class="notes">The bundle was measured via live production build. The treemap artifact is regenerable from a clean checkout, with the visualization step gated behind an environment variable so the production deployment path is not modified.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 8 — Category 2 Baseline
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 2 · Bundle Size <span class="muted">— Baseline</span></h1>
+  <table class="metric">
+    <thead><tr><th>Metric</th><th>Baseline</th></tr></thead>
+    <tbody>
+      <tr><td>Total production bundle size (<code>dist/</code>)</td><td>4.5 MB</td></tr>
+      <tr><td>Largest chunk</td><td><code>index-*.js</code> — 2,074 KB raw / 588 KB gzipped</td></tr>
+      <tr><td>Number of JS chunks</td><td>261</td></tr>
+      <tr><td>Top 3 dependencies by gzipped weight</td><td><code>highlight.js</code> via <code>lowlight</code> (118 KB) · <code>emoji-picker-react</code> (72 KB) · <code>yjs</code> (55 KB)</td></tr>
+      <tr><td>Unused dependencies identified</td><td><code>@tanstack/query-sync-storage-persister</code></td></tr>
+    </tbody>
+  </table>
+  <p>Vite issues a build-time warning that the main chunk exceeds the 500 KB minified threshold by approximately fourfold.</p>
+  <aside class="notes">The main chunk contains 99 percent of the JavaScript weight and exceeds Vite's recommended threshold by a factor of four. One unused dependency was identified.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 9 — Category 2 Findings
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 2 · Bundle Size <span class="muted">— Findings</span></h1>
+  <table>
+    <thead><tr><th style="width:3em">#</th><th>Finding</th><th style="width:7em">Severity</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><code>web/src/main.tsx</code> statically imports approximately 25 page components, including <code>AdminDashboard</code>, <code>AdminWorkspaceDetail</code>, <code>OrgChartPage</code>, <code>SetupPage</code>, and <code>InviteAccept</code>. No route-level lazy-loading is in use.</td><td><span class="sev sev-high">High</span></td></tr>
+      <tr><td>2</td><td><code>web/src/components/Editor.tsx</code> imports <code>lowlight</code>'s <code>common</code> syntax-highlighting bundle, registering approximately 37 language grammars at module load.</td><td><span class="sev sev-high">High</span></td></tr>
+      <tr><td>3</td><td><code>@tanstack/react-query-devtools</code> is statically imported and rendered unconditionally in <code>web/src/main.tsx</code>. The package is intended for development use only.</td><td><span class="sev sev-high">High</span></td></tr>
+      <tr><td>4</td><td><code>emoji-picker-react</code> (72 KB gzipped) is statically imported by <code>EmojiPicker.tsx</code>. The component is discretionary and not exercised by most users.</td><td><span class="sev sev-medium">Medium</span></td></tr>
+    </tbody>
+  </table>
+  <aside class="notes">The dominant cause of bundle weight is the absence of route-level code splitting combined with two unconditional dependencies — the lowlight common bundle and the development-only ReactQueryDevtools — that ship to production users.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 10 — Category 3 Methodology
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 3 · API Response Time <span class="muted">— Methodology</span></h1>
+  <p>The database was seeded to the PRD-required floor: 500 documents, 104 issues, 20 users, 35 sprints.</p>
+  <p>The five highest-traffic endpoints were identified by frontend network trace. Each endpoint was benchmarked with <code>autocannon v8.0.0</code> at concurrency 10, 25, and 50 for 30 seconds.</p>
+  <p><code>autocannon</code> does not emit native P95; <code>k6 v2.0.0</code> was added on 2026-05-20 to capture PRD-literal P95 on the two slowest endpoints.</p>
+  <p>The rate-limit bypass required for the benchmark is gated behind an <code>isTestEnv</code> check in <code>apiLimiter</code> and unreachable in dev or production builds.</p>
+  <aside class="notes">Five endpoints were benchmarked. Autocannon emits p90 and p97.5 but not P95; k6 was added specifically to capture PRD-literal P95 on the two slowest endpoints. The rate-limit bypass scaffolding is environment-gated to avoid affecting production.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 11 — Category 3 Baseline
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 3 · API Response Time <span class="muted">— Baseline</span></h1>
+  <p class="muted">c=50 row shown; full c=10/25/50 data preserved in <code>baselines/api-response-time/</code>.</p>
+  <table class="metric">
+    <thead><tr><th>Endpoint</th><th>P50</th><th>P95</th><th>P99</th></tr></thead>
+    <tbody>
+      <tr><td><code>GET /api/issues</code></td><td>39 ms</td><td><strong>46.6 ms</strong></td><td>51 ms</td></tr>
+      <tr><td><code>GET /api/documents?type=wiki</code></td><td>45 ms</td><td><strong>53.0 ms</strong></td><td>56 ms</td></tr>
+      <tr><td><code>GET /api/auth/me</code></td><td>15 ms</td><td>22 ms*</td><td>27 ms</td></tr>
+      <tr><td><code>GET /api/projects</code></td><td>23 ms</td><td>34 ms*</td><td>37 ms</td></tr>
+      <tr><td><code>GET /api/weeks</code></td><td>23 ms</td><td>31 ms*</td><td>36 ms</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">* autocannon p97.5 (strict upper bound on P95). All 850,757 requests returned 2xx.</p>
+  <aside class="notes">PRD-literal P95 was captured via k6 on the two slowest endpoints. The remaining three are reported as autocannon's p97.5, which is a strict upper bound on P95. All 850 thousand requests across the matrix returned successful responses.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 12 — Category 3 Findings
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 3 · API Response Time <span class="muted">— Findings</span></h1>
+  <table>
+    <thead><tr><th style="width:3em">#</th><th>Finding</th><th style="width:9em">Severity</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td><code>GET /api/issues</code> is the slowest endpoint under load; the route performs JSONB joins against <code>documents</code> and <code>users</code>, with sort by a CASE expression over <code>properties-&gt;&gt;'priority'</code>.</td><td><span class="sev sev-high">High</span></td></tr>
+      <tr><td>2</td><td><code>GET /api/documents?type=wiki</code> returns an unpaginated 241-row payload at c=50, exposing list-cost as a function of workspace document count.</td><td><span class="sev sev-high">High</span></td></tr>
+      <tr><td>3</td><td><code>api/src/middleware/auth.ts</code> issues <code>UPDATE sessions SET last_activity = NOW()</code> on every authenticated request. Cookie-refresh is throttled to 60 seconds; the database write is not.</td><td><span class="sev sev-high">High</span></td></tr>
+      <tr><td>4</td><td><code>GET /api/projects</code> and <code>/api/weeks</code> execute correlated subqueries; the <code>/api/projects</code> planner reports 0 of 139 Memoize cache hits.</td><td><span class="sev sev-medium">Medium / High</span></td></tr>
+    </tbody>
+  </table>
+  <aside class="notes">The most significant finding is the unthrottled session-activity write, which is a cross-cutting cost paid by every authenticated request. The correlated subqueries in /api/projects and /api/weeks are not the slowest endpoints at current seed volume but scale poorly.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 13 — Category 4 Methodology
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 4 · DB Query Efficiency <span class="muted">— Methodology</span></h1>
+  <p>Two evidence layers were captured.</p>
+  <p><strong>Layer A.</strong> PostgreSQL query logging was enabled via <code>ALTER SYSTEM SET log_statement = 'all'</code>; the five PRD-required user flows were walked and queries counted from docker logs. These counts are lower bounds — the stderr buffer dropped lines under burst.</p>
+  <p><strong>Layer B.</strong> The <code>pg_stat_statements</code> extension was enabled and reset between flows for exact counts. <code>EXPLAIN ANALYZE</code> was executed against the slowest query in each flow.</p>
+  <aside class="notes">Two evidence layers. The initial docker-log walk produced lower-bound counts because the postgres stderr buffer dropped lines under burst. The pg_stat_statements layer produced exact counts and is the authoritative source.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 14 — Category 4 Baseline
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 4 · DB Query Efficiency <span class="muted">— Baseline</span></h1>
+  <table>
+    <thead><tr><th>User flow</th><th style="width:9em">Total queries</th><th style="width:11em">Slowest query (ms)</th><th>N+1 detected?</th></tr></thead>
+    <tbody>
+      <tr><td>Load main page</td><td>26</td><td>0.28</td><td>Yes — <code>services/accountability.ts:175–437</code></td></tr>
+      <tr><td>View a document</td><td>7</td><td>0.11</td><td>No</td></tr>
+      <tr><td>List issues</td><td>5</td><td>0.26</td><td>No (post-filter scan: 92 of 104 rows discarded)</td></tr>
+      <tr><td>Sprint / team board</td><td>21</td><td>0.26</td><td>Yes — per-row UPDATE in <code>team.ts:561–577</code></td></tr>
+      <tr><td>Search content</td><td>5</td><td>0.19</td><td>No (Seq Scan: 491 of 500 rows discarded)</td></tr>
+    </tbody>
+  </table>
+  <p class="muted">Query times reflect localhost warm-cache execution (<code>Buffers: shared hit</code>). Production cold-cache will produce materially higher figures.</p>
+  <aside class="notes">The localhost warm-cache caveat is explicit. The query counts are exact via pg_stat_statements. The Sequential Scan and post-filter row-discard counts are the load-bearing shapes — they remain accurate regardless of execution-time scaling.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 15 — Category 4 Findings
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 4 · DB Query Efficiency <span class="muted">— Findings</span></h1>
+  <table>
+    <thead><tr><th style="width:3em">#</th><th>Finding</th><th style="width:9em">Severity</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Of all JSONB property expressions in route SQL, only <code>properties-&gt;&gt;'user_id'</code> on person documents has a dedicated expression index. <code>state</code>, <code>assignee_id</code>, <code>sprint_number</code>, and <code>owner_id</code> are uncovered.</td><td><span class="sev sev-high">High</span></td></tr>
+      <tr><td>2</td><td><code>services/accountability.ts:175–437</code> issues six awaited queries inside for-each loops. Projected dashboard load: 30–80 queries per request at production volume.</td><td><span class="sev sev-critical">Critical</span></td></tr>
+      <tr><td>3</td><td>The search endpoint executes <code>title ILIKE '%&lt;term&gt;%'</code>, which is non-sargable. A Sequential Scan was confirmed, filtering 491 of 500 rows.</td><td><span class="sev sev-high">High</span></td></tr>
+      <tr><td>4</td><td><code>GET /api/projects</code> Memoize cache produced 0 hits / 139 misses, indicating a correlated-subquery shape unsuited to plan caching.</td><td><span class="sev sev-medium">Medium / High</span></td></tr>
+    </tbody>
+  </table>
+  <aside class="notes">The load-bearing finding is the absence of expression indexes on JSONB hot paths. The accountability N+1 is the single largest source of database load and carries the Cat 6 critical-defect designation. The search Seq Scan is a known-pattern non-sargable predicate.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 16 — Category 5 Methodology
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 5 · Test Coverage <span class="muted">— Methodology</span></h1>
+  <p>The API unit test suite was executed via <code>pnpm --filter @ship/api test --coverage</code> using <code>@vitest/coverage-v8</code>.</p>
+  <p>The web unit test suite was executed via <code>pnpm --filter @ship/web test --coverage</code>.</p>
+  <p>The end-to-end test suite was executed three times at <code>PLAYWRIGHT_WORKERS=8</code> for flake cross-reference.</p>
+  <p>Critical user flows (authentication, document CRUD, real-time synchronization, sprint management) were mapped against the spec inventory.</p>
+  <aside class="notes">Two unit suites and one E2E suite. The E2E suite was run three times to identify flakes by intersection of runs. Critical flows were enumerated against the existing spec inventory.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 17 — Category 5 Baseline
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 5 · Test Coverage <span class="muted">— Baseline</span></h1>
+  <table class="metric">
+    <thead><tr><th>Metric</th><th>Baseline</th></tr></thead>
+    <tbody>
+      <tr><td>API unit tests</td><td>451 / 451 pass / 0 fail / 0 flaky (~3 min)</td></tr>
+      <tr><td>Web unit tests on audited commit</td><td>146 invocations, <strong>13 fail</strong> across 4 of 16 files</td></tr>
+      <tr><td>E2E <code>test()</code> invocations</td><td>869 across 71 specs</td></tr>
+      <tr><td>E2E results (3 runs at c=8)</td><td>864–866 pass / 0 hard fail / 10 unique flakes</td></tr>
+      <tr><td>API coverage</td><td>40.34% lines / 33.44% branches</td></tr>
+      <tr><td>Critical flows with zero coverage</td><td>WS session timeout · soft-FK orphan · <code>yjsToJson</code> drift</td></tr>
+    </tbody>
+  </table>
+  <aside class="notes">The API suite passes cleanly. The web suite was observed to be in a non-passing state on the audited commit. End-to-end stability was confirmed across three runs with zero hard failures. Three presearch-identified critical paths have zero unit-level coverage.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 18 — Category 5 Findings
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 5 · Test Coverage <span class="muted">— Findings</span></h1>
+  <table>
+    <thead><tr><th style="width:3em">#</th><th>Finding</th><th style="width:7em">Severity</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>The web test suite was non-passing on the audited commit. Three of four failing files were silently stale following intentional production refactors; two had never been observed to pass.</td><td><span class="sev sev-high">High</span></td></tr>
+      <tr><td>2</td><td>Root-level <code>pnpm test</code> invokes only the <code>@ship/api</code> package; web unit tests have no routine execution path.</td><td><span class="sev sev-high">High</span></td></tr>
+      <tr><td>3</td><td>API coverage is bimodal: hot routes 60–100%, cold operational routes below 10% (<code>dashboard.ts</code> 1.98%, <code>caia-auth.ts</code> 3.9%, <code>weekly-plans.ts</code> 4.8%).</td><td><span class="sev sev-high">High</span></td></tr>
+      <tr><td>4</td><td>One end-to-end test flaked consistently across runs: <code>program-mode-week-ux.spec.ts:369</code> (failed first attempt in 2 of 3 runs).</td><td><span class="sev sev-medium">Medium</span></td></tr>
+    </tbody>
+  </table>
+  <aside class="notes">The meta-finding is that the root test script omits the web package — a structural condition under which silently-rotting tests cannot be detected by routine CI. The bimodal API coverage indicates operational and administrative routes are materially less protected than user-facing routes.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 19 — Category 6 Methodology
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 6 · Runtime Errors <span class="muted">— Methodology</span></h1>
+  <p>Three live evidence passes were executed.</p>
+  <table>
+    <thead><tr><th style="width:5em">Pass</th><th style="width:18em">Method</th><th>Scope</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Live <code>curl</code> + handler grep</td><td>CSRF, bad-JSON-body, forced 500, error-handler enumeration</td></tr>
+      <tr><td>2</td><td>Playwright Node script</td><td>Disconnect/reconnect, slow-3G, 10 KB title, XSS, malformed Yjs, visibility race</td></tr>
+      <tr><td>3</td><td>Playwright + <code>psql</code> + defect-injection</td><td>WS session expiry, two-tab title race, <strong><code>yjsToJson</code> silent NULL</strong></td></tr>
+    </tbody>
+  </table>
+  <p>Plus the PRD-required normal-usage console pass via <code>normal-usage.mjs</code> across 11 routes.</p>
+  <aside class="notes">Cat 6 evidence was assembled across three passes. The third pass, executed during the critical-review re-audit, captured the three findings that drive the critical-defect designation. The yjsToJson reproduction used a documented defect-injection-then-revert protocol because the conversion function never returns undefined under normal operation.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 20 — Category 6 Baseline
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 6 · Runtime Errors <span class="muted">— Baseline</span></h1>
+  <table>
+    <thead><tr><th>Metric</th><th>Baseline</th></tr></thead>
+    <tbody>
+      <tr><td>Console errors during normal usage</td><td>1 (structurally expected 401 at <code>/login</code>) across 11 walked routes</td></tr>
+      <tr><td>Unhandled promise rejections observed</td><td>0 during live audit</td></tr>
+      <tr><td>Theoretical unhandled-rejection surface</td><td>~30 handlers across 5 sampled route files lack outer try/catch</td></tr>
+      <tr><td>Network disconnect / reconnect recovery</td><td>Pass</td></tr>
+      <tr><td>Routes outside any React error boundary</td><td>6+ (<code>/login</code>, <code>/setup</code>, <code>/admin</code>, <code>/admin/workspaces/:id</code>, <code>/invite/:token</code>, <code>/feedback/:programId</code>)</td></tr>
+      <tr><td>Silent failures with live evidence</td><td>3 + one production-error response-shape defect</td></tr>
+    </tbody>
+  </table>
+  <p>Twelve numbered scenarios carry direct live evidence; four are designated critical.</p>
+  <aside class="notes">The PRD-prescribed metrics for Cat 6 are populated here. The unhandled-rejection figure is qualified: zero were observed during the audit, but the theoretical surface is approximately 30 handlers across five sampled route files where Express 4 would propagate uncaught rejections to a global handler that does not exist.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 21 — Critical Defect #1
+     ============================================================ -->
+<section class="slide">
+  <div class="eyebrow">Critical Defect #1</div>
+  <h1><code>yjsToJson()</code> silent NULL persist</h1>
+  <p><strong>The chain.</strong></p>
+  <pre><code>yjsToJson(fragment)        → undefined    (under fault conditions)
+JSON.stringify(undefined)  → undefined    (JavaScript value, not a string)
+pg driver coerces undefined → SQL NULL</code></pre>
+  <p><code>documents.content</code> is silently set to NULL. <code>yjs_state</code> is unaffected (96 bytes intact at reproduction time). Subsequent REST reads observe an empty document.</p>
+  <p><strong>Reproduction.</strong> A marker-conditioned <code>return undefined</code> branch was injected into <code>yjsConverter.ts</code>. The persist path was exercised. The database row was inspected via <code>psql</code> (<code>content IS NULL = t</code>). The injection was reverted via <code>git restore</code>. No master diff remains.</p>
+  <p><span class="sev sev-critical">Severity: Critical</span> — silent data loss.</p>
+  <aside class="notes">The yjsToJson function, as written, always returns a valid object. The defect surface is therefore preventive rather than triggerable on unmodified master. Reproduction required injecting a defect — but the failure mode it exposes is real: the persist path performs no try-catch around JSON.stringify, and the pg driver's undefined-to-NULL coercion is silent.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 22 — Critical Defect #2
+     ============================================================ -->
+<section class="slide">
+  <div class="eyebrow">Critical Defect #2</div>
+  <h1>WS session validated only at upgrade</h1>
+  <p><code>validateWebSocketSession()</code> in <code>api/src/collaboration/index.ts:347–393</code> is invoked exactly once per connection — at HTTP upgrade. The <code>wss.on('connection', …)</code> handler (lines 683–786) installs <code>message</code> and <code>close</code> listeners but never re-validates the session.</p>
+  <p><strong>Live confirmation.</strong></p>
+  <table>
+    <thead><tr><th>Probe</th><th>Observed</th></tr></thead>
+    <tbody>
+      <tr><td>Pre-expiry phrase typed via WebSocket-bound editor</td><td>Persisted to <code>documents.content</code></td></tr>
+      <tr><td><code>DELETE FROM sessions WHERE id = …</code></td><td>Executed</td></tr>
+      <tr><td>REST <code>GET /api/auth/me</code> after delete</td><td>401 (HTTP boundary dead)</td></tr>
+      <tr><td>Post-expiry phrase typed via WebSocket-bound editor</td><td><strong>Persisted to <code>documents.content</code></strong></td></tr>
+    </tbody>
+  </table>
+  <p><span class="sev sev-critical">Severity: Critical</span> — a user with a revoked or expired session continues to write to the database until the browser is closed.</p>
+  <aside class="notes">The bug was reproduced by forcing session destruction at the database row level. The REST boundary correctly returned 401, confirming the HTTP session was no longer valid. The WebSocket continued to accept messages and persist them to documents.content.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 23 — Critical Defect #3
+     ============================================================ -->
+<section class="slide">
+  <div class="eyebrow">Critical Defect #3</div>
+  <h1>Accountability service N+1</h1>
+  <p><code>services/accountability.ts:175–437</code> contains six awaited query expressions inside for-each loops over (a) active sprints, (b) owned sprints, and (c) allocations.</p>
+  <p>Dashboard load issues an estimated <strong>30–80 SQL queries per request at production volume.</strong></p>
+  <p>At seed-data scale (104 issues, 35 sprints), the load-main-page user flow already exhibits 26 total queries, with <code>services/accountability.ts</code> the dominant contributor as confirmed by <code>pg_stat_statements</code>.</p>
+  <p><span class="sev sev-critical">Severity: Critical</span> — performance under realistic load.</p>
+  <aside class="notes">This finding is identified by static analysis and confirmed by query-count measurement. The N+1 loops multiply by user count, sprint count, and allocation count. At scale, this is the dominant source of database load across the application.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 24 — Critical Defect #4
+     ============================================================ -->
+<section class="slide">
+  <div class="eyebrow">Critical Defect #4</div>
+  <h1>No global Express error handler</h1>
+  <p>Enumeration of <code>api/src/app.ts</code> (lines 90–245) finds <strong>zero four-argument <code>(err, req, res, next)</code> middleware.</strong></p>
+  <p>Any uncaught exception past a route handler's own try/catch reaches Express's default <code>finalhandler</code>, which serializes the error to <code>Content-Type: text/html</code> with a <code>&lt;pre&gt;</code> stack trace.</p>
+  <p>Frontend code in <code>web/src/lib/api.ts</code> chains <code>fetch().then(r =&gt; r.json())</code>, which throws <code>SyntaxError: Unexpected token '&lt;' in JSON</code> when the response body is HTML.</p>
+  <p><strong>Exposed surface.</strong> Approximately 24 of 50 handlers in <code>weeks.ts</code> and 3 of 6 handlers in <code>dashboard.ts</code> lack an outer try/catch.</p>
+  <p><span class="sev sev-critical">Severity: Critical</span> — error handling.</p>
+  <aside class="notes">The grep is conclusive: no four-argument middleware exists. The frontend's JSON-parsing chain is the consumer that fails most visibly.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 25 — Category 7 Methodology
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 7 · Accessibility <span class="muted">— Methodology</span></h1>
+  <p>Four passes were executed.</p>
+  <ol>
+    <li><strong>Lighthouse 13.3.0</strong> on 10 routes.</li>
+    <li><strong><code>@axe-core/playwright</code></strong> deep scan on 8 authenticated routes against WCAG 2.0/2.1 A/AA + Section 508 rule tags.</li>
+    <li><strong>Keyboard-only walkthroughs</strong> of 3 representative flows (login, document create, edit + modal).</li>
+    <li><strong>Real macOS VoiceOver speech-log</strong> capture via <code>@guidepup/guidepup</code> driving Playwright, walking <code>/dashboard</code>, <code>/my-week</code>, and the wiki document editor.</li>
+  </ol>
+  <aside class="notes">Four passes were performed. The VoiceOver capture is the real speech log, not a Lighthouse proxy. Keyboard walkthroughs documented four specific reachability failures rather than asserting a global pass or fail.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 26 — Category 7 Baseline
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 7 · Accessibility <span class="muted">— Baseline</span></h1>
+  <table>
+    <thead><tr><th>Metric</th><th>Baseline</th></tr></thead>
+    <tbody>
+      <tr><td>Lighthouse a11y score per page</td><td>7 of 10 routes at 1.00; lowest 0.96 (<code>/my-week</code>, issue editor)</td></tr>
+      <tr><td>Critical / Serious axe violations</td><td>9 (4 Critical + 5 Serious) across 8 authenticated routes</td></tr>
+      <tr><td>Keyboard navigation completeness</td><td>Partial — four documented failures</td></tr>
+      <tr><td>Color contrast failures</td><td>9 nodes on <code>/my-week</code> + 3 on issue editor</td></tr>
+      <tr><td>Missing ARIA labels or roles</td><td>3 custom modals · ~10 placeholder-only inputs · <code>/settings</code> role-select · workspace switcher · comment reply inputs</td></tr>
+    </tbody>
+  </table>
+  <aside class="notes">Lighthouse on 10 routes, axe deep-scan on 8 routes, keyboard on 3 flows, real VoiceOver on 3 routes. Nine Critical-plus-Serious violations.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 27 — Category 7 Findings
+     ============================================================ -->
+<section class="slide">
+  <h1>Category 7 · Accessibility <span class="muted">— Findings</span></h1>
+  <table>
+    <thead><tr><th style="width:3em">#</th><th>Finding</th><th style="width:7em">Severity</th></tr></thead>
+    <tbody>
+      <tr><td>1</td><td>Three custom modal components declare <code>aria-modal</code> but lack focus traps and <code>aria-labelledby</code> attributes (<code>ConversionDialog</code>, <code>MergeProgramDialog</code>, <code>BacklogPickerModal</code>).</td><td><span class="sev sev-high">High</span></td></tr>
+      <tr><td>2</td><td>The <code>/settings</code> role-assignment dropdown has no accessible name; assistive technology announces it as "combobox" without role context.</td><td><span class="sev sev-critical">Critical</span></td></tr>
+      <tr><td>3</td><td>Clickable cells in <code>AccountabilityGrid.tsx:320, 406</code> are implemented as <code>&lt;div onClick&gt;</code> without <code>role="button"</code>, <code>tabIndex</code>, or keyboard event handlers — WCAG 2.1.1 failure.</td><td><span class="sev sev-high">High</span></td></tr>
+      <tr><td>4</td><td>Tailwind opacity modifiers degrade design-token contrast: <code>text-muted/50</code> blends to 2.26:1; <code>bg-accent/20</code> blends to 2.55:1.</td><td><span class="sev sev-high">High</span></td></tr>
+      <tr><td>5</td><td>The TipTap editor body is unreachable from the document title via Tab; keyboard users must click into it.</td><td><span class="sev sev-high">High</span></td></tr>
+    </tbody>
+  </table>
+  <aside class="notes">Accessibility findings cluster around two architectural patterns: custom modal implementations diverging from the Radix Dialog primitive used elsewhere, and Tailwind opacity modifiers degrading design-token contrast.</aside>
+</section>
+
+<!-- ============================================================
+     SLIDE 28 — Phase 1 Complete
+     ============================================================ -->
+<section class="slide close">
+  <h1>Phase 1 — Complete</h1>
+  <p>4 critical defects live-confirmed · 231 evidence artifacts · 7 PRD baseline tables</p>
+  <div class="meta">
+    <p><code>orientation/audit-report.md</code> · <code>orientation/audit-report-detailed.md</code></p>
+    <p><code>orientation/baselines/</code> · <code>orientation/README.md</code> · <code>orientation/discovery.md</code></p>
+  </div>
+  <p class="muted">The Phase 1 gate is met. Phase 2 remediation work is scoped per category against the audit-detailed report.</p>
+  <aside class="notes">This concludes the Phase 1 briefing. Four critical defects were identified and reproduced. 231 evidence artifacts are tracked. The audit is documented in two paired artifacts: an executive summary and a detailed reference. The full text of every finding referenced in this briefing is available in audit-report-detailed.md.</aside>
+</section>
+
+</div>
+
+<div class="counter">01 / 28</div>
+<div class="hint">← → space · F fullscreen · N notes</div>
+<div class="notes-panel"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
