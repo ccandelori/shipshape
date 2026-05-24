@@ -1,7 +1,7 @@
 # Cat 3 — API Response Time
 
 **Branch:** `feat/phase2-api`
-**PRD target:** 20% reduction in P95 on at least 2 endpoints, before/after under identical conditions.
+**Target:** 20% reduction in P95 on at least 2 endpoints, before/after under identical conditions.
 **Status:** ✅ **All 5 top endpoints exceeded the target on every measured percentile.**
 
 ## Headline (autocannon, c=25, 30 s, identical seed + same machine)
@@ -16,7 +16,7 @@ Autocannon emits `p90`, `p97_5`, and `p99` natively (no `p95`). `p97_5` is a str
 | `/api/documents?type=wiki` | 21 → 3 ms (**−86%**) | 25 → 3 ms (**−88%**) | 29 → 4 ms (**−86%**) | 34 → 4 ms (**−88%**) |
 | `/api/weeks` | 11 → 8 ms (−27%) | 14 → 10 ms (**−29%**) | 18 → 11 ms (**−39%**) | 20 → 12 ms (**−40%**) |
 
-Every endpoint cleared the PRD's 20% bar on the P95-upper-bracket column (smallest improvement: −35% on `/api/projects`). Since each row's P95 sits between the P90 and P97.5 columns shown, the PRD threshold is met by simultaneous bracketing: if both endpoints either side of P95 dropped by more than 20%, P95 itself necessarily dropped by more than 20%.
+Every endpoint cleared the 20% bar on the P95-upper-bracket column (smallest improvement: −35% on `/api/projects`). Since each row's P95 sits between the P90 and P97.5 columns shown, the threshold is met by simultaneous bracketing: if both endpoints either side of P95 dropped by more than 20%, P95 itself necessarily dropped by more than 20%.
 
 Raw artifacts:
 - Phase 1 baseline: `orientation/baselines/api-response-time/api-*-c25.json` (timestamps 2026-05-19)

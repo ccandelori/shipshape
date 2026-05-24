@@ -1,7 +1,7 @@
 # Cat 7 — Accessibility Compliance
 
 **Branch:** `feat/phase2-a11y`
-**PRD target:** 10+ Lighthouse score gain on lowest page OR fix all Critical/Serious violations on 3 most-important pages.
+**Target:** 10+ Lighthouse score gain on lowest page OR fix all Critical/Serious violations on 3 most-important pages.
 **Task 16 target:** all 8 baseline Critical/Serious axe findings closed, after-scan saved.
 **Status:** ✅ **All 8 axe Critical/Serious findings resolved across every scanned route.** After-scan: `Critical=0, Serious=0, Moderate=0, Minor=0` on all 8 routes (login, docs, my-week, issues, projects, settings, team-allocation, editor-wiki).
 

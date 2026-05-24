@@ -1,7 +1,7 @@
 # Cat 6 — Runtime Error and Edge Case Handling
 
 **Branch:** `feat/phase2-errors`
-**PRD target:** Fix 3 error handling gaps; at least one must involve real user-facing data loss or confusion (not just a missing loading spinner).
+**Target:** Fix 3 error handling gaps; at least one must involve real user-facing data loss or confusion (not just a missing loading spinner).
 **Status:** ✅ 3 fixes shipped, all with regression coverage. ERR-1 is the user-facing data-loss scenario.
 
 | # | Fix | Severity | User-facing impact | Regression test |

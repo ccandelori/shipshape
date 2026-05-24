@@ -1,8 +1,8 @@
 # Cat 1 — Type Safety
 
 **Branch:** `feat/phase2-typesafety` + `feat/phase2-typesafety-extended`
-**PRD target:** 25% reduction in type safety violations (747 → ≤560), each fix using meaningful types (no `any`-for-`unknown` swaps).
-**Status:** ✅ **−26.6% reduction** (747 → 548) — PRD target met. Six landed refactors plus the original tsconfig restore.
+**Target:** 25% reduction in type safety violations (747 → ≤560), each fix using meaningful types (no `any`-for-`unknown` swaps).
+**Status:** ✅ **−26.6% reduction** (747 → 548) — target met. Six landed refactors plus the original tsconfig restore.
 
 **Task 10 spec compliance:** A `shared/src/mappers/document-mappers.ts` domain mapper layer is in place with 18 unit tests covering happy paths + runtime-guard failures. The mapper-adoption pattern (discriminated-union narrowing or `in`-guards in lieu of `as` casts) is applied at two high-density web sites called out in the spec:
 
@@ -106,7 +106,7 @@ Net violation removal from this single change: **30 casts**. All hooks compile a
 
 ## What's still in the gap (post-target follow-up)
 
-The PRD target is met. Honest accounting of work that further reduces the count but wasn't required for the 25% target:
+Target met. Additional work that further reduces the count but wasn't required for the 25% target:
 
 | Path | Estimated reduction | Notes |
 |---|---:|---|
@@ -133,7 +133,7 @@ Raw baseline counts: `orientation/baselines/type-safety/counts.txt` + `orientati
 
 ## Tradeoffs
 
-- The 25% PRD target is met (current reduction is 26.6%, 199 violations removed). The structural improvements (`mockedPool`, `requireParam`, `HttpError`, the mapper layer) raise the type-safety floor going forward; every new route or test file that uses them adds zero to the violation count.
+- The 25% target is met (current reduction is 26.6%, 199 violations removed). The structural improvements (`mockedPool`, `requireParam`, `HttpError`, the mapper layer) raise the type-safety floor going forward; every new route or test file that uses them adds zero to the violation count.
 - Most of web/src's remaining assertions sit in `UnifiedDocumentPage` + `ProjectDetailsTab` + a few hooks. The dominant pattern (`document as IssueDocument` and friends) requires discriminated-union narrowing in view logic — the `PropertiesPanel` + `UnifiedEditor` adoption work in this branch shows the pattern, and the remaining files become single-edit follow-ups once touched.
 - `mockedPool()` exposes a `Mock<(text, params?) => Promise<QueryResult>>` rather than the real `Pool.query` shape. Tests that need other Pool methods (e.g., `pool.connect`) still need the original `vi.mocked(pool)` access. The helper covers the 95%+ case.
 - `requireParam`/`requireQueryString` throw plain `Error` objects with `statusCode: 400` so the global error handler (Cat 6 ERR-2) renders them as proper JSON. They don't carry a richer error shape — keeping the surface minimal so adoption stays trivial.

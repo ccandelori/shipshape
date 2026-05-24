@@ -1,7 +1,7 @@
 # Cat 2 — Bundle Size
 
 **Branch:** `feat/phase2-bundle`
-**PRD target:** 15% total reduction OR 20% initial-load reduction via code splitting.
+**Target:** 15% total reduction OR 20% initial-load reduction via code splitting.
 **Status:** ✅ **76% reduction on the entry chunk** (587.59 kB gzip → 142.61 kB gzip), 31% even in the worst-case "everything-Tiptap-related-pre-loads" scenario.
 
 ## Headline

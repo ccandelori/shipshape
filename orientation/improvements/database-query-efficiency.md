@@ -1,7 +1,7 @@
 # Cat 4 — Database Query Efficiency
 
 **Branch:** `feat/phase2-db`
-**PRD target:** 20% reduction in total query count on at least one user flow, OR 50% improvement on the slowest query.
+**Target:** 20% reduction in total query count on at least one user flow, OR 50% improvement on the slowest query.
 **Status:** ✅ **73% improvement on dashboard slowest query**; 90%+ on three sibling queries newly index-served.
 
 ## Headline

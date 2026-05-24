@@ -1,6 +1,6 @@
 # Improvement — Collaboration integrity observability (Phase 3 / Task 30)
 
-> Companion to the seven Phase 2 PRD-category writeups. Phase 2 added two
+> Companion to the seven Phase 2 category writeups. Phase 2 added two
 > structural guards for the silent-data-loss class (yjsToJson NULL guard +
 > WS 4401 session re-validation). This one makes the runtime behaviour of
 > those guards visible: a regression now surfaces in monitoring instead of

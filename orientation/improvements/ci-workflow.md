@@ -2,7 +2,7 @@
 
 **Branch:** `feat/phase2-ci` (merged) + `fix/phase2-web-type-check` (merged) + `feat/phase3-shipshape` (Phase 3 extension)
 **Task:** 17 (Phase 2) + 28 (Phase 3) — Add GitHub Actions workflow to run type-check, tests, and the `pnpm shipshape:ci` quality gate on every pull request.
-**Status:** ✅ Workflow file exists at `.github/workflows/test.yml`. The underlying per-package commands the workflow runs all exit 0 on current `master`. Phase 3 added a third job (`shipshape-ci`) that runs the Cat 1/2/4-static/5/6 subset and uploads the generated `shipshape-report.md` as a workflow artifact. **The root wrapper `pnpm type-check` is environment-sensitive — see "Honest note" below.**
+**Status:** ✅ Workflow file exists at `.github/workflows/test.yml`. The underlying per-package commands the workflow runs all exit 0 on current `master`. Phase 3 added a third job (`shipshape-ci`) that runs the Cat 1/2/4-static/5/6 subset and uploads the generated `shipshape-report.md` as a workflow artifact. **The root wrapper `pnpm type-check` is environment-sensitive — see "Note" below.**
 
 Per-package commands the workflow runs (these are the authoritative gates):
 
@@ -16,7 +16,7 @@ Per-package commands the workflow runs (these are the authoritative gates):
 
 Closes presearch risk #1 (no CI gate before Phase 2).
 
-### Honest note on the root wrapper
+### Note on the root wrapper
 
 `pnpm type-check` and `pnpm run type-check` both alias to `pnpm --recursive run type-check`. We've observed inconsistent behaviour across machines:
 
@@ -62,7 +62,7 @@ The Postgres service container uses the same `ship` / `ship_dev_password` / `shi
 - `pnpm shipshape:ci` — runs the lite-mode orchestrator
 - `actions/upload-artifact@v4` — uploads `orientation/shipshape-report.md` so every PR has a downloadable scoreboard (30-day retention)
 
-The lite-mode orchestrator runs five of the seven PRD categories:
+The lite-mode orchestrator runs five of the seven audit categories:
 
 | Cat | What | Why in CI |
 |---|---|---|
@@ -112,7 +112,7 @@ If both exit 0, the CI workflow will also pass on the same SHA.
 
 ## What unblocks once CI lands on a hosted runner
 
-The PRD does not require the workflow to be _running on GitHub_ — only that it exists and runs the right gates. Pushing this branch to a remote with GitHub Actions enabled would activate the workflow on the next PR; that's a deployment step, not a code step. Out of scope for the local Phase 2 evidence package.
+The spec does not require the workflow to be _running on GitHub_ — only that it exists and runs the right gates. Pushing this branch to a remote with GitHub Actions enabled would activate the workflow on the next PR; that's a deployment step, not a code step. Out of scope for the local Phase 2 evidence package.
 
 ## Tradeoffs
 

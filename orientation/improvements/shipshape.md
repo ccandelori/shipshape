@@ -1,6 +1,6 @@
 # Improvement — ShipShape Quality Dashboard (Phase 3 / Task 27 + 28)
 
-> Companion to the seven Phase 2 PRD-category writeups in this folder. This one
+> Companion to the seven Phase 2 spec-category writeups in this folder. This one
 > documents the orchestrator that turns those seven one-time measurements into
 > a permanent gate.
 
@@ -8,7 +8,7 @@
 
 A single command — `pnpm shipshape` — that reproduces every Phase 2 measurement
 and emits `orientation/shipshape-report.md` with a pass/fail line per category.
-Any of the seven PRD categories silently regressing makes the orchestrator exit
+Any of the seven audit categories silently regressing makes the orchestrator exit
 nonzero, so the command is suitable as a release gate.
 
 `pnpm shipshape:ci` is a lite variant — drops the two checks that need a dev
@@ -17,7 +17,7 @@ in <60s on a GitHub Actions runner.
 
 ## Why
 
-Phase 2 hit all seven PRD targets, but those numbers are a snapshot. Without a
+Phase 2 hit all seven target, but those numbers are a snapshot. Without a
 mechanical gate, a future PR could regress (a) the bundle by removing a
 `lazy()` wrapper, (b) the type-safety count by adding `as any` casts during a
 refactor, (c) the dashboard query by dropping an index in a migration. The
@@ -29,7 +29,7 @@ backslide on.
 
 ## The seven gates (thresholds & sources)
 
-| # | Category | PRD threshold | Source of truth |
+| # | Category | threshold | Source of truth |
 |---|---|---|---|
 | 1 | Type Safety | total markers ≤ 560 (≥ 25% reduction from 747) | `orientation/baselines/type-safety/counts.txt` |
 | 2 | Bundle Size | entry chunk ≤ 200 KB gzip | `orientation/baselines/bundle/after-build.txt` |

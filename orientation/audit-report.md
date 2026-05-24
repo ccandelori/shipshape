@@ -17,7 +17,7 @@
 
 ## Bottom line
 
-Phase 1 gate is **MET**. All 7 PRD categories carry baseline evidence. **4 critical-tier findings are now backed by live reproduction** (silent data loss, security-exposure, performance, error-handling), and Phase 2 has one improvement scoped per PRD category.
+Phase 1 gate is **MET**. All 7 audit categories carry baseline evidence. **4 critical-tier findings are now backed by live reproduction** (silent data loss, security-exposure, performance, error-handling), and Phase 2 has one improvement scoped per audit category.
 
 ---
 
@@ -102,9 +102,9 @@ Detailed methodology and evidence-table rows live in `audit-report-detailed.md`.
 
 **TL;DR.** All 5 hot endpoints clean. `/api/issues` slowest at 58 ms p97.5 at c=50. The dominant cross-cutting cost is `sessions.last_activity` writing on every request.
 
-**Headline:** **850,757 total requests / all 2xx / 0 errors** across 5 endpoints × c=10/25/50 × 30s (autocannon). Slowest endpoint: `/api/issues` at **47 ms P95 / 51 ms P99** under c=50 (PRD-literal P95 captured via k6 on the slowest 2 endpoints; full table below).
+**Headline:** **850,757 total requests / all 2xx / 0 errors** across 5 endpoints × c=10/25/50 × 30s (autocannon). Slowest endpoint: `/api/issues` at **47 ms P95 / 51 ms P99** under c=50 (spec-literal P95 captured via k6 on the slowest 2 endpoints; full table below).
 
-**PRD-literal P95 (k6, slowest 2 endpoints):**
+**spec-literal P95 (k6, slowest 2 endpoints):**
 
 | Endpoint | c=10 P50 / P95 / P99 | c=25 P50 / P95 / P99 | c=50 P50 / P95 / P99 |
 |---|---|---|---|
@@ -133,7 +133,7 @@ The remaining 3 endpoints (`/api/auth/me`, `/api/projects`, `/api/weeks`) carry 
 
 **TL;DR.** Exact per-flow query counts captured via `pg_stat_statements`. JSONB hot-path predicates run through GIN index instead of expression indexes; accountability service is the largest N+1 surface.
 
-**Headline:** Exact per-flow counts: **26 / 7 / 5 / 21 / 5** across the 5 PRD user flows. 5 EXPLAIN ANALYZE plans captured (one per flow's slowest query). Of the JSONB property expressions in route SQL, **only 1 hot path has a dedicated expression index** (person→user_id).
+**Headline:** Exact per-flow counts: **26 / 7 / 5 / 21 / 5** across the 5 user flows. 5 EXPLAIN ANALYZE plans captured (one per flow's slowest query). Of the JSONB property expressions in route SQL, **only 1 hot path has a dedicated expression index** (person→user_id).
 
 **PDF-format deliverable table:**
 
@@ -157,7 +157,7 @@ Slowest-query ms values are localhost warm-cache execution times (all `Buffers: 
 
 **Evidence:** `orientation/baselines/db-baseline.txt` + `queries-flow-{1..5}.log` + `explain-flow-{1..5}.txt`.
 
-**Methodology caveats** *(read with the numbers):* localhost warm-cache (all `Buffers: shared hit`), seed at PRD floor (500 docs / 104 issues / 20 users / 35 sprints), planning time ≈ exec time at this scale. *Relative* rankings are robust; *absolute* ms are localhost floors.
+**Methodology caveats** *(read with the numbers):* localhost warm-cache (all `Buffers: shared hit`), seed at specified floor (500 docs / 104 issues / 20 users / 35 sprints), planning time ≈ exec time at this scale. *Relative* rankings are robust; *absolute* ms are localhost floors.
 
 **Phase 2 plan:** **≥50% improvement on the slowest query.** Migration `038_jsonb_hot_path_indexes.sql` adds expression indexes on `state`, `assignee_id`, `sprint_number`, `owner_id`. Re-EXPLAIN before/after on the dashboard active-issues query.
 
@@ -215,7 +215,7 @@ Slowest-query ms values are localhost warm-cache execution times (all `Buffers: 
 
 ### 7. Accessibility
 
-**TL;DR.** Lighthouse + axe + keyboard + **real VoiceOver** on PRD-required routes. Lighthouse passes on most routes (lowest 0.96); axe deep-scan surfaces 4 rule families Lighthouse misses; VoiceOver transcript shows real macOS speech output on `/dashboard`, `/my-week`, and the wiki editor.
+**TL;DR.** Lighthouse + axe + keyboard + **real VoiceOver** on spec-required routes. Lighthouse passes on most routes (lowest 0.96); axe deep-scan surfaces 4 rule families Lighthouse misses; VoiceOver transcript shows real macOS speech output on `/dashboard`, `/my-week`, and the wiki editor.
 
 **Headline:** **Lighthouse: 7 of 10 routes 1.00; lowest 0.96** (`/my-week`, `/documents/<issue>` — both color-contrast). **axe deep-scan: 4 critical + 5 serious across 8 authenticated routes** (workspace tree, TipTap drag-handle, listitem semantics, `/settings` role `<select>` lacks label, color-contrast). **Keyboard navigation: Partial** (see PDF table below).
 
@@ -273,14 +273,14 @@ Slowest-query ms values are localhost warm-cache execution times (all `Buffers: 
 | 6. Runtime Errors | ✅ Measured | All 12 scenarios captured live (Playwright + psql + curl); 3 critical bugs live-confirmed in re-audit |
 | 7. Accessibility | ✅ Measured | Lighthouse on 10 routes + axe on 8 routes + keyboard on 3 flows + real VoiceOver on `/dashboard` + `/my-week` + wiki editor |
 
-**Phase 1 gate: MET** — all 7 categories cite a measurement with an evidence path. PRD-literal compliance: VoiceOver on `/dashboard` (not just `/my-week`) closes the one prior PRD-literal substitution gap.
+**Phase 1 gate: MET** — all 7 categories cite a measurement with an evidence path. spec-literal compliance: VoiceOver on `/dashboard` (not just `/my-week`) closes the one prior spec-literal substitution gap.
 
 **Deferred to Phase 2** (not gate-blocking):
 
 | Category | Deferred item | Why |
 |---|---|---|
 | 3 API | Production P95 measurements | No prod access from this audit thread; localhost is the floor |
-| 4 DB | Re-EXPLAIN at production-scale volume | Current seed meets the PRD floor (500 docs); not production scale |
+| 4 DB | Re-EXPLAIN at production-scale volume | Current seed meets the specified floor (500 docs); not production scale |
 | 3 API | Histogram-derived P95 (instead of p97.5) | Switch to k6/wrk2 in Phase 2 |
 
 ---
@@ -292,7 +292,7 @@ Slowest-query ms values are localhost warm-cache execution times (all `Buffers: 
 | 2026-05-18 | Baselines: type-safety, bundle, API response time |
 | 2026-05-19 | Baselines: DB queries, test coverage, runtime errors (passes 1+2), accessibility (Lighthouse + axe + keyboard) |
 | 2026-05-20 (AM) | Cat 5 test edits reverted to preserve baseline; orientation evidence docs tracked; bundle visualizer reproducibility hook; real VoiceOver transcript added |
-| 2026-05-20 (PM) | Critical-review re-audit: Cat 3 X-Bench rate-limit skip moved to master (guarded); p97.5 metric honesty pass; Cat 5 session-expiry matrix split; 3 new live runs (WS session expiry, two-tab title race, yjsToJson NULL) close evidence gaps; VoiceOver `/dashboard` closes PRD-literal gap; Cat 1 production-vs-test split |
+| 2026-05-20 (PM) | Critical-review re-audit: Cat 3 X-Bench rate-limit skip moved to master (guarded); p97.5 metric integrity pass; Cat 5 session-expiry matrix split; 3 new live runs (WS session expiry, two-tab title race, yjsToJson NULL) close evidence gaps; VoiceOver `/dashboard` closes spec-literal gap; Cat 1 production-vs-test split |
 
 ---
 
