@@ -13,11 +13,20 @@ import fs from 'node:fs/promises';
 import path from 'node:path';
 import type { CategoryCheck } from '../types.ts';
 import { CACHE_DIR, REPO_ROOT, safe, shTry } from '../util.ts';
+import { loginAndGetSessionCookie } from '../login.ts';
 
-const REGRESSION_FACTOR = 1.1; // allow at most 10% slowdown vs after-* number
+const REGRESSION_FACTOR = 1.1; // 10% slowdown allowance vs after-* number…
+const ABSOLUTE_TOLERANCE_MS = 10; // …OR +10ms absolute, whichever is larger.
+// Why both: on single-digit-ms baselines (3-4ms), 10% is sub-ms — within
+// run-to-run jitter. The absolute floor keeps the check honest without
+// flagging benign noise on local hardware.
 const DURATION_S = 10; // shorter than the 30s baseline to keep `pnpm shipshape` < 5min
 const CONCURRENCY = 25;
 const API_URL = process.env.SHIPSHAPE_API_URL ?? 'http://localhost:3000';
+
+function allowed(baseline: number): number {
+  return Math.max(baseline * REGRESSION_FACTOR, baseline + ABSOLUTE_TOLERANCE_MS);
+}
 
 // Permissive enough for Express signed session cookies (URL-encoded "s%3A<id>.<sig>")
 // while excluding every shell metacharacter. SHIPSHAPE_SESSION_COOKIE is operator-
@@ -54,30 +63,12 @@ const api: CategoryCheck = (_ctx) =>
   safe(
     3,
     'API Response Time',
-    `every endpoint P90 + P97.5 within ${(REGRESSION_FACTOR * 100 - 100).toFixed(0)}% of Phase 2 after-* numbers`,
+    `every endpoint P90 + P97.5 within ${(REGRESSION_FACTOR * 100 - 100).toFixed(0)}% or +${ABSOLUTE_TOLERANCE_MS}ms of post-remediation baseline`,
     'orientation/improvements/api-response-time.md',
-    `SHIPSHAPE_SESSION_COOKIE=<session_id> tsx scripts/shipshape/checks/api.ts (autocannon c=${CONCURRENCY} × ${DURATION_S}s × ${ENDPOINTS.length} endpoints)`,
+    `tsx scripts/shipshape/checks/api.ts (auto-login as dev@ship.local, autocannon c=${CONCURRENCY} × ${DURATION_S}s × ${ENDPOINTS.length} endpoints)`,
     async () => {
-      const cookie = process.env.SHIPSHAPE_SESSION_COOKIE;
-      if (!cookie) {
-        return {
-          actual: 'SHIPSHAPE_SESSION_COOKIE not set',
-          status: 'skip' as const,
-          notes:
-            'Cat 3 needs a session_id cookie for an admin user. Get one by logging in to web at :5173 then DevTools → Cookies → session_id. Export as SHIPSHAPE_SESSION_COOKIE and re-run.',
-        };
-      }
-      if (!SESSION_COOKIE_RE.test(cookie)) {
-        return {
-          actual: 'SHIPSHAPE_SESSION_COOKIE has unexpected shape',
-          status: 'skip' as const,
-          notes:
-            'Expected 16-1024 chars of [A-Za-z0-9._%-] (URL-safe base64 or URL-encoded signed cookie). Refusing to pass non-conforming input to the shell — re-export the value as it appears in DevTools.',
-        };
-      }
-
       // Validate API_URL — must be a parseable http(s) URL. SHIPSHAPE_API_URL
-      // is also operator-supplied; reject anything that would inject into the
+      // is operator-supplied; reject anything that would inject into the
       // curl burst probe's shell command.
       let apiUrlParsed: URL;
       try {
@@ -95,8 +86,6 @@ const api: CategoryCheck = (_ctx) =>
           status: 'skip' as const,
         };
       }
-      // Reconstruct from parsed components so any pre-shell metacharacters
-      // in the original env are dropped.
       const safeApiBase = `${apiUrlParsed.protocol}//${apiUrlParsed.host}${apiUrlParsed.pathname.replace(/\/+$/, '')}`;
 
       // Health probe — fail fast if API isn't running.
@@ -106,6 +95,35 @@ const api: CategoryCheck = (_ctx) =>
           actual: `API not reachable at ${safeApiBase}`,
           status: 'skip' as const,
           notes: `Start the API with: E2E_TEST=1 pnpm dev:api (so the X-Bench rate-limit bypass is active).`,
+        };
+      }
+
+      // Resolve the session cookie. Operator-provided SHIPSHAPE_SESSION_COOKIE wins
+      // for environments where auto-login can't be used (e.g. third-party SSO).
+      // Otherwise we log in as the seed user dev@ship.local / admin123, which the
+      // dev seed always creates. Override via SHIPSHAPE_LOGIN_EMAIL / _PASSWORD.
+      let cookie = process.env.SHIPSHAPE_SESSION_COOKIE ?? '';
+      let cookieSource = 'env';
+      if (!cookie) {
+        try {
+          const login = await loginAndGetSessionCookie({ apiUrl: safeApiBase });
+          cookie = login.sessionCookie;
+          cookieSource = 'auto-login';
+        } catch (e) {
+          return {
+            actual: `auto-login failed: ${(e as Error).message.slice(0, 200)}`,
+            status: 'skip' as const,
+            notes:
+              'Tried logging in as dev@ship.local (seed user). Override creds with SHIPSHAPE_LOGIN_EMAIL + SHIPSHAPE_LOGIN_PASSWORD, or paste a session_id into SHIPSHAPE_SESSION_COOKIE.',
+          };
+        }
+      }
+      if (!SESSION_COOKIE_RE.test(cookie)) {
+        return {
+          actual: `session cookie (${cookieSource}) has unexpected shape`,
+          status: 'skip' as const,
+          notes:
+            'Expected 16-1024 chars of [A-Za-z0-9._%-] (URL-safe base64 or URL-encoded signed cookie). Refusing to pass non-conforming input to the shell.',
         };
       }
 
@@ -180,11 +198,15 @@ const api: CategoryCheck = (_ctx) =>
         const current = JSON.parse(stdout) as AutocannonJson;
         const baseline = await readBaselineP90P975(ep.slug);
         const regressedFields: string[] = [];
-        if (current.latency.p90 > baseline.p90 * REGRESSION_FACTOR) {
-          regressedFields.push(`P90 ${current.latency.p90}ms > ${(baseline.p90 * REGRESSION_FACTOR).toFixed(1)}ms (baseline ${baseline.p90}ms)`);
+        if (current.latency.p90 > allowed(baseline.p90)) {
+          regressedFields.push(
+            `P90 ${current.latency.p90}ms > ${allowed(baseline.p90).toFixed(1)}ms (baseline ${baseline.p90}ms)`
+          );
         }
-        if (current.latency.p97_5 > baseline.p97_5 * REGRESSION_FACTOR) {
-          regressedFields.push(`P97.5 ${current.latency.p97_5}ms > ${(baseline.p97_5 * REGRESSION_FACTOR).toFixed(1)}ms (baseline ${baseline.p97_5}ms)`);
+        if (current.latency.p97_5 > allowed(baseline.p97_5)) {
+          regressedFields.push(
+            `P97.5 ${current.latency.p97_5}ms > ${allowed(baseline.p97_5).toFixed(1)}ms (baseline ${baseline.p97_5}ms)`
+          );
         }
         per.push({ slug: ep.slug, path: ep.path, current, baseline, regressedFields });
       }

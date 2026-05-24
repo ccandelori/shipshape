@@ -8,6 +8,7 @@ import { HERE, REPO_ROOT, durationLine, statusEmoji } from './util.ts';
 
 const TEMPLATE_PATH = path.join(HERE, 'report-template.md');
 const REPORT_PATH = path.join(REPO_ROOT, 'orientation/shipshape-report.md');
+const REPORT_JSON_PATH = path.join(REPO_ROOT, 'orientation/shipshape-report.json');
 
 function escape(s: string): string {
   // Markdown table cells can't contain raw newlines or unescaped pipes.
@@ -46,10 +47,20 @@ function buildSections(results: CheckResult[]): string {
     .join('\n\n');
 }
 
+export interface ShipshapeReportJson {
+  startedAt: string;
+  branch: string;
+  sha: string;
+  mode: 'full' | 'ci';
+  overallStatus: 'pass' | 'fail';
+  durationMs: number;
+  results: CheckResult[];
+}
+
 export async function emitReport(
   ctx: ShipshapeContext,
   results: CheckResult[]
-): Promise<{ overallPass: boolean; reportPath: string }> {
+): Promise<{ overallPass: boolean; reportPath: string; reportJsonPath: string }> {
   const template = await fs.readFile(TEMPLATE_PATH, 'utf8');
 
   const ordered = [...results].sort((a, b) => a.category - b.category);
@@ -70,5 +81,19 @@ export async function emitReport(
     .replace('{{PER_CATEGORY_SECTIONS}}', buildSections(ordered));
 
   await fs.writeFile(REPORT_PATH, body, 'utf8');
-  return { overallPass, reportPath: REPORT_PATH };
+
+  // Structured emission for downstream consumers (dashboard snapshot pipeline,
+  // CI status checks). Mirrors the markdown content but is parse-free.
+  const json: ShipshapeReportJson = {
+    startedAt: ctx.startedAt.toISOString(),
+    branch: ctx.branch,
+    sha: ctx.gitSha,
+    mode: ctx.mode,
+    overallStatus: overallPass ? 'pass' : 'fail',
+    durationMs: totalMs,
+    results: ordered,
+  };
+  await fs.writeFile(REPORT_JSON_PATH, JSON.stringify(json, null, 2) + '\n', 'utf8');
+
+  return { overallPass, reportPath: REPORT_PATH, reportJsonPath: REPORT_JSON_PATH };
 }

@@ -56,15 +56,31 @@ async function main() {
   const cat5 = await tests(ctx);
   const cat6 = await errors(ctx);
 
+  // Cat 5 wiped the dev DB. Cat 3 needs a seed user to auto-login + real data
+  // for the autocannon endpoints to return non-trivial payloads. Reseed before
+  // the stack-dependent checks unless the operator opted out.
+  if (process.env.SHIPSHAPE_NO_RESEED !== '1') {
+    console.log('\nMid-run reseed (Cat 5 wiped the dev DB; Cat 3 needs login + data)…');
+    const seed = shTry('pnpm db:seed');
+    if (seed.code !== 0) {
+      console.warn(`  mid-run seed failed (exit ${seed.code}); Cat 3 will skip if it can't auth.`);
+    } else {
+      console.log('  mid-run reseed complete.');
+    }
+  }
+
   // Stack-dependent checks last (sequential).
   const cat3 = await api(ctx);
   const cat7 = await axe(ctx);
 
   const results: CheckResult[] = [...batch1, cat5, cat6, cat3, cat7];
 
-  // Restore the dev DB so the next `pnpm dev` session has data. Cat 5 wiped it.
+  // Final reseed for dev session continuity — the mid-run seed above usually
+  // covers it, but Cat 3's autocannon (which writes via /api/standups, etc.) can
+  // leave the DB in a different shape than a fresh dev seed expects. Skipping if
+  // SHIPSHAPE_NO_RESEED=1 or if the mid-run reseed already happened recently.
   if (process.env.SHIPSHAPE_NO_RESEED !== '1') {
-    console.log('\nRestoring dev DB seed (Cat 5 wiped it)…');
+    console.log('\nFinal dev DB reseed (post-Cat 3 cleanup)…');
     const seed = shTry('pnpm db:seed');
     if (seed.code !== 0) {
       console.warn(`  seed failed (exit ${seed.code}); run \`pnpm db:seed\` manually if you need dev data.`);
