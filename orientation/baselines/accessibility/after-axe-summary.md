@@ -1,4 +1,4 @@
-# axe-core deep scan AFTER Task 16 fixes — 2026-05-22T15:25:03.228Z
+# axe-core deep scan AFTER Task 16 fixes — 2026-05-23T22:53:55.643Z
 
 Tags: `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `section508`.
 Browser: chromium-1200 (playwright). Resolution: 1280×800. Auth: cookie reuse via login UI.
