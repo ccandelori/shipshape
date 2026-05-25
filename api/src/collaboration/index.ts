@@ -17,6 +17,14 @@ const messageAwareness = 1;
 const messageCustomEvent = 2;
 const messageClearCache = 3; // Tells browser to clear IndexedDB cache before sync
 
+// RFC 6455 close codes used when a client sends a frame the collaboration
+// protocol cannot accept. Closing with a deliberate policy code (rather than
+// letting a decode error escape and abnormally terminate the socket with 1006,
+// or crash the process) is what distinguishes a hardened endpoint from a
+// fragile one. See the WebSocket findings in shipshapesec's AUDIT.md.
+const WS_CLOSE_PROTOCOL_ERROR = 1002; // malformed / undecodable frame
+const WS_CLOSE_UNSUPPORTED_DATA = 1003; // valid frame, message type we don't accept
+
 // Rate limiting configuration
 const RATE_LIMIT = {
   // Connection rate limiting: max connections per IP in time window
@@ -331,43 +339,84 @@ function getAwareness(docName: string, doc: Y.Doc): awarenessProtocol.Awareness 
   return aw;
 }
 
-function handleMessage(ws: WebSocket, message: Uint8Array, docName: string, doc: Y.Doc, aw: awarenessProtocol.Awareness) {
-  const decoder = decoding.createDecoder(message);
-  const messageType = decoding.readVarUint(decoder);
+// Minimal close surface so the handler can be unit-tested with an in-memory
+// mock. The real `ws` WebSocket satisfies this.
+export interface MessageHandlerWs {
+  close(code: number, reason: string): void;
+  send(data: Uint8Array): void;
+}
 
-  switch (messageType) {
-    case messageSync: {
-      const encoder = encoding.createEncoder();
-      encoding.writeVarUint(encoder, messageSync);
-      // Pass ws as origin so broadcast excludes the sender
-      syncProtocol.readSyncMessage(decoder, encoder, doc, ws);
+// Decode + dispatch a single inbound WebSocket frame. A client can send
+// arbitrary bytes, so every step that can throw on malformed input is guarded:
+// a decode failure or a handler throw closes the socket with a deliberate
+// policy code instead of escaping the 'message' listener as an uncaught
+// exception (which crashed the process — see shipshapesec WS findings).
+// Exported for the regression test in __tests__/ws-message-hardening.test.ts.
+export function handleMessage(
+  ws: MessageHandlerWs,
+  message: Uint8Array,
+  doc: Y.Doc,
+  aw: awarenessProtocol.Awareness,
+  connsMap: Map<MessageHandlerWs, { awarenessClientId: number }> = conns as unknown as Map<MessageHandlerWs, { awarenessClientId: number }>
+): void {
+  let decoder: decoding.Decoder;
+  let messageType: number;
+  try {
+    decoder = decoding.createDecoder(message);
+    messageType = decoding.readVarUint(decoder);
+  } catch {
+    // Frame is not even a readable varuint — protocol error.
+    ws.close(WS_CLOSE_PROTOCOL_ERROR, 'Malformed frame');
+    return;
+  }
 
-      if (encoding.length(encoder) > 1) {
-        ws.send(encoding.toUint8Array(encoder));
-      }
-      break;
-    }
-    case messageAwareness: {
-      const awarenessData = decoding.readVarUint8Array(decoder);
+  try {
+    switch (messageType) {
+      case messageSync: {
+        const encoder = encoding.createEncoder();
+        encoding.writeVarUint(encoder, messageSync);
+        // Pass ws as origin so broadcast excludes the sender
+        syncProtocol.readSyncMessage(decoder, encoder, doc, ws);
 
-      // Extract the actual client's awarenessClientId from the update
-      // This is critical for proper cleanup on disconnect - the server was
-      // previously storing doc.clientID (server's ID) instead of the client's
-      // actual awareness clientID, causing stale states on page refresh.
-      // Format: [numStates, ...for each: clientId, clock, stateJson]
-      const conn = conns.get(ws);
-      if (conn) {
-        const updateDecoder = decoding.createDecoder(awarenessData);
-        const numStates = decoding.readVarUint(updateDecoder);
-        if (numStates > 0) {
-          const clientId = decoding.readVarUint(updateDecoder);
-          conn.awarenessClientId = clientId;
+        if (encoding.length(encoder) > 1) {
+          ws.send(encoding.toUint8Array(encoder));
         }
+        break;
       }
+      case messageAwareness: {
+        const awarenessData = decoding.readVarUint8Array(decoder);
 
-      awarenessProtocol.applyAwarenessUpdate(aw, awarenessData, ws);
-      break;
+        // Extract the actual client's awarenessClientId from the update
+        // This is critical for proper cleanup on disconnect - the server was
+        // previously storing doc.clientID (server's ID) instead of the client's
+        // actual awareness clientID, causing stale states on page refresh.
+        // Format: [numStates, ...for each: clientId, clock, stateJson]
+        const conn = connsMap.get(ws);
+        if (conn) {
+          const updateDecoder = decoding.createDecoder(awarenessData);
+          const numStates = decoding.readVarUint(updateDecoder);
+          if (numStates > 0) {
+            const clientId = decoding.readVarUint(updateDecoder);
+            conn.awarenessClientId = clientId;
+          }
+        }
+
+        awarenessProtocol.applyAwarenessUpdate(aw, awarenessData, ws);
+        break;
+      }
+      default: {
+        // Collaboration clients only ever send sync (0) or awareness (1).
+        // Types 2/3 are server-to-client only; anything else is an unexpected
+        // message type — reject cleanly rather than silently ignoring it.
+        ws.close(WS_CLOSE_UNSUPPORTED_DATA, 'Unsupported message type');
+        return;
+      }
     }
+  } catch (err) {
+    // A well-formed varuint header followed by a malformed sync/awareness
+    // body throws inside the protocol decoders. Never let that escape.
+    console.error('[Collaboration] Rejecting malformed WS message:', err);
+    ws.close(WS_CLOSE_PROTOCOL_ERROR, 'Invalid message');
   }
 }
 
@@ -728,7 +777,20 @@ export function setupCollaboration(server: Server) {
   const wss = new WebSocketServer({ noServer: true, maxPayload: MAX_WS_MESSAGE_SIZE });
   const eventsWss = new WebSocketServer({ noServer: true, maxPayload: MAX_WS_MESSAGE_SIZE });
 
+  // Server-level error guards. Per-connection 'error' handlers (below) catch
+  // most failures, but a handshake/protocol error can surface on the server
+  // object itself; without a listener it becomes an uncaught exception.
+  wss.on('error', (err) => console.error('[Collaboration] WebSocketServer error:', err));
+  eventsWss.on('error', (err) => console.error('[Events] WebSocketServer error:', err));
+
   server.on('upgrade', async (request, socket, head) => {
+    // A connection burst leaves many half-open sockets; if a client drops
+    // mid-handshake the raw socket emits 'error'. Guard it so a flood of
+    // aborted upgrades can't crash the process.
+    socket.on('error', (err) => {
+      console.error('[Collaboration] Upgrade socket error:', err);
+    });
+
     const url = new URL(request.url || '', `http://${request.headers.host}`);
 
     // Handle /events WebSocket for real-time notifications
@@ -863,7 +925,14 @@ export function setupCollaboration(server: Server) {
       rateLimitViolations.delete(ws);
       recordMessage(ws);
 
-      handleMessage(ws, new Uint8Array(data), docName, doc, aw);
+      handleMessage(ws, new Uint8Array(data), doc, aw);
+    });
+
+    // Without an 'error' listener, ws emits errors (e.g. a frame exceeding
+    // maxPayload, or a protocol-level socket error) as uncaught exceptions,
+    // which crash the process. Handle them: log, let ws close the socket.
+    ws.on('error', (err) => {
+      console.error('[Collaboration] WebSocket connection error:', err);
     });
 
     ws.on('close', () => {
@@ -940,6 +1009,12 @@ export function setupCollaboration(server: Server) {
       } catch {
         // Ignore invalid messages
       }
+    });
+
+    // Same crash guard as the collab connection: an unhandled 'error' event
+    // (oversized frame, socket error) would otherwise take down the process.
+    ws.on('error', (err) => {
+      console.error('[Events] WebSocket connection error:', err);
     });
 
     ws.on('close', () => {
