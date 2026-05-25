@@ -1,11 +1,12 @@
 // Categories tab — sub-nav over 7 stacked CategoryPanels (all collapsible).
 // Default: collapsed. "Expand all" / "Collapse all" toggles available above.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ChevronsDown, ChevronsUp } from 'lucide-react';
-import type { DashboardSnapshot } from '../data/types';
+import type { DashboardSnapshot, TrajectoryPoint } from '../data/types';
 import { CategoryPanel } from '../components/CategoryPanel';
 import { SubNav, type SubNavItem } from '../components/Tabs/SubNav';
+import { consumePendingPanelTarget } from '../hooks/useDrillToCategory';
 
 import improvementCat1 from '../../data/improvements/cat-1.md?raw';
 import improvementCat2 from '../../data/improvements/cat-2.md?raw';
@@ -52,6 +53,27 @@ interface Props {
 export function CategoriesTab({ snapshot }: Props) {
   // null = use each panel's own local state. 'all' / 'none' force globally.
   const [forcedMode, setForcedMode] = useState<ExpandMode | null>(null);
+
+  const trajectoryByCat = new Map<number, TrajectoryPoint[]>();
+  for (const t of snapshot.history.categories) {
+    trajectoryByCat.set(t.category, t.points);
+  }
+
+  // Drain a pending panel target from the URL hash (set by useDrillToCategory).
+  // Scroll on mount once the panels are in the DOM. Two-frame defer gives
+  // the layout time to settle so getBoundingClientRect is accurate.
+  useEffect(() => {
+    const target = consumePendingPanelTarget();
+    if (target == null) return;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        const el = document.getElementById(`cat-${target}-panel`);
+        if (!el) return;
+        const top = el.getBoundingClientRect().top + window.scrollY - 90;
+        window.scrollTo({ top, behavior: 'smooth' });
+      });
+    });
+  }, []);
 
   const subnav: SubNavItem[] = snapshot.categoryDetails.map((d) => {
     const result = snapshot.shipshape.results.find((r) => r.category === d.category);
@@ -105,6 +127,7 @@ export function CategoriesTab({ snapshot }: Props) {
               result={result}
               improvementSource={improvement}
               auditSource={audit ?? null}
+              trajectory={trajectoryByCat.get(detail.category) ?? []}
               forcedOpen={
                 forcedMode === 'all' ? true : forcedMode === 'none' ? false : undefined
               }

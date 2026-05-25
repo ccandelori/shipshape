@@ -1,20 +1,20 @@
 {
   "meta": {
-    "generatedAt": "2026-05-24T01:48:39.219Z",
+    "generatedAt": "2026-05-25T04:27:33.114Z",
     "source": "snapshot",
-    "dashboardVersion": "1.0.0",
+    "dashboardVersion": "0.0.0",
     "notes": [
-      "Shipshape run: 2026-05-23T22:52:04.780Z on feat/dashboard@af3d1b679979",
-      "Snapshot built on feat/dashboard@af3d1b679979"
+      "Shipshape run: 2026-05-24T16:24:58.005Z on master@1d3ea0bf391e",
+      "Snapshot built on master@1d3ea0bf391e"
     ]
   },
   "shipshape": {
-    "startedAt": "2026-05-23T22:52:04.780Z",
-    "branch": "feat/dashboard",
-    "sha": "af3d1b679979",
+    "startedAt": "2026-05-24T16:24:58.005Z",
+    "branch": "master",
+    "sha": "1d3ea0bf391e",
     "mode": "full",
     "overallStatus": "pass",
-    "durationMs": 111571,
+    "durationMs": 111680,
     "results": [
       {
         "category": 1,
@@ -22,10 +22,10 @@
         "target": "<= 560 total typed-bypass markers (>= 25% reduction from 747)",
         "evidence_path": "orientation/improvements/type-safety.md",
         "reproduction": "rg-based count — see scripts/shipshape/checks/typecheck.ts or orientation/baselines/type-safety/counts.txt",
-        "durationMs": 10754,
+        "durationMs": 10793,
         "actual": "551 markers (: any=104 + as=380 + ts-expect-error=1 + non-null=66); ▼ 196 (26.2%) vs 747 baseline",
         "status": "pass",
-        "notes": "ESLint appendix — explicit: 451, hidden flow: 4774, redundant: 75; total: 5300. (Wider surface than the ripgrep gate; ripgrep is what the PRD target was set against.)"
+        "notes": "ESLint appendix — explicit: 471, hidden flow: 4774, redundant: 75; total: 5320. (Wider surface than the ripgrep gate; ripgrep is what the PRD target was set against.)"
       },
       {
         "category": 2,
@@ -33,7 +33,7 @@
         "target": "entry chunk <= 200 KB gzip",
         "evidence_path": "orientation/improvements/bundle-size.md",
         "reproduction": "pnpm --filter @ship/web build (parse entry chunk gzip from reporter table)",
-        "durationMs": 5491,
+        "durationMs": 5554,
         "actual": "142.68 kB gzip; ▼ 444.32 kB (75.7%) vs 587 kB baseline",
         "status": "pass",
         "notes": "Chunk: dist/assets/index-DaiNW7Aw.js                        481.36 kB │ gzip: 142.68 kB"
@@ -44,8 +44,8 @@
         "target": "every endpoint P90 + P97.5 within 10% or +10ms of post-remediation baseline",
         "evidence_path": "orientation/improvements/api-response-time.md",
         "reproduction": "tsx scripts/shipshape/checks/api.ts (auto-login as dev@ship.local, autocannon c=25 × 10s × 5 endpoints)",
-        "durationMs": 56376,
-        "actual": "/api/auth/me: P90=3ms / P97.5=4ms; /api/documents?type=wiki: P90=2ms / P97.5=3ms; /api/issues: P90=21ms / P97.5=22ms; /api/projects: P90=9ms / P97.5=10ms; /api/weeks: P90=9ms / P97.5=10ms",
+        "durationMs": 55438,
+        "actual": "/api/auth/me: P90=3ms / P97.5=4ms; /api/documents?type=wiki: P90=2ms / P97.5=3ms; /api/issues: P90=21ms / P97.5=24ms; /api/projects: P90=9ms / P97.5=10ms; /api/weeks: P90=9ms / P97.5=11ms",
         "status": "pass"
       },
       {
@@ -54,8 +54,8 @@
         "target": "dashboard \"my-work\" query <= 0.1 ms AND all 4 migration-038 indexes present",
         "evidence_path": "orientation/improvements/database-query-efficiency.md",
         "reproduction": "docker exec ship-postgres-1 psql -U ship -d ship_dev -c \"EXPLAIN ANALYZE ...\" (see check source)",
-        "durationMs": 133,
-        "actual": "4/4 indexes present; dashboard query 0.069 ms; planner: Seq Scan",
+        "durationMs": 140,
+        "actual": "4/4 indexes present; dashboard query 0.063 ms; planner: Seq Scan",
         "status": "pass",
         "notes": "Planner chose: Seq Scan (small datasets correctly prefer seqscan over JSONB index)"
       },
@@ -65,7 +65,7 @@
         "target": "0 test failures across api suite",
         "evidence_path": "orientation/improvements/test-coverage.md",
         "reproduction": "pnpm --filter @ship/api test",
-        "durationMs": 12773,
+        "durationMs": 12529,
         "actual": "497/497 tests pass across 36 files (vitest exit 0)",
         "status": "pass"
       },
@@ -85,8 +85,8 @@
         "target": "0 Critical + 0 Serious across all 8 baseline routes",
         "evidence_path": "orientation/improvements/accessibility.md",
         "reproduction": "node orientation/baselines/accessibility/axe-scan-after.mjs (auto-starts pnpm dev:web on :5173 if needed; chromium via playwright)",
-        "durationMs": 24568,
-        "actual": "0 Critical + 0 Serious across 8 routes (captured 2026-05-23T22:53:55.643Z)",
+        "durationMs": 25796,
+        "actual": "0 Critical + 0 Serious across 8 routes (captured 2026-05-24T16:26:48.929Z)",
         "status": "pass"
       }
     ]
@@ -365,6 +365,14 @@
         "reproduceCommand": "SHIPSHAPE_SESSION_COOKIE=<session_id> E2E_TEST=1 pnpm dev:api &\nbash orientation/baselines/api-response-time/benchmark-script.sh"
       },
       "whyItMatters": "P95/P99 latency dominates perceived responsiveness — the 5% of requests a user actually notices. Tail latency reveals contention, missing indexes, and N+1 patterns hidden by P50.",
+      "beforeAfter": {
+        "label": "/api/documents P95 @ c=25 (k6)",
+        "before": 28.29,
+        "after": 5.41,
+        "unit": "ms",
+        "reductionPct": 80.9,
+        "betterIs": "lower"
+      },
       "bullets": [
         "This check SKIPs when SHIPSHAPE_SESSION_COOKIE is unset — autocannon needs an authenticated session_id to hit the real endpoints.",
         "Baseline reference: orientation/baselines/api-baseline.json (post-remediation numbers).",
@@ -394,8 +402,8 @@
       "thresholdRationale": "Heaviest read in the app — JSONB property predicates on the documents table.",
       "whatWeMonitor": "The dashboard \"my-work\" query (fans out across documents + associations + assigned-issues filter) plus presence of the 4 JSONB expression indexes from migration 038. Measurement: docker exec EXPLAIN ANALYZE against the seeded dev DB.",
       "whyItMatters": "The unified-document-model puts everything in one table — JSONB property predicates dominate the slow queries. Without expression indexes on `properties->>'assignee_id'` etc., every \"my work\" load is a seq scan on the full documents table.",
-      "marginPct": 33,
-      "marginExplain": "Dashboard query at 0.067 ms vs the 0.1 ms ceiling — ~33 % headroom. JSONB indexes carry their weight at production volume.",
+      "marginPct": 60,
+      "marginExplain": "Dashboard query at 0.040 ms vs the 0.1 ms ceiling — ~60 % headroom. JSONB indexes carry their weight at production volume.",
       "highlight": {
         "outcomeStats": [
           {
@@ -444,10 +452,10 @@
       },
       "beforeAfter": {
         "label": "Dashboard \"my-work\" query",
-        "before": 14.2,
-        "after": 0.058,
+        "before": 0.149,
+        "after": 0.04,
         "unit": "ms",
-        "reductionPct": 99.6,
+        "reductionPct": 73,
         "betterIs": "lower"
       },
       "bullets": [
@@ -485,12 +493,12 @@
           {
             "value": 30,
             "unit": "",
-            "label": "New tests added",
+            "label": "New tests (this category)",
             "tone": "pass"
           },
           {
-            "value": 494,
-            "unit": "/494",
+            "value": 497,
+            "unit": "/497",
             "label": "Full suite passing",
             "tone": "pass"
           },
@@ -528,15 +536,15 @@
       },
       "whyItMatters": "A passing test suite is the substrate every other quality metric stands on. Type-safety wins are meaningless if regressions slip through; performance wins are meaningless if correctness drifted.",
       "beforeAfter": {
-        "label": "Test pass rate",
-        "before": 100,
-        "after": 100,
-        "unit": "%",
-        "reductionPct": 0,
+        "label": "api suite test count",
+        "before": 464,
+        "after": 497,
+        "unit": "",
+        "reductionPct": 7.1,
         "betterIs": "higher"
       },
       "bullets": [
-        "497/497 tests pass across 36 files in 12.2s.",
+        "497/497 tests pass across 36 files in 12.7s.",
         "PropertiesPanel data-testid race condition fixed (E2E flake elimination).",
         "Weekly-accountability null project_id on POST fixed (E2E flake elimination).",
         "One known low-priority flake (my-week stale-data) filed and tracked."
@@ -608,6 +616,14 @@
         "reproduceCommand": "pnpm --filter @ship/api test \\\n  src/__tests__/phase2-regressions.test.ts \\\n  src/utils/__tests__/yjsConverter.test.ts \\\n  src/__tests__/error-handler.test.ts"
       },
       "whyItMatters": "Real-time collab is where silent failures translate to lost work — a dropped Yjs message means a paragraph someone typed never reaches the server. The critical-path subset focuses here because that's where consequences are highest.",
+      "beforeAfter": {
+        "label": "Silent data-loss / security paths",
+        "before": 3,
+        "after": 0,
+        "unit": "",
+        "reductionPct": 100,
+        "betterIs": "lower"
+      },
       "bullets": [
         "33 pass / 0 fail across 5/5 critical-path files.",
         "yjsToJson now handles malformed Yjs state gracefully instead of crashing the persist path.",
@@ -685,6 +701,14 @@
         "reproduceCommand": "pnpm dev:web &\nnode orientation/baselines/accessibility/axe-scan-after.mjs"
       },
       "whyItMatters": "Ship claims Section 508 + WCAG 2.1 AA conformance. Either that claim is verified or it is a liability. Critical/Serious axe violations are the ones that actually break access.",
+      "beforeAfter": {
+        "label": "Critical + Serious axe violations",
+        "before": 8,
+        "after": 0,
+        "unit": "",
+        "reductionPct": 100,
+        "betterIs": "lower"
+      },
       "bullets": [
         "This check SKIPs when http://localhost:5173 is unreachable — axe needs the web dev server.",
         "Most recent full scan: 0 Critical, 0 Serious across all 8 baseline routes.",
@@ -733,12 +757,6 @@
       "href": "api/src/routes/health-collaboration.ts",
       "description": "Hand-written Prometheus exposition for the collaboration subsystem. Scrape-ready for any standard monitoring sidecar.",
       "category": "observability"
-    },
-    {
-      "label": "Session handoff log",
-      "href": "orientation/next-session.md",
-      "description": "Living operational context — what landed in the most recent work session, what is in flight, what to watch for.",
-      "category": "handoff"
     },
     {
       "label": "Agent collaboration contract",
@@ -1059,7 +1077,7 @@
             "kind": "markdown",
             "size": 739,
             "caption": "Post-remediation axe summary.",
-            "preview": "# axe-core deep scan AFTER Task 16 fixes — 2026-05-23T22:53:55.643Z\n\nTags: `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `section508`.\nBrowser: chromium-1200 (playwright). Resolution: 1280×800. Auth: cookie reuse via login UI.\n\n| Route | URL | Critical | Serious | Moderate | Minor | Total |\n|---|---|---:|---:|---:|---:|---:|\n| login | `/login` | 0 | 0 | 0 | 0 | 0 |\n| docs | `/docs` | 0 | 0 | 0 | 0 | 0 |\n| my-week | `/my-week` | 0 | 0 | 0 | 0 | 0 |\n| issues | `/issues` | 0 | 0 | 0 | 0 | 0 |\n| projects | `/projects` | 0 | 0 | 0 | 0 | 0 |\n| settings | `/settings` | 0 | 0 | 0 | 0 | 0 |\n| team_allocation | `/team-allocation` | 0 | 0 | 0 | 0 | 0 |\n| editor-wiki | `/documents/57895cfe-dcba-419a-8dbc-a919a846c0b7` | 0 | 0 | 0 | 0 | 0 |\n",
+            "preview": "# axe-core deep scan AFTER Task 16 fixes — 2026-05-24T16:26:48.929Z\n\nTags: `wcag2a`, `wcag2aa`, `wcag21a`, `wcag21aa`, `section508`.\nBrowser: chromium-1200 (playwright). Resolution: 1280×800. Auth: cookie reuse via login UI.\n\n| Route | URL | Critical | Serious | Moderate | Minor | Total |\n|---|---|---:|---:|---:|---:|---:|\n| login | `/login` | 0 | 0 | 0 | 0 | 0 |\n| docs | `/docs` | 0 | 0 | 0 | 0 | 0 |\n| my-week | `/my-week` | 0 | 0 | 0 | 0 | 0 |\n| issues | `/issues` | 0 | 0 | 0 | 0 | 0 |\n| projects | `/projects` | 0 | 0 | 0 | 0 | 0 |\n| settings | `/settings` | 0 | 0 | 0 | 0 | 0 |\n| team_allocation | `/team-allocation` | 0 | 0 | 0 | 0 | 0 |\n| editor-wiki | `/documents/57895cfe-dcba-419a-8dbc-a919a846c0b7` | 0 | 0 | 0 | 0 | 0 |\n",
             "external": false
           },
           {
@@ -1079,7 +1097,7 @@
             "kind": "json",
             "size": 1547,
             "caption": "Post-remediation axe summary (JSON).",
-            "preview": "{\n  \"capturedAt\": \"2026-05-23T22:53:55.643Z\",\n  \"routes\": [\n    {\n      \"name\": \"login\",\n      \"path\": \"/login\",\n      \"critical\": 0,\n      \"serious\": 0,\n      \"moderate\": 0,\n      \"minor\": 0,\n      \"total\": 0,\n      \"ms\": 2503\n    },\n    {\n      \"name\": \"docs\",\n      \"path\": \"/docs\",\n      \"critical\": 0,\n      \"serious\": 0,\n      \"moderate\": 0,\n      \"minor\": 0,\n      \"total\": 0,\n      \"ms\": 2642\n    },\n    {\n      \"name\": \"my-week\",\n      \"path\": \"/my-week\",\n      \"critical\": 0,\n      \"serious\": 0,\n      \"moderate\": 0,\n      \"minor\": 0,\n… (55 more lines)",
+            "preview": "{\n  \"capturedAt\": \"2026-05-24T16:26:48.929Z\",\n  \"routes\": [\n    {\n      \"name\": \"login\",\n      \"path\": \"/login\",\n      \"critical\": 0,\n      \"serious\": 0,\n      \"moderate\": 0,\n      \"minor\": 0,\n      \"total\": 0,\n      \"ms\": 2582\n    },\n    {\n      \"name\": \"docs\",\n      \"path\": \"/docs\",\n      \"critical\": 0,\n      \"serious\": 0,\n      \"moderate\": 0,\n      \"minor\": 0,\n      \"total\": 0,\n      \"ms\": 2708\n    },\n    {\n      \"name\": \"my-week\",\n      \"path\": \"/my-week\",\n      \"critical\": 0,\n      \"serious\": 0,\n      \"moderate\": 0,\n      \"minor\": 0,\n… (55 more lines)",
             "external": false
           },
           {
@@ -1192,6 +1210,1055 @@
       }
     ]
   },
+  "history": {
+    "runCount": 24,
+    "firstRunAt": "2026-05-24T04:06:17.738Z",
+    "categories": [
+      {
+        "category": 1,
+        "points": [
+          {
+            "startedAt": "2026-05-24T04:06:17.738Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T04:10:34.146Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T04:15:41.665Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T05:42:37.260Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T05:44:43.892Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T15:47:42.639Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T15:49:40.450Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T15:51:32.844Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T15:54:26.924Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T15:56:19.425Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T15:58:09.493Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T15:59:59.609Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T16:01:50.924Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T16:04:42.389Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T16:06:32.543Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T16:08:26.106Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T16:10:17.971Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T16:12:11.821Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T16:14:55.081Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T16:16:46.553Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T16:18:38.669Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T16:20:30.379Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T16:22:21.852Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 1.6
+          },
+          {
+            "startedAt": "2026-05-24T16:24:58.005Z",
+            "sha": "1d3ea0bf391e",
+            "status": "pass",
+            "marginPct": 1.6
+          }
+        ]
+      },
+      {
+        "category": 2,
+        "points": [
+          {
+            "startedAt": "2026-05-24T04:06:17.738Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T04:10:34.146Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T04:15:41.665Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T05:42:37.260Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T05:44:43.892Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T15:47:42.639Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T15:49:40.450Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T15:51:32.844Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T15:54:26.924Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T15:56:19.425Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T15:58:09.493Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T15:59:59.609Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T16:01:50.924Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T16:04:42.389Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T16:06:32.543Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T16:08:26.106Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T16:10:17.971Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T16:12:11.821Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T16:14:55.081Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T16:16:46.553Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T16:18:38.669Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T16:20:30.379Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T16:22:21.852Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 28.7
+          },
+          {
+            "startedAt": "2026-05-24T16:24:58.005Z",
+            "sha": "1d3ea0bf391e",
+            "status": "pass",
+            "marginPct": 28.7
+          }
+        ]
+      },
+      {
+        "category": 3,
+        "points": [
+          {
+            "startedAt": "2026-05-24T04:06:17.738Z",
+            "sha": "c7bb29e502ae",
+            "status": "fail",
+            "marginPct": null
+          },
+          {
+            "startedAt": "2026-05-24T04:10:34.146Z",
+            "sha": "c7bb29e502ae",
+            "status": "fail",
+            "marginPct": null
+          },
+          {
+            "startedAt": "2026-05-24T04:15:41.665Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 32
+          },
+          {
+            "startedAt": "2026-05-24T05:42:37.260Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 32
+          },
+          {
+            "startedAt": "2026-05-24T05:44:43.892Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 32
+          },
+          {
+            "startedAt": "2026-05-24T15:47:42.639Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 32
+          },
+          {
+            "startedAt": "2026-05-24T15:49:40.450Z",
+            "sha": "c7bb29e502ae",
+            "status": "fail",
+            "marginPct": null
+          },
+          {
+            "startedAt": "2026-05-24T15:51:32.844Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 32
+          },
+          {
+            "startedAt": "2026-05-24T15:54:26.924Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 32
+          },
+          {
+            "startedAt": "2026-05-24T15:56:19.425Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 32
+          },
+          {
+            "startedAt": "2026-05-24T15:58:09.493Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 32
+          },
+          {
+            "startedAt": "2026-05-24T15:59:59.609Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 32
+          },
+          {
+            "startedAt": "2026-05-24T16:01:50.924Z",
+            "sha": "c7bb29e502ae",
+            "status": "fail",
+            "marginPct": null
+          },
+          {
+            "startedAt": "2026-05-24T16:04:42.389Z",
+            "sha": "c7bb29e502ae",
+            "status": "fail",
+            "marginPct": null
+          },
+          {
+            "startedAt": "2026-05-24T16:06:32.543Z",
+            "sha": "c7bb29e502ae",
+            "status": "fail",
+            "marginPct": null
+          },
+          {
+            "startedAt": "2026-05-24T16:08:26.106Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 32
+          },
+          {
+            "startedAt": "2026-05-24T16:10:17.971Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 32
+          },
+          {
+            "startedAt": "2026-05-24T16:12:11.821Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 32
+          },
+          {
+            "startedAt": "2026-05-24T16:14:55.081Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 32
+          },
+          {
+            "startedAt": "2026-05-24T16:16:46.553Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 32
+          },
+          {
+            "startedAt": "2026-05-24T16:18:38.669Z",
+            "sha": "c7bb29e502ae",
+            "status": "fail",
+            "marginPct": null
+          },
+          {
+            "startedAt": "2026-05-24T16:20:30.379Z",
+            "sha": "c7bb29e502ae",
+            "status": "fail",
+            "marginPct": null
+          },
+          {
+            "startedAt": "2026-05-24T16:22:21.852Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 32
+          },
+          {
+            "startedAt": "2026-05-24T16:24:58.005Z",
+            "sha": "1d3ea0bf391e",
+            "status": "pass",
+            "marginPct": 32
+          }
+        ]
+      },
+      {
+        "category": 4,
+        "points": [
+          {
+            "startedAt": "2026-05-24T04:06:17.738Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T04:10:34.146Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T04:15:41.665Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T05:42:37.260Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T05:44:43.892Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T15:47:42.639Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T15:49:40.450Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T15:51:32.844Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T15:54:26.924Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T15:56:19.425Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T15:58:09.493Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T15:59:59.609Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T16:01:50.924Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T16:04:42.389Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T16:06:32.543Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T16:08:26.106Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T16:10:17.971Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T16:12:11.821Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T16:14:55.081Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T16:16:46.553Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T16:18:38.669Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T16:20:30.379Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T16:22:21.852Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 60
+          },
+          {
+            "startedAt": "2026-05-24T16:24:58.005Z",
+            "sha": "1d3ea0bf391e",
+            "status": "pass",
+            "marginPct": 60
+          }
+        ]
+      },
+      {
+        "category": 5,
+        "points": [
+          {
+            "startedAt": "2026-05-24T04:06:17.738Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T04:10:34.146Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T04:15:41.665Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T05:42:37.260Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T05:44:43.892Z",
+            "sha": "c7bb29e502ae",
+            "status": "fail",
+            "marginPct": null
+          },
+          {
+            "startedAt": "2026-05-24T15:47:42.639Z",
+            "sha": "c7bb29e502ae",
+            "status": "fail",
+            "marginPct": null
+          },
+          {
+            "startedAt": "2026-05-24T15:49:40.450Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:51:32.844Z",
+            "sha": "c7bb29e502ae",
+            "status": "fail",
+            "marginPct": null
+          },
+          {
+            "startedAt": "2026-05-24T15:54:26.924Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:56:19.425Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:58:09.493Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:59:59.609Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:01:50.924Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:04:42.389Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:06:32.543Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:08:26.106Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:10:17.971Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:12:11.821Z",
+            "sha": "c7bb29e502ae",
+            "status": "fail",
+            "marginPct": null
+          },
+          {
+            "startedAt": "2026-05-24T16:14:55.081Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:16:46.553Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:18:38.669Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:20:30.379Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:22:21.852Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:24:58.005Z",
+            "sha": "1d3ea0bf391e",
+            "status": "pass",
+            "marginPct": 100
+          }
+        ]
+      },
+      {
+        "category": 6,
+        "points": [
+          {
+            "startedAt": "2026-05-24T04:06:17.738Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T04:10:34.146Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T04:15:41.665Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T05:42:37.260Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T05:44:43.892Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:47:42.639Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:49:40.450Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:51:32.844Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:54:26.924Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:56:19.425Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:58:09.493Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:59:59.609Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:01:50.924Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:04:42.389Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:06:32.543Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:08:26.106Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:10:17.971Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:12:11.821Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:14:55.081Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:16:46.553Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:18:38.669Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:20:30.379Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:22:21.852Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:24:58.005Z",
+            "sha": "1d3ea0bf391e",
+            "status": "pass",
+            "marginPct": 100
+          }
+        ]
+      },
+      {
+        "category": 7,
+        "points": [
+          {
+            "startedAt": "2026-05-24T04:06:17.738Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T04:10:34.146Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T04:15:41.665Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T05:42:37.260Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T05:44:43.892Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:47:42.639Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:49:40.450Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:51:32.844Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:54:26.924Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:56:19.425Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:58:09.493Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T15:59:59.609Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:01:50.924Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:04:42.389Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:06:32.543Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:08:26.106Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:10:17.971Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:12:11.821Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:14:55.081Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:16:46.553Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:18:38.669Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:20:30.379Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:22:21.852Z",
+            "sha": "c7bb29e502ae",
+            "status": "pass",
+            "marginPct": 100
+          },
+          {
+            "startedAt": "2026-05-24T16:24:58.005Z",
+            "sha": "1d3ea0bf391e",
+            "status": "pass",
+            "marginPct": 100
+          }
+        ]
+      }
+    ]
+  },
   "deployedUrl": "http://143.198.163.184/",
-  "repoUrl": "https://github.com/ccandelori/shipshape"
+  "repoUrl": "https://labs.gauntletai.com/cameroncandelori/shipshape"
 }

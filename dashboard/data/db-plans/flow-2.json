@@ -1,0 +1,173 @@
+{
+  "title": "Flow 2 — View document (slowest: session lookup)",
+  "capturedAt": "2026-05-19",
+  "planningTimeMs": 0.369,
+  "executionTimeMs": 0.111,
+  "root": {
+    "name": "Hash Join",
+    "detail": null,
+    "depth": 1,
+    "cost": {
+      "startup": 10.76,
+      "total": 12.08,
+      "rows": 1,
+      "width": 122
+    },
+    "actual": {
+      "startupMs": 0.088,
+      "totalMs": 0.09,
+      "rows": 1,
+      "loops": 1
+    },
+    "attrs": [
+      "Output: s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at, u.is_super_admin",
+      "Inner Unique: true",
+      "Hash Cond: (u.id = s.user_id)",
+      "Buffers: shared hit=4 read=2 dirtied=1",
+      "InitPlan 1 (returns $0)"
+    ],
+    "children": [
+      {
+        "name": "Limit",
+        "detail": null,
+        "depth": 5,
+        "cost": {
+          "startup": 0.13,
+          "total": 2.6,
+          "rows": 1,
+          "width": 65
+        },
+        "actual": {
+          "startupMs": 0.064,
+          "totalMs": 0.064,
+          "rows": 1,
+          "loops": 1
+        },
+        "attrs": [
+          "Output: sessions.id",
+          "Buffers: shared hit=1 read=2 dirtied=1"
+        ],
+        "children": [
+          {
+            "name": "Index Only Scan using sessions_pkey",
+            "detail": "public.sessions",
+            "depth": 11,
+            "cost": {
+              "startup": 0.13,
+              "total": 12.46,
+              "rows": 5,
+              "width": 65
+            },
+            "actual": {
+              "startupMs": 0.064,
+              "totalMs": 0.064,
+              "rows": 1,
+              "loops": 1
+            },
+            "attrs": [
+              "Output: sessions.id",
+              "Heap Fetches: 1",
+              "Buffers: shared hit=1 read=2 dirtied=1"
+            ],
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "Seq Scan",
+        "detail": "public.users u",
+        "depth": 3,
+        "cost": {
+          "startup": 0,
+          "total": 1.24,
+          "rows": 24,
+          "width": 17
+        },
+        "actual": {
+          "startupMs": 0.002,
+          "totalMs": 0.003,
+          "rows": 20,
+          "loops": 1
+        },
+        "attrs": [
+          "Output: u.id, u.email, u.password_hash, u.name, u.is_super_admin, u.last_workspace_id, u.x509_subject_dn, u.piv_first_login_at, u.last_auth_provider, u.created_at, u.updated_at",
+          "Buffers: shared hit=1"
+        ],
+        "children": []
+      },
+      {
+        "name": "Hash",
+        "detail": null,
+        "depth": 3,
+        "cost": {
+          "startup": 8.15,
+          "total": 8.15,
+          "rows": 1,
+          "width": 121
+        },
+        "actual": {
+          "startupMs": 0.077,
+          "totalMs": 0.077,
+          "rows": 1,
+          "loops": 1
+        },
+        "attrs": [
+          "Output: s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at",
+          "Buckets: 1024  Batches: 1  Memory Usage: 9kB",
+          "Buffers: shared hit=3 read=2 dirtied=1"
+        ],
+        "children": [
+          {
+            "name": "Bitmap Heap Scan",
+            "detail": "public.sessions s",
+            "depth": 9,
+            "cost": {
+              "startup": 4.14,
+              "total": 8.15,
+              "rows": 1,
+              "width": 121
+            },
+            "actual": {
+              "startupMs": 0.073,
+              "totalMs": 0.073,
+              "rows": 1,
+              "loops": 1
+            },
+            "attrs": [
+              "Output: s.id, s.user_id, s.workspace_id, s.expires_at, s.last_activity, s.created_at",
+              "Recheck Cond: (s.id = $0)",
+              "Heap Blocks: exact=1",
+              "Buffers: shared hit=3 read=2 dirtied=1"
+            ],
+            "children": [
+              {
+                "name": "Bitmap Index Scan",
+                "detail": "sessions_pkey",
+                "depth": 15,
+                "cost": {
+                  "startup": 0,
+                  "total": 4.14,
+                  "rows": 1,
+                  "width": 0
+                },
+                "actual": {
+                  "startupMs": 0.07,
+                  "totalMs": 0.07,
+                  "rows": 1,
+                  "loops": 1
+                },
+                "attrs": [
+                  "Index Cond: (s.id = $0)",
+                  "Buffers: shared hit=2 read=2 dirtied=1",
+                  "Planning:",
+                  "Buffers: shared hit=394"
+                ],
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

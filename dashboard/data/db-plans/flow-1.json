@@ -1,0 +1,223 @@
+{
+  "title": "Flow 1 — My Week landing (slowest: weekly_plan list join with person + project)",
+  "capturedAt": "2026-05-19",
+  "planningTimeMs": 0.498,
+  "executionTimeMs": 0.281,
+  "root": {
+    "name": "Sort",
+    "detail": null,
+    "depth": 1,
+    "cost": {
+      "startup": 131.52,
+      "total": 131.6,
+      "rows": 32,
+      "width": 481
+    },
+    "actual": {
+      "startupMs": 0.248,
+      "totalMs": 0.25,
+      "rows": 32,
+      "loops": 1
+    },
+    "attrs": [
+      "Output: d.id, d.title, d.content, d.properties, d.created_at, d.updated_at, p.title, pr.title, (((d.properties ->> 'week_number'::text))::integer)",
+      "Sort Key: (((d.properties ->> 'week_number'::text))::integer) DESC, d.created_at DESC",
+      "Sort Method: quicksort  Memory: 63kB",
+      "Buffers: shared hit=85"
+    ],
+    "children": [
+      {
+        "name": "Hash Left Join",
+        "detail": null,
+        "depth": 3,
+        "cost": {
+          "startup": 94.9,
+          "total": 130.72,
+          "rows": 32,
+          "width": 481
+        },
+        "actual": {
+          "startupMs": 0.183,
+          "totalMs": 0.223,
+          "rows": 32,
+          "loops": 1
+        },
+        "attrs": [
+          "Output: d.id, d.title, d.content, d.properties, d.created_at, d.updated_at, p.title, pr.title, ((d.properties ->> 'week_number'::text))::integer",
+          "Inner Unique: true",
+          "Hash Cond: (((d.properties ->> 'project_id'::text))::uuid = pr.id)",
+          "Buffers: shared hit=79"
+        ],
+        "children": [
+          {
+            "name": "Hash Left Join",
+            "detail": null,
+            "depth": 9,
+            "cost": {
+              "startup": 49.65,
+              "total": 85.13,
+              "rows": 32,
+              "width": 457
+            },
+            "actual": {
+              "startupMs": 0.115,
+              "totalMs": 0.138,
+              "rows": 32,
+              "loops": 1
+            },
+            "attrs": [
+              "Output: d.id, d.title, d.content, d.properties, d.created_at, d.updated_at, p.title",
+              "Inner Unique: true",
+              "Hash Cond: (((d.properties ->> 'person_id'::text))::uuid = p.id)",
+              "Buffers: shared hit=45"
+            ],
+            "children": [
+              {
+                "name": "Bitmap Heap Scan",
+                "detail": "public.documents d",
+                "depth": 15,
+                "cost": {
+                  "startup": 4.4,
+                  "total": 39.79,
+                  "rows": 32,
+                  "width": 437
+                },
+                "actual": {
+                  "startupMs": 0.009,
+                  "totalMs": 0.015,
+                  "rows": 32,
+                  "loops": 1
+                },
+                "attrs": [
+                  "Output: d.id, d.workspace_id, d.document_type, d.title, d.content, d.yjs_state, d.parent_id, d.\"position\", d.properties, d.ticket_number, d.archived_at, d.deleted_at, d.started_at, d.completed_at, d.cancelled_at, d.reopened_at, d.converted_to_id, d.converted_from_id, d.converted_at, d.converted_by, d.original_type, d.conversion_count, d.created_at, d.updated_at, d.created_by, d.visibility",
+                  "Recheck Cond: (d.document_type = 'weekly_plan'::document_type)",
+                  "Filter: ((d.archived_at IS NULL) AND (d.workspace_id = '9dbdd448-5522-4fcf-854f-2c2f3736e323'::uuid))",
+                  "Heap Blocks: exact=10",
+                  "Buffers: shared hit=11"
+                ],
+                "children": [
+                  {
+                    "name": "Bitmap Index Scan",
+                    "detail": "idx_documents_document_type",
+                    "depth": 21,
+                    "cost": {
+                      "startup": 0,
+                      "total": 4.39,
+                      "rows": 32,
+                      "width": 0
+                    },
+                    "actual": {
+                      "startupMs": 0.004,
+                      "totalMs": 0.004,
+                      "rows": 32,
+                      "loops": 1
+                    },
+                    "attrs": [
+                      "Index Cond: (d.document_type = 'weekly_plan'::document_type)",
+                      "Buffers: shared hit=1"
+                    ],
+                    "children": []
+                  }
+                ]
+              },
+              {
+                "name": "Hash",
+                "detail": null,
+                "depth": 15,
+                "cost": {
+                  "startup": 39,
+                  "total": 39,
+                  "rows": 500,
+                  "width": 36
+                },
+                "actual": {
+                  "startupMs": 0.098,
+                  "totalMs": 0.098,
+                  "rows": 500,
+                  "loops": 1
+                },
+                "attrs": [
+                  "Output: p.title, p.id",
+                  "Buckets: 1024  Batches: 1  Memory Usage: 42kB",
+                  "Buffers: shared hit=34"
+                ],
+                "children": [
+                  {
+                    "name": "Seq Scan",
+                    "detail": "public.documents p",
+                    "depth": 21,
+                    "cost": {
+                      "startup": 0,
+                      "total": 39,
+                      "rows": 500,
+                      "width": 36
+                    },
+                    "actual": {
+                      "startupMs": 0.002,
+                      "totalMs": 0.061,
+                      "rows": 500,
+                      "loops": 1
+                    },
+                    "attrs": [
+                      "Output: p.title, p.id",
+                      "Buffers: shared hit=34"
+                    ],
+                    "children": []
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "name": "Hash",
+            "detail": null,
+            "depth": 9,
+            "cost": {
+              "startup": 39,
+              "total": 39,
+              "rows": 500,
+              "width": 36
+            },
+            "actual": {
+              "startupMs": 0.061,
+              "totalMs": 0.061,
+              "rows": 500,
+              "loops": 1
+            },
+            "attrs": [
+              "Output: pr.title, pr.id",
+              "Buckets: 1024  Batches: 1  Memory Usage: 42kB",
+              "Buffers: shared hit=34"
+            ],
+            "children": [
+              {
+                "name": "Seq Scan",
+                "detail": "public.documents pr",
+                "depth": 15,
+                "cost": {
+                  "startup": 0,
+                  "total": 39,
+                  "rows": 500,
+                  "width": 36
+                },
+                "actual": {
+                  "startupMs": 0.001,
+                  "totalMs": 0.028,
+                  "rows": 500,
+                  "loops": 1
+                },
+                "attrs": [
+                  "Output: pr.title, pr.id",
+                  "Buffers: shared hit=34",
+                  "Planning:",
+                  "Buffers: shared hit=443"
+                ],
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

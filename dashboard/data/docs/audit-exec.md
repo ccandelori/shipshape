@@ -1,4 +1,4 @@
-# ShipShape Audit Report — Phase 1
+# ShipShape Audit Report
 
 | Field | Value |
 |---|---|
@@ -10,10 +10,35 @@
 | Final submission | Sunday, 2026-05-24 10:59 PM CT |
 | Last updated | 2026-05-20 |
 
-> **Paired deliverables.** The PDF brief includes an Appendix A ("Codebase Orientation Checklist") as a required part of the final submission: see `orientation/README.md` (855 lines, all 8 PDF sections complete).
-> **Full prose + methodology details:** `orientation/audit-report-detailed.md`. This document is the executive summary. Every claim links back to either an evidence file or a section of the detailed report.
+> **Consolidated audit report.** The executive summary runs from here to the deep-dive divider; full per-category methodology, metrics, and raw-data citations follow it. The interactive view is the live dashboard at http://143.198.163.184/dashboard/ — its Audit tab renders this executive summary, and its Categories tab renders the per-category deep dives below.
+> **Paired deliverable.** `orientation/README.md` is the PDF Appendix A "Codebase Orientation Checklist" (all 8 sections complete, 855 lines), required as part of the final submission per the brief.
 
----
+## Contents
+
+**Executive summary**
+
+- [Bottom line](#bottom-line)
+- [What works](#what-works)
+- [Critical findings — live-confirmed](#critical-findings--live-confirmed)
+- [High findings — structurally confirmed](#high-findings--structurally-confirmed)
+- [Per-category baselines](#per-category-baselines)
+- [Phase 2 plan summary](#phase-2-plan-summary)
+- [Audit timeline](#audit-timeline)
+- [Methodology pointers](#methodology-pointers)
+- [Severity key](#severity-key)
+
+**Deep dives**
+
+- [Category 1: Type Safety](#category-1-type-safety)
+- [Category 2: Bundle Size](#category-2-bundle-size)
+- [Category 3: API Response Time](#category-3-api-response-time)
+- [Category 4: Database Query Efficiency](#category-4-database-query-efficiency)
+- [Category 5: Test Coverage & Quality](#category-5-test-coverage--quality)
+- [Category 6: Runtime Error & Edge Case Handling](#category-6-runtime-error--edge-case-handling)
+- [Category 7: Accessibility Compliance](#category-7-accessibility-compliance)
+- [Phase 2 Prioritization](#phase-2-prioritization)
+- [Sign-off](#sign-off)
+- [Appendix: Baseline filename conventions](#appendix-baseline-filename-conventions)
 
 ## Bottom line
 
@@ -61,7 +86,7 @@ Severity key: **Critical** = user-visible data loss / security exposure / outage
 
 ## Per-category baselines
 
-Detailed methodology and evidence-table rows live in `audit-report-detailed.md`. Per category: TL;DR, the headline number, the top findings, and where to verify.
+Detailed methodology and evidence-table rows live in the per-category deep dives below (or the Categories tab on the dashboard). Per category: TL;DR, the headline number, the top findings, and where to verify.
 
 ### 1. Type Safety
 
@@ -261,30 +286,6 @@ Slowest-query ms values are localhost warm-cache execution times (all `Buffers: 
 
 ---
 
-## Sign-off
-
-| Category | Status | Headline |
-|---|---|---|
-| 1. Type Safety | ✅ Measured | 747 violations (~498 prod / ~249 test); `pnpm type-check` exit 0; web tsconfig drops 3 safety flags |
-| 2. Bundle Size | ✅ Measured | 2,074 KB / 588 KB gzip main chunk; treemap regenerable via committed script |
-| 3. API Response Time | ✅ Measured | 850,757 req / 0 errors; `/api/issues` 58 ms p97.5 at c=50; rate-limit scaffold guarded + documented |
-| 4. DB Query Efficiency | ✅ Measured | Exact per-flow counts via `pg_stat_statements`; 5 EXPLAIN ANALYZE plans; JSONB index gaps identified |
-| 5. Test Coverage | ✅ Measured | API 40.34% / 33.44%; web baseline = broken-as-found (root-causes documented); E2E 0 hard failures × 3 runs |
-| 6. Runtime Errors | ✅ Measured | All 12 scenarios captured live (Playwright + psql + curl); 3 critical bugs live-confirmed in re-audit |
-| 7. Accessibility | ✅ Measured | Lighthouse on 10 routes + axe on 8 routes + keyboard on 3 flows + real VoiceOver on `/dashboard` + `/my-week` + wiki editor |
-
-**Phase 1 gate: MET** — all 7 categories cite a measurement with an evidence path. spec-literal compliance: VoiceOver on `/dashboard` (not just `/my-week`) closes the one prior spec-literal substitution gap.
-
-**Deferred to Phase 2** (not gate-blocking):
-
-| Category | Deferred item | Why |
-|---|---|---|
-| 3 API | Production P95 measurements | No prod access from this audit thread; localhost is the floor |
-| 4 DB | Re-EXPLAIN at production-scale volume | Current seed meets the specified floor (500 docs); not production scale |
-| 3 API | Histogram-derived P95 (instead of p97.5) | Switch to k6/wrk2 in Phase 2 |
-
----
-
 ## Audit timeline
 
 | Date | Work |
@@ -321,4 +322,4 @@ Slowest-query ms values are localhost warm-cache execution times (all `Buffers: 
 
 ---
 
-*Full prose, methodology details, raw measurement files, and per-category live-verification tables: see `orientation/audit-report-detailed.md`.*
+*Full prose, methodology details, raw measurement files, and per-category live-verification tables continue below in the Deep dives section.*

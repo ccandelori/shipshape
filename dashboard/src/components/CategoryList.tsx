@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronDown, ChevronUp } from 'lucide-react';
 import clsx from 'clsx';
-import type { DashboardSnapshot, CheckResult } from '../data/types';
+import type { DashboardSnapshot, CheckResult, TrajectoryPoint } from '../data/types';
 import { StatusPill } from './StatusPill';
+import { Sparkline } from './Sparkline';
 
 const CATEGORY_ICONS: Record<number, string> = {
   1: 'Aa',  // Type
@@ -30,6 +31,11 @@ interface Props {
 }
 
 export function CategoryList({ snapshot }: Props) {
+  const trajectoryByCat = new Map<number, TrajectoryPoint[]>();
+  for (const t of snapshot.history.categories) {
+    trajectoryByCat.set(t.category, t.points);
+  }
+
   return (
     <div className="surface p-6 md:p-8 h-full flex flex-col">
       <header className="flex items-center justify-between mb-5">
@@ -45,14 +51,27 @@ export function CategoryList({ snapshot }: Props) {
 
       <div className="flex-1 divide-y divide-ink-100">
         {snapshot.shipshape.results.map((r, i) => (
-          <CategoryRow key={r.category} result={r} index={i} />
+          <CategoryRow
+            key={r.category}
+            result={r}
+            index={i}
+            trajectory={trajectoryByCat.get(r.category) ?? []}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-function CategoryRow({ result, index }: { result: CheckResult; index: number }) {
+function CategoryRow({
+  result,
+  index,
+  trajectory,
+}: {
+  result: CheckResult;
+  index: number;
+  trajectory: TrajectoryPoint[];
+}) {
   const [open, setOpen] = useState(false);
   const Icon = CATEGORY_ICONS[result.category] ?? '·';
   const iconBg = ICON_BG[result.category] ?? 'bg-slate-100 text-ink-600';
@@ -77,6 +96,7 @@ function CategoryRow({ result, index }: { result: CheckResult; index: number }) 
           <div className="font-semibold text-ink-700 leading-tight">{result.name}</div>
           <div className="text-xs text-ink-400 mt-0.5 font-mono">CAT {result.category}</div>
         </div>
+        <Sparkline points={trajectory} width={64} height={20} className="shrink-0 no-print" />
         <StatusPill status={result.status} />
         {open ? (
           <ChevronUp size={16} data-print-hide className="text-ink-400 shrink-0" />

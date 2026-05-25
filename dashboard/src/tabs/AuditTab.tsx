@@ -1,5 +1,5 @@
-// Audit tab — executive audit + discovery + compliance scan.
-// Sub-nav scroll-jumps between the three sections.
+// Audit tab — executive audit + discovery + compliance scan + AI cost.
+// Sub-nav scroll-jumps between the four sections.
 
 import type { DashboardSnapshot } from '../data/types';
 import { SubNav, type SubNavItem } from '../components/Tabs/SubNav';
@@ -10,11 +10,13 @@ import { SectionHeading } from '../components/SectionHeading';
 import auditExecMd from '../../data/docs/audit-exec.md?raw';
 import discoveryMd from '../../data/docs/discovery.md?raw';
 import complianceMd from '../../data/docs/compliance.md?raw';
+import aiCostMd from '../../data/docs/ai-cost.md?raw';
 
 const SUBNAV: SubNavItem[] = [
   { id: 'audit-exec', label: 'Executive audit' },
   { id: 'audit-discovery', label: 'Discovery' },
   { id: 'audit-compliance', label: 'Compliance' },
+  { id: 'audit-ai-cost', label: 'AI cost' },
 ];
 
 interface Props {
@@ -58,6 +60,17 @@ export function AuditTab({ snapshot }: Props) {
             <MarkdownDocument source={complianceMd} stripFirstH1 />
           </div>
           <ComplianceFindings summary={snapshot.compliance} />
+        </section>
+
+        <section id="audit-ai-cost" className="scroll-mt-24">
+          <SectionHeading
+            eyebrow="How this audit was built"
+            title="AI spend for the week"
+            subtitle="Actual subscription cost (~$40), what the same work would have cost at Anthropic's per-token API rates (~$9K), and the cache + subscription economics that explain the gap."
+          />
+          <div className="surface p-6 md:p-8">
+            <MarkdownDocument source={aiCostMd} stripFirstH1 />
+          </div>
         </section>
       </div>
     </div>

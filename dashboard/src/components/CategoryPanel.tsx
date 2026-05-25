@@ -5,13 +5,16 @@
 import { useState } from 'react';
 import { ChevronDown, BookOpen, FileSearch, TrendingDown, TrendingUp } from 'lucide-react';
 import clsx from 'clsx';
-import type { CategoryDetail, CheckResult } from '../data/types';
+import type { CategoryDetail, CheckResult, TrajectoryPoint } from '../data/types';
 import { StatusPill } from './StatusPill';
 import { ArtifactLink } from './ArtifactLink';
 import { CopyButton } from './CopyButton';
 import { AnimatedNumber } from './AnimatedNumber';
 import { MarkdownDocument } from './Markdown/MarkdownDocument';
 import { CategoryHighlight } from './CategoryHighlight';
+import { Sparkline } from './Sparkline';
+import { BundleEmbed } from './BundleEmbed';
+import { DbPlans } from './DbPlans';
 import { formatDuration } from '../lib/format';
 
 interface Props {
@@ -19,11 +22,12 @@ interface Props {
   result: CheckResult;
   improvementSource: string;
   auditSource: string | null;
+  trajectory: TrajectoryPoint[];
   /** External control. If provided, overrides the local toggle state. */
   forcedOpen?: boolean;
 }
 
-export function CategoryPanel({ detail, result, improvementSource, auditSource, forcedOpen }: Props) {
+export function CategoryPanel({ detail, result, improvementSource, auditSource, trajectory, forcedOpen }: Props) {
   const [localOpen, setLocalOpen] = useState(false);
   const open = forcedOpen !== undefined ? forcedOpen : localOpen;
 
@@ -76,11 +80,13 @@ export function CategoryPanel({ detail, result, improvementSource, auditSource, 
           </p>
         </div>
 
-        {/* Eye-catching metric — trend or headroom */}
+        {/* Eye-catching metric — trend, headroom, and a sparkline of margin
+            over time so the reader sees both the current value and where it
+            sits in the recent history. */}
         <div className="hidden md:flex items-center gap-5 shrink-0">
           {detail.beforeAfter && trendPct !== undefined && (
             <div className="text-right">
-              <div className="label-mono mb-0.5">Δ remediation</div>
+              <div className="label-mono mb-0.5">Reduction</div>
               <div
                 className={clsx(
                   'inline-flex items-center gap-1.5 font-bold text-xl tabular-nums',
@@ -98,6 +104,12 @@ export function CategoryPanel({ detail, result, improvementSource, auditSource, 
               <div className="font-bold text-xl tabular-nums text-ink-700">
                 <AnimatedNumber value={detail.marginPct} decimals={1} suffix="%" />
               </div>
+            </div>
+          )}
+          {trajectory.length > 0 && (
+            <div className="text-right">
+              <div className="label-mono mb-0.5">Trend</div>
+              <Sparkline points={trajectory} width={80} height={26} />
             </div>
           )}
         </div>
@@ -143,6 +155,10 @@ export function CategoryPanel({ detail, result, improvementSource, auditSource, 
               <p className="text-sm font-mono leading-snug">{result.actual}</p>
             </div>
           </div>
+
+          {/* Domain-specific deep dives — one viz per category that warrants it. */}
+          {detail.category === 2 && <BundleEmbed />}
+          {detail.category === 4 && <DbPlans />}
 
           {/* Structured highlight (preferred) OR fall through to the full
               markdown narrative directly. */}

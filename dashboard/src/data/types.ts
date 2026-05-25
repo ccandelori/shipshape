@@ -25,6 +25,29 @@ export interface ShipshapeRun {
   results: CheckResult[];
 }
 
+/** A single point on a category's trajectory. */
+export interface TrajectoryPoint {
+  startedAt: string; // ISO
+  sha: string;
+  status: CheckStatus;
+  /** Margin-of-safety percentage. null when not derivable (e.g. skip without margin). */
+  marginPct: number | null;
+}
+
+export interface CategoryTrajectory {
+  category: number;
+  points: TrajectoryPoint[]; // sorted ascending by startedAt
+}
+
+export interface HistorySummary {
+  /** Total number of shipshape runs on file. */
+  runCount: number;
+  /** ISO timestamp of the earliest archived run. */
+  firstRunAt: string | null;
+  /** Per-category trajectories. Includes a point for every archived run. */
+  categories: CategoryTrajectory[];
+}
+
 export interface BeforeAfter {
   label: string;
   before: number;
@@ -166,6 +189,7 @@ export interface DashboardSnapshot {
   operations: OperationalArtifact[];
   evidence: EvidenceIndex;
   compliance: ComplianceSummary;
+  history: HistorySummary;
   deployedUrl: string;
   repoUrl: string;
 }

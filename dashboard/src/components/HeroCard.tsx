@@ -1,29 +1,45 @@
+import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { TrendingUp, AlertTriangle } from 'lucide-react';
+import { TrendingUp } from 'lucide-react';
 import type { DashboardSnapshot } from '../data/types';
-import { LollipopChart } from './LollipopChart';
 import { AnimatedNumber } from './AnimatedNumber';
+import { InfoTooltip } from './InfoTooltip';
+import { RadialDial } from './RadialDial';
+import { useDrillToCategory } from '../hooks/useDrillToCategory';
 
 interface Props {
   snapshot: DashboardSnapshot;
 }
 
 export function HeroCard({ snapshot }: Props) {
+  const drill = useDrillToCategory();
+  const [hoveredCategory, setHoveredCategory] = useState<number | null>(null);
+
   const passing = snapshot.shipshape.results.filter((r) => r.status === 'pass').length;
   const total = snapshot.shipshape.results.length;
   const healthyPct = Math.round((passing / total) * 100);
 
-  // Find the tightest margin among passing categories — the one closest to
-  // breaching. That's the watch-item the dashboard should surface.
-  const passingDetails = snapshot.categoryDetails.filter((d) => {
-    const result = snapshot.shipshape.results.find((r) => r.category === d.category);
-    return result?.status === 'pass' && d.marginPct !== null;
-  });
-  const tightest = [...passingDetails].sort(
-    (a, b) => (a.marginPct ?? Infinity) - (b.marginPct ?? Infinity)
-  )[0];
+  // Identify the tightest passing-margin category — the watch item.
+  const tightest = useMemo(() => {
+    const passingDetails = snapshot.categoryDetails.filter((d) => {
+      const r = snapshot.shipshape.results.find((res) => res.category === d.category);
+      return r?.status === 'pass' && d.marginPct !== null;
+    });
+    return [...passingDetails].sort(
+      (a, b) => (a.marginPct ?? Infinity) - (b.marginPct ?? Infinity)
+    )[0];
+  }, [snapshot]);
   const tightestName = tightest
     ? snapshot.shipshape.results.find((r) => r.category === tightest.category)?.name
+    : null;
+
+  // Caption follows the hovered dial; falls back to the tightest watch item.
+  const captionCat = hoveredCategory ?? tightest?.category;
+  const captionDetail = captionCat
+    ? snapshot.categoryDetails.find((d) => d.category === captionCat)
+    : null;
+  const captionResult = captionCat
+    ? snapshot.shipshape.results.find((r) => r.category === captionCat)
     : null;
 
   return (
@@ -32,51 +48,84 @@ export function HeroCard({ snapshot }: Props) {
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-      className="surface p-6 md:p-8 h-full flex flex-col"
+      className="surface p-6 md:p-8 flex flex-col"
     >
-      <header className="flex items-start gap-4 mb-4">
-        <div className="w-11 h-11 rounded-xl bg-cream-ring grid place-items-center text-ink-600">
+      <header className="flex items-center gap-3 mb-2">
+        <div className="w-11 h-11 rounded-xl bg-cream-ring grid place-items-center text-ink-600 shrink-0">
           <TrendingUp size={20} strokeWidth={2.2} />
         </div>
-        <div className="flex-1">
-          <h1 className="text-2xl md:text-3xl font-bold text-ink-700 tracking-tight leading-tight">
-            Quality at a glance
-          </h1>
-          <p className="text-sm md:text-base text-ink-400 mt-1 leading-relaxed max-w-lg">
-            Bar height = % headroom below threshold. Taller bar means more safety; shorter bar means
-            closer to breaching. Highlighted dot is the tightest margin.
-          </p>
-        </div>
-        <div className="hidden md:block pill pill-muted font-mono">Snapshot</div>
+        <h1 className="text-2xl md:text-3xl font-bold text-ink-700 tracking-tight leading-tight">
+          Quality at a glance
+        </h1>
+        <InfoTooltip
+          title="How to read these dials"
+          body="Each dial's ring shows the headroom that category has below its threshold. A nearly-full ring means lots of safety. A short arc means close to breaching. The coral notch marks the tightest margin: the watch item."
+        />
       </header>
 
-      <div className="flex-1 min-h-[260px] mt-2">
-        <LollipopChart snapshot={snapshot} highlightCategory={tightest?.category} />
+      {/* Seven radial dials — one per category */}
+      <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-x-2 gap-y-4 justify-items-center">
+        {snapshot.shipshape.results.map((r, i) => {
+          const detail = snapshot.categoryDetails.find((d) => d.category === r.category);
+          return (
+            <RadialDial
+              key={r.category}
+              category={r.category}
+              name={r.name}
+              status={r.status}
+              marginPct={detail?.marginPct ?? null}
+              isWatch={tightest?.category === r.category}
+              index={i}
+              onActivate={() => drill(r.category)}
+              onHover={(hovered) => setHoveredCategory(hovered ? r.category : null)}
+            />
+          );
+        })}
       </div>
 
-      <footer className="flex items-end justify-between mt-6 pt-6 border-t hairline border-t gap-6">
-        <div>
-          <div className="text-mega leading-none text-ink-700">
+      {/* Footer — primary stat + a live caption tied to the hovered dial */}
+      <footer className="mt-6 pt-6 border-t hairline border-t flex items-baseline justify-between gap-6 flex-wrap">
+        <div className="flex items-baseline gap-3 flex-wrap">
+          <span className="text-mega leading-none text-ink-700">
             <AnimatedNumber value={passing} />
             <span className="text-ink-300">/{total}</span>
-          </div>
-          <div className="text-sm text-ink-400 mt-2 max-w-[16ch] leading-snug">
-            Categories healthy ({healthyPct}% of monitored gates).
-          </div>
+          </span>
+          <span className="text-sm text-ink-500">
+            categories healthy <span className="text-ink-400">({healthyPct}%)</span>
+          </span>
         </div>
-        {tightest && (
-          <div className="text-right">
-            <div className="label-mono mb-1 flex items-center gap-1.5 justify-end">
-              <AlertTriangle size={11} className="text-coral-500" />
-              Tightest margin
-            </div>
-            <div className="font-bold text-3xl text-coral-500 tabular-nums">
-              <AnimatedNumber value={tightest.marginPct ?? 0} decimals={1} />
-              <span className="text-2xl">%</span>
-            </div>
-            <div className="text-xs text-ink-400 mt-1 max-w-[22ch] leading-snug">
-              {tightestName} — closest to breaching its threshold
-            </div>
+        {captionCat && captionDetail && captionResult && (
+          <motion.div
+            key={captionCat}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="text-xs text-ink-500 text-right whitespace-nowrap"
+          >
+            <span className="label-mono mr-1.5">
+              {hoveredCategory === null ? 'Watch' : 'Hovered'}
+            </span>
+            {captionResult.name}
+            {captionDetail.marginPct !== null && (
+              <span
+                className={
+                  hoveredCategory === null
+                    ? 'font-mono text-coral-500 ml-1'
+                    : 'font-mono text-ink-700 ml-1'
+                }
+              >
+                {captionDetail.marginPct.toFixed(1)}%
+              </span>
+            )}
+          </motion.div>
+        )}
+        {!captionCat && tightestName && tightest && (
+          <div className="text-xs text-ink-500 text-right whitespace-nowrap">
+            <span className="label-mono mr-1.5">Watch</span>
+            {tightestName}
+            <span className="font-mono text-coral-500 ml-1">
+              {(tightest.marginPct ?? 0).toFixed(1)}%
+            </span>
           </div>
         )}
       </footer>

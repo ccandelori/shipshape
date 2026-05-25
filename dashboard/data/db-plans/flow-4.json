@@ -1,0 +1,320 @@
+{
+  "title": "Flow 4 — Team grid (slowest: issues×sprints×programs join via document_associations)",
+  "capturedAt": "2026-05-19",
+  "planningTimeMs": 0.737,
+  "executionTimeMs": 0.26,
+  "root": {
+    "name": "Hash Left Join",
+    "detail": null,
+    "depth": 1,
+    "cost": {
+      "startup": 61.04,
+      "total": 123.5,
+      "rows": 22,
+      "width": 284
+    },
+    "actual": {
+      "startupMs": 0.071,
+      "totalMs": 0.205,
+      "rows": 87,
+      "loops": 1
+    },
+    "attrs": [
+      "Output: i.id, i.title, da_sprint.related_id, (i.properties ->> 'assignee_id'::text), (i.properties ->> 'state'::text), i.ticket_number, (s.properties ->> 'start_date'::text), (s.properties ->> 'end_date'::text), prog_da.related_id, p.title, (p.properties ->> 'emoji'::text), (p.properties ->> 'color'::text)",
+      "Inner Unique: true",
+      "Hash Cond: (prog_da.related_id = p.id)",
+      "Buffers: shared hit=454"
+    ],
+    "children": [
+      {
+        "name": "Nested Loop Left Join",
+        "detail": null,
+        "depth": 3,
+        "cost": {
+          "startup": 42.48,
+          "total": 104.55,
+          "rows": 22,
+          "width": 344
+        },
+        "actual": {
+          "startupMs": 0.061,
+          "totalMs": 0.176,
+          "rows": 87,
+          "loops": 1
+        },
+        "attrs": [
+          "Output: i.id, i.title, i.properties, i.ticket_number, da_sprint.related_id, s.properties, prog_da.related_id",
+          "Buffers: shared hit=452"
+        ],
+        "children": [
+          {
+            "name": "Nested Loop",
+            "detail": null,
+            "depth": 9,
+            "cost": {
+              "startup": 42.33,
+              "total": 92.52,
+              "rows": 22,
+              "width": 328
+            },
+            "actual": {
+              "startupMs": 0.055,
+              "totalMs": 0.122,
+              "rows": 87,
+              "loops": 1
+            },
+            "attrs": [
+              "Output: i.id, i.title, i.properties, i.ticket_number, da_sprint.related_id, s.properties",
+              "Inner Unique: true",
+              "Buffers: shared hit=276"
+            ],
+            "children": [
+              {
+                "name": "Hash Join",
+                "detail": null,
+                "depth": 15,
+                "cost": {
+                  "startup": 42.06,
+                  "total": 54.36,
+                  "rows": 22,
+                  "width": 192
+                },
+                "actual": {
+                  "startupMs": 0.05,
+                  "totalMs": 0.075,
+                  "rows": 87,
+                  "loops": 1
+                },
+                "attrs": [
+                  "Output: i.id, i.title, i.properties, i.ticket_number, da_sprint.related_id",
+                  "Inner Unique: true",
+                  "Hash Cond: (da_sprint.document_id = i.id)",
+                  "Buffers: shared hit=15"
+                ],
+                "children": [
+                  {
+                    "name": "Seq Scan",
+                    "detail": "public.document_associations da_sprint",
+                    "depth": 21,
+                    "cost": {
+                      "startup": 0,
+                      "total": 12.01,
+                      "rows": 108,
+                      "width": 32
+                    },
+                    "actual": {
+                      "startupMs": 0.006,
+                      "totalMs": 0.02,
+                      "rows": 108,
+                      "loops": 1
+                    },
+                    "attrs": [
+                      "Output: da_sprint.id, da_sprint.document_id, da_sprint.related_id, da_sprint.relationship_type, da_sprint.created_at, da_sprint.metadata",
+                      "Filter: (da_sprint.relationship_type = 'sprint'::relationship_type)",
+                      "Rows Removed by Filter: 293",
+                      "Buffers: shared hit=7"
+                    ],
+                    "children": []
+                  },
+                  {
+                    "name": "Hash",
+                    "detail": null,
+                    "depth": 21,
+                    "cost": {
+                      "startup": 40.77,
+                      "total": 40.77,
+                      "rows": 103,
+                      "width": 176
+                    },
+                    "actual": {
+                      "startupMs": 0.039,
+                      "totalMs": 0.039,
+                      "rows": 104,
+                      "loops": 1
+                    },
+                    "attrs": [
+                      "Output: i.id, i.title, i.properties, i.ticket_number",
+                      "Buckets: 1024  Batches: 1  Memory Usage: 37kB",
+                      "Buffers: shared hit=8"
+                    ],
+                    "children": [
+                      {
+                        "name": "Bitmap Heap Scan",
+                        "detail": "public.documents i",
+                        "depth": 27,
+                        "cost": {
+                          "startup": 4.95,
+                          "total": 40.77,
+                          "rows": 103,
+                          "width": 176
+                        },
+                        "actual": {
+                          "startupMs": 0.009,
+                          "totalMs": 0.026,
+                          "rows": 104,
+                          "loops": 1
+                        },
+                        "attrs": [
+                          "Output: i.id, i.title, i.properties, i.ticket_number",
+                          "Recheck Cond: (i.document_type = 'issue'::document_type)",
+                          "Filter: (((i.properties ->> 'assignee_id'::text) IS NOT NULL) AND (i.workspace_id = '9dbdd448-5522-4fcf-854f-2c2f3736e323'::uuid))",
+                          "Heap Blocks: exact=7",
+                          "Buffers: shared hit=8"
+                        ],
+                        "children": [
+                          {
+                            "name": "Bitmap Index Scan",
+                            "detail": "idx_documents_document_type",
+                            "depth": 33,
+                            "cost": {
+                              "startup": 0,
+                              "total": 4.93,
+                              "rows": 104,
+                              "width": 0
+                            },
+                            "actual": {
+                              "startupMs": 0.005,
+                              "totalMs": 0.005,
+                              "rows": 104,
+                              "loops": 1
+                            },
+                            "attrs": [
+                              "Index Cond: (i.document_type = 'issue'::document_type)",
+                              "Buffers: shared hit=1"
+                            ],
+                            "children": []
+                          }
+                        ]
+                      }
+                    ]
+                  }
+                ]
+              },
+              {
+                "name": "Index Scan using documents_pkey",
+                "detail": "public.documents s",
+                "depth": 15,
+                "cost": {
+                  "startup": 0.27,
+                  "total": 1.73,
+                  "rows": 1,
+                  "width": 152
+                },
+                "actual": {
+                  "startupMs": 0,
+                  "totalMs": 0,
+                  "rows": 1,
+                  "loops": 87
+                },
+                "attrs": [
+                  "Output: s.id, s.workspace_id, s.document_type, s.title, s.content, s.yjs_state, s.parent_id, s.\"position\", s.properties, s.ticket_number, s.archived_at, s.deleted_at, s.started_at, s.completed_at, s.cancelled_at, s.reopened_at, s.converted_to_id, s.converted_from_id, s.converted_at, s.converted_by, s.original_type, s.conversion_count, s.created_at, s.updated_at, s.created_by, s.visibility",
+                  "Index Cond: (s.id = da_sprint.related_id)",
+                  "Buffers: shared hit=261"
+                ],
+                "children": []
+              }
+            ]
+          },
+          {
+            "name": "Index Scan using idx_document_associations_document_id",
+            "detail": "public.document_associations prog_da",
+            "depth": 9,
+            "cost": {
+              "startup": 0.15,
+              "total": 0.54,
+              "rows": 1,
+              "width": 32
+            },
+            "actual": {
+              "startupMs": 0,
+              "totalMs": 0,
+              "rows": 1,
+              "loops": 87
+            },
+            "attrs": [
+              "Output: prog_da.id, prog_da.document_id, prog_da.related_id, prog_da.relationship_type, prog_da.created_at, prog_da.metadata",
+              "Index Cond: (prog_da.document_id = i.id)",
+              "Filter: (prog_da.relationship_type = 'program'::relationship_type)",
+              "Rows Removed by Filter: 2",
+              "Buffers: shared hit=176"
+            ],
+            "children": []
+          }
+        ]
+      },
+      {
+        "name": "Hash",
+        "detail": null,
+        "depth": 3,
+        "cost": {
+          "startup": 18.5,
+          "total": 18.5,
+          "rows": 5,
+          "width": 172
+        },
+        "actual": {
+          "startupMs": 0.003,
+          "totalMs": 0.003,
+          "rows": 5,
+          "loops": 1
+        },
+        "attrs": [
+          "Output: p.title, p.properties, p.id",
+          "Buckets: 1024  Batches: 1  Memory Usage: 9kB",
+          "Buffers: shared hit=2"
+        ],
+        "children": [
+          {
+            "name": "Bitmap Heap Scan",
+            "detail": "public.documents p",
+            "depth": 9,
+            "cost": {
+              "startup": 4.19,
+              "total": 18.5,
+              "rows": 5,
+              "width": 172
+            },
+            "actual": {
+              "startupMs": 0.002,
+              "totalMs": 0.002,
+              "rows": 5,
+              "loops": 1
+            },
+            "attrs": [
+              "Output: p.title, p.properties, p.id",
+              "Recheck Cond: (p.document_type = 'program'::document_type)",
+              "Heap Blocks: exact=1",
+              "Buffers: shared hit=2"
+            ],
+            "children": [
+              {
+                "name": "Bitmap Index Scan",
+                "detail": "idx_documents_document_type",
+                "depth": 15,
+                "cost": {
+                  "startup": 0,
+                  "total": 4.18,
+                  "rows": 5,
+                  "width": 0
+                },
+                "actual": {
+                  "startupMs": 0.001,
+                  "totalMs": 0.001,
+                  "rows": 5,
+                  "loops": 1
+                },
+                "attrs": [
+                  "Index Cond: (p.document_type = 'program'::document_type)",
+                  "Buffers: shared hit=1",
+                  "Planning:",
+                  "Buffers: shared hit=564"
+                ],
+                "children": []
+              }
+            ]
+          }
+        ]
+      }
+    ]
+  }
+}

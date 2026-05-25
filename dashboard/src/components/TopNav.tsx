@@ -11,12 +11,6 @@ interface Props {
   onExportFullReport: () => void;
 }
 
-const NAV_LINKS = [
-  { href: '#scoreboard', label: 'Overview' },
-  { href: '#deep-dives', label: 'Detail' },
-  { href: '#operations', label: 'Operations' },
-];
-
 export function TopNav({ snapshot, isLive, onRunLive, runState, onExportFullReport }: Props) {
   const isRunning = runState.kind === 'starting' || runState.kind === 'running';
   return (
@@ -29,18 +23,6 @@ export function TopNav({ snapshot, isLive, onRunLive, runState, onExportFullRepo
           <div className="font-semibold text-ink-700 leading-tight">SHIP</div>
           <div className="label-mono leading-none">Platform health</div>
         </div>
-      </div>
-
-      <div className="hidden md:flex items-center gap-1">
-        {NAV_LINKS.map((l) => (
-          <a
-            key={l.href}
-            href={l.href}
-            className="px-3 py-1.5 text-sm text-ink-500 hover:text-ink-700 transition-colors"
-          >
-            {l.label}
-          </a>
-        ))}
       </div>
 
       <div className="flex items-center gap-2 flex-wrap">

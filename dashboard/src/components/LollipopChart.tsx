@@ -1,8 +1,12 @@
 // Lollipop chart — each category's bar height encodes margin of safety
 // (% headroom below threshold). Higher = more safety. Hover any bar to
 // inspect its headroom; the default-highlighted bar is the tightest margin.
+//
+// Color encoding: monochrome ink for healthy, coral for failing, ink at
+// low opacity for skipped (no signal). Tightest margin is marked by a
+// larger dot + outline, not a third color.
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import type { DashboardSnapshot, CheckStatus } from '../data/types';
 
@@ -23,9 +27,36 @@ function tooltipLabel(status: CheckStatus, margin: number | null): string {
   return `${margin.toFixed(1)}% headroom`;
 }
 
+// Two-color encoding + one neutral for skip. The "tightest" marker carries
+// no extra hue; it's emphasized by size + ring.
+const INK = '#1B2030';
+const CORAL = '#FF6E52';
+const INK_MUTED = 'rgba(27, 32, 48, 0.25)';
+
+function dotFill(status: CheckStatus): string {
+  if (status === 'fail') return CORAL;
+  if (status === 'skip') return INK_MUTED;
+  return INK;
+}
+
+function stemColor(status: CheckStatus, isActive: boolean): string {
+  if (status === 'fail') return CORAL;
+  if (status === 'skip') return INK_MUTED;
+  return isActive ? INK : 'rgba(27, 32, 48, 0.4)';
+}
+
 export function LollipopChart({ snapshot, highlightCategory }: Props) {
-  const [hovered, setHovered] = useState<number | null>(null);
-  const activeCategory = hovered ?? highlightCategory;
+  // Sticky active marker: once the user hovers (or taps) a bar, it stays
+  // active until they pick a different one. Mouse-leave does NOT reset.
+  // Seeded from the tightest-margin watch item so the page lands with
+  // useful context already shown.
+  const [activeCategory, setActiveCategory] = useState<number | undefined>(highlightCategory);
+
+  // Re-seed when the source highlight changes (e.g. live snapshot refresh
+  // pushes a new tightest-margin category).
+  useEffect(() => {
+    setActiveCategory(highlightCategory);
+  }, [highlightCategory]);
 
   const data = snapshot.shipshape.results.map((r) => {
     const detail = snapshot.categoryDetails.find((d) => d.category === r.category);
@@ -55,7 +86,6 @@ export function LollipopChart({ snapshot, highlightCategory }: Props) {
       role="img"
       aria-label="Per-category margin of safety. Hover or tap a bar to see its headroom."
       className="block touch-manipulation"
-      onMouseLeave={() => setHovered(null)}
     >
       {/* Baseline rule */}
       <line
@@ -70,16 +100,11 @@ export function LollipopChart({ snapshot, highlightCategory }: Props) {
       {data.map((d, i) => {
         const x = padX + i * stepX;
         const y = baselineY - (d.value / 100) * chartH;
+        // Single source of truth: whichever bar is currently active gets the
+        // full emphasis treatment (ring + larger dot + darkened day-pill).
+        // The prop `highlightCategory` seeds the initial active value; once
+        // the user interacts, "active" follows them.
         const isActive = d.category === activeCategory;
-
-        const dotFill =
-          d.status === 'fail'
-            ? '#FF6E52'
-            : d.status === 'skip'
-              ? '#A8AFC2'
-              : isActive
-                ? '#1B2030'
-                : '#5E9AD8';
 
         return (
           <g key={d.category}>
@@ -90,12 +115,13 @@ export function LollipopChart({ snapshot, highlightCategory }: Props) {
               initial={{ y1: baselineY, y2: baselineY }}
               animate={{ y1: baselineY, y2: y }}
               transition={{ duration: 0.7, delay: 0.1 + i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-              stroke={isActive ? '#1B2030' : '#BFC5D5'}
+              stroke={stemColor(d.status, isActive)}
               strokeWidth={isActive ? 1.5 : 1}
               style={{ transition: 'stroke 150ms ease' }}
             />
 
-            {/* Marker dot */}
+            {/* Marker dot — active bar gets the full emphasis: larger radius
+                plus a cream stroke ring. */}
             <motion.circle
               cx={x}
               initial={{ cy: baselineY, r: 0 }}
@@ -106,11 +132,23 @@ export function LollipopChart({ snapshot, highlightCategory }: Props) {
                 ease: [0.16, 1, 0.3, 1],
                 r: { duration: 0.15 },
               }}
-              fill={dotFill}
-              stroke={isActive ? '#FFF' : 'none'}
+              fill={dotFill(d.status)}
+              stroke={isActive ? '#F6F4EE' : 'none'}
               strokeWidth={isActive ? 2 : 0}
-              style={{ transition: 'fill 150ms ease' }}
             />
+            {/* Outer "watch" ring around the active dot, in the same hue —
+                visible affordance without a third color. */}
+            {isActive && (
+              <motion.circle
+                cx={x}
+                cy={y}
+                r={11}
+                fill="none"
+                stroke={dotFill(d.status)}
+                strokeWidth={1.2}
+                opacity={0.4}
+              />
+            )}
 
             {/* Day-pill (category index) */}
             <motion.circle
@@ -120,7 +158,7 @@ export function LollipopChart({ snapshot, highlightCategory }: Props) {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ duration: 0.4, delay: 0.2 + i * 0.06 }}
-              fill={isActive ? '#1B2030' : '#EAEDF3'}
+              fill={isActive ? INK : '#EAEDF3'}
               style={{ transition: 'fill 150ms ease' }}
             />
             <motion.text
@@ -150,8 +188,8 @@ export function LollipopChart({ snapshot, highlightCategory }: Props) {
               fill="transparent"
               pointerEvents="all"
               style={{ cursor: 'pointer' }}
-              onMouseEnter={() => setHovered(d.category)}
-              onClick={() => setHovered(d.category)}
+              onMouseEnter={() => setActiveCategory(d.category)}
+              onClick={() => setActiveCategory(d.category)}
               role="button"
               aria-label={`Category ${d.category} — ${d.name}: ${tooltipLabel(d.status, d.margin)}`}
             />

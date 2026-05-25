@@ -41,7 +41,11 @@ export function useLiveSnapshot(
   const [lastUpdated, setLastUpdated] = useState<string | null>(null);
   const [runState, setRunState] = useState<RunState>({ kind: 'idle' });
 
-  // On mount: try to fetch fresher data from the API. Anonymous, no auth.
+  // On mount: try to fetch data from the live API. Anonymous, no auth.
+  // LIVE badge fires whenever the endpoint responds — it signals "API is
+  // healthy and serving data," not "data is fresher than the bundle." The
+  // data-swap is still gated on the timestamp comparison so a stale rsync
+  // can't overwrite a newer bundle.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -50,7 +54,11 @@ export function useLiveSnapshot(
         if (!res.ok) return;
         const data = (await res.json()) as LiveLatestResponse;
         if (cancelled) return;
-        // Only swap if the live run is newer than the baked snapshot.
+
+        setIsLive(true);
+        setLastUpdated(data.updatedAt);
+
+        // Swap snapshot data only if the live run is genuinely newer.
         if (
           new Date(data.shipshape.startedAt).getTime() >
           new Date(baked.shipshape.startedAt).getTime()
@@ -60,11 +68,9 @@ export function useLiveSnapshot(
             meta: { ...baked.meta, source: 'live', liveUpdatedAt: data.updatedAt },
             shipshape: data.shipshape,
           });
-          setIsLive(true);
-          setLastUpdated(data.updatedAt);
         }
       } catch {
-        // No /api/shipshape/latest endpoint reachable — that's fine, use baked snapshot.
+        // Endpoint unreachable — stay on baked snapshot, leave isLive false.
       }
     })();
     return () => {

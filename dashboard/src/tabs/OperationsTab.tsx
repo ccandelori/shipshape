@@ -1,5 +1,5 @@
-// Operations tab — deployment runbook, observability, handoff, agent
-// contract, and codebase reference cards.
+// Operations tab — deployment runbook, CI workflow, observability, quality
+// orchestrator, agent contract, and codebase reference cards.
 
 import type { DashboardSnapshot } from '../data/types';
 import { SubNav, type SubNavItem } from '../components/Tabs/SubNav';
@@ -9,14 +9,16 @@ import { repoLink } from '../lib/repo';
 import { ExternalLink, Lock, Network, GitMerge, Code2, Layers } from 'lucide-react';
 
 import deploymentMd from '../../data/docs/deployment.md?raw';
+import ciWorkflowMd from '../../data/docs/ci-workflow.md?raw';
 import observabilityMd from '../../data/docs/collab-observability.md?raw';
-import handoffMd from '../../data/docs/next-session.md?raw';
+import shipshapeOrchestratorMd from '../../data/docs/shipshape-orchestrator.md?raw';
 import agentsMd from '../../data/docs/agents.md?raw';
 
 const SUBNAV: SubNavItem[] = [
   { id: 'ops-deployment', label: 'Deployment' },
+  { id: 'ops-ci', label: 'CI workflow' },
   { id: 'ops-observability', label: 'Observability' },
-  { id: 'ops-handoff', label: 'Handoff' },
+  { id: 'ops-shipshape', label: 'Quality orchestrator' },
   { id: 'ops-agents', label: 'Agent contract' },
   { id: 'ops-codebase', label: 'Codebase reference' },
 ];
@@ -87,6 +89,17 @@ export function OperationsTab({ snapshot: _snapshot }: Props) {
           </div>
         </section>
 
+        <section id="ops-ci" className="scroll-mt-24">
+          <SectionHeading
+            eyebrow="Continuous integration"
+            title="CI workflow"
+            subtitle="How the GitHub Actions pipeline gates merges — lint, type-check, unit + E2E tests, compliance, and the Shipshape quality run."
+          />
+          <div className="surface p-6 md:p-8">
+            <MarkdownDocument source={ciWorkflowMd} stripFirstH1 />
+          </div>
+        </section>
+
         <section id="ops-observability" className="scroll-mt-24">
           <SectionHeading
             eyebrow="Instrumentation"
@@ -98,14 +111,14 @@ export function OperationsTab({ snapshot: _snapshot }: Props) {
           </div>
         </section>
 
-        <section id="ops-handoff" className="scroll-mt-24">
+        <section id="ops-shipshape" className="scroll-mt-24">
           <SectionHeading
-            eyebrow="Session log"
-            title="Handoff"
-            subtitle="The most recent operational context — what landed, what's in flight, what to watch for."
+            eyebrow="Quality orchestrator"
+            title="Shipshape"
+            subtitle="The cron-friendly runner that re-evaluates every category, writes JSON + markdown, and archives history — the source of truth behind this dashboard."
           />
           <div className="surface p-6 md:p-8">
-            <MarkdownDocument source={handoffMd} stripFirstH1 />
+            <MarkdownDocument source={shipshapeOrchestratorMd} stripFirstH1 />
           </div>
         </section>
 
