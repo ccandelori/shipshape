@@ -7,13 +7,24 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { parseAllExplains } from './parse-explain.ts';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '..', '..');
 const SHIPSHAPE_JSON = path.join(REPO_ROOT, 'orientation/shipshape-report.json');
 const OUT_PATH = path.join(REPO_ROOT, 'dashboard/data/snapshot.json');
-const AUDIT_DETAILED = path.join(REPO_ROOT, 'orientation/audit-report-detailed.md');
+// Consolidated audit report. splitAuditReport() slices its `## Category N`
+// deep-dive sections into per-category fragments; copyDocs() truncates its
+// executive half at the `<!-- exec-end -->` marker for the Audit tab.
+const AUDIT_REPORT = path.join(REPO_ROOT, 'orientation/audit-report.md');
+const EXEC_END_MARKER = '<!-- exec-end -->';
 const AUDIT_FRAGMENT_DIR = path.join(REPO_ROOT, 'dashboard/data/audit');
+const HISTORY_DIR = path.join(REPO_ROOT, 'orientation/shipshape-history');
+const TREEMAP_PUBLIC_DIR = path.join(REPO_ROOT, 'dashboard/public/treemaps');
+const TREEMAP_MAP: Record<string, string> = {
+  'bundle-baseline.html': 'orientation/baselines/bundle/bundle-baseline.html',
+  'bundle-after.html': 'orientation/baselines/bundle/after-bundle.html',
+};
 const IMPROVEMENT_DIR = path.join(REPO_ROOT, 'dashboard/data/improvements');
 const PREVIEW_LINES = 30;
 
@@ -24,10 +35,14 @@ const DOC_MAP: Record<string, string> = {
   'audit-exec': 'orientation/audit-report.md',
   'discovery': 'orientation/discovery.md',
   'compliance': 'orientation/compliance-scan.md',
+  'ai-cost': 'orientation/ai-cost-analysis.md',
   'deployment': 'orientation/deployment.md',
   'agents': 'AGENTS.md',
   'collab-observability': 'orientation/improvements/collab-observability.md',
-  'next-session': 'orientation/next-session.md',
+  'ci-workflow': 'orientation/improvements/ci-workflow.md',
+  'shipshape-orchestrator': 'orientation/improvements/shipshape.md',
+  // 'next-session' (Handoff) intentionally omitted — internal session-log
+  // notes, removed from the dashboard 2026-05-24.
 };
 
 const IMPROVEMENT_MAP: Record<number, string> = {
@@ -39,9 +54,21 @@ const IMPROVEMENT_MAP: Record<number, string> = {
   6: 'orientation/improvements/runtime-error-handling.md',
   7: 'orientation/improvements/accessibility.md',
 };
-const DASHBOARD_VERSION = '1.0.0';
+// Read the dashboard's version from its package.json so we don't drift.
+const DASHBOARD_VERSION: string = (() => {
+  try {
+    const pkg = JSON.parse(
+      fs.readFileSync(path.join(REPO_ROOT, 'dashboard/package.json'), 'utf8')
+    ) as { version?: string };
+    return pkg.version ?? '0.0.0';
+  } catch {
+    return '0.0.0';
+  }
+})();
 const DEPLOYED_URL = 'http://143.198.163.184/';
-const REPO_URL = 'https://github.com/ccandelori/shipshape';
+// GitLab submission repo. repoLink() (dashboard/src/lib/repo.ts) detects the
+// labs.gauntletai.com host and builds GitLab /-/blob/ + /-/tree/ link paths.
+const REPO_URL = 'https://labs.gauntletai.com/cameroncandelori/shipshape';
 
 // --- types (kept in sync with dashboard/src/data/types.ts) -----------------
 
@@ -283,6 +310,14 @@ const CATEGORY_DETAILS = [
     },
     whyItMatters:
       'P95/P99 latency dominates perceived responsiveness — the 5% of requests a user actually notices. Tail latency reveals contention, missing indexes, and N+1 patterns hidden by P50.',
+    beforeAfter: {
+      label: '/api/documents P95 @ c=25 (k6)',
+      before: 28.29,
+      after: 5.41,
+      unit: 'ms',
+      reductionPct: 80.9,
+      betterIs: 'lower' as const,
+    },
     bullets: [
       'This check SKIPs when SHIPSHAPE_SESSION_COOKIE is unset — autocannon needs an authenticated session_id to hit the real endpoints.',
       'Baseline reference: orientation/baselines/api-baseline.json (post-remediation numbers).',
@@ -302,8 +337,8 @@ const CATEGORY_DETAILS = [
       'The dashboard "my-work" query (fans out across documents + associations + assigned-issues filter) plus presence of the 4 JSONB expression indexes from migration 038. Measurement: docker exec EXPLAIN ANALYZE against the seeded dev DB.',
     whyItMatters:
       'The unified-document-model puts everything in one table — JSONB property predicates dominate the slow queries. Without expression indexes on `properties->>\'assignee_id\'` etc., every "my work" load is a seq scan on the full documents table.',
-    marginPct: 33, // (0.1 - 0.067) / 0.1 — comfortably below threshold
-    marginExplain: 'Dashboard query at 0.067 ms vs the 0.1 ms ceiling — ~33 % headroom. JSONB indexes carry their weight at production volume.',
+    marginPct: 60, // (0.1 - 0.040) / 0.1 — comfortably below threshold
+    marginExplain: 'Dashboard query at 0.040 ms vs the 0.1 ms ceiling — ~60 % headroom. JSONB indexes carry their weight at production volume.',
     highlight: {
       outcomeStats: [
         { value: 73, unit: '%', label: 'Wall-time cut on slowest query', tone: 'pass' as const },
@@ -339,10 +374,10 @@ const CATEGORY_DETAILS = [
     },
     beforeAfter: {
       label: 'Dashboard "my-work" query',
-      before: 14.2,
-      after: 0.058,
+      before: 0.149,
+      after: 0.040,
       unit: 'ms',
-      reductionPct: 99.6,
+      reductionPct: 73,
       betterIs: 'lower' as const,
     },
     bullets: [
@@ -366,8 +401,8 @@ const CATEGORY_DETAILS = [
     marginExplain: 'Binary gate: any test failure breaks it. Currently 497/497 passing, so the gate is fully clean.',
     highlight: {
       outcomeStats: [
-        { value: 30, unit: '', label: 'New tests added', tone: 'pass' as const },
-        { value: 494, unit: '/494', label: 'Full suite passing', tone: 'pass' as const },
+        { value: 30, unit: '', label: 'New tests (this category)', tone: 'pass' as const },
+        { value: 497, unit: '/497', label: 'Full suite passing', tone: 'pass' as const },
         { value: 5, unit: '', label: 'New test files', tone: 'neutral' as const },
       ],
       oneLineSummary:
@@ -399,15 +434,15 @@ const CATEGORY_DETAILS = [
     whyItMatters:
       'A passing test suite is the substrate every other quality metric stands on. Type-safety wins are meaningless if regressions slip through; performance wins are meaningless if correctness drifted.',
     beforeAfter: {
-      label: 'Test pass rate',
-      before: 100,
-      after: 100,
-      unit: '%',
-      reductionPct: 0,
+      label: 'api suite test count',
+      before: 464,
+      after: 497,
+      unit: '',
+      reductionPct: 7.1,
       betterIs: 'higher' as const,
     },
     bullets: [
-      '497/497 tests pass across 36 files in 12.2s.',
+      '497/497 tests pass across 36 files in 12.7s.',
       'PropertiesPanel data-testid race condition fixed (E2E flake elimination).',
       'Weekly-accountability null project_id on POST fixed (E2E flake elimination).',
       'One known low-priority flake (my-week stale-data) filed and tracked.',
@@ -460,6 +495,14 @@ const CATEGORY_DETAILS = [
     },
     whyItMatters:
       'Real-time collab is where silent failures translate to lost work — a dropped Yjs message means a paragraph someone typed never reaches the server. The critical-path subset focuses here because that\'s where consequences are highest.',
+    beforeAfter: {
+      label: 'Silent data-loss / security paths',
+      before: 3,
+      after: 0,
+      unit: '',
+      reductionPct: 100,
+      betterIs: 'lower' as const,
+    },
     bullets: [
       '33 pass / 0 fail across 5/5 critical-path files.',
       'yjsToJson now handles malformed Yjs state gracefully instead of crashing the persist path.',
@@ -514,6 +557,14 @@ const CATEGORY_DETAILS = [
     },
     whyItMatters:
       'Ship claims Section 508 + WCAG 2.1 AA conformance. Either that claim is verified or it is a liability. Critical/Serious axe violations are the ones that actually break access.',
+    beforeAfter: {
+      label: 'Critical + Serious axe violations',
+      before: 8,
+      after: 0,
+      unit: '',
+      reductionPct: 100,
+      betterIs: 'lower' as const,
+    },
     bullets: [
       'This check SKIPs when http://localhost:5173 is unreachable — axe needs the web dev server.',
       'Most recent full scan: 0 Critical, 0 Serious across all 8 baseline routes.',
@@ -532,7 +583,6 @@ const OPERATIONS = [
   { label: 'Quality orchestrator', href: 'scripts/shipshape/', description: '7-category quality check runner. `pnpm shipshape` produces the markdown + JSON report this dashboard reads.', category: 'tooling' as const },
   { label: 'Collaboration observability', href: 'orientation/improvements/collab-observability.md', description: 'Counters exposed at /metrics (Prometheus exposition) and /health/collaboration (JSON): ws_session_4401_count_5m, persist_failure_count_total, document NULL-content sentry.', category: 'observability' as const },
   { label: '/metrics endpoint', href: 'api/src/routes/health-collaboration.ts', description: 'Hand-written Prometheus exposition for the collaboration subsystem. Scrape-ready for any standard monitoring sidecar.', category: 'observability' as const },
-  { label: 'Session handoff log', href: 'orientation/next-session.md', description: 'Living operational context — what landed in the most recent work session, what is in flight, what to watch for.', category: 'handoff' as const },
   { label: 'Agent collaboration contract', href: 'AGENTS.md', description: 'Multi-agent collaboration rules: branch-per-task, parallel subagents, when to ask vs decide. Operational discipline for AI-assisted development.', category: 'handoff' as const },
 ];
 
@@ -545,6 +595,7 @@ function main(): void {
 
   const evidence = buildEvidenceIndex();
   const compliance = buildComplianceSummary();
+  const history = buildHistory();
 
   const snapshot = {
     meta: {
@@ -561,6 +612,7 @@ function main(): void {
     operations: OPERATIONS,
     evidence,
     compliance,
+    history,
     deployedUrl: DEPLOYED_URL,
     repoUrl: REPO_URL,
   };
@@ -572,7 +624,7 @@ function main(): void {
   console.log(`  operations: ${OPERATIONS.length} artifacts`);
   console.log(`  evidence: ${evidence.groups.reduce((s, g) => s + g.items.length, 0)} artifacts in ${evidence.groups.length} groups`);
 
-  const auditFragments = splitAuditDetailed();
+  const auditFragments = splitAuditReport();
   console.log(`  audit fragments: ${auditFragments} per-category slices`);
 
   const improvements = copyImprovements();
@@ -581,10 +633,118 @@ function main(): void {
   const docs = copyDocs();
   console.log(`  docs: ${docs} auxiliary docs staged`);
   console.log(`  compliance: ${compliance.findings.length} findings across ${compliance.scans.length} scans`);
+  console.log(`  history: ${history.runCount} archived runs (earliest ${history.firstRunAt ?? 'none'})`);
+
+  const treemaps = copyTreemaps();
+  console.log(`  treemaps: ${treemaps} HTML treemaps staged for inline embed`);
+
+  const plans = parseAllExplains(
+    path.join(REPO_ROOT, 'orientation/baselines'),
+    path.join(REPO_ROOT, 'dashboard/data/db-plans')
+  );
+  console.log(`  db plans: ${plans} EXPLAIN flows parsed into structured JSON`);
+}
+
+// Copy the rollup-plugin-visualizer treemaps into dashboard/public/treemaps/
+// so they can be iframed inline by the BundleEmbed component. Vite copies
+// public/ → dist/ at build time, nginx serves them from /dashboard/treemaps/.
+function copyTreemaps(): number {
+  fs.mkdirSync(TREEMAP_PUBLIC_DIR, { recursive: true });
+  let count = 0;
+  for (const [dest, src] of Object.entries(TREEMAP_MAP)) {
+    const abs = path.join(REPO_ROOT, src);
+    if (!fs.existsSync(abs)) {
+      console.warn(`  treemap source missing: ${src} — skipping`);
+      continue;
+    }
+    fs.copyFileSync(abs, path.join(TREEMAP_PUBLIC_DIR, dest));
+    count++;
+  }
+  return count;
+}
+
+// ---------------------------------------------------------------------------
+// History — read orientation/shipshape-history/*.json (timestamped per-run
+// archives) and build per-category trajectories. The current per-category
+// margin (from CATEGORY_DETAILS) is applied uniformly as the trajectory's
+// margin reading; honest because margin is a function of (status, current
+// value, threshold) and shipshape currently only persists status + actual.
+// Future enhancement: persist computed marginPct in the per-run JSON too.
+// ---------------------------------------------------------------------------
+
+function buildHistory(): {
+  runCount: number;
+  firstRunAt: string | null;
+  categories: Array<{
+    category: number;
+    points: Array<{ startedAt: string; sha: string; status: CheckStatus; marginPct: number | null }>;
+  }>;
+} {
+  if (!fs.existsSync(HISTORY_DIR)) {
+    return { runCount: 0, firstRunAt: null, categories: [] };
+  }
+  const files = fs
+    .readdirSync(HISTORY_DIR)
+    .filter((f) => f.endsWith('.json'))
+    .sort(); // filename is ISO timestamp → chronological
+
+  if (files.length === 0) {
+    return { runCount: 0, firstRunAt: null, categories: [] };
+  }
+
+  // Best-effort marginPct extraction. We re-derive from the current
+  // CATEGORY_DETAILS entry for runs that pass; fail/skip get null.
+  const marginByCat = new Map<number, number | null>();
+  for (const d of CATEGORY_DETAILS) {
+    marginByCat.set(d.category, d.marginPct);
+  }
+
+  const byCategory = new Map<number, Array<{ startedAt: string; sha: string; status: CheckStatus; marginPct: number | null }>>();
+
+  for (const file of files) {
+    const raw = fs.readFileSync(path.join(HISTORY_DIR, file), 'utf8');
+    let run: ShipshapeReportJson;
+    try {
+      run = JSON.parse(raw) as ShipshapeReportJson;
+    } catch {
+      continue;
+    }
+    for (const r of run.results) {
+      const point = {
+        startedAt: run.startedAt,
+        sha: run.sha,
+        status: r.status,
+        // Use the catalog margin for pass runs; null for fail/skip runs so
+        // the sparkline can break the line at those points.
+        marginPct: r.status === 'pass' ? marginByCat.get(r.category) ?? null : null,
+      };
+      const arr = byCategory.get(r.category) ?? [];
+      arr.push(point);
+      byCategory.set(r.category, arr);
+    }
+  }
+
+  const categories = [...byCategory.entries()]
+    .map(([category, points]) => ({ category, points }))
+    .sort((a, b) => a.category - b.category);
+
+  let firstRunAt: string | null = null;
+  try {
+    const earliest = JSON.parse(fs.readFileSync(path.join(HISTORY_DIR, files[0] ?? ''), 'utf8')) as ShipshapeReportJson;
+    firstRunAt = earliest.startedAt;
+  } catch {
+    /* leave null */
+  }
+
+  return {
+    runCount: files.length,
+    firstRunAt,
+    categories,
+  };
 }
 
 // Mirror auxiliary markdown docs (audit, discovery, compliance, deployment,
-// AGENTS, collab-observability, next-session) into dashboard/data/docs/.
+// AGENTS, collab-observability) into dashboard/data/docs/.
 function copyDocs(): number {
   fs.mkdirSync(DOCS_DIR, { recursive: true });
   let count = 0;
@@ -594,7 +754,25 @@ function copyDocs(): number {
       console.warn(`  doc missing: ${src} — skipping (${slug})`);
       continue;
     }
-    fs.copyFileSync(abs, path.join(DOCS_DIR, `${slug}.md`));
+    if (slug === 'audit-exec') {
+      // The audit report is one file: executive half, then deep dives,
+      // separated by the exec-end marker. The Audit tab renders only the
+      // executive half; per-category deep dives live on the Categories tab
+      // via splitAuditReport(). Fail loudly if the marker is missing rather
+      // than dumping the full ~175KB report into the executive section.
+      const full = fs.readFileSync(abs, 'utf8');
+      const marker = full.indexOf(EXEC_END_MARKER);
+      if (marker === -1) {
+        throw new Error(
+          `audit report ${src} is missing the ${EXEC_END_MARKER} marker; ` +
+            `cannot derive the executive view for the dashboard`
+        );
+      }
+      const exec = full.slice(0, marker).trimEnd() + '\n';
+      fs.writeFileSync(path.join(DOCS_DIR, `${slug}.md`), exec, 'utf8');
+    } else {
+      fs.copyFileSync(abs, path.join(DOCS_DIR, `${slug}.md`));
+    }
     count++;
   }
   return count;
@@ -907,16 +1085,16 @@ function copyImprovements(): number {
   return count;
 }
 
-// Split orientation/audit-report-detailed.md into per-category markdown
-// fragments at dashboard/data/audit/cat-{N}.md. The audit report has
-// stable `## Category N: Name` section headers — we slice from each
-// such header to the next `## ` header.
-function splitAuditDetailed(): number {
-  if (!fs.existsSync(AUDIT_DETAILED)) {
-    console.warn(`  audit splitter: ${AUDIT_DETAILED} not found — skipping`);
+// Split orientation/audit-report.md into per-category markdown fragments
+// at dashboard/data/audit/cat-{N}.md. The report has stable
+// `## Category N: Name` section headers — we slice from each such header
+// to the next `## ` header.
+function splitAuditReport(): number {
+  if (!fs.existsSync(AUDIT_REPORT)) {
+    console.warn(`  audit splitter: ${AUDIT_REPORT} not found — skipping`);
     return 0;
   }
-  const src = fs.readFileSync(AUDIT_DETAILED, 'utf8');
+  const src = fs.readFileSync(AUDIT_REPORT, 'utf8');
   const lines = src.split('\n');
   const sections: Array<{ category: number; startLine: number; endLine: number }> = [];
 

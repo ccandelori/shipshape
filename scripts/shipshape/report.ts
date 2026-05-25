@@ -9,6 +9,7 @@ import { HERE, REPO_ROOT, durationLine, statusEmoji } from './util.ts';
 const TEMPLATE_PATH = path.join(HERE, 'report-template.md');
 const REPORT_PATH = path.join(REPO_ROOT, 'orientation/shipshape-report.md');
 const REPORT_JSON_PATH = path.join(REPO_ROOT, 'orientation/shipshape-report.json');
+const HISTORY_DIR = path.join(REPO_ROOT, 'orientation/shipshape-history');
 
 function escape(s: string): string {
   // Markdown table cells can't contain raw newlines or unescaped pipes.
@@ -94,6 +95,14 @@ export async function emitReport(
     results: ordered,
   };
   await fs.writeFile(REPORT_JSON_PATH, JSON.stringify(json, null, 2) + '\n', 'utf8');
+
+  // Archive into the history directory so the dashboard can show trends over
+  // time. Filename is the run's startedAt with colons swapped for hyphens
+  // (filesystem-safe) — naturally sorts chronologically.
+  await fs.mkdir(HISTORY_DIR, { recursive: true });
+  const stamp = ctx.startedAt.toISOString().replace(/:/g, '-').replace(/\..+$/, 'Z');
+  const historyPath = path.join(HISTORY_DIR, `${stamp}.json`);
+  await fs.writeFile(historyPath, JSON.stringify(json, null, 2) + '\n', 'utf8');
 
   return { overallPass, reportPath: REPORT_PATH, reportJsonPath: REPORT_JSON_PATH };
 }
