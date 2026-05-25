@@ -600,7 +600,7 @@ All eight parameters are parameterized. ✓ No injection risk.
 
 **To do**
 - [x] Read every tsconfig. Findings below — root has `strict + noUncheckedIndexedAccess + noImplicitReturns + noFallthroughCasesInSwitch`. Web does *not* inherit the safety flags fully.
-- [x] Ran `pnpm type-check` live from the audit thread on 2026-05-19. **Exit 0 across api/web/shared; 0 compile errors.** Captured at `orientation/baselines/type-safety/tsc-output.txt`; cited in the audit at `audit-report-detailed.md` Cat 1 baseline-metrics row "`pnpm type-check` error count".
+- [x] Ran `pnpm type-check` live from the audit thread on 2026-05-19. **Exit 0 across api/web/shared; 0 compile errors.** Captured at `orientation/baselines/type-safety/tsc-output.txt`; cited in the audit at `audit-report.md` Category 1 baseline-metrics row "`pnpm type-check` error count".
 - [x] Pattern examples found and quoted below.
 - [x] Catalogued patterns. The codebase is light on advanced TS — no mapped types, branded types, conditional types, or template-literal types in `shared/`. Heavy use of `Record<string, unknown>`.
 

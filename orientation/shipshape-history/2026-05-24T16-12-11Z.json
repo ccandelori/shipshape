@@ -1,10 +1,10 @@
 {
-  "startedAt": "2026-05-24T16:24:58.005Z",
+  "startedAt": "2026-05-24T16:12:11.821Z",
   "branch": "master",
-  "sha": "1d3ea0bf391e",
+  "sha": "c7bb29e502ae",
   "mode": "full",
-  "overallStatus": "pass",
-  "durationMs": 111680,
+  "overallStatus": "fail",
+  "durationMs": 110853,
   "results": [
     {
       "category": 1,
@@ -12,7 +12,7 @@
       "target": "<= 560 total typed-bypass markers (>= 25% reduction from 747)",
       "evidence_path": "orientation/improvements/type-safety.md",
       "reproduction": "rg-based count — see scripts/shipshape/checks/typecheck.ts or orientation/baselines/type-safety/counts.txt",
-      "durationMs": 10793,
+      "durationMs": 11184,
       "actual": "551 markers (: any=104 + as=380 + ts-expect-error=1 + non-null=66); ▼ 196 (26.2%) vs 747 baseline",
       "status": "pass",
       "notes": "ESLint appendix — explicit: 471, hidden flow: 4774, redundant: 75; total: 5320. (Wider surface than the ripgrep gate; ripgrep is what the PRD target was set against.)"
@@ -23,7 +23,7 @@
       "target": "entry chunk <= 200 KB gzip",
       "evidence_path": "orientation/improvements/bundle-size.md",
       "reproduction": "pnpm --filter @ship/web build (parse entry chunk gzip from reporter table)",
-      "durationMs": 5554,
+      "durationMs": 5629,
       "actual": "142.68 kB gzip; ▼ 444.32 kB (75.7%) vs 587 kB baseline",
       "status": "pass",
       "notes": "Chunk: dist/assets/index-DaiNW7Aw.js                        481.36 kB │ gzip: 142.68 kB"
@@ -34,8 +34,8 @@
       "target": "every endpoint P90 + P97.5 within 10% or +10ms of post-remediation baseline",
       "evidence_path": "orientation/improvements/api-response-time.md",
       "reproduction": "tsx scripts/shipshape/checks/api.ts (auto-login as dev@ship.local, autocannon c=25 × 10s × 5 endpoints)",
-      "durationMs": 55438,
-      "actual": "/api/auth/me: P90=3ms / P97.5=4ms; /api/documents?type=wiki: P90=2ms / P97.5=3ms; /api/issues: P90=21ms / P97.5=24ms; /api/projects: P90=9ms / P97.5=10ms; /api/weeks: P90=9ms / P97.5=11ms",
+      "durationMs": 54400,
+      "actual": "/api/auth/me: P90=4ms / P97.5=5ms; /api/documents?type=wiki: P90=2ms / P97.5=3ms; /api/issues: P90=23ms / P97.5=26ms; /api/projects: P90=10ms / P97.5=13ms; /api/weeks: P90=10ms / P97.5=12ms",
       "status": "pass"
     },
     {
@@ -44,8 +44,8 @@
       "target": "dashboard \"my-work\" query <= 0.1 ms AND all 4 migration-038 indexes present",
       "evidence_path": "orientation/improvements/database-query-efficiency.md",
       "reproduction": "docker exec ship-postgres-1 psql -U ship -d ship_dev -c \"EXPLAIN ANALYZE ...\" (see check source)",
-      "durationMs": 140,
-      "actual": "4/4 indexes present; dashboard query 0.063 ms; planner: Seq Scan",
+      "durationMs": 168,
+      "actual": "4/4 indexes present; dashboard query 0.070 ms; planner: Seq Scan",
       "status": "pass",
       "notes": "Planner chose: Seq Scan (small datasets correctly prefer seqscan over JSONB index)"
     },
@@ -55,9 +55,10 @@
       "target": "0 test failures across api suite",
       "evidence_path": "orientation/improvements/test-coverage.md",
       "reproduction": "pnpm --filter @ship/api test",
-      "durationMs": 12529,
-      "actual": "497/497 tests pass across 36 files (vitest exit 0)",
-      "status": "pass"
+      "durationMs": 12726,
+      "actual": "489/497 tests pass across 36 files (vitest exit nonzero)",
+      "status": "fail",
+      "notes": "First failures: Activity API GET /activity/:entityType/:entityId successful activity retrieval returns 30 days of activity for a program | Activity API GET /activity/:entityType/:entityId successful activity retrieval returns 30 days of activity for a project | Activity API GET /activity/:entityType/:entityId successful activity retrieval returns 30 days of activity for a sprint | Activity API GET /activity/:entityType/:entityId successful activity retrieval returns empty array for entity with no activity | Activity API GET /activity/:entityType/:entityId error handling returns 404 when entity does not exist"
     },
     {
       "category": 6,
@@ -65,7 +66,7 @@
       "target": "0 failures in critical-path regression subset",
       "evidence_path": "orientation/improvements/runtime-error-handling.md",
       "reproduction": "pnpm --filter @ship/api test (filtered subset; runs piggyback on Cat 5 output)",
-      "durationMs": 0,
+      "durationMs": 1,
       "actual": "33 pass / 0 fail across 5/5 critical-path files",
       "status": "pass"
     },
@@ -75,8 +76,8 @@
       "target": "0 Critical + 0 Serious across all 8 baseline routes",
       "evidence_path": "orientation/improvements/accessibility.md",
       "reproduction": "node orientation/baselines/accessibility/axe-scan-after.mjs (auto-starts pnpm dev:web on :5173 if needed; chromium via playwright)",
-      "durationMs": 25796,
-      "actual": "0 Critical + 0 Serious across 8 routes (captured 2026-05-24T16:26:48.929Z)",
+      "durationMs": 25352,
+      "actual": "0 Critical + 0 Serious across 8 routes (captured 2026-05-24T16:14:01.968Z)",
       "status": "pass"
     }
   ]

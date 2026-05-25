@@ -5,13 +5,39 @@ Required by the GFA Week 4 brief's submission deliverables:
 
 ## Spend
 
-> ⚠️ Cameron to fill in actual figures from billing dashboards before submission.
+Period: 2026-05-18 18:22 UTC → 2026-05-24 20:17 UTC (6 days, 2 hours). Scope: every session under `~/.claude/projects/-Users-sheep-Desktop-Gauntlet-ship` and `-shipshapesec` (the audit target + the security probe tool), including spawned subagent transcripts. Aggregated from 209 session JSONLs covering 13,575 assistant turns.
 
-| Source | Plan / model | Period | $ (approx.) | Notes |
+| Source | Plan / model | Period | $ | Notes |
 |---|---|---|---|---|
-| Claude Code (Anthropic) | Opus 4.7 + Sonnet 4.6 | 2026-05-19 → 2026-05-22 | $___ | Primary driver. Orientation, audit, Phase 2 implementation, blocker followup. |
-| (any other tools) | — | — | $___ | Add rows if used (Cursor, ChatGPT, Copilot, etc.) |
-| **Total** | | | **$___** | |
+| Claude Code (Anthropic) | Max 20× subscription, Opus 4.7 + Sonnet 4.6 + Haiku 4.5 | 2026-05-18 → 2026-05-24 | **$40.00** | Pro-rated from $200/mo. Primary driver: orientation, audit, Phase 2 implementation, blocker followup, dashboard build, security probe tool. |
+| **Actual spend** | | | **$40.00** | |
+
+### Equivalent direct-API cost
+
+If the same work had been billed at Anthropic's published per-token API rates instead of the flat subscription, it would have cost approximately **$9,014.12** — a ~225× multiplier over the subscription. The breakdown by model:
+
+| Model | Turns | Input | Output | Cache read | Cache write 5m | Cache write 1h | $ |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| Opus 4.x | 13,036 | 28,868 | 14,021,228 | 3,874,442,947 | 9,131,582 | 65,628,013 | $9,003.75 |
+| Sonnet 4.x | 168 | 58,359 | 50,671 | 6,014,059 | 1,344,317 | 0 | $7.78 |
+| Haiku 4.x | 364 | 4,273 | 54,480 | 12,622,911 | 1,361,355 | 0 | $2.59 |
+| **Total** | **13,575** | **91,500** | **14,126,379** | **3,893,079,917** | **11,837,254** | **65,628,013** | **$9,014.12** |
+
+Where the equivalent-API dollars would have gone:
+
+- Cache reads — $5,811 (64%). 3.87B tokens read at the 90%-off cached rate.
+- 1-hour cache writes — $1,968 (22%). 65.6M tokens at 2× input price.
+- Output tokens — $1,051 (12%). 14M tokens at $75/MTok (Opus).
+- 5-minute cache writes — $171 (1.9%).
+- Uncached input — $0.43. Effectively zero: 98% of input was served from cache.
+
+Pricing constants used (per million tokens): Opus $15 in / $75 out / $1.50 cache-read / $18.75 5m-write / $30 1h-write; Sonnet $3 / $15 / $0.30 / $3.75 / $6; Haiku $0.80 / $4 / $0.08 / $1.00 / $1.60. Sourced from Anthropic's public pricing as of Jan 2026; the multiplier scales linearly if rates have shifted since.
+
+### Why the gap is this wide
+
+The cache-read line is the punchline. Claude Code keeps the system prompt, tool definitions, prior conversation, and recently-read files in Anthropic's prompt cache, paying the 5m or 1h cache-write rate once and then reading them back at 10% of input cost on every subsequent turn. Across 13K Opus turns over a single project, the same context gets re-read thousands of times. A naive per-token API user pays for every read; the subscription absorbs them.
+
+Without prompt caching, the same workload would have cost roughly **$60K** (recomputed at uncached input rates — every cached read instead billed at $15/MTok for Opus, $3 for Sonnet, $0.80 for Haiku). The cache cuts that by ~85% to $9K, and the Max subscription cuts what remains by another ~99.5% to $40.
 
 ## Where the spend went (qualitative)
 

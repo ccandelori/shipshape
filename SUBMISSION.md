@@ -27,8 +27,8 @@ If you only have 5 minutes, open the [live dashboard](http://143.198.163.184/das
 
 | # | Deliverable | Status | Pointer |
 |---|---|---|---|
-| 1 | GitHub Repository | 🟢 | This repo. `git log --oneline --merges master \| head -25` shows the per-category labeled merges |
-| 2 | Audit Report | 🟢 | [`orientation/audit-report.md`](orientation/audit-report.md) (executive) + [`orientation/audit-report-detailed.md`](orientation/audit-report-detailed.md) (1,091 lines, methodology + raw data) |
+| 1 | GitLab Repository | 🟢 | This repo (`labs.gauntletai.com/cameroncandelori/shipshape`). `git log --oneline --merges master \| head -25` shows the per-category labeled merges |
+| 2 | Audit Report | 🟢 | [`orientation/audit-report.md`](orientation/audit-report.md) — consolidated (1,417 lines): executive summary, then per-category deep dives with methodology + raw data |
 | 3 | Improvement Documentation | 🟢 | 7 category docs + 1 cross-cutting in [`orientation/improvements/`](orientation/improvements/) |
 | 4 | Discovery Write-up | 🟢 | [`orientation/discovery.md`](orientation/discovery.md) — 3 things learned in **WHAT · WHERE · WHY · THE POINT · THEN** format |
 | 5 | Demo Video (3-5 min) | ⏳ | Re-record outline in [`orientation/demo-video.md`](orientation/demo-video.md). Hosted URL TBA. |
@@ -58,7 +58,7 @@ The PRD: *"Your audit report must include baseline measurements for all 7 catego
 | 6 Runtime Error Handling | 3 gaps catalogued (1 silent data loss, 1 stack-trace leak, 1 WS session) | Defect-injection-then-revert protocol on candidate suspects | [`orientation/baselines/runtime-errors/`](orientation/baselines/runtime-errors/) + evidence/*.md per finding |
 | 7 Accessibility | 4 Critical + 4 Serious axe findings across 8 routes | axe-core deep scan via playwright @ chromium-1200, 8 routes, WCAG 2.1 AA + Section 508 | [`orientation/baselines/accessibility/axe-*.json`](orientation/baselines/accessibility/) + [`axe-summary.md`](orientation/baselines/accessibility/axe-summary.md) |
 
-Gate satisfied. Full audit at [`orientation/audit-report.md`](orientation/audit-report.md) (executive) + [`orientation/audit-report-detailed.md`](orientation/audit-report-detailed.md) (1,091 lines, methodology + raw numbers + per-finding evidence + Appendix A: full Codebase Orientation Checklist).
+Gate satisfied. Full audit at [`orientation/audit-report.md`](orientation/audit-report.md) — one consolidated report (1,417 lines): executive summary up top, then per-category deep dives with methodology, raw numbers, and per-finding evidence. Appendix A (full Codebase Orientation Checklist) lives in [`orientation/README.md`](orientation/README.md).
 
 </details>
 

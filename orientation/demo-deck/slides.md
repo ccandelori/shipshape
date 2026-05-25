@@ -563,13 +563,13 @@ class: text-center
 
 <br/>
 
-`orientation/audit-report.md` · `orientation/audit-report-detailed.md`
-`orientation/baselines/` · `orientation/README.md` · `orientation/discovery.md`
+`orientation/audit-report.md` · `orientation/baselines/`
+`orientation/README.md` · `orientation/discovery.md`
 
 <br/>
 
-The Phase 1 gate is met. Phase 2 remediation work is scoped per category against the audit-detailed report.
+The Phase 1 gate is met. Phase 2 remediation work is scoped per category against the consolidated audit report.
 
 <!--
-This concludes the Phase 1 briefing. Four critical defects were identified and reproduced. 231 evidence artifacts are tracked. The audit is documented in two paired artifacts: an executive summary and a detailed reference. The full text of every finding referenced in this briefing is available in audit-report-detailed.md.
+This concludes the Phase 1 briefing. Four critical defects were identified and reproduced. 231 evidence artifacts are tracked. The audit is one consolidated report: an executive summary up top, then the full per-category deep dives. The full text of every finding referenced in this briefing is available in audit-report.md.
 -->

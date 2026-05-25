@@ -1,47 +1,52 @@
-# Social Post — ShipShape Phase 2
+# Social Post — ShipShape (GFA Week 4)
 
-Two drafts per the GFA Week 4 brief's "Social Post" requirement (X or LinkedIn, tagged `@GauntletAI`). Post when ready and update the `Posted` line below.
-
----
-
-## Draft A — X (Twitter), ~280 chars
-
-> Just audited a US Treasury TypeScript codebase end-to-end. Found a silent NULL persist that emptied document bodies while the binary state survived, a WebSocket that kept writing edits after session revocation, and a 587 KB→142 KB entry chunk (−76%). Receipts, not vibes. @GauntletAI #ShipShape
-
-Backup variant focused on the test-coverage angle:
-
-> Wrote 30 critical-path regression tests against a Treasury codebase. Each one is a tripwire on a real audit finding: silent data loss, session revocation hole, dashboard N+1, axe a11y regressions. CI gate added so a future PR can't undo any of it. @GauntletAI #ShipShape
+Drafts per the GFA Week 4 brief's "Social Post" requirement (X or LinkedIn, tagged `@GauntletAI`). Impact-framed: strong verbs, concrete numbers, reads well out of context, no secrets. Post when ready and update the `Posted` line below. No emoji by default. Add your public dashboard/repo link where marked.
 
 ---
 
-## Draft B — LinkedIn, longer-form
+## Draft A — X (Twitter)
 
-> Just finished a one-week production audit on the US Department of the Treasury's open-source project tracker (Ship). It's a real TypeScript monorepo: React + Express + Postgres + Yjs CRDTs for live collaboration. ~73 Playwright tests, real users.
+> Audited a US Treasury codebase end-to-end, then built a security probe that actively attacks the running app. It found a single malformed WebSocket frame that crashes the entire collaboration server. I fixed it: 0 critical, server survives the full attack. Receipts, not vibes. @GauntletAI #ShipShape
+
+Backup variant (remediation-numbers angle):
+
+> One week on a US Treasury TypeScript codebase: bundle 587→143 KB gzip (−76%), slowest DB query −73%, API P95 −81%, accessibility 8 critical violations → 0. Every number on a live dashboard, every number backed by an evidence file. @GauntletAI #ShipShape
+
+---
+
+## Draft B — LinkedIn (longer-form)
+
+> This week I audited a real government web application, then proved every fix.
 >
-> The brief was "diagnose first, then fix" — write a measurable baseline for type safety, bundle size, API latency, DB query efficiency, test coverage, runtime errors, and accessibility, then move every needle with proof.
+> The target was an open-source US Department of the Treasury codebase (Ship): React + Express + Postgres, real-time collaboration over Yjs CRDTs and WebSockets, ~73 Playwright tests, real users. The brief was diagnose first, then fix: baseline seven quality dimensions, then move every needle with proof.
 >
-> What surprised me most:
+> I found 4 critical defects under live conditions. The scariest: a silent data-loss path. The Yjs-to-JSON converter could return `undefined`, which `JSON.stringify` quietly turns into a Postgres NULL, emptying a document's content while the binary CRDT state survived. Nothing crashed. REST reads just came back blank. Silent data loss is the worst kind.
 >
-> 1. The same Yjs document is persisted twice — once as a binary CRDT (the truth) and once as a JSON snapshot (the read-path optimization). When the JSON converter has a bug it returns `undefined`, which `JSON.stringify` quietly turns into pg NULL. The binary state survived; REST reads returned empty docs. Silent data loss is the worst kind because nothing crashes.
+> Then I remediated every category and measured:
+> - First-paint bundle: 587 → 143 KB gzip (−76%) via route-level code splitting
+> - Slowest database query: 0.149 → 0.040 ms (−73%) with JSONB expression indexes
+> - API tail latency: −81% at P95 on the slowest endpoint, measured with k6
+> - Accessibility: 8 critical and serious axe violations → 0
+> - Closed 3 silent-failure paths and added 33 targeted regression tests
 >
-> 2. WebSocket sessions were validated once at HTTP upgrade and then never again. A user logged out from another tab kept writing to the database via the still-open WS until they closed the browser. Patched with a 60-second re-validation tick and a 4401 close code.
+> Then I went a layer deeper and built a security probe from scratch: a single Go binary that actively attacks the running app across 5 surfaces (auth, WebSocket, input, dependencies, configuration). It found 71 issues, including a way to crash the entire collaboration server for every connected user with one malformed WebSocket frame. I fixed it (guarded message handler, policy-code closes, error listeners on every socket); the probe re-run confirms 0 critical and the server surviving the full frame-and-burst attack.
 >
-> 3. Adding 4 partial JSONB expression indexes on document properties turned the dashboard's slowest query from a 88%-wasted bitmap scan into an index seek. From 0.149 ms to 0.040 ms in the dev DB; the math scales.
+> All of it is surfaced on a live platform-health dashboard where every number traces back to an evidence file: the EXPLAIN output, the k6 run, the before/after probe.
 >
-> 4. Lazy-loading 20 routes + gating React Query devtools behind a build flag dropped the entry chunk from 587 KB gzip to 142 KB gzip. The shape of Vite's tree-shake on `import.meta.env.DEV` constants is a more important React shipping primitive than most teams realise.
+> The takeaway I'm keeping: deep-reading an unfamiliar 200-file codebase is where AI assistance is a genuine multiplier. This week's work would have cost about $9,000 at per-token API rates; on a flat subscription, about $40. That gap is prompt caching, and it's why this way of working is viable, not just a nice demo.
 >
-> Full audit report, 30 new tests, before/after benchmarks, and a CI gate that locks the floor in: [REPO_URL placeholder — replace with public fork URL once deployed].
+> Audit, remediate, prove. Not "I think it's faster." Here's the measurement.
 >
-> The biggest takeaway: most "performance problems" are observability problems. The dashboard wasn't slow because it was complicated — it was slow because nobody had a query log open while clicking through it.
+> Full audit report, the security probe, and the live dashboard: [REPO/DASHBOARD URL — add public link]
 >
-> @GauntletAI #ShipShape #TypeScript #PostgreSQL #WCAG
+> @GauntletAI #ShipShape #TypeScript #PostgreSQL #WebSecurity #WCAG
 
 ---
 
 ## Tags / hashtags
 
 - `@GauntletAI` (required per brief)
-- Optional: `#ShipShape`, `#TypeScript`, `#WCAG`, `#PostgreSQL`, `#WebDevelopment`, `#OpenSource`
+- Optional: `#ShipShape`, `#TypeScript`, `#PostgreSQL`, `#WebSecurity`, `#WCAG`, `#OpenSource`
 
 ## Posted
 
@@ -50,4 +55,6 @@ Backup variant focused on the test-coverage angle:
 
 ## Notes
 
-The LinkedIn version places the most surprising finding (silent NULL) first because LinkedIn rewards a strong first sentence in the truncated preview. The X version compresses three findings into one beat. Both link back to the deployed fork URL — fill that in once Task 22 ships the public deploy.
+- The LinkedIn version leads with the audit framing, then the silent-NULL hook (LinkedIn rewards a strong first 2 lines in the truncated preview), and saves the security probe as the escalation beat since it's the standout deliverable.
+- The X version leads with the security probe (the single most striking result) and keeps a remediation-numbers backup.
+- All figures are the verified set (EXPLAIN output, k6 P95, axe scans, a live test run at 497 passing, a live security-probe run). Don't round them differently when posting.

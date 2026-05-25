@@ -1,5 +1,5 @@
 {
-  "capturedAt": "2026-05-23T22:53:55.643Z",
+  "capturedAt": "2026-05-24T16:26:48.929Z",
   "routes": [
     {
       "name": "login",
@@ -9,7 +9,7 @@
       "moderate": 0,
       "minor": 0,
       "total": 0,
-      "ms": 2503
+      "ms": 2582
     },
     {
       "name": "docs",
@@ -19,7 +19,7 @@
       "moderate": 0,
       "minor": 0,
       "total": 0,
-      "ms": 2642
+      "ms": 2708
     },
     {
       "name": "my-week",
@@ -29,7 +29,7 @@
       "moderate": 0,
       "minor": 0,
       "total": 0,
-      "ms": 2604
+      "ms": 2686
     },
     {
       "name": "issues",
@@ -39,7 +39,7 @@
       "moderate": 0,
       "minor": 0,
       "total": 0,
-      "ms": 4198
+      "ms": 4266
     },
     {
       "name": "projects",
@@ -49,7 +49,7 @@
       "moderate": 0,
       "minor": 0,
       "total": 0,
-      "ms": 2922
+      "ms": 3040
     },
     {
       "name": "settings",
@@ -59,7 +59,7 @@
       "moderate": 0,
       "minor": 0,
       "total": 0,
-      "ms": 2638
+      "ms": 2726
     },
     {
       "name": "team_allocation",
@@ -69,7 +69,7 @@
       "moderate": 0,
       "minor": 0,
       "total": 0,
-      "ms": 2289
+      "ms": 2305
     },
     {
       "name": "editor-wiki",
@@ -79,7 +79,7 @@
       "moderate": 0,
       "minor": 0,
       "total": 0,
-      "ms": 2637
+      "ms": 2661
     }
   ]
 }

@@ -23,7 +23,7 @@
 
 This fork is the deliverable for the **GFA Week 4 — ShipShape** project (Auditing and Improving a Production TypeScript Codebase).
 
-- **Audit Report:** [`orientation/audit-report.md`](orientation/audit-report.md) (executive) + [`orientation/audit-report-detailed.md`](orientation/audit-report-detailed.md) (full prose, 1,091 lines)
+- **Audit Report:** [`orientation/audit-report.md`](orientation/audit-report.md) — consolidated: executive summary above the fold, full per-category deep dives + methodology + raw data below (1,417 lines)
 - **Phase 2 per-category improvements:** [`orientation/improvements/`](orientation/improvements/) — 8 docs covering each of 7 PRD categories + CI workflow
 - **Submission checklist + grader pointer:** [`SUBMISSION.md`](SUBMISSION.md)
 - **Raw evidence:** [`orientation/baselines/`](orientation/baselines/) — autocannon + axe + EXPLAIN ANALYZE artifacts
