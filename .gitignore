@@ -8,6 +8,13 @@ build
 .turbo
 *.tsbuildinfo
 
+# Test coverage
+coverage/
+
+# Local agent tooling config (Codex MCP, mirrored skills)
+.agents/
+.codex/
+
 # Environment files
 .env
 .env.local
