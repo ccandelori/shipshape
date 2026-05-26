@@ -13,6 +13,21 @@ describe('FleetGraph OpenAPI contracts', () => {
     expect(document.components?.schemas).toHaveProperty('FleetGraphResumeActionRequest');
   });
 
+  it('documents the FleetGraph chat request and SSE stream contract', () => {
+    expect(document.components?.schemas).toHaveProperty('FleetGraphChatRequest');
+    expect(document.components?.schemas).toHaveProperty('FleetGraphChatSseStream');
+
+    const chatOperation = requirePostOperation('/fleetgraph/chat');
+    const serializedOperation = JSON.stringify(chatOperation);
+
+    expect(serializedOperation).toContain('FleetGraphChatRequest');
+    expect(serializedOperation).toContain('text/event-stream');
+    expect(serializedOperation).toContain('event: token');
+    expect(serializedOperation).toContain('event: final');
+    expect(serializedOperation).toContain('X-Accel-Buffering');
+    expect(chatOperation.responses).toHaveProperty('429');
+  });
+
   it('registers every FleetGraph inbox route with conflict responses for state transitions', () => {
     const routePaths = [
       '/fleetgraph/findings',

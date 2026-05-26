@@ -162,6 +162,36 @@ To use custom domains (e.g., `api.example.gov` and `app.example.gov`):
 
 4. Wait for ACM certificate validation (5-30 minutes)
 
+### FleetGraph Chat SSE
+
+`POST /api/fleetgraph/chat` streams responses with Server-Sent Events (`text/event-stream`). The API sets:
+
+- `Cache-Control: no-cache, no-transform`
+- `Connection: keep-alive`
+- `X-Accel-Buffering: no`
+
+Keep this route unbuffered end-to-end. When routing through CloudFront, add a dedicated ordered cache behavior for `/api/fleetgraph/chat` before the broader `/api/*` behavior:
+
+- Target origin: `EB-API`
+- Cache policy: no cache (`min_ttl = 0`, `default_ttl = 0`, `max_ttl = 0`)
+- Origin request policy: forward all viewer headers, cookies, and query strings
+- Compression: `compress = false`
+- Methods: allow `POST` and `OPTIONS`; keep cached methods to `GET` and `HEAD`
+
+If nginx or another reverse proxy is inserted between CloudFront/ALB and Node, disable response buffering for this path or ensure it honors `X-Accel-Buffering: no`. If the CDN path cannot preserve streaming, route FleetGraph chat directly to the Elastic Beanstalk API origin.
+
+Verify the deployed path with:
+
+```bash
+curl -N \
+  -H "Content-Type: application/json" \
+  -H "Cookie: session_id=<session>" \
+  -d '{"documentId":"<uuid>","documentType":"sprint","question":"What is blocked?","conversationHistory":[]}' \
+  https://app.example.gov/api/fleetgraph/chat
+```
+
+The response should print `event: heartbeat` quickly, then `event: token` frames before the final frame. If all data arrives only after completion, a proxy is still buffering.
+
 ## Monitoring and Logs
 
 ### View API Logs

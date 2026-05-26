@@ -214,6 +214,70 @@ export const FleetGraphResumeActionRequestSchema = z.object({
 
 registry.register('FleetGraphResumeActionRequest', FleetGraphResumeActionRequestSchema);
 
+export const FleetGraphChatDocumentTypeSchema = z.enum(['sprint', 'project', 'issue']).openapi({
+  description: 'Document types supported by FleetGraph chat context loading',
+});
+
+registry.register('FleetGraphChatDocumentType', FleetGraphChatDocumentTypeSchema);
+
+export const FleetGraphChatMessageSchema = z.object({
+  role: z.enum(['user', 'assistant']).openapi({
+    description: 'Conversation message author role',
+  }),
+  content: z.string().trim().min(1).max(8_000).openapi({
+    description: 'Prior conversation message content',
+  }),
+}).openapi('FleetGraphChatMessage');
+
+registry.register('FleetGraphChatMessage', FleetGraphChatMessageSchema);
+
+export const FleetGraphChatRequestSchema = z.object({
+  documentId: UuidSchema.openapi({
+    description: 'Scoped Ship document id. Must belong to the authenticated workspace.',
+  }),
+  documentType: FleetGraphChatDocumentTypeSchema,
+  question: z.string().trim().min(1).max(4_000).openapi({
+    description: 'User question to answer using only the scoped Ship context',
+  }),
+  conversationHistory: z.array(FleetGraphChatMessageSchema).max(50).openapi({
+    description: 'Bounded prior user/assistant messages. The server uses the most recent 10 messages for model context.',
+  }),
+}).openapi('FleetGraphChatRequest');
+
+registry.register('FleetGraphChatRequest', FleetGraphChatRequestSchema);
+
+export const FleetGraphChatRateLimitResponseSchema = z.object({
+  error: z.string(),
+  retry_after_seconds: z.number().int().positive(),
+  reset_at: DateTimeSchema,
+}).openapi('FleetGraphChatRateLimitResponse');
+
+registry.register('FleetGraphChatRateLimitResponse', FleetGraphChatRateLimitResponseSchema);
+
+export const FleetGraphChatSseStreamSchema = z.string().openapi({
+  description: [
+    'Server-Sent Events stream. Frames are newline-delimited and use named events:',
+    'heartbeat, token, final, and error.',
+    'The server sets Cache-Control: no-cache, no-transform and X-Accel-Buffering: no.',
+  ].join(' '),
+  example: [
+    'event: heartbeat',
+    'data: {"sentAt":"2026-05-26T12:00:00.000Z"}',
+    '',
+    'event: token',
+    'data: {"token":"The "}',
+    '',
+    'event: token',
+    'data: {"token":"answer"}',
+    '',
+    'event: final',
+    'data: {"response":"The answer","usage":{"modelName":"gpt-4o-mini","inputTokens":12,"outputTokens":4,"totalTokens":16}}',
+    '',
+  ].join('\n'),
+});
+
+registry.register('FleetGraphChatSseStream', FleetGraphChatSseStreamSchema);
+
 const fleetGraphErrorResponse = (description: string) => ({
   description,
   content: {
@@ -222,6 +286,25 @@ const fleetGraphErrorResponse = (description: string) => ({
     },
   },
 });
+
+const fleetGraphChatSseEventExamples = {
+  heartbeat: {
+    summary: 'Heartbeat frame',
+    value: 'event: heartbeat\ndata: {"sentAt":"2026-05-26T12:00:00.000Z"}\n\n',
+  },
+  token: {
+    summary: 'Token frame',
+    value: 'event: token\ndata: {"token":"The "}\n\n',
+  },
+  final: {
+    summary: 'Final answer frame',
+    value: 'event: final\ndata: {"response":"The answer","usage":{"modelName":"gpt-4o-mini","inputTokens":12,"outputTokens":4,"totalTokens":16}}\n\n',
+  },
+  error: {
+    summary: 'Post-stream error frame',
+    value: 'event: error\ndata: {"error":"FleetGraph chat stream failed"}\n\n',
+  },
+};
 
 registry.registerPath({
   method: 'get',
@@ -243,6 +326,68 @@ registry.registerPath({
     },
     401: fleetGraphErrorResponse('Authentication required'),
     403: fleetGraphErrorResponse('Current user cannot access this workspace'),
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/fleetgraph/chat',
+  tags: ['FleetGraph'],
+  summary: 'Stream a context-scoped FleetGraph chat answer',
+  description: [
+    'Starts an on-demand FleetGraph chat response scoped to a sprint, project, or issue document in the current workspace.',
+    'Successful responses are streamed as text/event-stream frames with heartbeat, token, final, and error events.',
+    'The transport sets Content-Type: text/event-stream, Cache-Control: no-cache, no-transform, Connection: keep-alive, and X-Accel-Buffering: no.',
+    'Reverse proxies and CDNs must not buffer or cache this route.',
+  ].join(' '),
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: FleetGraphChatRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    200: {
+      description: 'SSE stream of FleetGraph chat events',
+      headers: {
+        'Cache-Control': {
+          description: 'Disables cache and transformation buffering for the stream',
+          schema: { type: 'string' },
+          example: 'no-cache, no-transform',
+        },
+        Connection: {
+          description: 'Keeps the response connection open for streaming',
+          schema: { type: 'string' },
+          example: 'keep-alive',
+        },
+        'X-Accel-Buffering': {
+          description: 'Disables nginx response buffering where supported',
+          schema: { type: 'string' },
+          example: 'no',
+        },
+      },
+      content: {
+        'text/event-stream': {
+          schema: FleetGraphChatSseStreamSchema,
+          examples: fleetGraphChatSseEventExamples,
+        },
+      },
+    },
+    400: fleetGraphErrorResponse('Invalid request body'),
+    401: fleetGraphErrorResponse('Authentication required'),
+    404: fleetGraphErrorResponse('Scoped document not found in the current workspace'),
+    429: {
+      description: 'Per-user FleetGraph chat rate limit exceeded',
+      content: {
+        'application/json': {
+          schema: FleetGraphChatRateLimitResponseSchema,
+        },
+      },
+    },
+    503: fleetGraphErrorResponse('FleetGraph chat is not configured'),
   },
 });
 

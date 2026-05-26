@@ -5957,6 +5957,107 @@
             "description": "Client-generated key for safely retrying duplicate resume submissions"
           }
         }
+      },
+      "FleetGraphChatDocumentType": {
+        "type": "string",
+        "enum": [
+          "sprint",
+          "project",
+          "issue"
+        ],
+        "description": "Document types supported by FleetGraph chat context loading"
+      },
+      "FleetGraphChatMessage": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "description": "Conversation message author role"
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8000,
+            "description": "Prior conversation message content"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ]
+      },
+      "FleetGraphChatRequest": {
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Scoped Ship document id. Must belong to the authenticated workspace.",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "documentType": {
+            "type": "string",
+            "enum": [
+              "sprint",
+              "project",
+              "issue"
+            ],
+            "description": "Document types supported by FleetGraph chat context loading"
+          },
+          "question": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000,
+            "description": "User question to answer using only the scoped Ship context"
+          },
+          "conversationHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FleetGraphChatMessage"
+            },
+            "maxItems": 50,
+            "description": "Bounded prior user/assistant messages. The server uses the most recent 10 messages for model context."
+          }
+        },
+        "required": [
+          "documentId",
+          "documentType",
+          "question",
+          "conversationHistory"
+        ]
+      },
+      "FleetGraphChatRateLimitResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "retry_after_seconds": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "reset_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 datetime string",
+            "example": "2025-01-30T14:30:00.000Z"
+          }
+        },
+        "required": [
+          "error",
+          "retry_after_seconds",
+          "reset_at"
+        ]
+      },
+      "FleetGraphChatSseStream": {
+        "type": "string",
+        "description": "Server-Sent Events stream. Frames are newline-delimited and use named events: heartbeat, token, final, and error. The server sets Cache-Control: no-cache, no-transform and X-Accel-Buffering: no.",
+        "example": "event: heartbeat\ndata: {\"sentAt\":\"2026-05-26T12:00:00.000Z\"}\n\nevent: token\ndata: {\"token\":\"The \"}\n\nevent: token\ndata: {\"token\":\"answer\"}\n\nevent: final\ndata: {\"response\":\"The answer\",\"usage\":{\"modelName\":\"gpt-4o-mini\",\"inputTokens\":12,\"outputTokens\":4,\"totalTokens\":16}}\n"
       }
     },
     "parameters": {}
@@ -11845,6 +11946,129 @@
           },
           "403": {
             "description": "Current user cannot access this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fleetgraph/chat": {
+      "post": {
+        "tags": [
+          "FleetGraph"
+        ],
+        "summary": "Stream a context-scoped FleetGraph chat answer",
+        "description": "Starts an on-demand FleetGraph chat response scoped to a sprint, project, or issue document in the current workspace. Successful responses are streamed as text/event-stream frames with heartbeat, token, final, and error events. The transport sets Content-Type: text/event-stream, Cache-Control: no-cache, no-transform, Connection: keep-alive, and X-Accel-Buffering: no. Reverse proxies and CDNs must not buffer or cache this route.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FleetGraphChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "SSE stream of FleetGraph chat events",
+            "headers": {
+              "Cache-Control": {
+                "description": "Disables cache and transformation buffering for the stream",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "no-cache, no-transform"
+              },
+              "Connection": {
+                "description": "Keeps the response connection open for streaming",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "keep-alive"
+              },
+              "X-Accel-Buffering": {
+                "description": "Disables nginx response buffering where supported",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "no"
+              }
+            },
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "description": "Server-Sent Events stream. Frames are newline-delimited and use named events: heartbeat, token, final, and error. The server sets Cache-Control: no-cache, no-transform and X-Accel-Buffering: no.",
+                  "example": "event: heartbeat\ndata: {\"sentAt\":\"2026-05-26T12:00:00.000Z\"}\n\nevent: token\ndata: {\"token\":\"The \"}\n\nevent: token\ndata: {\"token\":\"answer\"}\n\nevent: final\ndata: {\"response\":\"The answer\",\"usage\":{\"modelName\":\"gpt-4o-mini\",\"inputTokens\":12,\"outputTokens\":4,\"totalTokens\":16}}\n"
+                },
+                "examples": {
+                  "heartbeat": {
+                    "summary": "Heartbeat frame",
+                    "value": "event: heartbeat\ndata: {\"sentAt\":\"2026-05-26T12:00:00.000Z\"}\n\n"
+                  },
+                  "token": {
+                    "summary": "Token frame",
+                    "value": "event: token\ndata: {\"token\":\"The \"}\n\n"
+                  },
+                  "final": {
+                    "summary": "Final answer frame",
+                    "value": "event: final\ndata: {\"response\":\"The answer\",\"usage\":{\"modelName\":\"gpt-4o-mini\",\"inputTokens\":12,\"outputTokens\":4,\"totalTokens\":16}}\n\n"
+                  },
+                  "error": {
+                    "summary": "Post-stream error frame",
+                    "value": "event: error\ndata: {\"error\":\"FleetGraph chat stream failed\"}\n\n"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Scoped document not found in the current workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Per-user FleetGraph chat rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FleetGraphChatRateLimitResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "FleetGraph chat is not configured",
             "content": {
               "application/json": {
                 "schema": {
