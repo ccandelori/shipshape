@@ -1052,6 +1052,32 @@ describe('FleetGraph at-risk Week detector contracts', () => {
     });
   });
 
+  it('persists action candidates through the shared pending-action and auto-execution gates', async () => {
+    const outputDependencies = createOutputNodeDependencies();
+    let state = await createReasonedAtRiskState(createWeekContext({
+      ownerUserId,
+      issues: [{
+        id: '44444444-4444-4444-8444-444444444444',
+        title: 'Launch approval blocked',
+        state: 'blocked',
+        priority: 'high',
+      }],
+      blockerText: 'Blocked waiting on security approval.',
+    }));
+
+    state = await policyNode(state);
+    const outputState = await outputNode(state, outputDependencies);
+
+    expect(outputState.persistence).toEqual({
+      findingId: '88888888-8888-4888-8888-888888888888',
+      actionCandidateId: '99999999-9999-4999-8999-999999999999',
+      broadcastEvent: 'fleetgraph:finding_created',
+    });
+    expect(countQueries(outputDependencies, 'INSERT INTO fleetgraph_action_candidates')).toBe(1);
+    expect(countQueries(outputDependencies, "SET lifecycle_state = 'pending_review'")).toBe(1);
+    expect(countQueries(outputDependencies, 'SELECT f.lifecycle_state')).toBe(1);
+  });
+
   it('runs the compiled graph through finding generation and output persistence', async () => {
     const reasoner = {
       modelName: 'gpt-4o-mini',
@@ -1248,17 +1274,40 @@ function requireCapturedTrace(capturedTraces: CapturedTrace[], index: number): C
   return capturedTrace;
 }
 
-function createOutputNodeDependencies(): AtRiskWeekOutputNodeDependencies {
+type CapturingOutputNodeDependencies = AtRiskWeekOutputNodeDependencies & {
+  queryTexts: string[];
+};
+
+function createOutputNodeDependencies(): CapturingOutputNodeDependencies {
+  const queryTexts: string[] = [];
   const query = async <T extends QueryResultRow>(
     queryText: string,
     _values: unknown[]
   ): Promise<QueryResult<T>> => {
+    queryTexts.push(queryText);
+
+    if (queryText === 'BEGIN' || queryText === 'COMMIT' || queryText === 'ROLLBACK') {
+      return createQueryResult([]);
+    }
+
     if (queryText.startsWith('INSERT INTO fleetgraph_findings')) {
       return createQueryResult([{ id: '88888888-8888-4888-8888-888888888888' }] as unknown as T[]);
     }
 
     if (queryText.startsWith('INSERT INTO fleetgraph_action_candidates')) {
       return createQueryResult([{ id: '99999999-9999-4999-8999-999999999999' }] as unknown as T[]);
+    }
+
+    if (queryText.startsWith('UPDATE fleetgraph_findings') && queryText.includes("SET lifecycle_state = 'pending_review'")) {
+      return createQueryResult([{ id: '88888888-8888-4888-8888-888888888888' }] as unknown as T[]);
+    }
+
+    if (queryText.startsWith('SELECT f.lifecycle_state')) {
+      return createQueryResult([{ lifecycle_state: 'pending_review' }] as unknown as T[]);
+    }
+
+    if (queryText.startsWith('UPDATE fleetgraph_findings') && queryText.includes("SET lifecycle_state = 'executed'")) {
+      return createQueryResult([{ lifecycle_state: 'executed' }] as unknown as T[]);
     }
 
     return createQueryResult([]);
@@ -1270,7 +1319,12 @@ function createOutputNodeDependencies(): AtRiskWeekOutputNodeDependencies {
     },
     broadcastToUser: vi.fn(),
     now: () => '2026-05-26T05:03:00.000Z',
+    queryTexts,
   };
+}
+
+function countQueries(dependencies: CapturingOutputNodeDependencies, pattern: string): number {
+  return dependencies.queryTexts.filter((queryText) => queryText.includes(pattern)).length;
 }
 
 function createQueryResult<T extends QueryResultRow>(rows: T[]): QueryResult<T> {

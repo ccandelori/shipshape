@@ -7,7 +7,11 @@ import { z } from 'zod';
 import type { FleetGraphConfig } from '../config.js';
 import type { FleetGraphQueryClient, WeekContext } from '../context.js';
 import type { DetectorRunDecision } from '../guards.js';
-import { classifyFleetGraphPolicy } from '../policy.js';
+import {
+  autoExecuteIfAllowedInTransaction,
+  classifyFleetGraphPolicy,
+  persistPendingActionInTransaction,
+} from '../policy.js';
 import {
   evidenceItemSchema,
   fleetGraphSeveritySchema,
@@ -382,7 +386,7 @@ export type AtRiskWeekBroadcastPayload = {
   actionCandidateId: string | null;
   detectorType: typeof atRiskWeekDetectorType;
   severity: FleetGraphSeverity;
-  lifecycleState: 'open' | 'pending_review';
+  lifecycleState: FleetGraphLifecycleState;
 };
 
 export type AtRiskWeekOutputNodeDependencies = {
@@ -418,6 +422,7 @@ export type AtRiskWeekGraphDependencies = {
 type PersistedAtRiskWeekOutput = {
   findingId: string;
   actionCandidateId: string | null;
+  lifecycleState: FleetGraphLifecycleState;
 };
 
 export type AtRiskWeekNodeDependencies = {
@@ -1030,7 +1035,7 @@ export async function outputNode(
       state,
       context.ownerUserId,
       reasoning.severity,
-      lifecycleState,
+      persistence.lifecycleState,
       persistence,
       dependencies
     );
@@ -1044,7 +1049,8 @@ export async function outputNode(
       ? state.completedNodes
       : [...state.completedNodes, 'output'],
     persistence: {
-      ...persistence,
+      findingId: persistence.findingId,
+      actionCandidateId: persistence.actionCandidateId,
       broadcastEvent: context.ownerUserId === null ? null : 'fleetgraph:finding_created',
     },
     trace: {
@@ -1059,7 +1065,7 @@ function broadcastAtRiskWeekFindingCreated(
   state: AtRiskWeekGraphState,
   userId: string,
   severity: FleetGraphSeverity,
-  lifecycleState: 'open' | 'pending_review',
+  lifecycleState: FleetGraphLifecycleState,
   persistence: PersistedAtRiskWeekOutput,
   dependencies: AtRiskWeekOutputNodeDependencies
 ): void {
@@ -1094,16 +1100,21 @@ async function persistAtRiskWeekOutput(
 ): Promise<PersistedAtRiskWeekOutput> {
   try {
     await dependencies.client.query<QueryResultRow>('BEGIN', []);
-    const findingId = await insertAtRiskWeekFinding(state, reasoning, lifecycleState, dependencies);
-    const actionCandidateId = policy.actionCandidate === null
-      ? null
-      : await insertAtRiskWeekActionCandidate(findingId, policy.actionCandidate, state, dependencies);
+    const initialLifecycleState = policy.actionCandidate === null ? lifecycleState : 'open';
+    const findingId = await insertAtRiskWeekFinding(state, reasoning, initialLifecycleState, dependencies);
+    const pendingAction = policy.actionCandidate === null
+      ? {
+          actionCandidateId: null,
+          lifecycleState: initialLifecycleState,
+        }
+      : await persistAtRiskWeekActionCandidate(findingId, policy.actionCandidate, state, dependencies);
 
     await dependencies.client.query<QueryResultRow>('COMMIT', []);
 
     return {
       findingId,
-      actionCandidateId,
+      actionCandidateId: pendingAction.actionCandidateId,
+      lifecycleState: pendingAction.lifecycleState,
     };
   } catch (error) {
     await rollbackAtRiskWeekOutput(dependencies);
@@ -1152,39 +1163,36 @@ async function insertAtRiskWeekFinding(
   );
 }
 
-async function insertAtRiskWeekActionCandidate(
+async function persistAtRiskWeekActionCandidate(
   findingId: string,
   actionCandidate: ActionCandidate,
   state: AtRiskWeekGraphState,
   dependencies: AtRiskWeekOutputNodeDependencies
-): Promise<string> {
-  const result = await dependencies.client.query<InsertedIdRow>(
-    `INSERT INTO fleetgraph_action_candidates (
-       finding_id, target_document_id, owner_user_id, role_reason, urgency, evidence,
-       recommended_action, approval_level, reversibility
-     )
-     VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9)
-     RETURNING id`,
-    [
-      findingId,
-      actionCandidate.targetDocumentId,
-      actionCandidate.ownerUserId,
-      actionCandidate.roleReason,
-      actionCandidate.urgency,
-      JSON.stringify(actionCandidate.evidence),
-      JSON.stringify(actionCandidate.recommendedAction),
-      actionCandidate.approvalLevel,
-      actionCandidate.reversibility,
-    ]
+): Promise<Pick<PersistedAtRiskWeekOutput, 'actionCandidateId' | 'lifecycleState'>> {
+  const actionCandidateId = await persistPendingActionInTransaction(
+    dependencies.client,
+    {
+      id: findingId,
+      workspaceId: state.scope.workspaceId,
+      expectedLifecycleState: 'open',
+    },
+    actionCandidate
+  );
+  const execution = await autoExecuteIfAllowedInTransaction(
+    dependencies.client,
+    {
+      id: findingId,
+      workspaceId: state.scope.workspaceId,
+      scopedDocumentId: state.scope.scopedDocId,
+      expectedLifecycleState: 'pending_review',
+    },
+    actionCandidate
   );
 
-  return requireInsertedId(
-    result.rows[0],
-    'fleetgraph_action_candidates',
-    state.scope.workspaceId,
-    state.scope.scopedDocId,
-    state.scope.runId
-  );
+  return {
+    actionCandidateId,
+    lifecycleState: execution.lifecycleState,
+  };
 }
 
 async function rollbackAtRiskWeekOutput(dependencies: AtRiskWeekOutputNodeDependencies): Promise<void> {

@@ -240,8 +240,7 @@ export async function persistPendingAction(
 ): Promise<string> {
   try {
     await client.query('BEGIN', []);
-    const actionCandidateId = await insertPendingActionCandidate(client, finding.id, actionCandidate);
-    await transitionFindingToPendingReview(client, finding);
+    const actionCandidateId = await persistPendingActionInTransaction(client, finding, actionCandidate);
     await client.query('COMMIT', []);
 
     return actionCandidateId;
@@ -253,6 +252,17 @@ export async function persistPendingAction(
       message: errorMessage(error),
     });
   }
+}
+
+export async function persistPendingActionInTransaction(
+  client: FleetGraphQueryClient,
+  finding: FleetGraphPendingActionFinding,
+  actionCandidate: ActionCandidate
+): Promise<string> {
+  const actionCandidateId = await insertPendingActionCandidate(client, finding.id, actionCandidate);
+  await transitionFindingToPendingReview(client, finding);
+
+  return actionCandidateId;
 }
 
 async function insertPendingActionCandidate(
@@ -338,42 +348,10 @@ export async function autoExecuteIfAllowed(
 ): Promise<FleetGraphActionExecutionResult> {
   try {
     await client.query('BEGIN', []);
-    const lifecycleState = await requireAutoExecutionScope(client, finding, actionCandidate);
-
-    if (lifecycleState === 'executed') {
-      throw new FleetGraphActionExecutionError({
-        findingId: finding.id,
-        workspaceId: finding.workspaceId,
-        scopedDocumentId: finding.scopedDocumentId,
-        message: 'finding already executed',
-      });
-    }
-
-    if (lifecycleState !== finding.expectedLifecycleState) {
-      throw new FleetGraphActionExecutionError({
-        findingId: finding.id,
-        workspaceId: finding.workspaceId,
-        scopedDocumentId: finding.scopedDocumentId,
-        message: `finding lifecycle is not executable: expectedLifecycleState=${finding.expectedLifecycleState}, actualLifecycleState=${lifecycleState}`,
-      });
-    }
-
-    if (!isAutoExecutableActionCandidate(finding, actionCandidate)) {
-      await client.query('COMMIT', []);
-
-      return {
-        executed: false,
-        lifecycleState,
-      };
-    }
-
-    const executedLifecycleState = await transitionFindingToExecuted(client, finding);
+    const executionResult = await autoExecuteIfAllowedInTransaction(client, finding, actionCandidate);
     await client.query('COMMIT', []);
 
-    return {
-      executed: true,
-      lifecycleState: executedLifecycleState,
-    };
+    return executionResult;
   } catch (error) {
     await rollbackActionExecution(client, finding, error);
     throw new FleetGraphActionExecutionError({
@@ -383,6 +361,46 @@ export async function autoExecuteIfAllowed(
       message: errorMessage(error),
     });
   }
+}
+
+export async function autoExecuteIfAllowedInTransaction(
+  client: FleetGraphQueryClient,
+  finding: FleetGraphActionExecutionFinding,
+  actionCandidate: ActionCandidate
+): Promise<FleetGraphActionExecutionResult> {
+  const lifecycleState = await requireAutoExecutionScope(client, finding, actionCandidate);
+
+  if (lifecycleState === 'executed') {
+    throw new FleetGraphActionExecutionError({
+      findingId: finding.id,
+      workspaceId: finding.workspaceId,
+      scopedDocumentId: finding.scopedDocumentId,
+      message: 'finding already executed',
+    });
+  }
+
+  if (lifecycleState !== finding.expectedLifecycleState) {
+    throw new FleetGraphActionExecutionError({
+      findingId: finding.id,
+      workspaceId: finding.workspaceId,
+      scopedDocumentId: finding.scopedDocumentId,
+      message: `finding lifecycle is not executable: expectedLifecycleState=${finding.expectedLifecycleState}, actualLifecycleState=${lifecycleState}`,
+    });
+  }
+
+  if (!isAutoExecutableActionCandidate(finding, actionCandidate)) {
+    return {
+      executed: false,
+      lifecycleState,
+    };
+  }
+
+  const executedLifecycleState = await transitionFindingToExecuted(client, finding);
+
+  return {
+    executed: true,
+    lifecycleState: executedLifecycleState,
+  };
 }
 
 export function classifyApprovalLevel(actionCandidate: unknown): FleetGraphApprovalPolicyLevel {
