@@ -71,9 +71,11 @@ describe('FleetGraph chat runner', () => {
       { role: 'user', content: 'Question' },
     ];
     const observedMessages: FleetGraphChatModelMessage[][] = [];
+    const abortController = new AbortController();
     const model: FleetGraphChatModel = {
       modelName: 'test-chat-model',
-      stream: async function* (inputMessages) {
+      stream: async function* (inputMessages, abortSignal) {
+        expect(abortSignal).toBe(abortController.signal);
         observedMessages.push(inputMessages);
         yield { token: 'The ', usage: null };
         yield { token: 'answer', usage: null };
@@ -93,6 +95,7 @@ describe('FleetGraph chat runner', () => {
     const completion = await streamFleetGraphChatModelResponse({
       model,
       messages,
+      abortSignal: abortController.signal,
       onToken: (token) => {
         streamedTokens.push(token);
       },
@@ -118,10 +121,12 @@ describe('FleetGraph chat runner', () => {
         yield { token: 'No usage', usage: null };
       },
     };
+    const abortController = new AbortController();
 
     await expect(streamFleetGraphChatModelResponse({
       model,
       messages: [{ role: 'user', content: 'Question' }],
+      abortSignal: abortController.signal,
       onToken: () => {},
     })).rejects.toThrow('FleetGraph chat stream completed without usage metadata: modelName=missing-usage-model');
   });

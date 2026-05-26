@@ -105,7 +105,10 @@ export type FleetGraphChatModelChunk = {
 
 export type FleetGraphChatModel = {
   modelName: string;
-  stream: (messages: FleetGraphChatModelMessage[]) => AsyncIterable<FleetGraphChatModelChunk>;
+  stream: (
+    messages: FleetGraphChatModelMessage[],
+    abortSignal: AbortSignal
+  ) => AsyncIterable<FleetGraphChatModelChunk>;
 };
 
 export type FleetGraphChatCompletion = {
@@ -242,12 +245,17 @@ export async function buildFleetGraphChatPrompt(input: {
 export async function streamFleetGraphChatModelResponse(input: {
   model: FleetGraphChatModel;
   messages: FleetGraphChatModelMessage[];
+  abortSignal: AbortSignal;
   onToken: (token: string) => void | Promise<void>;
 }): Promise<FleetGraphChatCompletion> {
   let response = '';
   let usage: FleetGraphChatUsage | null = null;
 
-  for await (const chunk of input.model.stream(input.messages)) {
+  for await (const chunk of input.model.stream(input.messages, input.abortSignal)) {
+    if (input.abortSignal.aborted) {
+      break;
+    }
+
     if (chunk.token.length > 0) {
       response += chunk.token;
       await input.onToken(chunk.token);
@@ -325,10 +333,20 @@ export function createOpenAIFleetGraphChatModel(config: FleetGraphConfig): Fleet
 
   return {
     modelName: fleetGraphChatModelName,
-    stream: async function* (messages) {
-      const stream = await model.stream(messages.map(toLangChainChatMessage));
+    stream: async function* (messages, abortSignal) {
+      if (abortSignal.aborted) {
+        return;
+      }
+
+      const stream = await model.stream(messages.map(toLangChainChatMessage), {
+        signal: abortSignal,
+      });
 
       for await (const chunk of stream) {
+        if (abortSignal.aborted) {
+          return;
+        }
+
         const token = chunk.text;
         const usage = extractFleetGraphChatUsage(chunk, fleetGraphChatModelName);
 
