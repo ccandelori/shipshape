@@ -130,6 +130,15 @@ export type FleetGraphPendingActionFinding = {
   expectedLifecycleState: FleetGraphLifecycleState;
 };
 
+export type FleetGraphActionExecutionFinding = FleetGraphPendingActionFinding & {
+  scopedDocumentId: string;
+};
+
+export type FleetGraphActionExecutionResult = {
+  executed: boolean;
+  lifecycleState: FleetGraphLifecycleState;
+};
+
 type InsertedActionCandidateRow = {
   id: string;
 };
@@ -138,9 +147,20 @@ type UpdatedFindingRow = {
   id: string;
 };
 
+type LoadedExecutionFindingRow = {
+  lifecycle_state: FleetGraphLifecycleState;
+};
+
 type FleetGraphPendingActionPersistenceErrorInput = {
   findingId: string;
   workspaceId: string;
+  message: string;
+};
+
+type FleetGraphActionExecutionErrorInput = {
+  findingId: string;
+  workspaceId: string;
+  scopedDocumentId: string;
   message: string;
 };
 
@@ -158,6 +178,26 @@ export class FleetGraphPendingActionPersistenceError extends Error {
     this.name = 'FleetGraphPendingActionPersistenceError';
     this.findingId = input.findingId;
     this.workspaceId = input.workspaceId;
+  }
+}
+
+export class FleetGraphActionExecutionError extends Error {
+  readonly findingId: string;
+  readonly workspaceId: string;
+  readonly scopedDocumentId: string;
+
+  constructor(input: FleetGraphActionExecutionErrorInput) {
+    super([
+      'FleetGraph action auto-execution failed',
+      `findingId=${input.findingId}`,
+      `workspaceId=${input.workspaceId}`,
+      `scopedDocumentId=${input.scopedDocumentId}`,
+      `errorMessage=${input.message}`,
+    ].join(', '));
+    this.name = 'FleetGraphActionExecutionError';
+    this.findingId = input.findingId;
+    this.workspaceId = input.workspaceId;
+    this.scopedDocumentId = input.scopedDocumentId;
   }
 }
 
@@ -291,6 +331,60 @@ async function rollbackPendingAction(
   }
 }
 
+export async function autoExecuteIfAllowed(
+  client: FleetGraphQueryClient,
+  finding: FleetGraphActionExecutionFinding,
+  actionCandidate: ActionCandidate
+): Promise<FleetGraphActionExecutionResult> {
+  try {
+    await client.query('BEGIN', []);
+    const lifecycleState = await requireAutoExecutionScope(client, finding, actionCandidate);
+
+    if (lifecycleState === 'executed') {
+      throw new FleetGraphActionExecutionError({
+        findingId: finding.id,
+        workspaceId: finding.workspaceId,
+        scopedDocumentId: finding.scopedDocumentId,
+        message: 'finding already executed',
+      });
+    }
+
+    if (lifecycleState !== finding.expectedLifecycleState) {
+      throw new FleetGraphActionExecutionError({
+        findingId: finding.id,
+        workspaceId: finding.workspaceId,
+        scopedDocumentId: finding.scopedDocumentId,
+        message: `finding lifecycle is not executable: expectedLifecycleState=${finding.expectedLifecycleState}, actualLifecycleState=${lifecycleState}`,
+      });
+    }
+
+    if (!isAutoExecutableActionCandidate(finding, actionCandidate)) {
+      await client.query('COMMIT', []);
+
+      return {
+        executed: false,
+        lifecycleState,
+      };
+    }
+
+    const executedLifecycleState = await transitionFindingToExecuted(client, finding);
+    await client.query('COMMIT', []);
+
+    return {
+      executed: true,
+      lifecycleState: executedLifecycleState,
+    };
+  } catch (error) {
+    await rollbackActionExecution(client, finding, error);
+    throw new FleetGraphActionExecutionError({
+      findingId: finding.id,
+      workspaceId: finding.workspaceId,
+      scopedDocumentId: finding.scopedDocumentId,
+      message: errorMessage(error),
+    });
+  }
+}
+
 export function classifyApprovalLevel(actionCandidate: unknown): FleetGraphApprovalPolicyLevel {
   const actionKind = requireApprovalActionKind(actionCandidate);
 
@@ -333,6 +427,116 @@ function requireApprovalActionKind(actionCandidate: unknown): string {
   }
 
   return kind;
+}
+
+async function requireAutoExecutionScope(
+  client: FleetGraphQueryClient,
+  finding: FleetGraphActionExecutionFinding,
+  actionCandidate: ActionCandidate
+): Promise<FleetGraphLifecycleState> {
+  if (actionCandidate.targetDocumentId !== finding.scopedDocumentId) {
+    throw new FleetGraphActionExecutionError({
+      findingId: finding.id,
+      workspaceId: finding.workspaceId,
+      scopedDocumentId: finding.scopedDocumentId,
+      message: `action target does not match scoped document: targetDocumentId=${actionCandidate.targetDocumentId}`,
+    });
+  }
+
+  const result = await client.query<LoadedExecutionFindingRow>(
+    `SELECT f.lifecycle_state
+     FROM fleetgraph_findings f
+     INNER JOIN documents d
+       ON d.id = $4
+      AND d.workspace_id = $2
+     WHERE f.id = $1
+       AND f.workspace_id = $2
+       AND f.scoped_document_id = $3
+       AND f.scoped_document_id = d.id
+     FOR UPDATE`,
+    [finding.id, finding.workspaceId, finding.scopedDocumentId, actionCandidate.targetDocumentId]
+  );
+  const row = result.rows[0];
+
+  if (!row) {
+    throw new FleetGraphActionExecutionError({
+      findingId: finding.id,
+      workspaceId: finding.workspaceId,
+      scopedDocumentId: finding.scopedDocumentId,
+      message: 'finding scope was not found or is not authorized for action target',
+    });
+  }
+
+  return row.lifecycle_state;
+}
+
+function isAutoExecutableActionCandidate(
+  finding: FleetGraphActionExecutionFinding,
+  actionCandidate: ActionCandidate
+): boolean {
+  if (actionCandidate.approvalLevel === 'approval_required') {
+    return false;
+  }
+
+  if (isVisibleWriteActionKind(actionCandidate.recommendedAction.kind)) {
+    throw new FleetGraphActionExecutionError({
+      findingId: finding.id,
+      workspaceId: finding.workspaceId,
+      scopedDocumentId: finding.scopedDocumentId,
+      message: `visible write action cannot auto-execute: actionKind=${actionCandidate.recommendedAction.kind}`,
+    });
+  }
+
+  return actionCandidate.approvalLevel === 'none' || actionCandidate.approvalLevel === 'notify_only';
+}
+
+function isVisibleWriteActionKind(actionKind: FleetGraphActionKind): boolean {
+  return fleetGraphVisibleWriteActionKinds.some((visibleActionKind) => visibleActionKind === actionKind);
+}
+
+async function transitionFindingToExecuted(
+  client: FleetGraphQueryClient,
+  finding: FleetGraphActionExecutionFinding
+): Promise<FleetGraphLifecycleState> {
+  const result = await client.query<LoadedExecutionFindingRow>(
+    `UPDATE fleetgraph_findings
+     SET lifecycle_state = 'executed'
+     WHERE id = $1
+       AND workspace_id = $2
+       AND scoped_document_id = $3
+       AND lifecycle_state = $4
+     RETURNING lifecycle_state`,
+    [finding.id, finding.workspaceId, finding.scopedDocumentId, finding.expectedLifecycleState]
+  );
+  const row = result.rows[0];
+
+  if (!row) {
+    throw new FleetGraphActionExecutionError({
+      findingId: finding.id,
+      workspaceId: finding.workspaceId,
+      scopedDocumentId: finding.scopedDocumentId,
+      message: `finding execution transition returned no rows: expectedLifecycleState=${finding.expectedLifecycleState}`,
+    });
+  }
+
+  return row.lifecycle_state;
+}
+
+async function rollbackActionExecution(
+  client: FleetGraphQueryClient,
+  finding: FleetGraphActionExecutionFinding,
+  originalError: unknown
+): Promise<void> {
+  try {
+    await client.query('ROLLBACK', []);
+  } catch (rollbackError) {
+    throw new FleetGraphActionExecutionError({
+      findingId: finding.id,
+      workspaceId: finding.workspaceId,
+      scopedDocumentId: finding.scopedDocumentId,
+      message: `rollback failed after ${errorMessage(originalError)}: ${errorMessage(rollbackError)}`,
+    });
+  }
 }
 
 function classifyReversibility(recommendedAction: RecommendedAction): FleetGraphReversibility {

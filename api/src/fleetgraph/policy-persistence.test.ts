@@ -1,6 +1,7 @@
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { pool } from '../db/client.js';
 import {
+  autoExecuteIfAllowed,
   persistPendingAction,
   FleetGraphPendingActionPersistenceError,
   type FleetGraphPendingActionFinding,
@@ -169,6 +170,39 @@ describe('FleetGraph pending action persistence', () => {
     }
   });
 
+  it('auto-executes scoped non-visible candidates and marks the finding executed', async () => {
+    const client = await pool.connect();
+    const finding = await createFinding('open');
+
+    try {
+      const result = await autoExecuteIfAllowed(
+        client,
+        {
+          id: finding.id,
+          workspaceId,
+          scopedDocumentId: targetDocumentId,
+          expectedLifecycleState: 'open',
+        },
+        createAutoActionCandidate()
+      );
+
+      expect(result).toEqual({
+        executed: true,
+        lifecycleState: 'executed',
+      });
+
+      const lifecycleResult = await pool.query<FindingLifecycleRow>(
+        `SELECT lifecycle_state
+         FROM fleetgraph_findings
+         WHERE id = $1`,
+        [finding.id]
+      );
+      expect(lifecycleResult.rows[0]!.lifecycle_state).toBe('executed');
+    } finally {
+      client.release();
+    }
+  });
+
   async function createFinding(lifecycleState: string): Promise<IdRow> {
     const result = await pool.query<IdRow>(
       `INSERT INTO fleetgraph_findings (
@@ -206,6 +240,28 @@ describe('FleetGraph pending action persistence', () => {
         body: 'Please post the current blocker owner and next step before standup.',
       },
       approvalLevel: 'approval_required',
+      reversibility: 'reversible',
+    };
+  }
+
+  function createAutoActionCandidate(): ActionCandidate {
+    return {
+      targetDocumentId,
+      ownerUserId,
+      roleReason: 'Week owner is responsible for resolving at-risk Week blockers.',
+      urgency: 'medium',
+      evidence: [{
+        sourceType: 'issue',
+        sourceDocumentId: targetDocumentId,
+        quote: 'Launch approval blocked',
+        observedAt: '2026-05-26T05:00:00.000Z',
+      }],
+      recommendedAction: {
+        kind: 'notify',
+        title: 'Review Week risk',
+        body: 'Review the blocked launch approval before standup.',
+      },
+      approvalLevel: 'none',
       reversibility: 'reversible',
     };
   }
