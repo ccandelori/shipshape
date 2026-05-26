@@ -6,7 +6,7 @@ FleetGraph reads the state of a Ship project, reasons about what changed or what
 
 ## Agent Responsibility
 
-FleetGraph has two modes that share one graph architecture.
+FleetGraph has two modes that share Ship context, authorization, model configuration, and outcome policy concepts. The current MVP implementation is not fully unified into one compiled graph: proactive detection runs through LangGraph, while on-demand chat uses direct OpenAI token streaming with the same context builders.
 
 ### Proactive Mode
 
@@ -55,6 +55,8 @@ On-demand mode reasons about:
 - The user's workspace permissions and action eligibility.
 
 On-demand is not answer-only. The MVP can stream answers first, but the architecture supports action requests by producing draft actions or pending approvals rather than pretending chat cannot do work.
+
+Implementation status as of 2026-05-26: MVP on-demand chat is implemented in `api/src/fleetgraph/chat.ts` and `api/src/routes/fleetgraph-chat.ts` as a direct OpenAI streaming path. It reuses FleetGraph context builders, workspace authorization, rate limits, SSE framing, and model configuration, but it is not yet a LangGraph node path. This is an intentional MVP deviation to preserve stable token streaming and avoid reworking chat abort, heartbeat, and SSE behavior during submission hardening.
 
 ### Autonomy Rules
 
@@ -135,6 +137,8 @@ The database-backed FleetGraph inbox is the source of truth. WebSocket `/events`
 
 ## Graph Diagram
 
+This diagram is the target agent architecture. The implemented Week 5 graph-backed path is the proactive at-risk Week detector. The on-demand branch is represented because it is the intended unification path, but the current MVP chat route streams directly through `api/src/fleetgraph/chat.ts`.
+
 ```mermaid
 flowchart TD
     START((start)) --> trigger["normalize trigger + actor"]
@@ -174,8 +178,8 @@ Trace paths required for validation:
 
 - Proactive quiet exit: no material state change or suppressed finding.
 - Proactive finding path: changed state, pre-filter passes, reasoning produces a finding, approval is requested.
-- On-demand answer path: user asks a question and receives an SSE streamed answer.
-- On-demand action path: user asks for work, graph produces an action candidate or pending approval.
+- On-demand answer path: user asks a question and receives an SSE streamed answer through the direct MVP chat route.
+- On-demand action path: target architecture; user asks for work, graph produces an action candidate or pending approval.
 
 ## Trace Links And Runtime Evidence
 
@@ -306,16 +310,17 @@ FleetGraph is organized around three layers.
 2. Agent outcome layer:
    - Findings, action candidates, approvals, dismissals, snoozes, and context-scoped chat answers.
 
-3. Execution graph layer:
-   - One compiled graph branches by trigger, intent, material change, suppression state, approval policy, and output surface.
+3. Execution layer:
+   - Current MVP: a compiled LangGraph path for proactive at-risk Week detection plus a direct SSE path for on-demand chat.
+   - Target architecture: one graph branches by trigger, intent, material change, suppression state, approval policy, and output surface.
 
 This avoids the anti-pattern of building a detector service and bolting on a chatbot. The agent receives events, reasons with dynamic Ship context, calls primitive Ship tools, and persists visible outcomes.
 
 ### Node Design
 
-- `trigger`: normalizes proactive ticks, mutation events, and on-demand chat turns.
+- `trigger`: normalizes proactive ticks and mutation events in the current graph; on-demand chat turn normalization is a target graph node.
 - `scope`: authorizes workspace access and resolves the relevant Ship document graph.
-- `intent`: separates proactive runs from on-demand question or action requests.
+- `intent`: target node that separates proactive runs from on-demand question or action requests.
 - `detector`: selects the proactive use-case family.
 - `context`: builds a bounded Ship-native context bundle.
 - `fetch`: pulls documents, issues, standups, accountability status, activity, and metrics in parallel.
@@ -326,7 +331,7 @@ This avoids the anti-pattern of building a detector service and bolting on a cha
 - `pending`: persists human-in-the-loop checkpoint state.
 - `resume`: validates actor authorization and resumes approved, edited, or rejected actions.
 - `execute`: calls Ship tools for approved actions.
-- `output`: persists findings and streams or broadcasts UI updates.
+- `output`: persists findings and broadcasts UI updates today; target graph output also streams on-demand chat responses.
 
 ### State Management
 
@@ -347,7 +352,7 @@ Graph state includes:
 
 Durable state includes:
 
-- LangGraph checkpoints through `PostgresSaver`.
+- LangGraph checkpointing currently uses `MemorySaver`; durable FleetGraph state is persisted in outcome tables. `PostgresSaver` remains the intended production checkpointer after credentialed deployment hardening.
 - FleetGraph finding rows with `workspace_id`, `project_id`, `detector_type`, `content_hash`, status, severity, payload, recipient list, snooze state, and pending action metadata.
 - Chat thread ids scoped as `chat:{userId}:{hash(docId)}` with a sliding message window.
 
@@ -539,3 +544,4 @@ Runtime model spend for the MVP at-risk Week detector is now persisted in `fleet
 | Architecture Decisions | Defined in this document |
 | Cost Analysis | Design estimate plus deterministic runtime telemetry captured |
 | Timed Latency Proof | Passed locally at 45.113 seconds; see `docs/fleetgraph-latency-proof.md` |
+| On-Demand Graph Parity | Direct SSE chat is documented as an intentional MVP deviation; graph unification is deferred |
