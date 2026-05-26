@@ -1,6 +1,7 @@
 import { MemorySaver, type BaseCheckpointSaver } from '@langchain/langgraph';
+import type { QueryResultRow } from 'pg';
 import { z } from 'zod';
-import type { WeekContext } from '../context.js';
+import type { FleetGraphQueryClient, WeekContext } from '../context.js';
 import type { DetectorRunDecision } from '../guards.js';
 import {
   evidenceItemSchema,
@@ -12,6 +13,7 @@ import {
   type FleetGraphApprovalLevel,
   type FleetGraphReversibility,
 } from '../types.js';
+import { extractText } from '../../utils/document-content.js';
 
 export const atRiskWeekDetectorType = 'at_risk_week';
 
@@ -215,6 +217,26 @@ export type AtRiskWeekCheckpointConfig = {
   };
 };
 
+export type AtRiskWeekNodeDependencies = {
+  client: FleetGraphQueryClient;
+  buildWeekContext: (
+    client: FleetGraphQueryClient,
+    workspaceId: string,
+    scopedDocId: string
+  ) => Promise<WeekContext>;
+  shouldRunDetector: (
+    client: FleetGraphQueryClient,
+    workspaceId: string,
+    scopedDocId: string,
+    context: WeekContext
+  ) => Promise<DetectorRunDecision>;
+  now: () => string;
+};
+
+type ScopeResolutionRow = QueryResultRow & {
+  id: string;
+};
+
 export function createAtRiskWeekInitialState(input: AtRiskWeekGraphInput): AtRiskWeekGraphState {
   const parsedInput = atRiskWeekGraphInputSchema.parse(input);
   const scope = createAtRiskWeekScopeState(parsedInput);
@@ -246,6 +268,136 @@ export function createAtRiskWeekInitialState(input: AtRiskWeekGraphInput): AtRis
     requestedAt: parsedInput.requestedAt,
     completedAt: null,
   };
+}
+
+export async function scopeNode(
+  state: AtRiskWeekGraphState,
+  dependencies: AtRiskWeekNodeDependencies
+): Promise<AtRiskWeekGraphState> {
+  if (state.status !== 'running') {
+    return state;
+  }
+
+  const result = await dependencies.client.query<ScopeResolutionRow>(
+    `SELECT d.id
+     FROM documents d
+     JOIN workspaces w ON w.id = d.workspace_id
+     WHERE d.workspace_id = $1
+       AND d.id = $2
+       AND d.document_type = 'sprint'
+       AND d.archived_at IS NULL
+       AND d.deleted_at IS NULL
+       AND w.archived_at IS NULL`,
+    [state.scope.workspaceId, state.scope.scopedDocId]
+  );
+
+  if (!result.rows[0]) {
+    return recordAtRiskWeekEarlyExit(
+      state,
+      {
+        node: 'scope',
+        reason: 'scope_not_found',
+        message: `Active Week scope not found: workspaceId=${state.scope.workspaceId}, scopedDocId=${state.scope.scopedDocId}`,
+        materialChangeKey: state.scope.materialChangeKey,
+      },
+      dependencies.now()
+    );
+  }
+
+  return completeAtRiskWeekNode(state, 'scope', 'context', {});
+}
+
+export async function contextNode(
+  state: AtRiskWeekGraphState,
+  dependencies: AtRiskWeekNodeDependencies
+): Promise<AtRiskWeekGraphState> {
+  if (state.status !== 'running') {
+    return state;
+  }
+
+  const context = await dependencies.buildWeekContext(
+    dependencies.client,
+    state.scope.workspaceId,
+    state.scope.scopedDocId
+  );
+
+  return completeAtRiskWeekNode(state, 'context', 'guard', {
+    context,
+  });
+}
+
+export async function guardNode(
+  state: AtRiskWeekGraphState,
+  dependencies: AtRiskWeekNodeDependencies
+): Promise<AtRiskWeekGraphState> {
+  if (state.status !== 'running') {
+    return state;
+  }
+
+  const context = requireAtRiskWeekContext(state, 'guard');
+  const guard = await dependencies.shouldRunDetector(
+    dependencies.client,
+    state.scope.workspaceId,
+    state.scope.scopedDocId,
+    context
+  );
+  const guardedState = completeAtRiskWeekNode(state, 'guard', 'preFilter', {
+    guard,
+    scope: {
+      ...state.scope,
+      materialChangeKey: guard.materialChangeKey,
+    },
+    trace: {
+      ...state.trace,
+      materialChangeKey: guard.materialChangeKey,
+    },
+  });
+
+  if (!guard.shouldRun) {
+    return recordAtRiskWeekEarlyExit(
+      guardedState,
+      {
+        node: 'guard',
+        reason: 'guard_suppressed',
+        message: guard.reason,
+        materialChangeKey: guard.materialChangeKey,
+      },
+      dependencies.now()
+    );
+  }
+
+  return guardedState;
+}
+
+export async function preFilterNode(
+  state: AtRiskWeekGraphState,
+  dependencies: AtRiskWeekNodeDependencies
+): Promise<AtRiskWeekGraphState> {
+  if (state.status !== 'running') {
+    return state;
+  }
+
+  const context = requireAtRiskWeekContext(state, 'preFilter');
+  const guard = requireAtRiskWeekGuard(state, 'preFilter');
+  const preFilter = evaluateAtRiskWeekPreFilter(context);
+  const preFilteredState = completeAtRiskWeekNode(state, 'preFilter', 'reason', {
+    preFilter,
+  });
+
+  if (!preFilter.shouldReason) {
+    return recordAtRiskWeekEarlyExit(
+      preFilteredState,
+      {
+        node: 'preFilter',
+        reason: 'pre_filter_safe',
+        message: 'No blockers or high-priority blocked issues were present.',
+        materialChangeKey: guard.materialChangeKey,
+      },
+      dependencies.now()
+    );
+  }
+
+  return preFilteredState;
 }
 
 export function recordAtRiskWeekEarlyExit(
@@ -298,6 +450,13 @@ export function createAtRiskWeekCheckpointer(): BaseCheckpointSaver {
   return new MemorySaver();
 }
 
+export class AtRiskWeekNodeContractError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AtRiskWeekNodeContractError';
+  }
+}
+
 function createAtRiskWeekScopeState(input: AtRiskWeekGraphInput): AtRiskWeekScopeState {
   return {
     workspaceId: input.workspaceId,
@@ -308,4 +467,78 @@ function createAtRiskWeekScopeState(input: AtRiskWeekGraphInput): AtRiskWeekScop
     checkpointThreadId: `fleetgraph:at_risk_week:${input.workspaceId}:${input.scopedDocId}:${input.runId}`,
     checkpointNamespace: `fleetgraph:at_risk_week:${input.workspaceId}:${input.scopedDocId}`,
   };
+}
+
+function completeAtRiskWeekNode(
+  state: AtRiskWeekGraphState,
+  completedNode: AtRiskWeekNodeName,
+  nextNode: AtRiskWeekNodeName,
+  update: Partial<AtRiskWeekGraphState>
+): AtRiskWeekGraphState {
+  return {
+    ...state,
+    ...update,
+    activeNode: nextNode,
+    completedNodes: [...state.completedNodes, completedNode],
+  };
+}
+
+function requireAtRiskWeekContext(state: AtRiskWeekGraphState, node: AtRiskWeekNodeName): WeekContext {
+  if (state.context === null) {
+    throw new AtRiskWeekNodeContractError(`At-risk Week ${node} node requires Week context`);
+  }
+
+  return state.context;
+}
+
+function requireAtRiskWeekGuard(state: AtRiskWeekGraphState, node: AtRiskWeekNodeName): DetectorRunDecision {
+  if (state.guard === null) {
+    throw new AtRiskWeekNodeContractError(`At-risk Week ${node} node requires guard decision`);
+  }
+
+  return state.guard;
+}
+
+function evaluateAtRiskWeekPreFilter(context: WeekContext): AtRiskWeekPreFilterDecision {
+  const evidenceSummary = [
+    ...context.issues.filter(isHighPriorityBlockedIssue).map((issue) => (
+      `High-priority blocked issue: ${issue.title}`
+    )),
+    ...context.standups.filter(hasStandupBlockerText).map((standup) => (
+      `Standup blocker: ${extractText(standup.content).trim()}`
+    )),
+    ...context.sprintIterations.filter(hasIterationBlockerText).map((iteration) => (
+      `Iteration blocker: ${iteration.storyTitle}`
+    )),
+  ];
+
+  if (evidenceSummary.length === 0) {
+    return {
+      shouldReason: false,
+      reason: 'no_blockers_or_blocked_high_priority_issues',
+      evidenceSummary,
+    };
+  }
+
+  return {
+    shouldReason: true,
+    reason: 'candidate_risk',
+    evidenceSummary,
+  };
+}
+
+function isHighPriorityBlockedIssue(issue: WeekContext['issues'][number]): boolean {
+  return isHighPriority(issue.priority) && issue.state === 'blocked';
+}
+
+function isHighPriority(priority: string | null): boolean {
+  return priority === 'urgent' || priority === 'high' || priority === 'critical';
+}
+
+function hasStandupBlockerText(standup: WeekContext['standups'][number]): boolean {
+  return extractText(standup.content).toLowerCase().includes('block');
+}
+
+function hasIterationBlockerText(iteration: WeekContext['sprintIterations'][number]): boolean {
+  return typeof iteration.blockersEncountered === 'string' && iteration.blockersEncountered.trim().length > 0;
 }
