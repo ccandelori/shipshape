@@ -1,4 +1,5 @@
 import { Router, type Request, type Response } from 'express';
+import type { PoolClient } from 'pg';
 import { z } from 'zod';
 import { pool } from '../db/client.js';
 import { authMiddleware } from '../middleware/auth.js';
@@ -104,6 +105,31 @@ type FleetGraphFindingQueryInput = {
   limit: number;
 };
 
+type FleetGraphActorContext = {
+  workspaceId: string;
+  userId: string;
+  isWorkspaceAdmin: boolean;
+};
+
+type FleetGraphDecisionFindingRow = {
+  id: string;
+  recipient_user_id: string | null;
+  lifecycle_state: string;
+};
+
+type FleetGraphActionCandidateIdRow = {
+  id: string;
+};
+
+type FleetGraphDecisionResult = {
+  success: true;
+  finding: FleetGraphFindingResponse;
+} | {
+  success: false;
+  statusCode: number;
+  error: string;
+};
+
 const router = Router();
 
 const fleetGraphLifecycleStateSchema = z.enum([
@@ -132,6 +158,21 @@ const recommendedActionSchema = z.object({
   kind: z.enum(['notify', 'draft_comment', 'create_issue', 'update_issue_state', 'assign_issue']),
   title: z.string().min(1).optional(),
   body: z.string().min(1),
+});
+
+const fleetGraphFindingParamsSchema = z.object({
+  id: z.string().uuid(),
+});
+
+const fleetGraphApproveBodySchema = z.object({
+  action_candidate_id: z.string().uuid().optional(),
+  edited_action: recommendedActionSchema.nullable().optional(),
+  idempotency_key: z.string().min(1).max(120).optional(),
+});
+
+const fleetGraphRejectBodySchema = z.object({
+  reason: z.string().trim().min(1).max(1000),
+  idempotency_key: z.string().min(1).max(120).optional(),
 });
 
 router.get('/findings', authMiddleware, async (req: Request, res: Response) => {
@@ -178,6 +219,109 @@ router.get('/findings', authMiddleware, async (req: Request, res: Response) => {
   } catch (error) {
     console.error('FleetGraph findings list failed:', error);
     res.status(500).json({ error: 'Failed to list FleetGraph findings' });
+  }
+});
+
+router.post('/findings/:id/reject', authMiddleware, async (req: Request, res: Response) => {
+  const paramsResult = fleetGraphFindingParamsSchema.safeParse(req.params);
+  const bodyResult = fleetGraphRejectBodySchema.safeParse(req.body ?? {});
+  const actorContext = getFleetGraphActorContext(req);
+
+  if (!paramsResult.success) {
+    res.status(400).json({
+      error: 'Invalid input',
+      details: paramsResult.error.issues.map((issue) => ({
+        path: issue.path,
+        message: issue.message,
+      })),
+    });
+    return;
+  }
+
+  if (!bodyResult.success) {
+    res.status(400).json({
+      error: 'Invalid input',
+      details: bodyResult.error.issues.map((issue) => ({
+        path: issue.path,
+        message: issue.message,
+      })),
+    });
+    return;
+  }
+
+  if (!actorContext.success) {
+    res.status(actorContext.statusCode).json({ error: actorContext.error });
+    return;
+  }
+
+  try {
+    const result = await rejectFleetGraphFinding({
+      findingId: paramsResult.data.id,
+      actorContext: actorContext.data,
+      reason: bodyResult.data.reason,
+    });
+
+    if (!result.success) {
+      res.status(result.statusCode).json({ error: result.error });
+      return;
+    }
+
+    res.json(result.finding);
+  } catch (error) {
+    console.error('FleetGraph finding rejection failed:', error);
+    res.status(500).json({ error: 'Failed to reject FleetGraph finding' });
+  }
+});
+
+router.post('/findings/:id/approve', authMiddleware, async (req: Request, res: Response) => {
+  const paramsResult = fleetGraphFindingParamsSchema.safeParse(req.params);
+  const bodyResult = fleetGraphApproveBodySchema.safeParse(req.body ?? {});
+  const actorContext = getFleetGraphActorContext(req);
+
+  if (!paramsResult.success) {
+    res.status(400).json({
+      error: 'Invalid input',
+      details: paramsResult.error.issues.map((issue) => ({
+        path: issue.path,
+        message: issue.message,
+      })),
+    });
+    return;
+  }
+
+  if (!bodyResult.success) {
+    res.status(400).json({
+      error: 'Invalid input',
+      details: bodyResult.error.issues.map((issue) => ({
+        path: issue.path,
+        message: issue.message,
+      })),
+    });
+    return;
+  }
+
+  if (!actorContext.success) {
+    res.status(actorContext.statusCode).json({ error: actorContext.error });
+    return;
+  }
+
+  try {
+    const result = await approveFleetGraphFinding({
+      findingId: paramsResult.data.id,
+      actorContext: actorContext.data,
+      actionCandidateId: bodyResult.data.action_candidate_id,
+      editedAction: bodyResult.data.edited_action ?? null,
+    });
+
+    if (!result.success) {
+      res.status(result.statusCode).json({ error: result.error });
+      return;
+    }
+
+    res.json(result.finding);
+  } catch (error) {
+    console.error('FleetGraph finding approval failed:', error);
+    res.status(500).json({ error: 'Failed to approve FleetGraph finding' });
   }
 });
 
@@ -234,6 +378,50 @@ async function loadFleetGraphFindings(
   return result.rows;
 }
 
+async function loadFleetGraphFindingById(
+  workspaceId: string,
+  findingId: string
+): Promise<FleetGraphFindingResponse | null> {
+  const result = await pool.query<FleetGraphFindingRow>(
+    `SELECT
+       f.id,
+       f.workspace_id,
+       f.scoped_document_id,
+       scoped_document.document_type AS scoped_document_type,
+       scoped_document.title AS scoped_document_title,
+       f.detector_type,
+       f.severity,
+       f.evidence,
+       f.recipient_user_id,
+       recipient_user.name AS recipient_user_name,
+       recipient_user.email AS recipient_user_email,
+       f.lifecycle_state,
+       f.material_change_key,
+       f.created_at,
+       f.updated_at,
+       f.expires_at
+     FROM fleetgraph_findings f
+     INNER JOIN documents scoped_document
+       ON scoped_document.id = f.scoped_document_id
+      AND scoped_document.workspace_id = f.workspace_id
+     LEFT JOIN users recipient_user
+       ON recipient_user.id = f.recipient_user_id
+     WHERE f.workspace_id = $1
+       AND f.id = $2`,
+    [workspaceId, findingId]
+  );
+
+  const finding = result.rows[0];
+
+  if (!finding) {
+    return null;
+  }
+
+  const actionCandidates = await loadFleetGraphActionCandidates(workspaceId, [finding.id]);
+
+  return mapFindingResponse(finding, actionCandidates);
+}
+
 async function loadFleetGraphActionCandidates(
   workspaceId: string,
   findingIds: string[]
@@ -273,6 +461,339 @@ async function loadFleetGraphActionCandidates(
   );
 
   return result.rows;
+}
+
+async function rejectFleetGraphFinding(input: {
+  findingId: string;
+  actorContext: FleetGraphActorContext;
+  reason: string;
+}): Promise<FleetGraphDecisionResult> {
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const finding = await loadDecisionFindingForUpdate(
+      client,
+      input.actorContext.workspaceId,
+      input.findingId
+    );
+
+    if (!finding) {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        statusCode: 404,
+        error: 'FleetGraph finding not found',
+      };
+    }
+
+    if (!canActorDecideFinding(input.actorContext, finding)) {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        statusCode: 403,
+        error: 'FleetGraph finding decision requires the recipient or workspace admin',
+      };
+    }
+
+    if (finding.lifecycle_state !== 'pending_review') {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        statusCode: 409,
+        error: 'FleetGraph finding is not pending review',
+      };
+    }
+
+    const actionCandidateId = await loadNullableSingleActionCandidateId(
+      client,
+      input.actorContext.workspaceId,
+      finding.id
+    );
+
+    await client.query(
+      `INSERT INTO fleetgraph_approvals (
+         finding_id, action_candidate_id, actor_user_id, decision, reason
+       )
+       VALUES ($1, $2, $3, 'rejected', $4)`,
+      [finding.id, actionCandidateId, input.actorContext.userId, input.reason]
+    );
+
+    await client.query(
+      `UPDATE fleetgraph_findings
+       SET lifecycle_state = 'rejected'
+       WHERE id = $1`,
+      [finding.id]
+    );
+
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+
+  const updatedFinding = await loadFleetGraphFindingById(
+    input.actorContext.workspaceId,
+    input.findingId
+  );
+
+  if (!updatedFinding) {
+    throw new Error('Rejected FleetGraph finding could not be reloaded');
+  }
+
+  return {
+    success: true,
+    finding: updatedFinding,
+  };
+}
+
+async function approveFleetGraphFinding(input: {
+  findingId: string;
+  actorContext: FleetGraphActorContext;
+  actionCandidateId?: string;
+  editedAction: FleetGraphRecommendedAction | null;
+}): Promise<FleetGraphDecisionResult> {
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const finding = await loadDecisionFindingForUpdate(
+      client,
+      input.actorContext.workspaceId,
+      input.findingId
+    );
+
+    if (!finding) {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        statusCode: 404,
+        error: 'FleetGraph finding not found',
+      };
+    }
+
+    if (!canActorDecideFinding(input.actorContext, finding)) {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        statusCode: 403,
+        error: 'FleetGraph finding decision requires the recipient or workspace admin',
+      };
+    }
+
+    if (finding.lifecycle_state !== 'pending_review') {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        statusCode: 409,
+        error: 'FleetGraph finding is not pending review',
+      };
+    }
+
+    const actionCandidateResult = await resolveActionCandidateIdForApproval(
+      client,
+      input.actorContext.workspaceId,
+      finding.id,
+      input.actionCandidateId
+    );
+
+    if (!actionCandidateResult.success) {
+      await client.query('ROLLBACK');
+      return actionCandidateResult;
+    }
+
+    const decision = input.editedAction ? 'edited' : 'approved';
+    const editedAction = input.editedAction ? JSON.stringify(input.editedAction) : null;
+
+    await client.query(
+      `INSERT INTO fleetgraph_approvals (
+         finding_id, action_candidate_id, actor_user_id, decision, edited_action
+       )
+       VALUES ($1, $2, $3, $4, $5)`,
+      [finding.id, actionCandidateResult.actionCandidateId, input.actorContext.userId, decision, editedAction]
+    );
+
+    await client.query(
+      `UPDATE fleetgraph_findings
+       SET lifecycle_state = 'approved'
+       WHERE id = $1`,
+      [finding.id]
+    );
+
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+
+  const updatedFinding = await loadFleetGraphFindingById(
+    input.actorContext.workspaceId,
+    input.findingId
+  );
+
+  if (!updatedFinding) {
+    throw new Error('Approved FleetGraph finding could not be reloaded');
+  }
+
+  return {
+    success: true,
+    finding: updatedFinding,
+  };
+}
+
+async function loadDecisionFindingForUpdate(
+  client: PoolClient,
+  workspaceId: string,
+  findingId: string
+): Promise<FleetGraphDecisionFindingRow | null> {
+  const result = await client.query<FleetGraphDecisionFindingRow>(
+    `SELECT id, recipient_user_id, lifecycle_state
+     FROM fleetgraph_findings
+     WHERE workspace_id = $1
+       AND id = $2
+     FOR UPDATE`,
+    [workspaceId, findingId]
+  );
+
+  return result.rows[0] ?? null;
+}
+
+async function loadNullableSingleActionCandidateId(
+  client: PoolClient,
+  workspaceId: string,
+  findingId: string
+): Promise<string | null> {
+  const result = await client.query<FleetGraphActionCandidateIdRow>(
+    `SELECT action_candidate.id
+     FROM fleetgraph_action_candidates action_candidate
+     INNER JOIN fleetgraph_findings finding
+       ON finding.id = action_candidate.finding_id
+      AND finding.workspace_id = $1
+     WHERE action_candidate.finding_id = $2
+     ORDER BY action_candidate.id ASC
+     LIMIT 2`,
+    [workspaceId, findingId]
+  );
+
+  if (result.rows.length !== 1) {
+    return null;
+  }
+
+  return result.rows[0]!.id;
+}
+
+async function resolveActionCandidateIdForApproval(
+  client: PoolClient,
+  workspaceId: string,
+  findingId: string,
+  requestedActionCandidateId?: string
+): Promise<{
+  success: true;
+  actionCandidateId: string;
+} | {
+  success: false;
+  statusCode: number;
+  error: string;
+}> {
+  const result = await client.query<FleetGraphActionCandidateIdRow>(
+    `SELECT action_candidate.id
+     FROM fleetgraph_action_candidates action_candidate
+     INNER JOIN fleetgraph_findings finding
+       ON finding.id = action_candidate.finding_id
+      AND finding.workspace_id = $1
+     WHERE action_candidate.finding_id = $2
+     ORDER BY action_candidate.id ASC`,
+    [workspaceId, findingId]
+  );
+
+  if (requestedActionCandidateId) {
+    const matchingActionCandidate = result.rows.find((row) => row.id === requestedActionCandidateId);
+
+    if (!matchingActionCandidate) {
+      return {
+        success: false,
+        statusCode: 400,
+        error: 'Action candidate does not belong to this FleetGraph finding',
+      };
+    }
+
+    return {
+      success: true,
+      actionCandidateId: matchingActionCandidate.id,
+    };
+  }
+
+  if (result.rows.length === 0) {
+    return {
+      success: false,
+      statusCode: 409,
+      error: 'FleetGraph finding has no action candidates to approve',
+    };
+  }
+
+  if (result.rows.length > 1) {
+    return {
+      success: false,
+      statusCode: 400,
+      error: 'action_candidate_id is required when a finding has multiple action candidates',
+    };
+  }
+
+  return {
+    success: true,
+    actionCandidateId: result.rows[0]!.id,
+  };
+}
+
+function getFleetGraphActorContext(req: Request): {
+  success: true;
+  data: FleetGraphActorContext;
+} | {
+  success: false;
+  statusCode: number;
+  error: string;
+} {
+  if (!req.workspaceId) {
+    return {
+      success: false,
+      statusCode: 401,
+      error: 'No workspace found for authenticated request',
+    };
+  }
+
+  if (!req.userId) {
+    return {
+      success: false,
+      statusCode: 401,
+      error: 'No user found for authenticated request',
+    };
+  }
+
+  return {
+    success: true,
+    data: {
+      workspaceId: req.workspaceId,
+      userId: req.userId,
+      isWorkspaceAdmin: req.isSuperAdmin === true || req.membership?.role === 'admin',
+    },
+  };
+}
+
+function canActorDecideFinding(
+  actorContext: FleetGraphActorContext,
+  finding: FleetGraphDecisionFindingRow
+): boolean {
+  if (actorContext.isWorkspaceAdmin) {
+    return true;
+  }
+
+  return finding.recipient_user_id === actorContext.userId;
 }
 
 function parseFleetGraphFindingQuery(query: Request['query']) {

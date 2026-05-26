@@ -45,6 +45,7 @@ const expectedColumns: Record<FleetGraphTable, readonly string[]> = {
     'actor_user_id',
     'decision',
     'edited_action',
+    'reason',
     'created_at',
   ],
   fleetgraph_suppressions: [
@@ -87,6 +88,7 @@ const expectedCheckConstraints = [
   'fleetgraph_action_candidates_approval_level_check',
   'fleetgraph_action_candidates_reversibility_check',
   'fleetgraph_approvals_decision_check',
+  'fleetgraph_approvals_rejected_reason_check',
   'fleetgraph_suppressions_suppression_type_check',
   'fleetgraph_usage_trigger_check',
 ] as const

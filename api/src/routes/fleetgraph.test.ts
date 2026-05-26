@@ -9,10 +9,24 @@ type IdRow = {
   id: string;
 };
 
+type CountRow = {
+  count: string;
+};
+
 type SeededFinding = {
   id: string;
   title: string;
   lifecycleState: string;
+};
+
+type ApprovalAuditRow = {
+  decision: string;
+  edited_action: string | null;
+};
+
+type RejectionAuditRow = {
+  decision: string;
+  reason: string | null;
 };
 
 describe('FleetGraph inbox API', () => {
@@ -23,6 +37,7 @@ describe('FleetGraph inbox API', () => {
   let otherWorkspaceId = '';
   let userId = '';
   let scopedDocumentId = '';
+  let otherScopedDocumentId = '';
   let openFinding: SeededFinding;
   let pendingFinding: SeededFinding;
 
@@ -78,6 +93,7 @@ describe('FleetGraph inbox API', () => {
        RETURNING id`,
       [otherWorkspaceId, userId]
     );
+    otherScopedDocumentId = otherDocumentResult.rows[0]!.id;
 
     openFinding = await createFinding({
       workspaceId,
@@ -192,6 +208,166 @@ describe('FleetGraph inbox API', () => {
     expect(secondPage.body.next_cursor).toBeNull();
   });
 
+  it('approves a pending finding action candidate and records an audit row', async () => {
+    const finding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Approval pending risk',
+      lifecycleState: 'pending_review',
+      materialChangeKey: `v1:inbox-${testRunId}:approve`,
+      createdAt: '2026-05-26T08:00:00.000Z',
+    });
+    const actionCandidateId = await createActionCandidate(finding.id, scopedDocumentId);
+
+    const response = await request(app)
+      .post(`/api/fleetgraph/findings/${finding.id}/approve`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ action_candidate_id: actionCandidateId });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      id: finding.id,
+      lifecycle_state: 'approved',
+      action_candidates: [{ id: actionCandidateId }],
+    });
+
+    const auditResult = await pool.query<ApprovalAuditRow>(
+      `SELECT decision, edited_action
+       FROM fleetgraph_approvals
+       WHERE finding_id = $1`,
+      [finding.id]
+    );
+    expect(auditResult.rows).toEqual([{
+      decision: 'approved',
+      edited_action: null,
+    }]);
+  });
+
+  it('persists a human-edited recommended action on approval', async () => {
+    const finding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Edited approval pending risk',
+      lifecycleState: 'pending_review',
+      materialChangeKey: `v1:inbox-${testRunId}:edited-approve`,
+      createdAt: '2026-05-26T08:30:00.000Z',
+    });
+    const actionCandidateId = await createActionCandidate(finding.id, scopedDocumentId);
+    const editedAction = {
+      kind: 'draft_comment',
+      title: 'Ask owner for concrete unblock plan',
+      body: 'Please post the current blocker, owner, and next dated checkpoint.',
+    };
+
+    const response = await request(app)
+      .post(`/api/fleetgraph/findings/${finding.id}/approve`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({
+        action_candidate_id: actionCandidateId,
+        edited_action: editedAction,
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.body.lifecycle_state).toBe('approved');
+
+    const auditResult = await pool.query<ApprovalAuditRow>(
+      `SELECT decision, edited_action
+       FROM fleetgraph_approvals
+       WHERE finding_id = $1`,
+      [finding.id]
+    );
+    expect(auditResult.rows).toHaveLength(1);
+    expect(auditResult.rows[0]!.decision).toBe('edited');
+    expect(JSON.parse(auditResult.rows[0]!.edited_action ?? '{}')).toEqual(editedAction);
+  });
+
+  it('rejects a pending finding and records the rejection reason', async () => {
+    const finding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Rejection pending risk',
+      lifecycleState: 'pending_review',
+      materialChangeKey: `v1:inbox-${testRunId}:reject`,
+      createdAt: '2026-05-26T09:00:00.000Z',
+    });
+    await createActionCandidate(finding.id, scopedDocumentId);
+    const reason = 'Owner already resolved the blocker in standup.';
+
+    const response = await request(app)
+      .post(`/api/fleetgraph/findings/${finding.id}/reject`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ reason });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      id: finding.id,
+      lifecycle_state: 'rejected',
+    });
+
+    const auditResult = await pool.query<RejectionAuditRow>(
+      `SELECT decision, reason
+       FROM fleetgraph_approvals
+       WHERE finding_id = $1`,
+      [finding.id]
+    );
+    expect(auditResult.rows).toEqual([{
+      decision: 'rejected',
+      reason,
+    }]);
+  });
+
+  it('returns 409 and does not create an audit row for a terminal finding decision', async () => {
+    const finding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Already approved risk',
+      lifecycleState: 'approved',
+      materialChangeKey: `v1:inbox-${testRunId}:already-approved`,
+      createdAt: '2026-05-26T10:00:00.000Z',
+    });
+    const actionCandidateId = await createActionCandidate(finding.id, scopedDocumentId);
+
+    const response = await request(app)
+      .post(`/api/fleetgraph/findings/${finding.id}/approve`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ action_candidate_id: actionCandidateId });
+
+    expect(response.status).toBe(409);
+    expect(response.body).toEqual({ error: 'FleetGraph finding is not pending review' });
+
+    const auditResult = await pool.query<CountRow>(
+      `SELECT COUNT(*)::text AS count
+       FROM fleetgraph_approvals
+       WHERE finding_id = $1`,
+      [finding.id]
+    );
+    expect(auditResult.rows[0]!.count).toBe('0');
+  });
+
+  it('does not allow approving a finding from another workspace', async () => {
+    const finding = await createFinding({
+      workspaceId: otherWorkspaceId,
+      scopedDocumentId: otherScopedDocumentId,
+      recipientUserId: userId,
+      title: 'Cross workspace pending risk',
+      lifecycleState: 'pending_review',
+      materialChangeKey: `v1:inbox-${testRunId}:cross-workspace`,
+      createdAt: '2026-05-26T11:00:00.000Z',
+    });
+
+    const response = await request(app)
+      .post(`/api/fleetgraph/findings/${finding.id}/approve`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({});
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'FleetGraph finding not found' });
+  });
+
   async function createFinding(input: {
     workspaceId: string;
     scopedDocumentId: string;
@@ -230,8 +406,8 @@ describe('FleetGraph inbox API', () => {
     };
   }
 
-  async function createActionCandidate(findingId: string, targetDocumentId: string): Promise<void> {
-    await pool.query(
+  async function createActionCandidate(findingId: string, targetDocumentId: string): Promise<string> {
+    const result = await pool.query<IdRow>(
       `INSERT INTO fleetgraph_action_candidates (
          finding_id, target_document_id, owner_user_id, role_reason, urgency, evidence,
          recommended_action, approval_level, reversibility
@@ -244,7 +420,8 @@ describe('FleetGraph inbox API', () => {
          $4,
          'approval_required',
          'reversible'
-       )`,
+       )
+       RETURNING id`,
       [
         findingId,
         targetDocumentId,
@@ -256,5 +433,7 @@ describe('FleetGraph inbox API', () => {
         }),
       ]
     );
+
+    return result.rows[0]!.id;
   }
 });
