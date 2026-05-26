@@ -139,11 +139,11 @@ export const FleetGraphFindingSchema = z.object({
 registry.register('FleetGraphFinding', FleetGraphFindingSchema);
 
 export const FleetGraphFindingListQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1).openapi({
-    description: 'Page number (1-indexed)',
-  }),
   limit: z.coerce.number().int().min(1).max(100).default(20).openapi({
     description: 'Items per page (max 100)',
+  }),
+  cursor: z.string().min(1).optional().openapi({
+    description: 'Opaque cursor returned by the previous page. Encodes the last seen created_at and id.',
   }),
   lifecycle_state: FleetGraphLifecycleStateSchema.optional().openapi({
     description: 'Filter by a single lifecycle_state. Results are always sorted by created_at desc.',
@@ -159,10 +159,11 @@ registry.register('FleetGraphFindingListQuery', FleetGraphFindingListQuerySchema
 
 export const FleetGraphFindingListResponseSchema = z.object({
   items: z.array(FleetGraphFindingSchema),
-  total: z.number().int().nonnegative(),
-  page: z.number().int().positive(),
   limit: z.number().int().positive(),
   hasMore: z.boolean(),
+  next_cursor: z.string().nullable().openapi({
+    description: 'Opaque cursor for the next page, or null when no more findings are available',
+  }),
 }).openapi('FleetGraphFindingListResponse');
 
 registry.register('FleetGraphFindingListResponse', FleetGraphFindingListResponseSchema);

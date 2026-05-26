@@ -5781,18 +5781,17 @@
       "FleetGraphFindingListQuery": {
         "type": "object",
         "properties": {
-          "page": {
-            "type": "integer",
-            "minimum": 1,
-            "default": 1,
-            "description": "Page number (1-indexed)"
-          },
           "limit": {
             "type": "integer",
             "minimum": 1,
             "maximum": 100,
             "default": 20,
             "description": "Items per page (max 100)"
+          },
+          "cursor": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Opaque cursor returned by the previous page. Encodes the last seen created_at and id."
           },
           "lifecycle_state": {
             "type": "string",
@@ -5838,15 +5837,6 @@
               "$ref": "#/components/schemas/FleetGraphFinding"
             }
           },
-          "total": {
-            "type": "integer",
-            "minimum": 0
-          },
-          "page": {
-            "type": "integer",
-            "minimum": 0,
-            "exclusiveMinimum": true
-          },
           "limit": {
             "type": "integer",
             "minimum": 0,
@@ -5854,14 +5844,18 @@
           },
           "hasMore": {
             "type": "boolean"
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true,
+            "description": "Opaque cursor for the next page, or null when no more findings are available"
           }
         },
         "required": [
           "items",
-          "total",
-          "page",
           "limit",
-          "hasMore"
+          "hasMore",
+          "next_cursor"
         ]
       },
       "FleetGraphApproveFindingRequest": {
@@ -11761,23 +11755,22 @@
             "schema": {
               "type": "integer",
               "minimum": 1,
-              "default": 1,
-              "description": "Page number (1-indexed)"
-            },
-            "required": false,
-            "name": "page",
-            "in": "query"
-          },
-          {
-            "schema": {
-              "type": "integer",
-              "minimum": 1,
               "maximum": 100,
               "default": 20,
               "description": "Items per page (max 100)"
             },
             "required": false,
             "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Opaque cursor returned by the previous page. Encodes the last seen created_at and id."
+            },
+            "required": false,
+            "name": "cursor",
             "in": "query"
           },
           {
