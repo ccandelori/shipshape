@@ -13,6 +13,7 @@ import {
   type BelongsToEntry,
 } from '../utils/document-crud.js';
 import { broadcastToUser } from '../collaboration/index.js';
+import { enqueueMutationCheck } from '../fleetgraph/triggers.js';
 
 type RouterType = ReturnType<typeof Router>;
 const router: RouterType = Router();
@@ -78,6 +79,17 @@ const updateIssueSchema = z.object({
 const rejectIssueSchema = z.object({
   reason: z.string().min(1).max(1000),
 });
+
+function enqueueFleetGraphChecksForSprintIds(workspaceId: string, sprintIds: string[]): void {
+  const uniqueSprintIds = [...new Set(sprintIds.filter((sprintId) => sprintId.length > 0))];
+  for (const sprintId of uniqueSprintIds) {
+    enqueueMutationCheck(workspaceId, sprintId);
+  }
+}
+
+function sprintIdsFromBelongsTo(entries: BelongsToEntry[]): string[] {
+  return entries.filter((entry) => entry.type === 'sprint').map((entry) => entry.id);
+}
 
 // Helper to extract issue properties from row (without belongs_to - added separately)
 function extractIssueFromRow(row: any) {
@@ -644,6 +656,7 @@ router.post('/', authMiddleware, async (req: Request, res: Response) => {
 
     // Auto-complete sprint_issues accountability when first issue is created in a sprint
     const sprintAssociations = belongs_to.filter(bt => bt.type === 'sprint');
+    enqueueFleetGraphChecksForSprintIds(req.workspaceId!, sprintAssociations.map((association) => association.id));
     for (const sprintAssoc of sprintAssociations) {
       // Check if this is the first issue in the sprint
       const issueCountResult = await pool.query(
@@ -994,6 +1007,10 @@ router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
 
     const issue = extractIssueFromRow(row);
     const belongsTo = await getBelongsToAssociations(id);
+    const affectedSprintIds = belongsToChanged
+      ? [...sprintIdsFromBelongsTo(oldBelongsTo), ...sprintIdsFromBelongsTo(newBelongsTo)]
+      : sprintIdsFromBelongsTo(belongsTo);
+    enqueueFleetGraphChecksForSprintIds(workspaceId, affectedSprintIds);
 
     // Broadcast accountability update when an action item issue is completed
     if (isClosingIssue && wasNotClosed) {

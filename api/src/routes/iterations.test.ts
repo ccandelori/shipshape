@@ -23,10 +23,15 @@ vi.mock('../middleware/auth.js', () => ({
   }),
 }));
 
+vi.mock('../fleetgraph/triggers.js', () => ({
+  enqueueMutationCheck: vi.fn(),
+}));
+
 import { pool } from '../db/client.js';
 import express from 'express';
 import request from 'supertest';
 import iterationsRouter from './iterations.js';
+import { enqueueMutationCheck } from '../fleetgraph/triggers.js';
 
 describe('Iterations API', () => {
   let app: express.Express;
@@ -75,6 +80,7 @@ describe('Iterations API', () => {
       expect(res.body.story_title).toBe('Test Story');
       expect(res.body.status).toBe('pass');
       expect(res.body.author.name).toBe('Test User');
+      expect(enqueueMutationCheck).toHaveBeenCalledWith('ws-123', sprintId);
     });
 
     it('returns 400 for invalid status', async () => {

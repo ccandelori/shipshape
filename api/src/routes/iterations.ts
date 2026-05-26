@@ -3,6 +3,7 @@ import { pool } from '../db/client.js';
 import { z } from 'zod';
 import { getVisibilityContext, VISIBILITY_FILTER_SQL } from '../middleware/visibility.js';
 import { authMiddleware } from '../middleware/auth.js';
+import { enqueueMutationCheck } from '../fleetgraph/triggers.js';
 
 type RouterType = ReturnType<typeof Router>;
 const router: RouterType = Router();
@@ -25,7 +26,7 @@ const listIterationsSchema = z.object({
 // Create iteration entry - POST /api/weeks/:id/iterations
 router.post('/:id/iterations', authMiddleware, async (req: Request, res: Response) => {
   try {
-    const { id: sprintId } = req.params;
+    const sprintId = String(req.params.id);
     const userId = req.userId!;
     const workspaceId = req.workspaceId!;
 
@@ -86,6 +87,7 @@ router.post('/:id/iterations', authMiddleware, async (req: Request, res: Respons
       created_at: iteration.created_at,
       updated_at: iteration.updated_at,
     });
+    enqueueMutationCheck(workspaceId, sprintId);
   } catch (err) {
     console.error('Create iteration error:', err);
     res.status(500).json({ error: 'Internal server error' });

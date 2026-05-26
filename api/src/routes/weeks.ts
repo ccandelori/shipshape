@@ -10,6 +10,7 @@ import {
 } from '../utils/transformIssueLinks.js';
 import { logDocumentChange, getLatestDocumentFieldHistory } from '../utils/document-crud.js';
 import { broadcastToUser } from '../collaboration/index.js';
+import { enqueueMutationCheck } from '../fleetgraph/triggers.js';
 import { extractText } from '../utils/document-content.js';
 import { requireParam, requireQueryString, optionalQueryString, queryInt } from '../utils/queryParams.js';
 
@@ -1990,6 +1991,7 @@ router.post('/:id/standups', authMiddleware, async (req: Request, res: Response)
 
     // Broadcast celebration when standup is created
     broadcastToUser(userId, 'accountability:updated', { type: 'standup', targetId: id });
+    enqueueMutationCheck(workspaceId, id);
 
     res.status(201).json({
       id: standup.id,

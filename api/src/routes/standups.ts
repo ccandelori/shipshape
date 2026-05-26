@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { getVisibilityContext, VISIBILITY_FILTER_SQL } from '../middleware/visibility.js';
 import { authMiddleware } from '../middleware/auth.js';
 import { requireParam, requireQueryString, optionalQueryString, queryInt } from '../utils/queryParams.js';
+import { enqueueMutationCheck } from '../fleetgraph/triggers.js';
 
 type RouterType = ReturnType<typeof Router>;
 const router: RouterType = Router();
@@ -418,6 +419,9 @@ router.patch('/:id', authMiddleware, async (req: Request, res: Response) => {
     );
 
     const standup = result.rows[0];
+    if (standup.parent_id) {
+      enqueueMutationCheck(workspaceId, standup.parent_id);
+    }
     res.json({
       id: standup.id,
       sprint_id: standup.parent_id,

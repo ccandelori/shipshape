@@ -1,8 +1,14 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import request from 'supertest'
 import crypto from 'crypto'
+
+vi.mock('../fleetgraph/triggers.js', () => ({
+  enqueueMutationCheck: vi.fn(),
+}))
+
 import { createApp } from '../app.js'
 import { pool } from '../db/client.js'
+import { enqueueMutationCheck } from '../fleetgraph/triggers.js'
 
 describe('Issues API', () => {
   const app = createApp()
@@ -87,6 +93,10 @@ describe('Issues API', () => {
       [testWorkspaceId, testProgramId]
     )
     testSprintId = sprintResult.rows[0].id
+  })
+
+  beforeEach(() => {
+    vi.mocked(enqueueMutationCheck).mockClear()
   })
 
   afterAll(async () => {
@@ -277,12 +287,14 @@ describe('Issues API', () => {
           priority: 'high',
           belongs_to: [
             { id: testProjectId, type: 'project' },
+            { id: testSprintId, type: 'sprint' },
           ],
         })
 
       expect(res.status).toBe(201)
       expect(res.body.state).toBe('in_progress')
       expect(res.body.priority).toBe('high')
+      expect(enqueueMutationCheck).toHaveBeenCalledWith(testWorkspaceId, testSprintId)
     })
 
     it('should create issue without belongs_to (valid)', async () => {
@@ -345,12 +357,17 @@ describe('Issues API', () => {
         .set('Cookie', sessionCookie)
         .set('x-csrf-token', csrfToken)
         .send({
-          belongs_to: [{ id: testProjectId, type: 'project' }],
+          estimate: 3,
+          belongs_to: [
+            { id: testProjectId, type: 'project' },
+            { id: testSprintId, type: 'sprint' },
+          ],
         })
 
       expect(res.status).toBe(200)
       expect(res.body.belongs_to).toBeInstanceOf(Array)
       expect(res.body.belongs_to.some((bt: { id: string; type: string }) => bt.id === testProjectId && bt.type === 'project')).toBe(true)
+      expect(enqueueMutationCheck).toHaveBeenCalledWith(testWorkspaceId, testSprintId)
     })
 
     it('should return 404 for non-existent issue', async () => {
