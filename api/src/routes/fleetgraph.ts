@@ -175,6 +175,17 @@ const fleetGraphRejectBodySchema = z.object({
   idempotency_key: z.string().min(1).max(120).optional(),
 });
 
+const fleetGraphDismissBodySchema = z.object({
+  reason: z.string().trim().min(1).max(1000),
+  idempotency_key: z.string().min(1).max(120).optional(),
+});
+
+const fleetGraphSnoozeBodySchema = z.object({
+  reason: z.string().trim().min(1).max(1000),
+  expires_at: z.string().datetime({ offset: true }),
+  idempotency_key: z.string().min(1).max(120).optional(),
+});
+
 router.get('/findings', authMiddleware, async (req: Request, res: Response) => {
   const queryResult = parseFleetGraphFindingQuery(req.query);
 
@@ -219,6 +230,116 @@ router.get('/findings', authMiddleware, async (req: Request, res: Response) => {
   } catch (error) {
     console.error('FleetGraph findings list failed:', error);
     res.status(500).json({ error: 'Failed to list FleetGraph findings' });
+  }
+});
+
+router.post('/findings/:id/snooze', authMiddleware, async (req: Request, res: Response) => {
+  const paramsResult = fleetGraphFindingParamsSchema.safeParse(req.params);
+  const bodyResult = fleetGraphSnoozeBodySchema.safeParse(req.body ?? {});
+  const actorContext = getFleetGraphActorContext(req);
+
+  if (!paramsResult.success) {
+    res.status(400).json({
+      error: 'Invalid input',
+      details: paramsResult.error.issues.map((issue) => ({
+        path: issue.path,
+        message: issue.message,
+      })),
+    });
+    return;
+  }
+
+  if (!bodyResult.success) {
+    res.status(400).json({
+      error: 'Invalid input',
+      details: bodyResult.error.issues.map((issue) => ({
+        path: issue.path,
+        message: issue.message,
+      })),
+    });
+    return;
+  }
+
+  if (!actorContext.success) {
+    res.status(actorContext.statusCode).json({ error: actorContext.error });
+    return;
+  }
+
+  const expiresAt = new Date(bodyResult.data.expires_at);
+
+  if (expiresAt.getTime() <= Date.now()) {
+    res.status(400).json({ error: 'expires_at must be in the future' });
+    return;
+  }
+
+  try {
+    const result = await snoozeFleetGraphFinding({
+      findingId: paramsResult.data.id,
+      actorContext: actorContext.data,
+      reason: bodyResult.data.reason,
+      expiresAt,
+    });
+
+    if (!result.success) {
+      res.status(result.statusCode).json({ error: result.error });
+      return;
+    }
+
+    res.json(result.finding);
+  } catch (error) {
+    console.error('FleetGraph finding snooze failed:', error);
+    res.status(500).json({ error: 'Failed to snooze FleetGraph finding' });
+  }
+});
+
+router.post('/findings/:id/dismiss', authMiddleware, async (req: Request, res: Response) => {
+  const paramsResult = fleetGraphFindingParamsSchema.safeParse(req.params);
+  const bodyResult = fleetGraphDismissBodySchema.safeParse(req.body ?? {});
+  const actorContext = getFleetGraphActorContext(req);
+
+  if (!paramsResult.success) {
+    res.status(400).json({
+      error: 'Invalid input',
+      details: paramsResult.error.issues.map((issue) => ({
+        path: issue.path,
+        message: issue.message,
+      })),
+    });
+    return;
+  }
+
+  if (!bodyResult.success) {
+    res.status(400).json({
+      error: 'Invalid input',
+      details: bodyResult.error.issues.map((issue) => ({
+        path: issue.path,
+        message: issue.message,
+      })),
+    });
+    return;
+  }
+
+  if (!actorContext.success) {
+    res.status(actorContext.statusCode).json({ error: actorContext.error });
+    return;
+  }
+
+  try {
+    const result = await dismissFleetGraphFinding({
+      findingId: paramsResult.data.id,
+      actorContext: actorContext.data,
+      reason: bodyResult.data.reason,
+    });
+
+    if (!result.success) {
+      res.status(result.statusCode).json({ error: result.error });
+      return;
+    }
+
+    res.json(result.finding);
+  } catch (error) {
+    console.error('FleetGraph finding dismissal failed:', error);
+    res.status(500).json({ error: 'Failed to dismiss FleetGraph finding' });
   }
 });
 
@@ -461,6 +582,122 @@ async function loadFleetGraphActionCandidates(
   );
 
   return result.rows;
+}
+
+async function dismissFleetGraphFinding(input: {
+  findingId: string;
+  actorContext: FleetGraphActorContext;
+  reason: string;
+}): Promise<FleetGraphDecisionResult> {
+  return suppressFleetGraphFinding({
+    findingId: input.findingId,
+    actorContext: input.actorContext,
+    reason: input.reason,
+    suppressionType: 'dismissed',
+    lifecycleState: 'dismissed',
+    expiresAt: null,
+  });
+}
+
+async function snoozeFleetGraphFinding(input: {
+  findingId: string;
+  actorContext: FleetGraphActorContext;
+  reason: string;
+  expiresAt: Date;
+}): Promise<FleetGraphDecisionResult> {
+  return suppressFleetGraphFinding({
+    findingId: input.findingId,
+    actorContext: input.actorContext,
+    reason: input.reason,
+    suppressionType: 'snoozed',
+    lifecycleState: 'snoozed',
+    expiresAt: input.expiresAt,
+  });
+}
+
+async function suppressFleetGraphFinding(input: {
+  findingId: string;
+  actorContext: FleetGraphActorContext;
+  reason: string;
+  suppressionType: 'dismissed' | 'snoozed';
+  lifecycleState: 'dismissed' | 'snoozed';
+  expiresAt: Date | null;
+}): Promise<FleetGraphDecisionResult> {
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const finding = await loadDecisionFindingForUpdate(
+      client,
+      input.actorContext.workspaceId,
+      input.findingId
+    );
+
+    if (!finding) {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        statusCode: 404,
+        error: 'FleetGraph finding not found',
+      };
+    }
+
+    if (!canActorDecideFinding(input.actorContext, finding)) {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        statusCode: 403,
+        error: 'FleetGraph finding decision requires the recipient or workspace admin',
+      };
+    }
+
+    if (!canSuppressFindingState(finding.lifecycle_state)) {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        statusCode: 409,
+        error: 'FleetGraph finding cannot be suppressed from its current state',
+      };
+    }
+
+    await client.query(
+      `INSERT INTO fleetgraph_suppressions (
+         finding_id, suppression_type, reason, expires_at
+       )
+       VALUES ($1, $2, $3, $4)`,
+      [finding.id, input.suppressionType, input.reason, input.expiresAt]
+    );
+
+    await client.query(
+      `UPDATE fleetgraph_findings
+       SET lifecycle_state = $2,
+           expires_at = $3
+       WHERE id = $1`,
+      [finding.id, input.lifecycleState, input.expiresAt]
+    );
+
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+
+  const updatedFinding = await loadFleetGraphFindingById(
+    input.actorContext.workspaceId,
+    input.findingId
+  );
+
+  if (!updatedFinding) {
+    throw new Error('Suppressed FleetGraph finding could not be reloaded');
+  }
+
+  return {
+    success: true,
+    finding: updatedFinding,
+  };
 }
 
 async function rejectFleetGraphFinding(input: {
@@ -794,6 +1031,10 @@ function canActorDecideFinding(
   }
 
   return finding.recipient_user_id === actorContext.userId;
+}
+
+function canSuppressFindingState(lifecycleState: string): boolean {
+  return lifecycleState === 'open' || lifecycleState === 'pending_review';
 }
 
 function parseFleetGraphFindingQuery(query: Request['query']) {

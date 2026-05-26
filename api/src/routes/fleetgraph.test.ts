@@ -29,6 +29,12 @@ type RejectionAuditRow = {
   reason: string | null;
 };
 
+type SuppressionAuditRow = {
+  suppression_type: string;
+  reason: string;
+  expires_at: Date | null;
+};
+
 describe('FleetGraph inbox API', () => {
   const testRunId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const sessionId = `fleetgraph-inbox-${testRunId}`;
@@ -366,6 +372,143 @@ describe('FleetGraph inbox API', () => {
 
     expect(response.status).toBe(404);
     expect(response.body).toEqual({ error: 'FleetGraph finding not found' });
+  });
+
+  it('dismisses a pending finding and records an indefinite suppression', async () => {
+    const finding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Dismiss pending risk',
+      lifecycleState: 'pending_review',
+      materialChangeKey: `v1:inbox-${testRunId}:dismiss`,
+      createdAt: '2026-05-26T12:00:00.000Z',
+    });
+    const reason = 'The team accepted this risk for the current Week.';
+
+    const response = await request(app)
+      .post(`/api/fleetgraph/findings/${finding.id}/dismiss`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ reason });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      id: finding.id,
+      lifecycle_state: 'dismissed',
+    });
+
+    const suppressionResult = await pool.query<SuppressionAuditRow>(
+      `SELECT suppression_type, reason, expires_at
+       FROM fleetgraph_suppressions
+       WHERE finding_id = $1`,
+      [finding.id]
+    );
+    expect(suppressionResult.rows).toEqual([{
+      suppression_type: 'dismissed',
+      reason,
+      expires_at: null,
+    }]);
+  });
+
+  it('snoozes an open finding until a future expiry', async () => {
+    const finding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Snooze open risk',
+      lifecycleState: 'open',
+      materialChangeKey: `v1:inbox-${testRunId}:snooze`,
+      createdAt: '2026-05-26T13:00:00.000Z',
+    });
+    const reason = 'Waiting for the owner update later today.';
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+
+    const response = await request(app)
+      .post(`/api/fleetgraph/findings/${finding.id}/snooze`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ reason, expires_at: expiresAt });
+
+    expect(response.status).toBe(200);
+    expect(response.body).toMatchObject({
+      id: finding.id,
+      lifecycle_state: 'snoozed',
+      expires_at: expiresAt,
+    });
+
+    const suppressionResult = await pool.query<SuppressionAuditRow>(
+      `SELECT suppression_type, reason, expires_at
+       FROM fleetgraph_suppressions
+       WHERE finding_id = $1`,
+      [finding.id]
+    );
+    expect(suppressionResult.rows).toHaveLength(1);
+    expect(suppressionResult.rows[0]).toMatchObject({
+      suppression_type: 'snoozed',
+      reason,
+    });
+    expect(suppressionResult.rows[0]!.expires_at?.toISOString()).toBe(expiresAt);
+  });
+
+  it('rejects snooze requests whose expiry is not in the future', async () => {
+    const finding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Expired snooze risk',
+      lifecycleState: 'open',
+      materialChangeKey: `v1:inbox-${testRunId}:expired-snooze`,
+      createdAt: '2026-05-26T14:00:00.000Z',
+    });
+    const expiresAt = new Date(Date.now() - 60 * 1000).toISOString();
+
+    const response = await request(app)
+      .post(`/api/fleetgraph/findings/${finding.id}/snooze`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({
+        reason: 'This expiry is stale.',
+        expires_at: expiresAt,
+      });
+
+    expect(response.status).toBe(400);
+    expect(response.body).toEqual({ error: 'expires_at must be in the future' });
+
+    const suppressionResult = await pool.query<CountRow>(
+      `SELECT COUNT(*)::text AS count
+       FROM fleetgraph_suppressions
+       WHERE finding_id = $1`,
+      [finding.id]
+    );
+    expect(suppressionResult.rows[0]!.count).toBe('0');
+  });
+
+  it('returns 409 and does not suppress a terminal finding', async () => {
+    const finding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Terminal suppression risk',
+      lifecycleState: 'approved',
+      materialChangeKey: `v1:inbox-${testRunId}:terminal-suppression`,
+      createdAt: '2026-05-26T15:00:00.000Z',
+    });
+
+    const response = await request(app)
+      .post(`/api/fleetgraph/findings/${finding.id}/dismiss`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ reason: 'Already approved.' });
+
+    expect(response.status).toBe(409);
+    expect(response.body).toEqual({
+      error: 'FleetGraph finding cannot be suppressed from its current state',
+    });
+
+    const suppressionResult = await pool.query<CountRow>(
+      `SELECT COUNT(*)::text AS count
+       FROM fleetgraph_suppressions
+       WHERE finding_id = $1`,
+      [finding.id]
+    );
+    expect(suppressionResult.rows[0]!.count).toBe('0');
   });
 
   async function createFinding(input: {
