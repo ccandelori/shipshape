@@ -124,4 +124,40 @@ describe('FindingCard', () => {
 
     expect(actions.onResume).toHaveBeenCalledWith({ actionCandidateId: 'action-1' });
   });
+
+  it('submits dismiss and snooze decisions with audit reasons', () => {
+    const actions = createActionHandlers();
+    render(
+      <FindingCard
+        finding={createFinding('pending_review')}
+        actions={actions}
+        pendingAction={null}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss finding' }));
+    fireEvent.change(screen.getByLabelText('Dismiss reason'), {
+      target: { value: 'Known duplicate' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm dismiss' }));
+    expect(actions.onDismiss).toHaveBeenCalledWith({
+      findingId: 'finding-1',
+      reason: 'Known duplicate',
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Snooze finding' }));
+    fireEvent.change(screen.getByLabelText('Snooze reason'), {
+      target: { value: 'Waiting for Friday update' },
+    });
+    fireEvent.change(screen.getByLabelText('Snooze until'), {
+      target: { value: '2026-05-27T09:30' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm snooze' }));
+
+    expect(actions.onSnooze).toHaveBeenCalledWith({
+      findingId: 'finding-1',
+      reason: 'Waiting for Friday update',
+      expiresAt: new Date('2026-05-27T09:30').toISOString(),
+    });
+  });
 });

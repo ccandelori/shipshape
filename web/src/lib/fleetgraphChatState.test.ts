@@ -45,4 +45,26 @@ describe('FleetGraph chat stream state', () => {
       lastHeartbeatAt: '2026-05-26T12:00:00.000Z',
     });
   });
+
+  it('moves into failed state when the stream emits an error event', () => {
+    const state = reduceFleetGraphChatStreamEvent(
+      {
+        ...createFleetGraphChatStreamState(),
+        status: 'streaming',
+        response: 'Partial answer',
+      },
+      {
+        event: 'error',
+        data: { error: 'FleetGraph chat stream failed' },
+      }
+    );
+
+    expect(state).toEqual({
+      status: 'failed',
+      response: 'Partial answer',
+      usage: null,
+      error: 'FleetGraph chat stream failed',
+      lastHeartbeatAt: null,
+    });
+  });
 });
