@@ -20,8 +20,16 @@ import { handleMessage, type MessageHandlerWs } from '../index.js'
 const WS_CLOSE_PROTOCOL_ERROR = 1002
 const WS_CLOSE_UNSUPPORTED_DATA = 1003
 
-function mockWs(): MessageHandlerWs & { close: ReturnType<typeof vi.fn>; send: ReturnType<typeof vi.fn> } {
-  return { close: vi.fn(), send: vi.fn() }
+type MockMessageHandlerWs = MessageHandlerWs & {
+  close: ReturnType<typeof vi.fn<(code: number, reason: string) => void>>;
+  send: ReturnType<typeof vi.fn<(data: Uint8Array) => void>>;
+}
+
+function mockWs(): MockMessageHandlerWs {
+  return {
+    close: vi.fn<(code: number, reason: string) => void>(),
+    send: vi.fn<(data: Uint8Array) => void>(),
+  }
 }
 
 function freshDocAndAwareness(): { doc: Y.Doc; aw: awarenessProtocol.Awareness } {
