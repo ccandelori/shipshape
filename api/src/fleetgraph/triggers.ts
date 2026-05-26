@@ -1,7 +1,9 @@
 import type { QueryResult, QueryResultRow } from 'pg';
+import { broadcastToUser } from '../collaboration/index.js';
 import { pool } from '../db/client.js';
 import type { FleetGraphQueryClient } from './context.js';
 import { acquireAdvisoryLock, releaseAdvisoryLock } from './guards.js';
+import { createProductionAtRiskWeekScopeRunner } from './proactive-runner.js';
 
 export const proactivePollIntervalMs = 180_000;
 export const mutationDebounceMs = 45_000;
@@ -18,6 +20,7 @@ export type ProactiveWeekScope = {
 
 export type ProactiveScopeRunInput = ProactiveWeekScope & {
   triggerSource: ProactiveTriggerSource;
+  client: FleetGraphQueryClient;
 };
 
 export type ProactiveScopeRunner = (input: ProactiveScopeRunInput) => Promise<void>;
@@ -158,6 +161,7 @@ export function createProactiveTriggerController(options: ProactiveTriggerContro
         workspaceId: scope.workspaceId,
         scopedDocId: scope.scopedDocId,
         triggerSource,
+        client,
       });
       options.logger.info('fleetgraph.proactive_trigger.scope_processed', {
         workspaceId: scope.workspaceId,
@@ -305,7 +309,7 @@ function getDefaultController(): ProactiveTriggerController {
   if (defaultController === null) {
     defaultController = createProactiveTriggerController({
       pool,
-      runScope: runPlaceholderScope,
+      runScope: createProductionAtRiskWeekScopeRunner(consoleLogger, broadcastToUser),
       timers: createProductionTimers(),
       logger: consoleLogger,
       pollIntervalMs: proactivePollIntervalMs,
@@ -366,14 +370,6 @@ function mapScopeRow(row: QueryResultRow): ProactiveWeekScope {
     workspaceId: row.workspace_id,
     scopedDocId: row.scoped_document_id,
   };
-}
-
-async function runPlaceholderScope(input: ProactiveScopeRunInput): Promise<void> {
-  consoleLogger.info('fleetgraph.proactive_trigger.placeholder_runner', {
-    workspaceId: input.workspaceId,
-    scopedDocId: input.scopedDocId,
-    triggerSource: input.triggerSource,
-  });
 }
 
 const consoleLogger: FleetGraphTriggerLogger = {

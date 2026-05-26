@@ -6,6 +6,7 @@ import {
   registerProactiveTriggerShutdownHandlers,
   type FleetGraphTriggerLockClient,
   type FleetGraphTriggerPool,
+  type ProactiveScopeRunInput,
   type ProactiveTriggerSignal,
   type ProactiveTimer,
 } from './triggers.js';
@@ -72,11 +73,7 @@ describe('FleetGraph proactive triggers', () => {
   });
 
   it('runs the proactive runner once per active Week scope during poll checks', async () => {
-    const runScope = vi.fn<({ workspaceId, scopedDocId, triggerSource }: {
-      workspaceId: string;
-      scopedDocId: string;
-      triggerSource: 'poll' | 'mutation';
-    }) => Promise<void>>().mockResolvedValue(undefined);
+    const runScope = vi.fn<(input: ProactiveScopeRunInput) => Promise<void>>().mockResolvedValue(undefined);
     const pool = createPoolWithActiveScopes([
       { workspace_id: 'workspace-a', scoped_document_id: 'week-a' },
       { workspace_id: 'workspace-b', scoped_document_id: 'week-b' },
@@ -99,16 +96,16 @@ describe('FleetGraph proactive triggers', () => {
     });
 
     expect(pool.query).toHaveBeenCalledWith(expect.stringContaining("d.document_type = 'sprint'"), []);
-    expect(runScope).toHaveBeenCalledWith({
+    expect(runScope).toHaveBeenCalledWith(expect.objectContaining({
       workspaceId: 'workspace-a',
       scopedDocId: 'week-a',
       triggerSource: 'poll',
-    });
-    expect(runScope).toHaveBeenCalledWith({
+    }));
+    expect(runScope).toHaveBeenCalledWith(expect.objectContaining({
       workspaceId: 'workspace-b',
       scopedDocId: 'week-b',
       triggerSource: 'poll',
-    });
+    }));
   });
 
   it('skips locked scopes and releases acquired advisory locks', async () => {
@@ -121,11 +118,7 @@ describe('FleetGraph proactive triggers', () => {
       ],
       [firstClient.client, secondClient.client]
     );
-    const runScope = vi.fn<({ workspaceId, scopedDocId, triggerSource }: {
-      workspaceId: string;
-      scopedDocId: string;
-      triggerSource: 'poll' | 'mutation';
-    }) => Promise<void>>().mockResolvedValue(undefined);
+    const runScope = vi.fn<(input: ProactiveScopeRunInput) => Promise<void>>().mockResolvedValue(undefined);
     const controller = createProactiveTriggerController({
       pool,
       runScope,
@@ -144,11 +137,12 @@ describe('FleetGraph proactive triggers', () => {
     });
 
     expect(runScope).toHaveBeenCalledTimes(1);
-    expect(runScope).toHaveBeenCalledWith({
+    expect(runScope).toHaveBeenCalledWith(expect.objectContaining({
       workspaceId: 'workspace-a',
       scopedDocId: 'week-a',
       triggerSource: 'poll',
-    });
+      client: firstClient.client,
+    }));
     expect(firstClient.query).toHaveBeenCalledWith(expect.stringContaining('pg_try_advisory_lock'), expect.any(Array));
     expect(firstClient.query).toHaveBeenCalledWith(expect.stringContaining('pg_advisory_unlock'), expect.any(Array));
     expect(secondClient.query).toHaveBeenCalledWith(expect.stringContaining('pg_try_advisory_lock'), expect.any(Array));
@@ -159,11 +153,7 @@ describe('FleetGraph proactive triggers', () => {
 
   it('debounces rapid mutation checks for the same Week scope', async () => {
     vi.useFakeTimers();
-    const runScope = vi.fn<({ workspaceId, scopedDocId, triggerSource }: {
-      workspaceId: string;
-      scopedDocId: string;
-      triggerSource: 'poll' | 'mutation';
-    }) => Promise<void>>().mockResolvedValue(undefined);
+    const runScope = vi.fn<(input: ProactiveScopeRunInput) => Promise<void>>().mockResolvedValue(undefined);
     const controller = createProactiveTriggerController({
       pool: createPoolWithActiveScopes([{ workspace_id: 'workspace-a', scoped_document_id: 'week-a' }]),
       runScope,
@@ -189,11 +179,11 @@ describe('FleetGraph proactive triggers', () => {
     await vi.advanceTimersByTimeAsync(1);
 
     expect(runScope).toHaveBeenCalledTimes(1);
-    expect(runScope).toHaveBeenCalledWith({
+    expect(runScope).toHaveBeenCalledWith(expect.objectContaining({
       workspaceId: 'workspace-a',
       scopedDocId: 'week-a',
       triggerSource: 'mutation',
-    });
+    }));
     expect(controller.pendingMutationCount()).toBe(0);
   });
 

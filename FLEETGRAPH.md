@@ -251,8 +251,9 @@ Why hybrid:
 Default timing:
 
 - Poll interval: about 3 minutes.
-- Mutation debounce: 30 to 60 seconds.
+- Mutation debounce: 45 seconds.
 - Target latency: well under 5 minutes for mutation-triggered risk; under one poll interval plus processing time for time-based risk.
+- Local timed proof: `docs/fleetgraph-latency-proof.md` measured mutation commit to persisted finding at `45.113s` against the `300s` target.
 
 Multi-instance behavior:
 
@@ -269,7 +270,7 @@ Headless authentication:
 
 ## Test Cases
 
-Shared trace links are not yet captured because LangSmith credentials are missing locally. The deterministic local evidence above verifies the two MVP proactive graph paths and usage metadata that the shared traces must show once credentials are available.
+Shared trace links are not yet captured because LangSmith credentials are missing locally. The deterministic local evidence above verifies the two MVP proactive graph paths and usage metadata that the shared traces must show once credentials are available. The timed latency proof in `docs/fleetgraph-latency-proof.md` verifies the mutation-triggered path against the five-minute target using the real trigger controller, advisory lock, context builder, guard, graph, policy, and persistence path with a deterministic local reasoner.
 
 | # | Ship state | Expected output | Required trace path | Trace link status |
 |---|------------|-----------------|---------------------|------------------|
@@ -537,3 +538,4 @@ Runtime model spend for the MVP at-risk Week detector is now persisted in `fleet
 | Test Cases | MVP proactive paths verified locally; shared trace links require LangSmith credentials |
 | Architecture Decisions | Defined in this document |
 | Cost Analysis | Design estimate plus deterministic runtime telemetry captured |
+| Timed Latency Proof | Passed locally at 45.113 seconds; see `docs/fleetgraph-latency-proof.md` |

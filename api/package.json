@@ -17,6 +17,7 @@
     "db:seed": "tsx src/db/seed.ts",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:orphan-check": "tsx src/db/scripts/orphan-diagnostic.ts",
+    "fleetgraph:latency-proof": "tsx src/fleetgraph/scripts/verify-latency.ts",
     "openapi:generate": "tsx src/scripts/generate-openapi.ts",
     "mcp": "tsx src/mcp/server.ts"
   },
