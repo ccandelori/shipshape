@@ -246,6 +246,7 @@ async function seed() {
       { prefix: 'API', name: 'API Platform', color: '#10B981' },
       { prefix: 'UI', name: 'Design System', color: '#F59E0B' },
       { prefix: 'INFRA', name: 'Infrastructure', color: '#EF4444' },
+      { prefix: 'FG', name: 'FleetGraph MVP', color: '#0EA5E9' },
     ];
 
     const programs: Array<{ id: string; prefix: string; name: string; color: string }> = [];
@@ -278,6 +279,11 @@ async function seed() {
       console.log('ℹ️  All programs already exist');
     }
 
+    const fleetGraphProgram = programs.find(program => program.prefix === 'FG');
+    if (!fleetGraphProgram) {
+      throw new Error('FleetGraph MVP program was not seeded');
+    }
+
     // Define stable teams per program so sprint ownership, issue assignment,
     // and weekly plans/retros all align consistently.
     // Uses names (not indices) because allUsers query order is non-deterministic.
@@ -287,6 +293,7 @@ async function seed() {
       ['Grace Lee', 'Henry Patel'],      // API Platform
       ['Carol Williams', 'David Kim'],   // Design System
       ['Jack Brown', 'Iris Nguyen'],     // Infrastructure
+      ['Dev User', 'Alice Chen', 'Grace Lee'], // FleetGraph MVP
     ];
     const programTeams: Record<string, number[]> = {};
     programs.forEach((prog, idx) => {
@@ -407,6 +414,97 @@ async function seed() {
           projectsCreated++;
         }
       }
+    }
+
+    const fleetGraphProjectTemplates = [
+      {
+        title: 'FleetGraph - HITL Findings Inbox',
+        color: '#0ea5e9',
+        ownerName: 'Dev User',
+        impact: 5,
+        confidence: 4,
+        ease: 3,
+        plan: 'Make proactive FleetGraph findings visible, reviewable, and recoverable through a human approval loop.',
+        monetary_impact_expected: 45000,
+        targetDateDays: 14,
+      },
+      {
+        title: 'FleetGraph - Embedded Agent Chat',
+        color: '#14b8a6',
+        ownerName: 'Alice Chen',
+        impact: 5,
+        confidence: 3,
+        ease: 3,
+        plan: 'Answer scoped questions from project, week, and issue context without forcing users out of their document flow.',
+        monetary_impact_expected: 38000,
+        targetDateDays: 21,
+      },
+      {
+        title: 'FleetGraph - Trace Evidence Pipeline',
+        color: '#6366f1',
+        ownerName: 'Grace Lee',
+        impact: 4,
+        confidence: 4,
+        ease: 2,
+        plan: 'Attach LangSmith run metadata, model usage, and durable decision evidence to every FleetGraph outcome.',
+        monetary_impact_expected: 30000,
+        targetDateDays: 28,
+      },
+    ];
+
+    for (const template of fleetGraphProjectTemplates) {
+      const existingProject = await pool.query(
+        `SELECT d.id FROM documents d
+         JOIN document_associations da ON da.document_id = d.id
+           AND da.related_id = $3 AND da.relationship_type = 'program'
+         WHERE d.workspace_id = $1 AND d.document_type = 'project' AND d.title = $2`,
+        [workspaceId, template.title, fleetGraphProgram.id]
+      );
+
+      if (existingProject.rows[0]) {
+        projects.push({
+          id: existingProject.rows[0].id,
+          programId: fleetGraphProgram.id,
+          title: template.title,
+        });
+        continue;
+      }
+
+      const owner = allUsers.find((user: { name: string }) => user.name === template.ownerName);
+      if (!owner) {
+        throw new Error(`FleetGraph seed owner not found: ${template.ownerName}`);
+      }
+
+      const targetDate = new Date();
+      targetDate.setDate(targetDate.getDate() + template.targetDateDays);
+      const projectResult = await pool.query(
+        `INSERT INTO documents (workspace_id, document_type, title, properties)
+         VALUES ($1, 'project', $2, $3)
+         RETURNING id`,
+        [
+          workspaceId,
+          template.title,
+          JSON.stringify({
+            color: template.color,
+            owner_id: owner.id,
+            impact: template.impact,
+            confidence: template.confidence,
+            ease: template.ease,
+            plan: template.plan,
+            monetary_impact_expected: template.monetary_impact_expected,
+            target_date: targetDate.toISOString().split('T')[0],
+          }),
+        ]
+      );
+      const projectId = projectResult.rows[0].id;
+
+      await createAssociation(pool, projectId, fleetGraphProgram.id, 'program');
+      projects.push({
+        id: projectId,
+        programId: fleetGraphProgram.id,
+        title: template.title,
+      });
+      projectsCreated++;
     }
 
     if (projectsCreated > 0) {
@@ -661,6 +759,147 @@ async function seed() {
         [workspaceId, program.id]
       );
       maxTickets[program.id] = maxResult.rows[0].max_ticket;
+    }
+
+    const fleetGraphIssues = [
+      {
+        title: 'Open FleetGraph inbox from the left rail',
+        description: 'Expose the review queue where program leads can inspect proactive findings and make approve, reject, dismiss, or snooze decisions.',
+        state: 'done',
+        sprintOffset: -1,
+        priority: 'high',
+        estimate: 3,
+        projectTitle: 'FleetGraph - HITL Findings Inbox',
+      },
+      {
+        title: 'Persist at-risk week action candidates',
+        description: 'Store recommended actions beside durable findings so reviewers can approve an exact draft or reject it with context.',
+        state: 'in_progress',
+        sprintOffset: 0,
+        priority: 'high',
+        estimate: 5,
+        projectTitle: 'FleetGraph - HITL Findings Inbox',
+      },
+      {
+        title: 'Expose scoped FleetGraph chat in editor',
+        description: 'Mount the embedded agent chat for project, week, and issue documents with the current document as the query scope.',
+        state: 'in_progress',
+        sprintOffset: 0,
+        priority: 'high',
+        estimate: 8,
+        projectTitle: 'FleetGraph - Embedded Agent Chat',
+      },
+      {
+        title: 'Capture LangSmith trace URLs for shared review',
+        description: 'Record trace metadata for quiet and finding-producing runs so each demo can link back to model inputs, outputs, and branch decisions.',
+        state: 'todo',
+        sprintOffset: 0,
+        priority: 'high',
+        estimate: 3,
+        projectTitle: 'FleetGraph - Trace Evidence Pipeline',
+      },
+      {
+        title: 'Add deterministic FleetGraph demo scenarios',
+        description: 'Provide quiet prefilter and pending-action demo paths that run without external model variability.',
+        state: 'done',
+        sprintOffset: -1,
+        priority: 'medium',
+        estimate: 5,
+        projectTitle: 'FleetGraph - Trace Evidence Pipeline',
+      },
+      {
+        title: 'Document FleetGraph graph architecture tradeoffs',
+        description: 'Keep a graph explainer that describes trigger scope, context loading, detector branches, policy boundaries, and human review.',
+        state: 'done',
+        sprintOffset: -2,
+        priority: 'medium',
+        estimate: 4,
+        projectTitle: 'FleetGraph - Embedded Agent Chat',
+      },
+      {
+        title: 'Design FleetGraph observability dashboard',
+        description: 'Summarize model usage, guard decisions, pending findings, and approval outcomes after the MVP workflow is stable.',
+        state: 'backlog',
+        sprintOffset: null,
+        priority: 'medium',
+        estimate: 8,
+        projectTitle: 'FleetGraph - Trace Evidence Pipeline',
+      },
+    ];
+
+    const fleetGraphTeam = programTeams[fleetGraphProgram.id];
+    if (!fleetGraphTeam) {
+      throw new Error('FleetGraph MVP team was not allocated');
+    }
+
+    for (let i = 0; i < fleetGraphIssues.length; i++) {
+      const issue = fleetGraphIssues[i]!;
+      const targetProject = projects.find(project => (
+        project.programId === fleetGraphProgram.id && project.title === issue.projectTitle
+      ));
+      if (!targetProject) {
+        throw new Error(`FleetGraph seed project not found: ${issue.projectTitle}`);
+      }
+
+      const assignee = allUsers[fleetGraphTeam[i % fleetGraphTeam.length]!]!;
+      let sprintId: string | null = null;
+      if (issue.sprintOffset !== null) {
+        const targetSprintNumber = currentSprintNumber + issue.sprintOffset;
+        const sprint = sprints.find(
+          seedSprint => seedSprint.programId === fleetGraphProgram.id && seedSprint.number === targetSprintNumber
+        );
+        if (!sprint) {
+          throw new Error(`FleetGraph seed sprint not found: week ${targetSprintNumber}`);
+        }
+        sprintId = sprint.id;
+      }
+
+      const existingIssue = await pool.query(
+        `SELECT d.id FROM documents d
+         JOIN document_associations da ON da.document_id = d.id
+           AND da.related_id = $2 AND da.relationship_type = 'program'
+         WHERE d.workspace_id = $1 AND d.title = $3 AND d.document_type = 'issue'`,
+        [workspaceId, fleetGraphProgram.id, issue.title]
+      );
+
+      if (!existingIssue.rows[0]) {
+        maxTickets[fleetGraphProgram.id]!++;
+        const issueContent = {
+          type: 'doc',
+          content: [
+            { type: 'paragraph', content: [{ type: 'text', text: issue.description }] },
+          ],
+        };
+        const issueProperties = {
+          state: issue.state,
+          priority: issue.priority,
+          source: 'internal',
+          assignee_id: assignee.id,
+          feedback_status: null,
+          rejection_reason: null,
+          estimate: issue.estimate,
+        };
+        const issueResult = await pool.query(
+          `INSERT INTO documents (workspace_id, document_type, title, content, properties, ticket_number)
+           VALUES ($1, 'issue', $2, $3, $4, $5)
+           RETURNING id`,
+          [
+            workspaceId,
+            issue.title,
+            JSON.stringify(issueContent),
+            JSON.stringify(issueProperties),
+            maxTickets[fleetGraphProgram.id],
+          ]
+        );
+        const issueId = issueResult.rows[0].id;
+
+        await createAssociation(pool, issueId, fleetGraphProgram.id, 'program');
+        await createAssociation(pool, issueId, targetProject.id, 'project');
+        if (sprintId) {
+          await createAssociation(pool, issueId, sprintId, 'sprint');
+        }
+        issuesCreated++;
+      }
     }
 
     // Seed Ship Core issues with comprehensive sprint coverage
@@ -1239,6 +1478,230 @@ async function seed() {
     }
     if (weeklyRetrosCreated > 0) {
       console.log(`✅ Created ${weeklyRetrosCreated} weekly retros`);
+    }
+
+    const fleetGraphTableResult = await pool.query<{
+      findings_table: string | null;
+      action_candidates_table: string | null;
+      usage_table: string | null;
+    }>(
+      `SELECT
+         to_regclass('public.fleetgraph_findings')::text AS findings_table,
+         to_regclass('public.fleetgraph_action_candidates')::text AS action_candidates_table,
+         to_regclass('public.fleetgraph_usage')::text AS usage_table`
+    );
+    const fleetGraphTables = fleetGraphTableResult.rows[0]!;
+
+    if (
+      fleetGraphTables.findings_table
+      && fleetGraphTables.action_candidates_table
+      && fleetGraphTables.usage_table
+    ) {
+      const devUser = allUsers.find((user: { name: string }) => user.name === 'Dev User');
+      if (!devUser) {
+        throw new Error('FleetGraph seed recipient not found: Dev User');
+      }
+
+      const inboxProject = projects.find(project => (
+        project.programId === fleetGraphProgram.id
+        && project.title === 'FleetGraph - HITL Findings Inbox'
+      ));
+      if (!inboxProject) {
+        throw new Error('FleetGraph inbox project not found');
+      }
+
+      const currentFleetGraphSprint = sprints.find(sprint => (
+        sprint.programId === fleetGraphProgram.id && sprint.number === currentSprintNumber
+      ));
+      if (!currentFleetGraphSprint) {
+        throw new Error(`FleetGraph current week not found: ${currentSprintNumber}`);
+      }
+
+      const traceIssueResult = await pool.query<{ id: string }>(
+        `SELECT d.id FROM documents d
+         JOIN document_associations da ON da.document_id = d.id
+           AND da.related_id = $2 AND da.relationship_type = 'program'
+         WHERE d.workspace_id = $1
+           AND d.document_type = 'issue'
+           AND d.title = 'Capture LangSmith trace URLs for shared review'`,
+        [workspaceId, fleetGraphProgram.id]
+      );
+      const traceIssue = traceIssueResult.rows[0];
+      if (!traceIssue) {
+        throw new Error('FleetGraph trace issue not found');
+      }
+
+      let fleetGraphFindingsCreated = 0;
+      let fleetGraphActionCandidatesCreated = 0;
+      let fleetGraphUsageRowsCreated = 0;
+      const observedAt = new Date().toISOString();
+
+      const openFindingKey = 'seed:fleetgraph:open:inbox-visible:v1';
+      const existingOpenFinding = await pool.query<{ id: string }>(
+        `SELECT id FROM fleetgraph_findings
+         WHERE workspace_id = $1 AND material_change_key = $2`,
+        [workspaceId, openFindingKey]
+      );
+      if (!existingOpenFinding.rows[0]) {
+        await pool.query(
+          `INSERT INTO fleetgraph_findings (
+             workspace_id, scoped_document_id, detector_type, severity, evidence,
+             recipient_user_id, lifecycle_state, material_change_key
+           )
+           VALUES ($1, $2, 'ownership_unclear', 'medium', $3::jsonb, $4, 'open', $5)`,
+          [
+            workspaceId,
+            inboxProject.id,
+            JSON.stringify([{
+              sourceType: 'document',
+              sourceDocumentId: inboxProject.id,
+              quote: 'FleetGraph inbox wiring is ready, but ownership for daily triage has not been written into the project plan.',
+              observedAt,
+            }]),
+            devUser.id,
+            openFindingKey,
+          ]
+        );
+        fleetGraphFindingsCreated++;
+      }
+
+      const pendingFindingKey = 'seed:fleetgraph:pending-review:trace-evidence:v1';
+      const existingPendingFinding = await pool.query<{ id: string }>(
+        `SELECT id FROM fleetgraph_findings
+         WHERE workspace_id = $1 AND material_change_key = $2`,
+        [workspaceId, pendingFindingKey]
+      );
+
+      let pendingFindingId = existingPendingFinding.rows[0]?.id ?? null;
+      if (!pendingFindingId) {
+        const pendingFindingResult = await pool.query<{ id: string }>(
+          `INSERT INTO fleetgraph_findings (
+             workspace_id, scoped_document_id, detector_type, severity, evidence,
+             recipient_user_id, lifecycle_state, material_change_key
+           )
+           VALUES ($1, $2, 'at_risk_week', 'high', $3::jsonb, $4, 'pending_review', $5)
+           RETURNING id`,
+          [
+            workspaceId,
+            currentFleetGraphSprint.id,
+            JSON.stringify([{
+              sourceType: 'issue',
+              sourceDocumentId: traceIssue.id,
+              quote: 'Trace evidence is still todo while the FleetGraph demo depends on shared review links.',
+              observedAt,
+            }]),
+            devUser.id,
+            pendingFindingKey,
+          ]
+        );
+        pendingFindingId = pendingFindingResult.rows[0]!.id;
+        fleetGraphFindingsCreated++;
+      }
+
+      const existingActionCandidate = await pool.query<{ id: string }>(
+        `SELECT id FROM fleetgraph_action_candidates
+         WHERE finding_id = $1 AND target_document_id = $2`,
+        [pendingFindingId, traceIssue.id]
+      );
+      if (!existingActionCandidate.rows[0]) {
+        await pool.query(
+          `INSERT INTO fleetgraph_action_candidates (
+             finding_id, target_document_id, owner_user_id, role_reason, urgency, evidence,
+             recommended_action, approval_level, reversibility
+           )
+           VALUES ($1, $2, $3, $4, 'high', $5::jsonb, $6, 'approval_required', 'reversible')`,
+          [
+            pendingFindingId,
+            traceIssue.id,
+            devUser.id,
+            'The FleetGraph owner is responsible for turning trace evidence into reviewable demo artifacts.',
+            JSON.stringify([{
+              sourceType: 'issue',
+              sourceDocumentId: traceIssue.id,
+              quote: 'Capture LangSmith trace URLs for shared review',
+              observedAt,
+            }]),
+            JSON.stringify({
+              kind: 'draft_comment',
+              title: 'Request trace evidence update',
+              body: 'Please add the shared LangSmith trace URLs or note the credential blocker before the next FleetGraph review.',
+            }),
+          ]
+        );
+        fleetGraphActionCandidatesCreated++;
+      }
+
+      const fleetGraphUsageSeeds = [
+        {
+          runId: 'seed-fleetgraph-quiet-prefilter',
+          trigger: 'proactive',
+          detector: 'at_risk_week',
+          modelName: 'deterministic-demo',
+          inputTokens: 0,
+          outputTokens: 0,
+          estimatedCostUsd: 0,
+          traceMetadata: {
+            scenario: 'quiet_prefilter',
+            scoped_document_id: currentFleetGraphSprint.id,
+            branch: 'prefilter_exit',
+          },
+        },
+        {
+          runId: 'seed-fleetgraph-pending-action',
+          trigger: 'proactive',
+          detector: 'at_risk_week',
+          modelName: 'gpt-4.1-mini',
+          inputTokens: 1180,
+          outputTokens: 260,
+          estimatedCostUsd: 0.0009,
+          traceMetadata: {
+            scenario: 'finding_pending_action',
+            scoped_document_id: currentFleetGraphSprint.id,
+            branch: 'pending_review',
+          },
+        },
+      ];
+
+      for (const usageSeed of fleetGraphUsageSeeds) {
+        const existingUsage = await pool.query<{ id: string }>(
+          `SELECT id FROM fleetgraph_usage
+           WHERE workspace_id = $1 AND run_id = $2`,
+          [workspaceId, usageSeed.runId]
+        );
+        if (!existingUsage.rows[0]) {
+          await pool.query(
+            `INSERT INTO fleetgraph_usage (
+               run_id, workspace_id, trigger, detector, model_name,
+               input_tokens, output_tokens, estimated_cost_usd, trace_metadata
+             )
+             VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)`,
+            [
+              usageSeed.runId,
+              workspaceId,
+              usageSeed.trigger,
+              usageSeed.detector,
+              usageSeed.modelName,
+              usageSeed.inputTokens,
+              usageSeed.outputTokens,
+              usageSeed.estimatedCostUsd,
+              JSON.stringify(usageSeed.traceMetadata),
+            ]
+          );
+          fleetGraphUsageRowsCreated++;
+        }
+      }
+
+      if (fleetGraphFindingsCreated > 0) {
+        console.log(`Created ${fleetGraphFindingsCreated} FleetGraph findings`);
+      }
+      if (fleetGraphActionCandidatesCreated > 0) {
+        console.log(`Created ${fleetGraphActionCandidatesCreated} FleetGraph action candidates`);
+      }
+      if (fleetGraphUsageRowsCreated > 0) {
+        console.log(`Created ${fleetGraphUsageRowsCreated} FleetGraph usage rows`);
+      }
+    } else {
+      console.log('FleetGraph outcome tables not found; run pnpm db:migrate before seeding FleetGraph findings');
     }
 
     console.log('');
