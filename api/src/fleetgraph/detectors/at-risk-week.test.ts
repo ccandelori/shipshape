@@ -13,7 +13,9 @@ import {
   createAtRiskWeekCheckpointer,
   createAtRiskWeekInitialState,
   createAtRiskWeekTraceMetadata,
+  createInstrumentedAtRiskWeekTraceRunner,
   createLangChainAtRiskWeekReasoner,
+  estimateAtRiskWeekModelCost,
   runAtRiskWeekGraph,
   guardNode,
   outputNode,
@@ -27,7 +29,10 @@ import {
   traceAtRiskWeekNode,
   traceAtRiskWeekRun,
   atRiskWeekPromptBoundary,
+  atRiskWeekLatencyTargetMs,
   AtRiskWeekModelInvocationError,
+  AtRiskWeekStructuredOutputError,
+  type AtRiskWeekTraceClock,
   type AtRiskWeekTraceDefinition,
   type AtRiskWeekTraceMetadata,
   type AtRiskWeekTraceRunner,
@@ -131,6 +136,11 @@ describe('FleetGraph at-risk Week detector contracts', () => {
       modelName: 'gpt-4o-mini',
       modelTemperature: 0,
     });
+  });
+
+  it('estimates gpt-4o-mini reasoning cost from token usage', () => {
+    expect(estimateAtRiskWeekModelCost('gpt-4o-mini', 1_200, 240)).toBe(0.000324);
+    expect(estimateAtRiskWeekModelCost('unknown-model', 1_200, 240)).toBe(0);
   });
 
   it('records early exits as immutable terminal state transitions', () => {
@@ -483,6 +493,53 @@ describe('FleetGraph at-risk Week detector contracts', () => {
     });
     expect(reasoner.invoke).not.toHaveBeenCalled();
     expect(outputDependencies.broadcastToUser).not.toHaveBeenCalled();
+  });
+
+  it('records per-node and overall graph timings against the latency target', async () => {
+    const reasoner = {
+      modelName: 'gpt-4o-mini',
+      invoke: vi.fn(async () => ({
+        reasoning: createAtRiskReasoningOutput(),
+        modelUsage: null,
+      })),
+    };
+    const outputDependencies = createOutputNodeDependencies();
+    const traceClock = createIncrementingTraceClock(5);
+    const graphDependencies = createGraphDependencies({
+      nodeDependencies: createNodeDependencies({
+        scopeRows: [{ id: scopedDocId }],
+        weekContext: createWeekContext({ issues: [] }),
+        guardDecision: {
+          shouldRun: true,
+          reason: 'run_material_changed_no_suppression:v1:safe',
+          materialChangeKey: 'v1:safe',
+        },
+      }),
+      reasonNodeDependencies: createReasonNodeDependencies({ reasoner }),
+      outputNodeDependencies: outputDependencies,
+      traceRunner: createInstrumentedAtRiskWeekTraceRunner(passthroughAtRiskWeekTraceRunner, traceClock),
+    });
+
+    const graphState = await runAtRiskWeekGraph(graphInput, graphDependencies);
+
+    expect(graphState.trace.timings.map((timing) => timing.traceNode)).toEqual([
+      'scope',
+      'context',
+      'guard',
+      'preFilter',
+      'run',
+    ]);
+    expect(graphState.trace.timings.map((timing) => timing.durationMs)).toEqual([5, 5, 5, 5, 45]);
+    expect(createAtRiskWeekTraceMetadata(graphState, 'preFilter')).toMatchObject({
+      traceDurationMs: 5,
+      graphLatencyMs: 45,
+    });
+    expect(createAtRiskWeekTraceMetadata(graphState, 'run')).toMatchObject({
+      traceDurationMs: 45,
+      graphLatencyMs: 45,
+      latencyTargetMs: atRiskWeekLatencyTargetMs,
+      latencyTargetMet: true,
+    });
   });
 
   it('runs the compiled graph through the suppressed guard path without model or output calls', async () => {
@@ -847,12 +904,45 @@ describe('FleetGraph at-risk Week detector contracts', () => {
       modelName: 'gpt-4o-mini',
       inputTokens: 1_200,
       outputTokens: 240,
-      estimatedCost: 0,
+      estimatedCost: 0.000324,
     });
     expect(structuredModel.invoke).toHaveBeenCalledWith([
       expect.objectContaining({ content: 'system prompt' }),
       expect.objectContaining({ content: 'user prompt' }),
     ]);
+  });
+
+  it('surfaces malformed structured model output with model context', async () => {
+    const rawMessage = new AIMessage({
+      content: '',
+      usage_metadata: {
+        input_tokens: 500,
+        output_tokens: 50,
+        total_tokens: 550,
+      },
+    });
+    const structuredModel: AtRiskWeekStructuredModelInvoker = {
+      invoke: vi.fn(async () => ({
+        raw: rawMessage,
+        parsed: {
+          isAtRisk: true,
+          severity: 'high',
+          evidence: [],
+          recommendedAction: null,
+          rationale: 'Invalid because evidence and action are missing.',
+        },
+      })),
+    };
+    const reasoner = createLangChainAtRiskWeekReasoner('gpt-4o-mini', structuredModel);
+
+    await expect(reasoner.invoke([
+      { role: 'system', content: 'system prompt' },
+      { role: 'user', content: 'user prompt' },
+    ])).rejects.toThrow(AtRiskWeekStructuredOutputError);
+    await expect(reasoner.invoke([
+      { role: 'system', content: 'system prompt' },
+      { role: 'user', content: 'user prompt' },
+    ])).rejects.toThrow('modelName=gpt-4o-mini');
   });
 
   it('classifies at-risk reasoning into a pending review action candidate', async () => {
@@ -1071,6 +1161,7 @@ type GraphDependencyFixture = {
   nodeDependencies: AtRiskWeekNodeDependencies;
   reasonNodeDependencies: AtRiskWeekReasonNodeDependencies;
   outputNodeDependencies: AtRiskWeekOutputNodeDependencies;
+  traceRunner?: AtRiskWeekTraceRunner;
 };
 
 function createNodeDependencies(fixture: NodeDependencyFixture): AtRiskWeekNodeDependencies {
@@ -1113,8 +1204,24 @@ function createGraphDependencies(fixture: GraphDependencyFixture): AtRiskWeekGra
     nodeDependencies: fixture.nodeDependencies,
     reasonNodeDependencies: fixture.reasonNodeDependencies,
     outputNodeDependencies: fixture.outputNodeDependencies,
-    traceRunner: passthroughAtRiskWeekTraceRunner,
+    traceRunner: fixture.traceRunner ?? passthroughAtRiskWeekTraceRunner,
     checkpointer: createAtRiskWeekCheckpointer(),
+  };
+}
+
+function createIncrementingTraceClock(stepMs: number): AtRiskWeekTraceClock {
+  let currentMs = 0;
+
+  return {
+    now: () => {
+      const instant = {
+        iso: new Date(currentMs).toISOString(),
+        monotonicMs: currentMs,
+      };
+      currentMs += stepMs;
+
+      return instant;
+    },
   };
 }
 

@@ -32,6 +32,14 @@ export const atRiskWeekPromptBoundary = {
 
 export const atRiskWeekReasoningModelName = 'gpt-4o-mini';
 export const atRiskWeekReasoningModelTemperature = 0;
+export const atRiskWeekLatencyTargetMs = 5 * 60 * 1_000;
+
+const atRiskWeekModelPricingByName = {
+  'gpt-4o-mini': {
+    inputUsdPerMillionTokens: 0.15,
+    outputUsdPerMillionTokens: 0.60,
+  },
+} as const;
 
 export const atRiskWeekTriggerSourceSchema = z.enum(['poll', 'mutation', 'ondemand', 'resume']);
 export type AtRiskWeekTriggerSource = z.infer<typeof atRiskWeekTriggerSourceSchema>;
@@ -133,6 +141,22 @@ export type AtRiskWeekBranchDecision = {
   reason: string;
 };
 
+export type AtRiskWeekTraceTiming = {
+  traceNode: AtRiskWeekTraceNode;
+  startedAt: string;
+  completedAt: string;
+  durationMs: number;
+};
+
+export type AtRiskWeekTraceInstant = {
+  iso: string;
+  monotonicMs: number;
+};
+
+export type AtRiskWeekTraceClock = {
+  now: () => AtRiskWeekTraceInstant;
+};
+
 export type AtRiskWeekStateTrace = {
   detector: typeof atRiskWeekDetectorType;
   triggerSource: AtRiskWeekTriggerSource;
@@ -142,6 +166,7 @@ export type AtRiskWeekStateTrace = {
   materialChangeKey: string | null;
   branchDecisions: AtRiskWeekBranchDecision[];
   modelUsage: AtRiskWeekModelUsage | null;
+  timings: AtRiskWeekTraceTiming[];
 };
 
 export type AtRiskWeekTraceNode = AtRiskWeekNodeName | 'run';
@@ -183,6 +208,10 @@ export type AtRiskWeekTraceMetadata = {
   findingId: string | null;
   actionCandidateId: string | null;
   broadcastEvent: AtRiskWeekPersistenceArtifacts['broadcastEvent'];
+  traceDurationMs: number | null;
+  graphLatencyMs: number | null;
+  latencyTargetMs: typeof atRiskWeekLatencyTargetMs;
+  latencyTargetMet: boolean | null;
   completedAt: string | null;
 };
 
@@ -452,6 +481,7 @@ export function createAtRiskWeekInitialState(input: AtRiskWeekGraphInput): AtRis
       materialChangeKey: null,
       branchDecisions: [],
       modelUsage: null,
+      timings: [],
     },
     requestedAt: parsedInput.requestedAt,
     completedAt: null,
@@ -541,6 +571,27 @@ export const passthroughAtRiskWeekTraceRunner: AtRiskWeekTraceRunner = async (
   operation
 ) => operation(state);
 
+export function createInstrumentedAtRiskWeekTraceRunner(
+  baseRunner: AtRiskWeekTraceRunner,
+  clock: AtRiskWeekTraceClock
+): AtRiskWeekTraceRunner {
+  return async (definition, state, operation) => {
+    const startedAt = clock.now();
+
+    return baseRunner(definition, state, async (currentState) => {
+      const outputState = await operation(currentState);
+      const completedAt = clock.now();
+
+      return recordAtRiskWeekTraceTiming(outputState, {
+        traceNode: definition.inputMetadata.traceNode,
+        startedAt: startedAt.iso,
+        completedAt: completedAt.iso,
+        durationMs: calculateAtRiskWeekTraceDuration(startedAt, completedAt),
+      });
+    });
+  };
+}
+
 export async function traceAtRiskWeekRun(
   state: AtRiskWeekGraphState,
   runner: AtRiskWeekTraceRunner,
@@ -626,6 +677,8 @@ export function createAtRiskWeekTraceMetadata(
   traceNode: AtRiskWeekTraceNode
 ): AtRiskWeekTraceMetadata {
   const latestBranchDecision = state.trace.branchDecisions[state.trace.branchDecisions.length - 1] ?? null;
+  const traceTiming = findLatestAtRiskWeekTraceTiming(state.trace.timings, traceNode);
+  const graphTiming = findLatestAtRiskWeekTraceTiming(state.trace.timings, 'run');
 
   return {
     detectorType: atRiskWeekDetectorType,
@@ -664,8 +717,64 @@ export function createAtRiskWeekTraceMetadata(
     findingId: state.persistence?.findingId ?? null,
     actionCandidateId: state.persistence?.actionCandidateId ?? null,
     broadcastEvent: state.persistence?.broadcastEvent ?? null,
+    traceDurationMs: traceTiming?.durationMs ?? null,
+    graphLatencyMs: graphTiming?.durationMs ?? null,
+    latencyTargetMs: atRiskWeekLatencyTargetMs,
+    latencyTargetMet: graphTiming === null ? null : graphTiming.durationMs <= atRiskWeekLatencyTargetMs,
     completedAt: state.completedAt,
   };
+}
+
+function recordAtRiskWeekTraceTiming(
+  state: AtRiskWeekGraphState,
+  timing: AtRiskWeekTraceTiming
+): AtRiskWeekGraphState {
+  isoDateTimeSchema.parse(timing.startedAt);
+  isoDateTimeSchema.parse(timing.completedAt);
+
+  if (!Number.isFinite(timing.durationMs) || timing.durationMs < 0) {
+    throw new AtRiskWeekNodeContractError(
+      `At-risk Week trace timing duration must be nonnegative: traceNode=${timing.traceNode}, durationMs=${timing.durationMs}`
+    );
+  }
+
+  return {
+    ...state,
+    trace: {
+      ...state.trace,
+      timings: [...state.trace.timings, timing],
+    },
+  };
+}
+
+function calculateAtRiskWeekTraceDuration(
+  startedAt: AtRiskWeekTraceInstant,
+  completedAt: AtRiskWeekTraceInstant
+): number {
+  const durationMs = completedAt.monotonicMs - startedAt.monotonicMs;
+
+  if (!Number.isFinite(durationMs) || durationMs < 0) {
+    throw new AtRiskWeekNodeContractError(
+      `At-risk Week trace clock moved backwards: startedMs=${startedAt.monotonicMs}, completedMs=${completedAt.monotonicMs}`
+    );
+  }
+
+  return durationMs;
+}
+
+function findLatestAtRiskWeekTraceTiming(
+  timings: AtRiskWeekTraceTiming[],
+  traceNode: AtRiskWeekTraceNode
+): AtRiskWeekTraceTiming | null {
+  for (let index = timings.length - 1; index >= 0; index -= 1) {
+    const timing = timings[index];
+
+    if (timing && timing.traceNode === traceNode) {
+      return timing;
+    }
+  }
+
+  return null;
 }
 
 async function runAtRiskWeekGraphNode(
@@ -1135,13 +1244,26 @@ export function createLangChainAtRiskWeekReasoner(
     modelName,
     invoke: async (messages) => {
       const result = await structuredModel.invoke(messages.map(toLangChainMessage));
+      const reasoning = parseAtRiskWeekStructuredOutput(result.parsed, modelName);
 
       return {
-        reasoning: atRiskWeekReasoningOutputSchema.parse(result.parsed),
+        reasoning,
         modelUsage: extractAtRiskWeekModelUsage(result.raw, modelName),
       };
     },
   };
+}
+
+function parseAtRiskWeekStructuredOutput(parsed: unknown, modelName: string): AtRiskWeekReasoningOutput {
+  try {
+    return atRiskWeekReasoningOutputSchema.parse(parsed);
+  } catch (error) {
+    throw new AtRiskWeekStructuredOutputError({
+      modelName,
+      message: errorMessage(error),
+      parsed,
+    });
+  }
 }
 
 export function recordAtRiskWeekEarlyExit(
@@ -1352,6 +1474,31 @@ export class AtRiskWeekModelInvocationError extends Error {
   }
 }
 
+type AtRiskWeekStructuredOutputErrorInput = {
+  modelName: string;
+  message: string;
+  parsed: unknown;
+};
+
+export class AtRiskWeekStructuredOutputError extends Error {
+  readonly modelName: string;
+  readonly parsedOutput: string;
+
+  constructor(input: AtRiskWeekStructuredOutputErrorInput) {
+    const parsedOutput = stringifyAtRiskWeekErrorPayload(input.parsed);
+
+    super([
+      'At-risk Week structured output parse failed',
+      `modelName=${input.modelName}`,
+      `errorMessage=${input.message}`,
+      `parsedOutput=${parsedOutput}`,
+    ].join(', '));
+    this.name = 'AtRiskWeekStructuredOutputError';
+    this.modelName = input.modelName;
+    this.parsedOutput = parsedOutput;
+  }
+}
+
 type AtRiskWeekPersistenceErrorInput = {
   workspaceId: string;
   scopedDocId: string;
@@ -1521,8 +1668,39 @@ function extractAtRiskWeekModelUsage(raw: BaseMessage, modelName: string): AtRis
     modelName,
     inputTokens,
     outputTokens,
-    estimatedCost: 0,
+    estimatedCost: estimateAtRiskWeekModelCost(modelName, inputTokens, outputTokens),
   };
+}
+
+export function estimateAtRiskWeekModelCost(
+  modelName: string,
+  inputTokens: number,
+  outputTokens: number
+): number {
+  if (!Number.isInteger(inputTokens) || inputTokens < 0) {
+    throw new AtRiskWeekNodeContractError(
+      `At-risk Week model input token count must be a nonnegative integer: modelName=${modelName}, inputTokens=${inputTokens}`
+    );
+  }
+
+  if (!Number.isInteger(outputTokens) || outputTokens < 0) {
+    throw new AtRiskWeekNodeContractError(
+      `At-risk Week model output token count must be a nonnegative integer: modelName=${modelName}, outputTokens=${outputTokens}`
+    );
+  }
+
+  const pricing = atRiskWeekModelPricingByName[modelName as keyof typeof atRiskWeekModelPricingByName];
+
+  if (!pricing) {
+    return 0;
+  }
+
+  const cost = (
+    inputTokens * pricing.inputUsdPerMillionTokens
+    + outputTokens * pricing.outputUsdPerMillionTokens
+  ) / 1_000_000;
+
+  return Math.round(cost * 1_000_000) / 1_000_000;
 }
 
 function integerOrNull(value: unknown): number | null {
@@ -1601,6 +1779,14 @@ function responseBodyOrNull(value: unknown): string | null {
   }
 
   return JSON.stringify(value);
+}
+
+function stringifyAtRiskWeekErrorPayload(value: unknown): string {
+  try {
+    return JSON.stringify(value);
+  } catch (_error) {
+    return '[unserializable]';
+  }
 }
 
 function errorMessage(error: unknown): string {
