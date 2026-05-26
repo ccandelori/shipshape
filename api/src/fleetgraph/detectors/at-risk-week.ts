@@ -20,6 +20,7 @@ import {
   isoDateTimeSchema,
   type ActionCandidate,
   type FleetGraphApprovalLevel,
+  type FleetGraphTrigger,
   type FleetGraphLifecycleState,
   type FleetGraphReversibility,
   type FleetGraphSeverity,
@@ -472,6 +473,18 @@ type AtRiskWeekTraceInvocationOutput = {
   metadata: AtRiskWeekTraceMetadata;
 };
 
+type AtRiskWeekUsageRecord = {
+  runId: string;
+  workspaceId: string;
+  trigger: FleetGraphTrigger;
+  detector: typeof atRiskWeekDetectorType;
+  modelName: string;
+  inputTokens: number;
+  outputTokens: number;
+  estimatedCost: number;
+  traceMetadata: AtRiskWeekTraceMetadata;
+};
+
 export function createAtRiskWeekInitialState(input: AtRiskWeekGraphInput): AtRiskWeekGraphState {
   const parsedInput = atRiskWeekGraphInputSchema.parse(input);
   const scope = createAtRiskWeekScopeState(parsedInput);
@@ -577,6 +590,8 @@ export async function runAtRiskWeekGraph(
         { graphState: state },
         createAtRiskWeekCheckpointConfig(state)
       );
+
+      await persistAtRiskWeekUsage(output.graphState, dependencies.nodeDependencies.client);
 
       return output.graphState;
     }
@@ -1262,6 +1277,78 @@ async function rollbackAtRiskWeekOutput(dependencies: AtRiskWeekOutputNodeDepend
       message: `Rollback failed after persistence error: ${errorMessage(error)}`,
     });
   }
+}
+
+async function persistAtRiskWeekUsage(
+  state: AtRiskWeekGraphState,
+  client: FleetGraphQueryClient
+): Promise<void> {
+  const usage = createAtRiskWeekUsageRecord(state);
+
+  try {
+    await client.query<QueryResultRow>(
+      `INSERT INTO fleetgraph_usage (
+         run_id, workspace_id, trigger, detector, model_name,
+         input_tokens, output_tokens, estimated_cost_usd, trace_metadata
+       )
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)`,
+      [
+        usage.runId,
+        usage.workspaceId,
+        usage.trigger,
+        usage.detector,
+        usage.modelName,
+        usage.inputTokens,
+        usage.outputTokens,
+        usage.estimatedCost,
+        JSON.stringify(usage.traceMetadata),
+      ]
+    );
+  } catch (error) {
+    throw new AtRiskWeekPersistenceError({
+      workspaceId: state.scope.workspaceId,
+      scopedDocId: state.scope.scopedDocId,
+      runId: state.scope.runId,
+      message: `Usage persistence failed: ${errorMessage(error)}`,
+    });
+  }
+}
+
+function createAtRiskWeekUsageRecord(state: AtRiskWeekGraphState): AtRiskWeekUsageRecord {
+  const modelUsage = state.trace.modelUsage ?? {
+    modelName: atRiskWeekReasoningModelName,
+    inputTokens: 0,
+    outputTokens: 0,
+    estimatedCost: 0,
+  };
+
+  return {
+    runId: state.scope.runId,
+    workspaceId: state.scope.workspaceId,
+    trigger: toFleetGraphUsageTrigger(state.trace.triggerSource),
+    detector: atRiskWeekDetectorType,
+    modelName: modelUsage.modelName,
+    inputTokens: modelUsage.inputTokens,
+    outputTokens: modelUsage.outputTokens,
+    estimatedCost: modelUsage.estimatedCost,
+    traceMetadata: createAtRiskWeekTraceMetadata(state, 'run'),
+  };
+}
+
+function toFleetGraphUsageTrigger(triggerSource: AtRiskWeekTriggerSource): FleetGraphTrigger {
+  if (triggerSource === 'poll' || triggerSource === 'mutation') {
+    return 'proactive';
+  }
+
+  if (triggerSource === 'ondemand') {
+    return 'ondemand';
+  }
+
+  if (triggerSource === 'resume') {
+    return 'resume';
+  }
+
+  throw new AtRiskWeekNodeContractError(`Unsupported at-risk Week trigger source: triggerSource=${triggerSource}`);
 }
 
 function requireInsertedId(

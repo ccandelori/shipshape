@@ -49,6 +49,24 @@ type ActionCandidateRow = {
   reversibility: string;
 };
 
+type UsageRow = {
+  run_id: string;
+  workspace_id: string;
+  trigger: string;
+  detector: string;
+  model_name: string;
+  input_tokens: number;
+  output_tokens: number;
+  estimated_cost_usd: string;
+  trace_metadata: {
+    trigger?: string;
+    branchPath?: string;
+    lifecycleState?: string;
+    findingId?: string;
+    actionCandidateId?: string;
+  };
+};
+
 describe('FleetGraph at-risk Week output persistence', () => {
   const testRunId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const requestedAt = '2026-05-26T05:00:00.000Z';
@@ -291,7 +309,7 @@ describe('FleetGraph at-risk Week output persistence', () => {
               modelName: 'gpt-4o-mini',
               inputTokens: 850,
               outputTokens: 172,
-              estimatedCost: 0,
+              estimatedCost: 0.000231,
             },
           })),
         },
@@ -356,6 +374,34 @@ describe('FleetGraph at-risk Week output persistence', () => {
         approval_level: 'approval_required',
         reversibility: 'reversible',
       });
+
+      const usageResult = await pool.query<UsageRow>(
+        `SELECT run_id, workspace_id, trigger, detector, model_name,
+                input_tokens, output_tokens, estimated_cost_usd::text, trace_metadata
+         FROM fleetgraph_usage
+         WHERE workspace_id = $1
+           AND run_id = $2
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [workspaceId, graphInput.runId]
+      );
+      expect(usageResult.rows[0]).toEqual({
+        run_id: graphInput.runId,
+        workspace_id: workspaceId,
+        trigger: 'proactive',
+        detector: 'at_risk_week',
+        model_name: 'gpt-4o-mini',
+        input_tokens: 850,
+        output_tokens: 172,
+        estimated_cost_usd: '0.000231',
+        trace_metadata: expect.objectContaining({
+          trigger: 'poll',
+          branchPath: 'output',
+          lifecycleState: 'pending_review',
+          findingId: graphState.persistence!.findingId,
+          actionCandidateId: graphState.persistence!.actionCandidateId,
+        }),
+      });
       expect(broadcastToUser).toHaveBeenCalledWith(ownerUserId, 'fleetgraph:finding_created', {
         workspaceId,
         scopedDocumentId: scopedDocId,
@@ -364,6 +410,116 @@ describe('FleetGraph at-risk Week output persistence', () => {
         detectorType: 'at_risk_week',
         severity: 'high',
         lifecycleState: 'pending_review',
+      });
+    } finally {
+      client.release();
+    }
+  });
+
+  it('persists zero-token usage for quiet preFilter exits without calling the model', async () => {
+    const client = await pool.connect();
+    const broadcastToUser = vi.fn();
+    const quietRunId = '44444444-4444-4444-8444-444444444444';
+    const quietMaterialChangeKey = `${materialChangeKey}:quiet-usage`;
+    const graphInput: AtRiskWeekGraphInput = {
+      workspaceId,
+      scopedDocId,
+      runId: quietRunId,
+      triggerSource: 'poll',
+      requestedAt,
+    };
+    const quietContext = {
+      ...createWeekContext({
+        workspaceId,
+        scopedDocId,
+        ownerUserId,
+        requestedAt,
+        materialChangeKey: quietMaterialChangeKey,
+        policyKind: 'finding_only',
+      }),
+      issues: [],
+    };
+    const reasoner = vi.fn(async () => ({
+      reasoning: createReasoningOutput(scopedDocId, 'finding_only'),
+      modelUsage: {
+        modelName: 'gpt-4o-mini',
+        inputTokens: 1,
+        outputTokens: 1,
+        estimatedCost: 0.000001,
+      },
+    }));
+    const graphDependencies: AtRiskWeekGraphDependencies = {
+      nodeDependencies: {
+        client,
+        buildWeekContext: vi.fn(async () => quietContext),
+        shouldRunDetector: vi.fn(async () => ({
+          shouldRun: true,
+          reason: `run_material_changed_no_suppression:${quietMaterialChangeKey}`,
+          materialChangeKey: quietMaterialChangeKey,
+        })),
+        now: () => completedAt,
+      },
+      reasonNodeDependencies: {
+        reasoner: {
+          modelName: 'gpt-4o-mini',
+          invoke: reasoner,
+        },
+        retryPolicy: {
+          maxAttempts: 1,
+          delayMs: 0,
+          sleep: vi.fn(async () => undefined),
+        },
+        logger: {
+          warn: vi.fn(),
+        },
+        now: () => completedAt,
+      },
+      outputNodeDependencies: {
+        client,
+        broadcastToUser,
+        now: () => completedAt,
+      },
+      traceRunner: passthroughAtRiskWeekTraceRunner,
+      checkpointer: createAtRiskWeekCheckpointer(),
+    };
+
+    try {
+      const graphState = await runAtRiskWeekGraph(graphInput, graphDependencies);
+
+      expect(graphState.status).toBe('exited');
+      expect(graphState.earlyExit).toMatchObject({
+        node: 'preFilter',
+        reason: 'pre_filter_safe',
+      });
+      expect(reasoner).not.toHaveBeenCalled();
+      expect(broadcastToUser).not.toHaveBeenCalled();
+
+      const usageResult = await pool.query<UsageRow>(
+        `SELECT run_id, workspace_id, trigger, detector, model_name,
+                input_tokens, output_tokens, estimated_cost_usd::text, trace_metadata
+         FROM fleetgraph_usage
+         WHERE workspace_id = $1
+           AND run_id = $2
+         ORDER BY created_at DESC
+         LIMIT 1`,
+        [workspaceId, quietRunId]
+      );
+      expect(usageResult.rows[0]).toEqual({
+        run_id: quietRunId,
+        workspace_id: workspaceId,
+        trigger: 'proactive',
+        detector: 'at_risk_week',
+        model_name: 'gpt-4o-mini',
+        input_tokens: 0,
+        output_tokens: 0,
+        estimated_cost_usd: '0.000000',
+        trace_metadata: expect.objectContaining({
+          trigger: 'poll',
+          branchPath: 'prefilter-exit',
+          lifecycleState: null,
+          findingId: null,
+          actionCandidateId: null,
+        }),
       });
     } finally {
       client.release();
