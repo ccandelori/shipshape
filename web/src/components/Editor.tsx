@@ -38,6 +38,7 @@ import { CommentMark } from './editor/CommentMark';
 import { CommentDisplayExtension } from './editor/CommentDisplay';
 import { AIScoringDisplayExtension } from './editor/AIScoringDisplay';
 import { PlanReferenceBlockExtension } from './editor/PlanReferenceBlock';
+import { EmbeddedChat, type FleetGraphChatDocumentType } from '@/components/FleetGraph/EmbeddedChat';
 import { useCommentsQuery, useCreateComment, useUpdateComment } from '@/hooks/useCommentsQuery';
 import { BubbleMenu } from '@tiptap/react';
 import 'tippy.js/dist/tippy.css';
@@ -232,6 +233,8 @@ export function Editor({
   const [rightSidebarCollapsed, setRightSidebarCollapsed] = useState(() => {
     return localStorage.getItem('ship:rightSidebarCollapsed') === 'true';
   });
+  const [fleetGraphChatOpen, setFleetGraphChatOpen] = useState(false);
+  const fleetGraphChatDocumentType = resolveFleetGraphChatDocumentType(documentType);
   const [portalTarget, setPortalTarget] = useState<HTMLElement | null>(null);
 
   // AbortController for cancelling async uploads (images, files) when navigating away
@@ -248,6 +251,12 @@ export function Editor({
   useEffect(() => {
     localStorage.setItem('ship:rightSidebarCollapsed', String(rightSidebarCollapsed));
   }, [rightSidebarCollapsed]);
+
+  useEffect(() => {
+    if (!fleetGraphChatDocumentType) {
+      setFleetGraphChatOpen(false);
+    }
+  }, [fleetGraphChatDocumentType]);
 
   // Track browser online status for sync indicator using native browser events
   useEffect(() => {
@@ -878,6 +887,23 @@ export function Editor({
           })()}
 
           {/* Delete button */}
+          {fleetGraphChatDocumentType && (
+            <Tooltip content={fleetGraphChatOpen ? 'Close FleetGraph chat' : 'Open FleetGraph chat'}>
+              <button
+                onClick={() => setFleetGraphChatOpen((open) => !open)}
+                className={cn(
+                  'flex h-6 w-6 items-center justify-center rounded transition-colors',
+                  fleetGraphChatOpen
+                    ? 'bg-accent/20 text-accent'
+                    : 'text-muted hover:bg-border hover:text-foreground'
+                )}
+                aria-label={fleetGraphChatOpen ? 'Close FleetGraph chat' : 'Open FleetGraph chat'}
+              >
+                <FleetGraphChatIcon />
+              </button>
+            </Tooltip>
+          )}
+
           {onDelete && (
             <Tooltip content="Delete document">
               <button
@@ -1029,6 +1055,13 @@ export function Editor({
             }}
           />
         </div>
+        {fleetGraphChatOpen && fleetGraphChatDocumentType && (
+          <EmbeddedChat
+            documentId={documentId}
+            documentType={fleetGraphChatDocumentType}
+            className="w-80 shrink-0"
+          />
+        )}
 
       </div>
 
@@ -1097,10 +1130,28 @@ function ExpandLeftIcon() {
   );
 }
 
+function FleetGraphChatIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h8m-8 4h5m8-2a8 8 0 11-14.32-4.91A8 8 0 0121 12z" />
+    </svg>
+  );
+}
+
 function TrashIcon() {
   return (
     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
     </svg>
   );
+}
+
+function resolveFleetGraphChatDocumentType(
+  documentType: string | undefined
+): FleetGraphChatDocumentType | null {
+  if (documentType === 'sprint' || documentType === 'project' || documentType === 'issue') {
+    return documentType;
+  }
+
+  return null;
 }
