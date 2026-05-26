@@ -14,6 +14,7 @@ import {
   createAtRiskWeekInitialState,
   createLangChainAtRiskWeekReasoner,
   guardNode,
+  policyNode,
   preFilterNode,
   reasonNode,
   renderAtRiskWeekReasoningPrompt,
@@ -31,6 +32,7 @@ import {
 const workspaceId = '11111111-1111-4111-8111-111111111111';
 const scopedDocId = '22222222-2222-4222-8222-222222222222';
 const runId = '33333333-3333-4333-8333-333333333333';
+const ownerUserId = '77777777-7777-4777-8777-777777777777';
 const requestedAt = '2026-05-26T05:00:00.000Z';
 
 const graphInput: AtRiskWeekGraphInput = {
@@ -647,6 +649,49 @@ describe('FleetGraph at-risk Week detector contracts', () => {
       expect.objectContaining({ content: 'user prompt' }),
     ]);
   });
+
+  it('classifies at-risk reasoning into a pending review action candidate', async () => {
+    const state = await createReasonedAtRiskState(createWeekContext({
+      ownerUserId,
+      issues: [{
+        id: '44444444-4444-4444-8444-444444444444',
+        title: 'Launch approval blocked',
+        state: 'blocked',
+        priority: 'high',
+      }],
+      blockerText: 'Blocked waiting on security approval.',
+    }));
+
+    const policyState = await policyNode(state);
+
+    expect(policyState.status).toBe('running');
+    expect(policyState.activeNode).toBe('output');
+    expect(policyState.completedNodes).toEqual(['scope', 'context', 'guard', 'preFilter', 'reason', 'policy']);
+    expect(policyState.policy).toEqual({
+      lifecycleState: 'pending_review',
+      approvalLevel: 'approval_required',
+      reversibility: 'reversible',
+      actionCandidate: {
+        targetDocumentId: scopedDocId,
+        ownerUserId,
+        roleReason: 'Week owner is responsible for resolving at-risk Week blockers.',
+        urgency: 'high',
+        evidence: [{
+          sourceType: 'issue',
+          sourceDocumentId: '44444444-4444-4444-8444-444444444444',
+          quote: 'Launch approval blocked',
+          observedAt: '2026-05-26T05:00:00.000Z',
+        }],
+        recommendedAction: {
+          kind: 'draft_comment',
+          title: 'Ask for blocker update',
+          body: 'Please post the current blocker owner and next step before standup.',
+        },
+        approvalLevel: 'approval_required',
+        reversibility: 'reversible',
+      },
+    });
+  });
 });
 
 type ScopeRow = QueryResultRow & {
@@ -662,6 +707,7 @@ type IssueFixture = {
 
 type WeekContextFixture = {
   issues: IssueFixture[];
+  ownerUserId?: string | null;
   blockerText?: string;
 };
 
@@ -757,6 +803,26 @@ async function createReasoningReadyState(weekContext: WeekContext) {
   );
 }
 
+async function createReasonedAtRiskState(weekContext: WeekContext) {
+  return reasonNode(
+    await createReasoningReadyState(weekContext),
+    createReasonNodeDependencies({
+      reasoner: {
+        modelName: 'gpt-4o-mini',
+        invoke: vi.fn(async () => ({
+          reasoning: createAtRiskReasoningOutput(),
+          modelUsage: {
+            modelName: 'gpt-4o-mini',
+            inputTokens: 850,
+            outputTokens: 172,
+            estimatedCost: 0,
+          },
+        })),
+      },
+    })
+  );
+}
+
 function createWeekContext(fixture: WeekContextFixture): WeekContext {
   return {
     week: {
@@ -771,7 +837,7 @@ function createWeekContext(fixture: WeekContextFixture): WeekContext {
       createdAt: new Date('2026-05-20T05:00:00.000Z'),
       updatedAt: new Date('2026-05-26T05:00:00.000Z'),
     },
-    ownerUserId: null,
+    ownerUserId: fixture.ownerUserId ?? null,
     projectId: null,
     programId: null,
     issues: fixture.issues.map((issue) => ({

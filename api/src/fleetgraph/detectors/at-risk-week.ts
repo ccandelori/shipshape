@@ -6,6 +6,7 @@ import { z } from 'zod';
 import type { FleetGraphConfig } from '../config.js';
 import type { FleetGraphQueryClient, WeekContext } from '../context.js';
 import type { DetectorRunDecision } from '../guards.js';
+import { classifyFleetGraphPolicy } from '../policy.js';
 import {
   evidenceItemSchema,
   fleetGraphSeveritySchema,
@@ -14,7 +15,9 @@ import {
   isoDateTimeSchema,
   type ActionCandidate,
   type FleetGraphApprovalLevel,
+  type FleetGraphLifecycleState,
   type FleetGraphReversibility,
+  type FleetGraphSeverity,
 } from '../types.js';
 import { extractText } from '../../utils/document-content.js';
 
@@ -102,6 +105,7 @@ export const atRiskWeekReasoningOutputSchema = z.discriminatedUnion('isAtRisk', 
 export type AtRiskWeekReasoningOutput = z.infer<typeof atRiskWeekReasoningOutputSchema>;
 
 export type AtRiskWeekPolicyDecision = {
+  lifecycleState: FleetGraphLifecycleState;
   approvalLevel: FleetGraphApprovalLevel;
   reversibility: FleetGraphReversibility;
   actionCandidate: ActionCandidate | null;
@@ -282,6 +286,31 @@ export type AtRiskWeekReasonNodeDependencies = {
   now: () => string;
 };
 
+export type AtRiskWeekBroadcastPayload = {
+  workspaceId: string;
+  scopedDocumentId: string;
+  findingId: string;
+  actionCandidateId: string | null;
+  detectorType: typeof atRiskWeekDetectorType;
+  severity: FleetGraphSeverity;
+  lifecycleState: 'open' | 'pending_review';
+};
+
+export type AtRiskWeekOutputNodeDependencies = {
+  client: FleetGraphQueryClient;
+  broadcastToUser: (
+    userId: string,
+    eventType: 'fleetgraph:finding_created',
+    payload: AtRiskWeekBroadcastPayload
+  ) => void;
+  now: () => string;
+};
+
+type PersistedAtRiskWeekOutput = {
+  findingId: string;
+  actionCandidateId: string | null;
+};
+
 export type AtRiskWeekNodeDependencies = {
   client: FleetGraphQueryClient;
   buildWeekContext: (
@@ -299,6 +328,10 @@ export type AtRiskWeekNodeDependencies = {
 };
 
 type ScopeResolutionRow = QueryResultRow & {
+  id: string;
+};
+
+type InsertedIdRow = QueryResultRow & {
   id: string;
 };
 
@@ -511,6 +544,251 @@ export async function reasonNode(
   }
 
   return reasonedState;
+}
+
+export async function policyNode(state: AtRiskWeekGraphState): Promise<AtRiskWeekGraphState> {
+  if (state.status !== 'running') {
+    return state;
+  }
+
+  const context = requireAtRiskWeekContext(state, 'policy');
+  const reasoning = requireAtRiskWeekReasoning(state, 'policy');
+
+  if (!reasoning.isAtRisk) {
+    throw new AtRiskWeekNodeContractError('At-risk Week policy node requires at-risk reasoning');
+  }
+
+  const policy = classifyFleetGraphPolicy({
+    targetDocumentId: state.scope.scopedDocId,
+    ownerUserId: context.ownerUserId,
+    roleReason: 'Week owner is responsible for resolving at-risk Week blockers.',
+    severity: reasoning.severity,
+    evidence: reasoning.evidence,
+    recommendedAction: reasoning.recommendedAction,
+  });
+
+  return completeAtRiskWeekNode(state, 'policy', 'output', {
+    policy: {
+      lifecycleState: policy.lifecycleState,
+      approvalLevel: policy.approvalLevel,
+      reversibility: policy.reversibility,
+      actionCandidate: policy.actionCandidate,
+    },
+  });
+}
+
+export async function outputNode(
+  state: AtRiskWeekGraphState,
+  dependencies: AtRiskWeekOutputNodeDependencies
+): Promise<AtRiskWeekGraphState> {
+  if (state.status !== 'running') {
+    return state;
+  }
+
+  const context = requireAtRiskWeekContext(state, 'output');
+  const guard = requireAtRiskWeekGuard(state, 'output');
+  const reasoning = requireAtRiskWeekReasoning(state, 'output');
+  const policy = requireAtRiskWeekPolicy(state, 'output');
+
+  if (!reasoning.isAtRisk) {
+    throw new AtRiskWeekNodeContractError('At-risk Week output node requires at-risk reasoning');
+  }
+
+  const lifecycleState = requireAtRiskWeekOutputLifecycle(policy.lifecycleState);
+  const persistence = await persistAtRiskWeekOutput(state, reasoning, policy, lifecycleState, dependencies);
+
+  if (context.ownerUserId !== null) {
+    broadcastAtRiskWeekFindingCreated(
+      state,
+      context.ownerUserId,
+      reasoning.severity,
+      lifecycleState,
+      persistence,
+      dependencies
+    );
+  }
+
+  return {
+    ...state,
+    status: 'completed',
+    activeNode: null,
+    completedNodes: state.completedNodes.includes('output')
+      ? state.completedNodes
+      : [...state.completedNodes, 'output'],
+    persistence: {
+      ...persistence,
+      broadcastEvent: context.ownerUserId === null ? null : 'fleetgraph:finding_created',
+    },
+    trace: {
+      ...state.trace,
+      materialChangeKey: guard.materialChangeKey,
+    },
+    completedAt: isoDateTimeSchema.parse(dependencies.now()),
+  };
+}
+
+function broadcastAtRiskWeekFindingCreated(
+  state: AtRiskWeekGraphState,
+  userId: string,
+  severity: FleetGraphSeverity,
+  lifecycleState: 'open' | 'pending_review',
+  persistence: PersistedAtRiskWeekOutput,
+  dependencies: AtRiskWeekOutputNodeDependencies
+): void {
+  try {
+    dependencies.broadcastToUser(userId, 'fleetgraph:finding_created', {
+      workspaceId: state.scope.workspaceId,
+      scopedDocumentId: state.scope.scopedDocId,
+      findingId: persistence.findingId,
+      actionCandidateId: persistence.actionCandidateId,
+      detectorType: atRiskWeekDetectorType,
+      severity,
+      lifecycleState,
+    });
+  } catch (error) {
+    throw new AtRiskWeekBroadcastError({
+      workspaceId: state.scope.workspaceId,
+      scopedDocId: state.scope.scopedDocId,
+      runId: state.scope.runId,
+      findingId: persistence.findingId,
+      userId,
+      message: errorMessage(error),
+    });
+  }
+}
+
+async function persistAtRiskWeekOutput(
+  state: AtRiskWeekGraphState,
+  reasoning: Extract<AtRiskWeekReasoningOutput, { isAtRisk: true }>,
+  policy: AtRiskWeekPolicyDecision,
+  lifecycleState: 'open' | 'pending_review',
+  dependencies: AtRiskWeekOutputNodeDependencies
+): Promise<PersistedAtRiskWeekOutput> {
+  try {
+    await dependencies.client.query<QueryResultRow>('BEGIN', []);
+    const findingId = await insertAtRiskWeekFinding(state, reasoning, lifecycleState, dependencies);
+    const actionCandidateId = policy.actionCandidate === null
+      ? null
+      : await insertAtRiskWeekActionCandidate(findingId, policy.actionCandidate, state, dependencies);
+
+    await dependencies.client.query<QueryResultRow>('COMMIT', []);
+
+    return {
+      findingId,
+      actionCandidateId,
+    };
+  } catch (error) {
+    await rollbackAtRiskWeekOutput(dependencies);
+    throw new AtRiskWeekPersistenceError({
+      workspaceId: state.scope.workspaceId,
+      scopedDocId: state.scope.scopedDocId,
+      runId: state.scope.runId,
+      message: errorMessage(error),
+    });
+  }
+}
+
+async function insertAtRiskWeekFinding(
+  state: AtRiskWeekGraphState,
+  reasoning: Extract<AtRiskWeekReasoningOutput, { isAtRisk: true }>,
+  lifecycleState: 'open' | 'pending_review',
+  dependencies: AtRiskWeekOutputNodeDependencies
+): Promise<string> {
+  const context = requireAtRiskWeekContext(state, 'output');
+  const guard = requireAtRiskWeekGuard(state, 'output');
+  const result = await dependencies.client.query<InsertedIdRow>(
+    `INSERT INTO fleetgraph_findings (
+       workspace_id, scoped_document_id, detector_type, severity, evidence,
+       recipient_user_id, lifecycle_state, material_change_key
+     )
+     VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8)
+     RETURNING id`,
+    [
+      state.scope.workspaceId,
+      state.scope.scopedDocId,
+      atRiskWeekDetectorType,
+      reasoning.severity,
+      JSON.stringify(reasoning.evidence),
+      context.ownerUserId,
+      lifecycleState,
+      guard.materialChangeKey,
+    ]
+  );
+
+  return requireInsertedId(
+    result.rows[0],
+    'fleetgraph_findings',
+    state.scope.workspaceId,
+    state.scope.scopedDocId,
+    state.scope.runId
+  );
+}
+
+async function insertAtRiskWeekActionCandidate(
+  findingId: string,
+  actionCandidate: ActionCandidate,
+  state: AtRiskWeekGraphState,
+  dependencies: AtRiskWeekOutputNodeDependencies
+): Promise<string> {
+  const result = await dependencies.client.query<InsertedIdRow>(
+    `INSERT INTO fleetgraph_action_candidates (
+       finding_id, target_document_id, owner_user_id, role_reason, urgency, evidence,
+       recommended_action, approval_level, reversibility
+     )
+     VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9)
+     RETURNING id`,
+    [
+      findingId,
+      actionCandidate.targetDocumentId,
+      actionCandidate.ownerUserId,
+      actionCandidate.roleReason,
+      actionCandidate.urgency,
+      JSON.stringify(actionCandidate.evidence),
+      JSON.stringify(actionCandidate.recommendedAction),
+      actionCandidate.approvalLevel,
+      actionCandidate.reversibility,
+    ]
+  );
+
+  return requireInsertedId(
+    result.rows[0],
+    'fleetgraph_action_candidates',
+    state.scope.workspaceId,
+    state.scope.scopedDocId,
+    state.scope.runId
+  );
+}
+
+async function rollbackAtRiskWeekOutput(dependencies: AtRiskWeekOutputNodeDependencies): Promise<void> {
+  try {
+    await dependencies.client.query<QueryResultRow>('ROLLBACK', []);
+  } catch (error) {
+    throw new AtRiskWeekPersistenceError({
+      workspaceId: 'unknown',
+      scopedDocId: 'unknown',
+      runId: 'unknown',
+      message: `Rollback failed after persistence error: ${errorMessage(error)}`,
+    });
+  }
+}
+
+function requireInsertedId(
+  row: InsertedIdRow | undefined,
+  tableName: string,
+  workspaceId: string,
+  scopedDocId: string,
+  runId: string
+): string {
+  if (!row) {
+    throw new AtRiskWeekPersistenceError({
+      workspaceId,
+      scopedDocId,
+      runId,
+      message: `${tableName} insert returned no id`,
+    });
+  }
+
+  return row.id;
 }
 
 export function createOpenAIAtRiskWeekReasoner(config: FleetGraphConfig): AtRiskWeekStructuredReasoner {
@@ -755,6 +1033,68 @@ export class AtRiskWeekModelInvocationError extends Error {
   }
 }
 
+type AtRiskWeekPersistenceErrorInput = {
+  workspaceId: string;
+  scopedDocId: string;
+  runId: string;
+  message: string;
+};
+
+export class AtRiskWeekPersistenceError extends Error {
+  readonly workspaceId: string;
+  readonly scopedDocId: string;
+  readonly runId: string;
+
+  constructor(input: AtRiskWeekPersistenceErrorInput) {
+    super([
+      'At-risk Week output persistence failed',
+      `workspaceId=${input.workspaceId}`,
+      `scopedDocId=${input.scopedDocId}`,
+      `runId=${input.runId}`,
+      `errorMessage=${input.message}`,
+    ].join(', '));
+    this.name = 'AtRiskWeekPersistenceError';
+    this.workspaceId = input.workspaceId;
+    this.scopedDocId = input.scopedDocId;
+    this.runId = input.runId;
+  }
+}
+
+type AtRiskWeekBroadcastErrorInput = {
+  workspaceId: string;
+  scopedDocId: string;
+  runId: string;
+  findingId: string;
+  userId: string;
+  message: string;
+};
+
+export class AtRiskWeekBroadcastError extends Error {
+  readonly workspaceId: string;
+  readonly scopedDocId: string;
+  readonly runId: string;
+  readonly findingId: string;
+  readonly userId: string;
+
+  constructor(input: AtRiskWeekBroadcastErrorInput) {
+    super([
+      'At-risk Week finding broadcast failed',
+      `workspaceId=${input.workspaceId}`,
+      `scopedDocId=${input.scopedDocId}`,
+      `runId=${input.runId}`,
+      `findingId=${input.findingId}`,
+      `userId=${input.userId}`,
+      `errorMessage=${input.message}`,
+    ].join(', '));
+    this.name = 'AtRiskWeekBroadcastError';
+    this.workspaceId = input.workspaceId;
+    this.scopedDocId = input.scopedDocId;
+    this.runId = input.runId;
+    this.findingId = input.findingId;
+    this.userId = input.userId;
+  }
+}
+
 function createAtRiskWeekScopeState(input: AtRiskWeekGraphInput): AtRiskWeekScopeState {
   return {
     workspaceId: input.workspaceId,
@@ -806,6 +1146,32 @@ function requireAtRiskWeekPreFilter(
   }
 
   return state.preFilter;
+}
+
+function requireAtRiskWeekReasoning(state: AtRiskWeekGraphState, node: AtRiskWeekNodeName): AtRiskWeekReasoningOutput {
+  if (state.reasoning === null) {
+    throw new AtRiskWeekNodeContractError(`At-risk Week ${node} node requires model reasoning`);
+  }
+
+  return state.reasoning;
+}
+
+function requireAtRiskWeekPolicy(state: AtRiskWeekGraphState, node: AtRiskWeekNodeName): AtRiskWeekPolicyDecision {
+  if (state.policy === null) {
+    throw new AtRiskWeekNodeContractError(`At-risk Week ${node} node requires policy decision`);
+  }
+
+  return state.policy;
+}
+
+function requireAtRiskWeekOutputLifecycle(lifecycleState: FleetGraphLifecycleState): 'open' | 'pending_review' {
+  if (lifecycleState === 'open' || lifecycleState === 'pending_review') {
+    return lifecycleState;
+  }
+
+  throw new AtRiskWeekNodeContractError(
+    `At-risk Week output node cannot create new finding with lifecycleState=${lifecycleState}`
+  );
 }
 
 type BaseMessageWithUsageMetadata = BaseMessage & {
@@ -916,6 +1282,14 @@ function responseBodyOrNull(value: unknown): string | null {
   }
 
   return JSON.stringify(value);
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
 }
 
 function evaluateAtRiskWeekPreFilter(context: WeekContext): AtRiskWeekPreFilterDecision {
