@@ -9,6 +9,7 @@ import {
   type FleetGraphSeverity,
   type RecommendedAction,
 } from './types.js';
+import type { FleetGraphQueryClient } from './context.js';
 
 export const fleetGraphApprovalPolicyLevels = [
   'auto_answer',
@@ -123,6 +124,43 @@ export type FleetGraphPolicyDecision = {
   actionCandidate: ActionCandidate | null;
 };
 
+export type FleetGraphPendingActionFinding = {
+  id: string;
+  workspaceId: string;
+  expectedLifecycleState: FleetGraphLifecycleState;
+};
+
+type InsertedActionCandidateRow = {
+  id: string;
+};
+
+type UpdatedFindingRow = {
+  id: string;
+};
+
+type FleetGraphPendingActionPersistenceErrorInput = {
+  findingId: string;
+  workspaceId: string;
+  message: string;
+};
+
+export class FleetGraphPendingActionPersistenceError extends Error {
+  readonly findingId: string;
+  readonly workspaceId: string;
+
+  constructor(input: FleetGraphPendingActionPersistenceErrorInput) {
+    super([
+      'FleetGraph pending action persistence failed',
+      `findingId=${input.findingId}`,
+      `workspaceId=${input.workspaceId}`,
+      `errorMessage=${input.message}`,
+    ].join(', '));
+    this.name = 'FleetGraphPendingActionPersistenceError';
+    this.findingId = input.findingId;
+    this.workspaceId = input.workspaceId;
+  }
+}
+
 export function classifyFleetGraphPolicy(input: FleetGraphPolicyInput): FleetGraphPolicyDecision {
   const approvalLevel = classifyPersistenceApprovalLevel(input.recommendedAction);
   const reversibility = classifyReversibility(input.recommendedAction);
@@ -153,6 +191,104 @@ export function classifyFleetGraphPolicy(input: FleetGraphPolicyInput): FleetGra
     reversibility,
     actionCandidate,
   };
+}
+
+export async function persistPendingAction(
+  client: FleetGraphQueryClient,
+  finding: FleetGraphPendingActionFinding,
+  actionCandidate: ActionCandidate
+): Promise<string> {
+  try {
+    await client.query('BEGIN', []);
+    const actionCandidateId = await insertPendingActionCandidate(client, finding.id, actionCandidate);
+    await transitionFindingToPendingReview(client, finding);
+    await client.query('COMMIT', []);
+
+    return actionCandidateId;
+  } catch (error) {
+    await rollbackPendingAction(client, finding, error);
+    throw new FleetGraphPendingActionPersistenceError({
+      findingId: finding.id,
+      workspaceId: finding.workspaceId,
+      message: errorMessage(error),
+    });
+  }
+}
+
+async function insertPendingActionCandidate(
+  client: FleetGraphQueryClient,
+  findingId: string,
+  actionCandidate: ActionCandidate
+): Promise<string> {
+  const result = await client.query<InsertedActionCandidateRow>(
+    `INSERT INTO fleetgraph_action_candidates (
+       finding_id, target_document_id, owner_user_id, role_reason, urgency, evidence,
+       recommended_action, approval_level, reversibility
+     )
+     VALUES ($1, $2, $3, $4, $5, $6::jsonb, $7, $8, $9)
+     RETURNING id`,
+    [
+      findingId,
+      actionCandidate.targetDocumentId,
+      actionCandidate.ownerUserId,
+      actionCandidate.roleReason,
+      actionCandidate.urgency,
+      JSON.stringify(actionCandidate.evidence),
+      JSON.stringify(actionCandidate.recommendedAction),
+      actionCandidate.approvalLevel,
+      actionCandidate.reversibility,
+    ]
+  );
+  const row = result.rows[0];
+
+  if (!row) {
+    throw new FleetGraphPendingActionPersistenceError({
+      findingId,
+      workspaceId: 'unknown',
+      message: 'fleetgraph_action_candidates insert returned no id',
+    });
+  }
+
+  return row.id;
+}
+
+async function transitionFindingToPendingReview(
+  client: FleetGraphQueryClient,
+  finding: FleetGraphPendingActionFinding
+): Promise<void> {
+  const result = await client.query<UpdatedFindingRow>(
+    `UPDATE fleetgraph_findings
+     SET lifecycle_state = 'pending_review'
+     WHERE id = $1
+       AND workspace_id = $2
+       AND lifecycle_state = $3
+     RETURNING id`,
+    [finding.id, finding.workspaceId, finding.expectedLifecycleState]
+  );
+
+  if (!result.rows[0]) {
+    throw new FleetGraphPendingActionPersistenceError({
+      findingId: finding.id,
+      workspaceId: finding.workspaceId,
+      message: `finding lifecycle transition returned no rows: expectedLifecycleState=${finding.expectedLifecycleState}`,
+    });
+  }
+}
+
+async function rollbackPendingAction(
+  client: FleetGraphQueryClient,
+  finding: FleetGraphPendingActionFinding,
+  originalError: unknown
+): Promise<void> {
+  try {
+    await client.query('ROLLBACK', []);
+  } catch (rollbackError) {
+    throw new FleetGraphPendingActionPersistenceError({
+      findingId: finding.id,
+      workspaceId: finding.workspaceId,
+      message: `rollback failed after ${errorMessage(originalError)}: ${errorMessage(rollbackError)}`,
+    });
+  }
 }
 
 export function classifyApprovalLevel(actionCandidate: unknown): FleetGraphApprovalPolicyLevel {
@@ -209,4 +345,12 @@ function classifyReversibility(recommendedAction: RecommendedAction): FleetGraph
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
 }
