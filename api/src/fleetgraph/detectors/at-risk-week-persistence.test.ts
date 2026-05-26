@@ -2,10 +2,14 @@ import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { pool } from '../../db/client.js';
 import type { WeekContext } from '../context.js';
 import {
+  createAtRiskWeekCheckpointer,
   createAtRiskWeekInitialState,
   outputNode,
+  passthroughAtRiskWeekTraceRunner,
+  runAtRiskWeekGraph,
   AtRiskWeekBroadcastError,
   AtRiskWeekPersistenceError,
+  type AtRiskWeekGraphDependencies,
   type AtRiskWeekGraphInput,
   type AtRiskWeekGraphState,
   type AtRiskWeekOutputNodeDependencies,
@@ -249,6 +253,123 @@ describe('FleetGraph at-risk Week output persistence', () => {
     }
   });
 
+  it('runs the compiled graph against seeded DB state and persists finding plus action candidate', async () => {
+    const client = await pool.connect();
+    const broadcastToUser = vi.fn();
+    const graphMaterialChangeKey = `${materialChangeKey}:graph`;
+    const graphInput: AtRiskWeekGraphInput = {
+      workspaceId,
+      scopedDocId,
+      runId: '33333333-3333-4333-8333-333333333333',
+      triggerSource: 'poll',
+      requestedAt,
+    };
+    const graphDependencies: AtRiskWeekGraphDependencies = {
+      nodeDependencies: {
+        client,
+        buildWeekContext: vi.fn(async () => createWeekContext({
+          workspaceId,
+          scopedDocId,
+          ownerUserId,
+          requestedAt,
+          materialChangeKey: graphMaterialChangeKey,
+          policyKind: 'action_candidate',
+        })),
+        shouldRunDetector: vi.fn(async () => ({
+          shouldRun: true,
+          reason: `run_material_changed_no_suppression:${graphMaterialChangeKey}`,
+          materialChangeKey: graphMaterialChangeKey,
+        })),
+        now: () => completedAt,
+      },
+      reasonNodeDependencies: {
+        reasoner: {
+          modelName: 'gpt-4o-mini',
+          invoke: vi.fn(async () => ({
+            reasoning: createReasoningOutput(scopedDocId, 'action_candidate'),
+            modelUsage: {
+              modelName: 'gpt-4o-mini',
+              inputTokens: 850,
+              outputTokens: 172,
+              estimatedCost: 0,
+            },
+          })),
+        },
+        retryPolicy: {
+          maxAttempts: 1,
+          delayMs: 0,
+          sleep: vi.fn(async () => undefined),
+        },
+        logger: {
+          warn: vi.fn(),
+        },
+        now: () => completedAt,
+      },
+      outputNodeDependencies: {
+        client,
+        broadcastToUser,
+        now: () => completedAt,
+      },
+      traceRunner: passthroughAtRiskWeekTraceRunner,
+      checkpointer: createAtRiskWeekCheckpointer(),
+    };
+
+    try {
+      const graphState = await runAtRiskWeekGraph(graphInput, graphDependencies);
+
+      expect(graphState.status).toBe('completed');
+      expect(graphState.completedNodes).toEqual(['scope', 'context', 'guard', 'preFilter', 'reason', 'policy', 'output']);
+      expect(graphState.persistence).toEqual({
+        findingId: expect.any(String),
+        actionCandidateId: expect.any(String),
+        broadcastEvent: 'fleetgraph:finding_created',
+      });
+
+      const findingResult = await pool.query<FindingRow>(
+        `SELECT workspace_id, scoped_document_id, detector_type, severity, evidence,
+                recipient_user_id, lifecycle_state, material_change_key
+         FROM fleetgraph_findings
+         WHERE id = $1`,
+        [graphState.persistence!.findingId]
+      );
+      expect(findingResult.rows[0]).toMatchObject({
+        workspace_id: workspaceId,
+        scoped_document_id: scopedDocId,
+        detector_type: 'at_risk_week',
+        severity: 'high',
+        recipient_user_id: ownerUserId,
+        lifecycle_state: 'pending_review',
+        material_change_key: graphMaterialChangeKey,
+      });
+
+      const candidateResult = await pool.query<ActionCandidateRow>(
+        `SELECT finding_id, target_document_id, owner_user_id, role_reason, urgency,
+                evidence, recommended_action, approval_level, reversibility
+         FROM fleetgraph_action_candidates
+         WHERE id = $1`,
+        [graphState.persistence!.actionCandidateId]
+      );
+      expect(candidateResult.rows[0]).toMatchObject({
+        finding_id: graphState.persistence!.findingId,
+        target_document_id: scopedDocId,
+        owner_user_id: ownerUserId,
+        approval_level: 'approval_required',
+        reversibility: 'reversible',
+      });
+      expect(broadcastToUser).toHaveBeenCalledWith(ownerUserId, 'fleetgraph:finding_created', {
+        workspaceId,
+        scopedDocumentId: scopedDocId,
+        findingId: graphState.persistence!.findingId,
+        actionCandidateId: graphState.persistence!.actionCandidateId,
+        detectorType: 'at_risk_week',
+        severity: 'high',
+        lifecycleState: 'pending_review',
+      });
+    } finally {
+      client.release();
+    }
+  });
+
   it('rolls back finding creation and skips broadcast when action candidate persistence fails', async () => {
     const client = await pool.connect();
     const broadcastToUser = vi.fn();
@@ -473,7 +594,24 @@ function createWeekContext(input: OutputReadyStateInput): WeekContext {
     ownerUserId: input.ownerUserId,
     projectId: null,
     programId: null,
-    issues: [],
+    issues: [{
+      id: input.scopedDocId,
+      workspaceId: input.workspaceId,
+      documentType: 'issue',
+      title: 'Launch approval blocked',
+      content: {},
+      parentId: null,
+      properties: {
+        state: 'blocked',
+        priority: 'high',
+      },
+      ticketNumber: null,
+      createdAt: new Date('2026-05-20T05:00:00.000Z'),
+      updatedAt: new Date('2026-05-26T05:00:00.000Z'),
+      state: 'blocked',
+      priority: 'high',
+      assigneeUserId: null,
+    }],
     standups: [],
     sprintIterations: [],
     accountability: {

@@ -14,6 +14,7 @@ import {
   createAtRiskWeekInitialState,
   createAtRiskWeekTraceMetadata,
   createLangChainAtRiskWeekReasoner,
+  runAtRiskWeekGraph,
   guardNode,
   outputNode,
   passthroughAtRiskWeekTraceRunner,
@@ -30,6 +31,7 @@ import {
   type AtRiskWeekTraceDefinition,
   type AtRiskWeekTraceMetadata,
   type AtRiskWeekTraceRunner,
+  type AtRiskWeekGraphDependencies,
   type AtRiskWeekNodeDependencies,
   type AtRiskWeekGraphInput,
   type AtRiskWeekOutputNodeDependencies,
@@ -446,6 +448,77 @@ describe('FleetGraph at-risk Week detector contracts', () => {
       findingId: null,
       broadcastEvent: null,
     });
+  });
+
+  it('runs the compiled graph through the quiet preFilter path without model or output calls', async () => {
+    const reasoner = {
+      modelName: 'gpt-4o-mini',
+      invoke: vi.fn(async () => ({
+        reasoning: createAtRiskReasoningOutput(),
+        modelUsage: null,
+      })),
+    };
+    const outputDependencies = createOutputNodeDependencies();
+    const graphDependencies = createGraphDependencies({
+      nodeDependencies: createNodeDependencies({
+        scopeRows: [{ id: scopedDocId }],
+        weekContext: createWeekContext({ issues: [] }),
+        guardDecision: {
+          shouldRun: true,
+          reason: 'run_material_changed_no_suppression:v1:safe',
+          materialChangeKey: 'v1:safe',
+        },
+      }),
+      reasonNodeDependencies: createReasonNodeDependencies({ reasoner }),
+      outputNodeDependencies: outputDependencies,
+    });
+
+    const graphState = await runAtRiskWeekGraph(graphInput, graphDependencies);
+
+    expect(graphState.status).toBe('exited');
+    expect(graphState.completedNodes).toEqual(['scope', 'context', 'guard', 'preFilter']);
+    expect(graphState.earlyExit).toMatchObject({
+      node: 'preFilter',
+      reason: 'pre_filter_safe',
+    });
+    expect(reasoner.invoke).not.toHaveBeenCalled();
+    expect(outputDependencies.broadcastToUser).not.toHaveBeenCalled();
+  });
+
+  it('runs the compiled graph through the suppressed guard path without model or output calls', async () => {
+    const reasoner = {
+      modelName: 'gpt-4o-mini',
+      invoke: vi.fn(async () => ({
+        reasoning: createAtRiskReasoningOutput(),
+        modelUsage: null,
+      })),
+    };
+    const outputDependencies = createOutputNodeDependencies();
+    const graphDependencies = createGraphDependencies({
+      nodeDependencies: createNodeDependencies({
+        scopeRows: [{ id: scopedDocId }],
+        weekContext: createWeekContext({ issues: [] }),
+        guardDecision: {
+          shouldRun: false,
+          reason: 'suppressed_open_finding:finding-1:v1:key',
+          materialChangeKey: 'v1:key',
+        },
+      }),
+      reasonNodeDependencies: createReasonNodeDependencies({ reasoner }),
+      outputNodeDependencies: outputDependencies,
+    });
+
+    const graphState = await runAtRiskWeekGraph(graphInput, graphDependencies);
+
+    expect(graphState.status).toBe('exited');
+    expect(graphState.completedNodes).toEqual(['scope', 'context', 'guard']);
+    expect(graphState.earlyExit).toMatchObject({
+      node: 'guard',
+      reason: 'guard_suppressed',
+      materialChangeKey: 'v1:key',
+    });
+    expect(reasoner.invoke).not.toHaveBeenCalled();
+    expect(outputDependencies.broadcastToUser).not.toHaveBeenCalled();
   });
 
   it('passes through preFilter when blockers or blocked high-priority issues are present', async () => {
@@ -888,6 +961,70 @@ describe('FleetGraph at-risk Week detector contracts', () => {
       lifecycleState: 'pending_review',
     });
   });
+
+  it('runs the compiled graph through finding generation and output persistence', async () => {
+    const reasoner = {
+      modelName: 'gpt-4o-mini',
+      invoke: vi.fn(async () => ({
+        reasoning: createAtRiskReasoningOutput(),
+        modelUsage: {
+          modelName: 'gpt-4o-mini',
+          inputTokens: 850,
+          outputTokens: 172,
+          estimatedCost: 0,
+        },
+      })),
+    };
+    const outputDependencies = createOutputNodeDependencies();
+    const graphDependencies = createGraphDependencies({
+      nodeDependencies: createNodeDependencies({
+        scopeRows: [{ id: scopedDocId }],
+        weekContext: createWeekContext({
+          ownerUserId,
+          issues: [{
+            id: '44444444-4444-4444-8444-444444444444',
+            title: 'Launch approval blocked',
+            state: 'blocked',
+            priority: 'high',
+          }],
+          blockerText: 'Blocked waiting on security approval.',
+        }),
+        guardDecision: {
+          shouldRun: true,
+          reason: 'run_material_changed_no_suppression:v1:risky',
+          materialChangeKey: 'v1:risky',
+        },
+      }),
+      reasonNodeDependencies: createReasonNodeDependencies({ reasoner }),
+      outputNodeDependencies: outputDependencies,
+    });
+
+    const graphState = await runAtRiskWeekGraph(graphInput, graphDependencies);
+
+    expect(graphState.status).toBe('completed');
+    expect(graphState.completedNodes).toEqual(['scope', 'context', 'guard', 'preFilter', 'reason', 'policy', 'output']);
+    expect(graphState.persistence).toEqual({
+      findingId: '88888888-8888-4888-8888-888888888888',
+      actionCandidateId: '99999999-9999-4999-8999-999999999999',
+      broadcastEvent: 'fleetgraph:finding_created',
+    });
+    expect(graphState.trace.modelUsage).toEqual({
+      modelName: 'gpt-4o-mini',
+      inputTokens: 850,
+      outputTokens: 172,
+      estimatedCost: 0,
+    });
+    expect(reasoner.invoke).toHaveBeenCalledTimes(1);
+    expect(outputDependencies.broadcastToUser).toHaveBeenCalledWith(ownerUserId, 'fleetgraph:finding_created', {
+      workspaceId,
+      scopedDocumentId: scopedDocId,
+      findingId: '88888888-8888-4888-8888-888888888888',
+      actionCandidateId: '99999999-9999-4999-8999-999999999999',
+      detectorType: 'at_risk_week',
+      severity: 'high',
+      lifecycleState: 'pending_review',
+    });
+  });
 });
 
 type CapturedTrace = {
@@ -930,6 +1067,12 @@ type ReasonNodeDependencyFixture = {
   warn?: AtRiskWeekReasonNodeDependencies['logger']['warn'];
 };
 
+type GraphDependencyFixture = {
+  nodeDependencies: AtRiskWeekNodeDependencies;
+  reasonNodeDependencies: AtRiskWeekReasonNodeDependencies;
+  outputNodeDependencies: AtRiskWeekOutputNodeDependencies;
+};
+
 function createNodeDependencies(fixture: NodeDependencyFixture): AtRiskWeekNodeDependencies {
   return {
     client: {
@@ -962,6 +1105,16 @@ function createReasonNodeDependencies(fixture: ReasonNodeDependencyFixture): AtR
       warn: fixture.warn ?? vi.fn(),
     },
     now: () => '2026-05-26T05:02:00.000Z',
+  };
+}
+
+function createGraphDependencies(fixture: GraphDependencyFixture): AtRiskWeekGraphDependencies {
+  return {
+    nodeDependencies: fixture.nodeDependencies,
+    reasonNodeDependencies: fixture.reasonNodeDependencies,
+    outputNodeDependencies: fixture.outputNodeDependencies,
+    traceRunner: passthroughAtRiskWeekTraceRunner,
+    checkpointer: createAtRiskWeekCheckpointer(),
   };
 }
 

@@ -1,5 +1,5 @@
 import { HumanMessage, SystemMessage, type BaseMessage } from '@langchain/core/messages';
-import { MemorySaver, type BaseCheckpointSaver } from '@langchain/langgraph';
+import { Annotation, END, MemorySaver, START, StateGraph, type BaseCheckpointSaver } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
 import { getCurrentRunTree, traceable } from 'langsmith/traceable';
 import type { QueryResultRow } from 'pg';
@@ -366,6 +366,26 @@ export type AtRiskWeekOutputNodeDependencies = {
   now: () => string;
 };
 
+const atRiskWeekGraphAnnotation = Annotation.Root({
+  graphState: Annotation<AtRiskWeekGraphState>(),
+});
+
+type AtRiskWeekLangGraphState = typeof atRiskWeekGraphAnnotation.State;
+export type AtRiskWeekCompiledGraph = {
+  invoke: (
+    input: AtRiskWeekLangGraphState,
+    options: AtRiskWeekCheckpointConfig
+  ) => Promise<AtRiskWeekLangGraphState>;
+};
+
+export type AtRiskWeekGraphDependencies = {
+  nodeDependencies: AtRiskWeekNodeDependencies;
+  reasonNodeDependencies: AtRiskWeekReasonNodeDependencies;
+  outputNodeDependencies: AtRiskWeekOutputNodeDependencies;
+  traceRunner: AtRiskWeekTraceRunner;
+  checkpointer: BaseCheckpointSaver;
+};
+
 type PersistedAtRiskWeekOutput = {
   findingId: string;
   actionCandidateId: string | null;
@@ -436,6 +456,83 @@ export function createAtRiskWeekInitialState(input: AtRiskWeekGraphInput): AtRis
     requestedAt: parsedInput.requestedAt,
     completedAt: null,
   };
+}
+
+export function compileAtRiskWeekGraph(dependencies: AtRiskWeekGraphDependencies): AtRiskWeekCompiledGraph {
+  const graph = new StateGraph(atRiskWeekGraphAnnotation)
+    .addNode('scope', (state: AtRiskWeekLangGraphState) => runAtRiskWeekGraphNode(
+      state,
+      'scope',
+      dependencies,
+      (currentState) => scopeNode(currentState, dependencies.nodeDependencies)
+    ))
+    .addNode('context', (state: AtRiskWeekLangGraphState) => runAtRiskWeekGraphNode(
+      state,
+      'context',
+      dependencies,
+      (currentState) => contextNode(currentState, dependencies.nodeDependencies)
+    ))
+    .addNode('guard', (state: AtRiskWeekLangGraphState) => runAtRiskWeekGraphNode(
+      state,
+      'guard',
+      dependencies,
+      (currentState) => guardNode(currentState, dependencies.nodeDependencies)
+    ))
+    .addNode('preFilter', (state: AtRiskWeekLangGraphState) => runAtRiskWeekGraphNode(
+      state,
+      'preFilter',
+      dependencies,
+      (currentState) => preFilterNode(currentState, dependencies.nodeDependencies)
+    ))
+    .addNode('reason', (state: AtRiskWeekLangGraphState) => runAtRiskWeekGraphNode(
+      state,
+      'reason',
+      dependencies,
+      (currentState) => reasonNode(currentState, dependencies.reasonNodeDependencies)
+    ))
+    .addNode('policy', (state: AtRiskWeekLangGraphState) => runAtRiskWeekGraphNode(
+      state,
+      'policy',
+      dependencies,
+      (currentState) => policyNode(currentState)
+    ))
+    .addNode('output', (state: AtRiskWeekLangGraphState) => runAtRiskWeekGraphNode(
+      state,
+      'output',
+      dependencies,
+      (currentState) => outputNode(currentState, dependencies.outputNodeDependencies)
+    ))
+    .addEdge(START, 'scope');
+
+  atRiskWeekNodeNames.forEach((node) => {
+    graph.addConditionalEdges(node, routeAtRiskWeekGraph, [...atRiskWeekNodeNames, END]);
+  });
+
+  return graph.compile({
+    checkpointer: dependencies.checkpointer,
+    name: 'fleetgraph.at_risk_week',
+  });
+}
+
+export async function runAtRiskWeekGraph(
+  input: AtRiskWeekGraphInput,
+  dependencies: AtRiskWeekGraphDependencies
+): Promise<AtRiskWeekGraphState> {
+  const initialState = createAtRiskWeekInitialState(input);
+
+  return traceAtRiskWeekRun(
+    initialState,
+    dependencies.traceRunner,
+    async (state) => {
+      const graph = compileAtRiskWeekGraph(dependencies);
+      const output = await graph.invoke(
+        { graphState: state },
+        createAtRiskWeekCheckpointConfig(state)
+      );
+
+      return output.graphState;
+    }
+  );
 }
 
 export const passthroughAtRiskWeekTraceRunner: AtRiskWeekTraceRunner = async (
@@ -569,6 +666,25 @@ export function createAtRiskWeekTraceMetadata(
     broadcastEvent: state.persistence?.broadcastEvent ?? null,
     completedAt: state.completedAt,
   };
+}
+
+async function runAtRiskWeekGraphNode(
+  state: AtRiskWeekLangGraphState,
+  node: AtRiskWeekNodeName,
+  dependencies: AtRiskWeekGraphDependencies,
+  operation: AtRiskWeekTraceOperation
+): Promise<Partial<AtRiskWeekLangGraphState>> {
+  return {
+    graphState: await traceAtRiskWeekNode(state.graphState, node, dependencies.traceRunner, operation),
+  };
+}
+
+function routeAtRiskWeekGraph(state: AtRiskWeekLangGraphState): AtRiskWeekNodeName | typeof END {
+  if (state.graphState.status !== 'running' || state.graphState.activeNode === null) {
+    return END;
+  }
+
+  return state.graphState.activeNode;
 }
 
 export async function scopeNode(
