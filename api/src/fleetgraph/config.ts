@@ -1,15 +1,19 @@
 export interface FleetGraphEnv {
   OPENAI_API_KEY?: string;
-  LANGCHAIN_API_KEY?: string;
-  LANGCHAIN_TRACING_V2?: string;
-  LANGCHAIN_PROJECT?: string;
+  LANGFUSE_PUBLIC_KEY?: string;
+  LANGFUSE_SECRET_KEY?: string;
+  LANGFUSE_BASE_URL?: string;
+  LANGFUSE_TRACING_ENVIRONMENT?: string;
+  LANGFUSE_RELEASE?: string;
 }
 
 export interface FleetGraphConfig {
   openaiApiKey: string;
-  langchainApiKey: string;
-  langchainTracingV2: true;
-  langchainProject: string;
+  langfusePublicKey: string;
+  langfuseSecretKey: string;
+  langfuseBaseUrl: string;
+  langfuseTracingEnvironment: string | null;
+  langfuseRelease: string | null;
 }
 
 export class FleetGraphConfigError extends Error {
@@ -21,9 +25,9 @@ export class FleetGraphConfigError extends Error {
 
 const REQUIRED_ENV_KEYS = [
   'OPENAI_API_KEY',
-  'LANGCHAIN_API_KEY',
-  'LANGCHAIN_TRACING_V2',
-  'LANGCHAIN_PROJECT',
+  'LANGFUSE_PUBLIC_KEY',
+  'LANGFUSE_SECRET_KEY',
+  'LANGFUSE_BASE_URL',
 ] as const;
 
 type RequiredEnvKey = typeof REQUIRED_ENV_KEYS[number];
@@ -55,28 +59,28 @@ export function parseFleetGraphConfig(env: FleetGraphEnv): FleetGraphConfig {
   }
 
   const openaiApiKey = requireEnvValue(env, 'OPENAI_API_KEY');
-  const langchainApiKey = requireEnvValue(env, 'LANGCHAIN_API_KEY');
-  const langchainTracing = requireEnvValue(env, 'LANGCHAIN_TRACING_V2');
-  const langchainProject = requireEnvValue(env, 'LANGCHAIN_PROJECT');
-
-  if (langchainTracing !== 'true') {
-    throw new FleetGraphConfigError('FleetGraph configuration requires LANGCHAIN_TRACING_V2=true');
-  }
+  const langfusePublicKey = requireEnvValue(env, 'LANGFUSE_PUBLIC_KEY');
+  const langfuseSecretKey = requireEnvValue(env, 'LANGFUSE_SECRET_KEY');
+  const langfuseBaseUrl = requireEnvValue(env, 'LANGFUSE_BASE_URL');
 
   return {
     openaiApiKey,
-    langchainApiKey,
-    langchainTracingV2: true,
-    langchainProject,
+    langfusePublicKey,
+    langfuseSecretKey,
+    langfuseBaseUrl,
+    langfuseTracingEnvironment: optionalEnvValue(env.LANGFUSE_TRACING_ENVIRONMENT),
+    langfuseRelease: optionalEnvValue(env.LANGFUSE_RELEASE),
   };
 }
 
 export function loadFleetGraphConfig(): FleetGraphConfig {
   return parseFleetGraphConfig({
     OPENAI_API_KEY: process.env.OPENAI_API_KEY,
-    LANGCHAIN_API_KEY: process.env.LANGCHAIN_API_KEY,
-    LANGCHAIN_TRACING_V2: process.env.LANGCHAIN_TRACING_V2,
-    LANGCHAIN_PROJECT: process.env.LANGCHAIN_PROJECT,
+    LANGFUSE_PUBLIC_KEY: process.env.LANGFUSE_PUBLIC_KEY,
+    LANGFUSE_SECRET_KEY: process.env.LANGFUSE_SECRET_KEY,
+    LANGFUSE_BASE_URL: process.env.LANGFUSE_BASE_URL,
+    LANGFUSE_TRACING_ENVIRONMENT: process.env.LANGFUSE_TRACING_ENVIRONMENT,
+    LANGFUSE_RELEASE: process.env.LANGFUSE_RELEASE,
   });
 }
 
@@ -91,4 +95,12 @@ export function isFleetGraphAvailable(): boolean {
 
     throw error;
   }
+}
+
+function optionalEnvValue(value: string | undefined): string | null {
+  if (!value || value.trim().length === 0) {
+    return null;
+  }
+
+  return value;
 }

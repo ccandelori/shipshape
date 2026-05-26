@@ -17,7 +17,7 @@ The proof exercises:
 - Real at-risk Week LangGraph path through context, guard, pre-filter, reason, policy, output, and usage persistence.
 - Real `fleetgraph_findings`, `fleetgraph_action_candidates`, and `fleetgraph_usage` writes.
 
-The proof intentionally replaces only the external model and LangSmith network calls with a deterministic local reasoner and passthrough trace runner. That keeps the latency measurement runnable without `OPENAI_API_KEY` and `LANGCHAIN_API_KEY`. It does not measure live model provider latency.
+The proof intentionally replaces only the external model and Langfuse network calls with a deterministic local reasoner and passthrough trace runner. That keeps the latency measurement runnable without `OPENAI_API_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_BASE_URL`. It does not measure live model provider latency.
 
 ## Commands
 

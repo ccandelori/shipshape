@@ -17,6 +17,12 @@ async function main() {
     await loadProductionSecrets();
   }
 
+  const {
+    shutdownFleetGraphLangfuseTracing,
+    startFleetGraphLangfuseTracingFromEnvironment,
+  } = await import('./fleetgraph/langfuse.js');
+  startFleetGraphLangfuseTracingFromEnvironment();
+
   // Now import app after secrets are loaded
   const { createApp } = await import('./app.js');
   const { setupCollaboration } = await import('./collaboration/index.js');
@@ -41,6 +47,16 @@ async function main() {
   setupCollaboration(server);
   startProactiveTriggers();
   registerProactiveTriggerShutdownHandlers(process, shutdownProactiveTriggers);
+  process.prependOnceListener('SIGTERM', () => {
+    void shutdownFleetGraphLangfuseTracing().catch((error: unknown) => {
+      console.error('fleetgraph.langfuse.shutdown_failed', error);
+    });
+  });
+  process.prependOnceListener('SIGINT', () => {
+    void shutdownFleetGraphLangfuseTracing().catch((error: unknown) => {
+      console.error('fleetgraph.langfuse.shutdown_failed', error);
+    });
+  });
 
   // Start server
   server.listen(PORT, () => {

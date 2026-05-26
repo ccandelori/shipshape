@@ -1,17 +1,21 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type {
   FleetGraphQueryClient,
   IssueContextResult,
   ProjectContext,
   WeekContext,
 } from './context.js';
+import type { FleetGraphLangfuseRuntime, FleetGraphLangfuseRunnableConfig } from './langfuse.js';
 import {
   buildFleetGraphChatPrompt,
+  createFleetGraphChatTraceContext,
   FLEETGRAPH_CHAT_CONTEXT_BOUNDARY,
   streamFleetGraphChatModelResponse,
+  traceFleetGraphChatCompletionWithRuntime,
   type FleetGraphChatContextBuilders,
   type FleetGraphChatModel,
   type FleetGraphChatModelMessage,
+  type FleetGraphChatScope,
 } from './chat.js';
 
 describe('FleetGraph chat runner', () => {
@@ -71,12 +75,20 @@ describe('FleetGraph chat runner', () => {
       { role: 'user', content: 'Question' },
     ];
     const observedMessages: FleetGraphChatModelMessage[][] = [];
+    const observedStreamConfigs: FleetGraphLangfuseRunnableConfig[] = [];
+    const streamConfig = {
+      callbacks: [],
+      metadata: {},
+      runName: 'test-chat-run',
+      tags: ['fleetgraph'],
+    };
     const abortController = new AbortController();
     const model: FleetGraphChatModel = {
       modelName: 'test-chat-model',
-      stream: async function* (inputMessages, abortSignal) {
+      stream: async function* (inputMessages, abortSignal, inputStreamConfig) {
         expect(abortSignal).toBe(abortController.signal);
         observedMessages.push(inputMessages);
+        observedStreamConfigs.push(inputStreamConfig);
         yield { token: 'The ', usage: null };
         yield { token: 'answer', usage: null };
         yield {
@@ -96,12 +108,14 @@ describe('FleetGraph chat runner', () => {
       model,
       messages,
       abortSignal: abortController.signal,
+      streamConfig,
       onToken: (token) => {
         streamedTokens.push(token);
       },
     });
 
     expect(observedMessages).toEqual([messages]);
+    expect(observedStreamConfigs).toEqual([streamConfig]);
     expect(streamedTokens).toEqual(['The ', 'answer']);
     expect(completion).toEqual({
       response: 'The answer',
@@ -127,8 +141,132 @@ describe('FleetGraph chat runner', () => {
       model,
       messages: [{ role: 'user', content: 'Question' }],
       abortSignal: abortController.signal,
+      streamConfig: {
+        callbacks: [],
+        metadata: {},
+        runName: 'missing-usage-run',
+        tags: [],
+      },
       onToken: () => {},
     })).rejects.toThrow('FleetGraph chat stream completed without usage metadata: modelName=missing-usage-model');
+  });
+
+  it('creates Langfuse chat trace context without raw prompt payloads in propagated metadata', () => {
+    const scope = createChatScope();
+    const traceContext = createFleetGraphChatTraceContext({
+      userId: 'user-123',
+      workspaceId: 'workspace-123',
+      scope,
+      request: {
+        documentId: scope.documentId,
+        documentType: scope.documentType,
+        question: 'What is blocked?',
+        conversationHistory: [
+          { role: 'assistant', content: 'Earlier answer' },
+        ],
+      },
+    });
+
+    expect(traceContext).toMatchObject({
+      traceName: 'fleetgraph.chat.response',
+      userId: 'user-123',
+      sessionId: `fleetgraph:chat:user-123:${scope.documentId}`,
+      tags: ['fleetgraph', 'mode:ondemand', 'document_type:sprint', 'trace_node:chat'],
+      metadata: {
+        workspaceId: 'workspace-123',
+        userId: 'user-123',
+        documentId: scope.documentId,
+        documentType: 'sprint',
+        questionLength: '16',
+        historyMessageCount: '1',
+      },
+    });
+    expect(traceContext.input).toMatchObject({
+      documentTitle: 'FleetGraph Week',
+      questionLength: 16,
+      historyMessageCount: 1,
+    });
+    expect(traceContext.streamConfig.runName).toBe('fleetgraph.chat.llm');
+    expect(traceContext.streamConfig.tags).toEqual([
+      'fleetgraph',
+      'mode:ondemand',
+      'document_type:sprint',
+      'trace_node:chat',
+      'llm',
+    ]);
+  });
+
+  it('wraps streamed chat completion in a Langfuse operation span', async () => {
+    const scope = createChatScope();
+    const traceContext = createFleetGraphChatTraceContext({
+      userId: 'user-123',
+      workspaceId: 'workspace-123',
+      scope,
+      request: {
+        documentId: scope.documentId,
+        documentType: scope.documentType,
+        question: 'What is blocked?',
+        conversationHistory: [],
+      },
+    });
+    const observation = {
+      update: vi.fn(),
+    };
+    const startActiveObservationSpy = vi.fn();
+    const propagateAttributesSpy = vi.fn();
+    const runtime: FleetGraphLangfuseRuntime = {
+      startActiveObservation: ((name: string, fn: (span: typeof observation) => Promise<unknown>, options: object) => {
+        startActiveObservationSpy(name, options);
+        return fn(observation);
+      }) as unknown as FleetGraphLangfuseRuntime['startActiveObservation'],
+      propagateAttributes: ((params: object, fn: () => Promise<unknown>) => {
+        propagateAttributesSpy(params);
+        return fn();
+      }) as unknown as FleetGraphLangfuseRuntime['propagateAttributes'],
+    };
+
+    const completion = await traceFleetGraphChatCompletionWithRuntime({
+      runtime,
+      traceContext,
+      operation: async () => ({
+        response: 'Vendor approval is blocked.',
+        usage: {
+          modelName: 'gpt-4o-mini',
+          inputTokens: 20,
+          outputTokens: 6,
+          totalTokens: 26,
+        },
+      }),
+    });
+
+    expect(completion.response).toBe('Vendor approval is blocked.');
+    expect(startActiveObservationSpy).toHaveBeenCalledWith('fleetgraph.chat.response', { asType: 'chain' });
+    expect(propagateAttributesSpy).toHaveBeenCalledWith(expect.objectContaining({
+      traceName: 'fleetgraph.chat.response',
+      userId: 'user-123',
+      sessionId: traceContext.sessionId,
+      metadata: expect.objectContaining({
+        documentId: scope.documentId,
+        documentType: 'sprint',
+      }),
+      asBaggage: false,
+    }));
+    expect(observation.update).toHaveBeenCalledWith(expect.objectContaining({
+      input: traceContext.input,
+      metadata: traceContext.metadata,
+    }));
+    expect(observation.update).toHaveBeenLastCalledWith(expect.objectContaining({
+      output: {
+        response: 'Vendor approval is blocked.',
+        usage: {
+          modelName: 'gpt-4o-mini',
+          inputTokens: 20,
+          outputTokens: 6,
+          totalTokens: 26,
+        },
+      },
+      level: 'DEFAULT',
+    }));
   });
 
   function createUnusedQueryClient(): FleetGraphQueryClient {
@@ -191,6 +329,15 @@ describe('FleetGraph chat runner', () => {
         weeklyPlan: { exists: true, documentIds: ['550e8400-e29b-41d4-a716-446655440050'] },
         weeklyRetro: { exists: false, documentIds: [] },
       },
+    };
+  }
+
+  function createChatScope(): FleetGraphChatScope {
+    return {
+      documentId: '550e8400-e29b-41d4-a716-446655440001',
+      documentType: 'sprint',
+      workspaceId: 'workspace-123',
+      title: 'FleetGraph Week',
     };
   }
 

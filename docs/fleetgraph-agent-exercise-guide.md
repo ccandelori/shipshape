@@ -57,9 +57,11 @@ For embedded chat and live proactive model runs, the API process also needs:
 
 ```bash
 OPENAI_API_KEY=...
-LANGCHAIN_API_KEY=...
-LANGCHAIN_TRACING_V2=true
-LANGCHAIN_PROJECT=...
+LANGFUSE_PUBLIC_KEY=...
+LANGFUSE_SECRET_KEY=...
+LANGFUSE_BASE_URL=https://cloud.langfuse.com
+LANGFUSE_TRACING_ENVIRONMENT=local
+LANGFUSE_RELEASE=ship-local
 ```
 
 If those values are absent, the seeded inbox and deterministic latency proof still work, but embedded chat returns `FleetGraph chat is not configured`.
@@ -327,7 +329,7 @@ docker exec ship-postgres-1 psql -U ship -d ship_dev -c "select result from flee
 Verify the comment:
 
 ```bash
-docker exec ship-postgres-1 psql -U ship -d ship_dev -c "select d.title, c.content from comments c join documents d on d.id = c.document_id where c.content like 'Please add the shared LangSmith trace URLs%' order by c.created_at desc limit 3;"
+docker exec ship-postgres-1 psql -U ship -d ship_dev -c "select d.title, c.content from comments c join documents d on d.id = c.document_id where c.content like 'Please add the shared Langfuse trace URLs%' order by c.created_at desc limit 3;"
 ```
 
 Expected idempotency behavior:
@@ -353,7 +355,7 @@ If the second window does not visibly update, click `Refresh` to distinguish a W
 
 ## Exercise Embedded Chat
 
-1. Make sure the API process has `OPENAI_API_KEY`, `LANGCHAIN_API_KEY`, `LANGCHAIN_TRACING_V2=true`, and `LANGCHAIN_PROJECT`.
+1. Make sure the API process has `OPENAI_API_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_BASE_URL`.
 2. Open a FleetGraph project, issue, or week document. Good seeded targets include:
    - `FleetGraph - Embedded Agent Chat`
    - `Expose scoped FleetGraph chat in editor`
@@ -436,15 +438,15 @@ Expected:
 - Live proactive graph runs add additional rows with trigger `proactive`.
 - `trace_metadata` records branch path, scoped document, and related run metadata.
 
-If LangSmith credentials are configured:
+If Langfuse credentials are configured:
 
 1. Run one quiet or no-finding scenario.
 2. Run one pending action scenario.
-3. Open the LangSmith project named by `LANGCHAIN_PROJECT`.
+3. Open the Langfuse project associated with `LANGFUSE_PUBLIC_KEY`.
 4. Capture shared trace URLs for both runs.
 5. Add those URLs to the FleetGraph submission evidence.
 
-Without LangSmith credentials, this step remains blocked by environment, not by the local product path.
+Without Langfuse credentials, this step remains blocked by environment, not by the local product path.
 
 ## Developer Verification Commands
 
@@ -473,4 +475,4 @@ Collect these artifacts for a full FleetGraph exercise pass:
 - Screenshot of embedded chat streaming an answer from a project, issue, or week.
 - Latency proof JSON showing `latencyTargetMet: true`.
 - `fleetgraph_usage` output showing recorded usage rows.
-- LangSmith shared trace URLs when credentials are available.
+- Langfuse shared trace URLs when credentials are available.

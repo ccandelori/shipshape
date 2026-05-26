@@ -74,9 +74,11 @@ const latencyPollIntervalMs = 1_000;
 const proofModelName = 'fleetgraph-latency-proof-deterministic';
 const proofConfig = {
   openaiApiKey: 'unused-latency-proof-openai-key',
-  langchainApiKey: 'unused-latency-proof-langsmith-key',
-  langchainTracingV2: true,
-  langchainProject: 'fleetgraph-latency-proof',
+  langfusePublicKey: 'unused-latency-proof-langfuse-public-key',
+  langfuseSecretKey: 'unused-latency-proof-langfuse-secret-key',
+  langfuseBaseUrl: 'https://cloud.langfuse.com',
+  langfuseTracingEnvironment: 'test',
+  langfuseRelease: 'latency-proof',
 } as const;
 
 async function main(): Promise<void> {

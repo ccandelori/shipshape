@@ -1,12 +1,18 @@
 import { HumanMessage, SystemMessage, type BaseMessage } from '@langchain/core/messages';
+import type { RunnableConfig } from '@langchain/core/runnables';
 import { Annotation, END, MemorySaver, START, StateGraph, type BaseCheckpointSaver } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
-import { getCurrentRunTree, traceable } from 'langsmith/traceable';
 import type { QueryResultRow } from 'pg';
 import { z } from 'zod';
 import type { FleetGraphConfig } from '../config.js';
 import type { FleetGraphQueryClient, WeekContext } from '../context.js';
 import type { DetectorRunDecision } from '../guards.js';
+import {
+  createFleetGraphLangfusePropagatedAttributes,
+  createFleetGraphLangfuseRunnableConfig,
+  fleetGraphLangfuseRuntime,
+  type FleetGraphLangfuseRuntime,
+} from '../langfuse.js';
 import {
   autoExecuteIfAllowedInTransaction,
   classifyFleetGraphPolicy,
@@ -368,8 +374,10 @@ export type AtRiskWeekStructuredModelResult = {
 };
 
 export type AtRiskWeekStructuredModelInvoker = {
-  invoke: (messages: BaseMessage[]) => Promise<AtRiskWeekStructuredModelResult>;
+  invoke: (messages: BaseMessage[], config: Partial<RunnableConfig>) => Promise<AtRiskWeekStructuredModelResult>;
 };
+
+export type AtRiskWeekRunnableConfigFactory = () => Partial<RunnableConfig>;
 
 export type AtRiskWeekStructuredReasoner = {
   modelName: string;
@@ -461,16 +469,6 @@ type ScopeResolutionRow = QueryResultRow & {
 
 type InsertedIdRow = QueryResultRow & {
   id: string;
-};
-
-type AtRiskWeekTraceInvocationInput = {
-  state: AtRiskWeekGraphState;
-  metadata: AtRiskWeekTraceMetadata;
-};
-
-type AtRiskWeekTraceInvocationOutput = {
-  state: AtRiskWeekGraphState;
-  metadata: AtRiskWeekTraceMetadata;
 };
 
 type AtRiskWeekUsageRecord = {
@@ -642,48 +640,53 @@ export async function traceAtRiskWeekNode(
   return runner(createAtRiskWeekTraceDefinition(state, node), state, operation);
 }
 
-export function createLangSmithAtRiskWeekTraceRunner(config: FleetGraphConfig): AtRiskWeekTraceRunner {
+export function createLangfuseAtRiskWeekTraceRunner(_config: FleetGraphConfig): AtRiskWeekTraceRunner {
+  return createLangfuseAtRiskWeekTraceRunnerWithRuntime(fleetGraphLangfuseRuntime);
+}
+
+export function createLangfuseAtRiskWeekTraceRunnerWithRuntime(
+  runtime: FleetGraphLangfuseRuntime
+): AtRiskWeekTraceRunner {
   return async (definition, state, operation) => {
-    const tracedOperation = traceable(
-      async (input: AtRiskWeekTraceInvocationInput): Promise<AtRiskWeekTraceInvocationOutput> => {
-        const outputState = await operation(input.state);
-        const outputMetadata = createAtRiskWeekTraceMetadata(outputState, input.metadata.traceNode);
-        const runTree = getCurrentRunTree();
-
-        if (runTree) {
-          runTree.metadata = {
-            ...runTree.metadata,
-            ...outputMetadata,
-          };
-        }
-
-        return {
-          state: outputState,
-          metadata: outputMetadata,
-        };
-      },
-      {
-        name: definition.name,
-        run_type: definition.runType,
-        project_name: config.langchainProject,
-        tags: definition.tags,
-        metadata: definition.inputMetadata,
-        processInputs: (input: Readonly<AtRiskWeekTraceInvocationInput>) => ({
-          traceMetadata: input.metadata,
-        }),
-        processOutputs: (output: Readonly<AtRiskWeekTraceInvocationOutput>) => ({
-          traceMetadata: output.metadata,
-          runStatus: output.state.status,
-          activeNode: output.state.activeNode,
-        }),
-      }
-    );
-    const output = await tracedOperation({
-      state,
-      metadata: definition.inputMetadata,
+    const propagatedAttributes = createFleetGraphLangfusePropagatedAttributes({
+      traceName: definition.name,
+      sessionId: state.scope.checkpointThreadId,
+      userId: null,
+      tags: definition.tags,
+      metadata: createAtRiskWeekLangfusePropagatedMetadata(definition.inputMetadata),
     });
 
-    return output.state;
+    return runtime.startActiveObservation(definition.name, async (observation) => (
+      runtime.propagateAttributes(propagatedAttributes, async () => {
+        observation.update({
+          input: createAtRiskWeekLangfuseInput(definition.inputMetadata),
+          metadata: definition.inputMetadata,
+        });
+
+        try {
+          const outputState = await operation(state);
+          const outputMetadata = createAtRiskWeekTraceMetadata(outputState, definition.inputMetadata.traceNode);
+
+          observation.update({
+            output: createAtRiskWeekLangfuseOutput(outputState, outputMetadata),
+            metadata: outputMetadata,
+            level: 'DEFAULT',
+          });
+
+          return outputState;
+        } catch (error) {
+          observation.update({
+            output: {
+              traceMetadata: definition.inputMetadata,
+              errorMessage: errorMessage(error),
+            },
+            level: 'ERROR',
+            statusMessage: errorMessage(error),
+          });
+          throw error;
+        }
+      })
+    ), { asType: definition.runType });
   };
 }
 
@@ -758,6 +761,40 @@ export function createAtRiskWeekTraceMetadata(
     latencyTargetMs: atRiskWeekLatencyTargetMs,
     latencyTargetMet: graphTiming === null ? null : graphTiming.durationMs <= atRiskWeekLatencyTargetMs,
     completedAt: state.completedAt,
+  };
+}
+
+export function createAtRiskWeekLangfusePropagatedMetadata(
+  metadata: AtRiskWeekTraceMetadata
+): Record<string, string> {
+  return {
+    detectorType: metadata.detectorType,
+    detectorVersion: metadata.detectorVersion,
+    triggerSource: metadata.triggerSource,
+    workspaceId: metadata.workspaceId,
+    scopedDocumentId: metadata.scopedDocumentId,
+    runId: metadata.runId,
+    traceNode: metadata.traceNode,
+    runStatus: metadata.runStatus,
+    activeNode: metadata.activeNode ?? 'none',
+    materialChangeKey: metadata.materialChangeKey ?? 'none',
+  };
+}
+
+function createAtRiskWeekLangfuseInput(metadata: AtRiskWeekTraceMetadata): object {
+  return {
+    traceMetadata: metadata,
+  };
+}
+
+function createAtRiskWeekLangfuseOutput(
+  state: AtRiskWeekGraphState,
+  metadata: AtRiskWeekTraceMetadata
+): object {
+  return {
+    traceMetadata: metadata,
+    runStatus: state.status,
+    activeNode: state.activeNode,
   };
 }
 
@@ -1384,17 +1421,38 @@ export function createOpenAIAtRiskWeekReasoner(config: FleetGraphConfig): AtRisk
     includeRaw: true,
   });
 
-  return createLangChainAtRiskWeekReasoner(atRiskWeekReasoningModelName, structuredModel);
+  return createLangChainAtRiskWeekReasoner(
+    atRiskWeekReasoningModelName,
+    structuredModel,
+    () => createFleetGraphLangfuseRunnableConfig({
+      runName: 'fleetgraph.at_risk_week.reason.llm',
+      tags: [
+        'fleetgraph',
+        `detector:${atRiskWeekDetectorType}`,
+        `detector_version:${atRiskWeekDetectorVersion}`,
+        'trace_node:reason',
+        'llm',
+      ],
+      metadata: {
+        detectorType: atRiskWeekDetectorType,
+        detectorVersion: atRiskWeekDetectorVersion,
+        traceNode: 'reason',
+      },
+      userId: null,
+      sessionId: null,
+    })
+  );
 }
 
 export function createLangChainAtRiskWeekReasoner(
   modelName: string,
-  structuredModel: AtRiskWeekStructuredModelInvoker
+  structuredModel: AtRiskWeekStructuredModelInvoker,
+  createRunnableConfig: AtRiskWeekRunnableConfigFactory
 ): AtRiskWeekStructuredReasoner {
   return {
     modelName,
     invoke: async (messages) => {
-      const result = await structuredModel.invoke(messages.map(toLangChainMessage));
+      const result = await structuredModel.invoke(messages.map(toLangChainMessage), createRunnableConfig());
       const reasoning = parseAtRiskWeekStructuredOutput(result.parsed, modelName);
 
       return {

@@ -183,14 +183,14 @@ Trace paths required for validation:
 
 ## Trace Links And Runtime Evidence
 
-Shared LangSmith trace links are pending. As of 2026-05-26, the local shell has no `OPENAI_API_KEY`, `LANGCHAIN_API_KEY`, `LANGCHAIN_TRACING_V2`, or `LANGCHAIN_PROJECT`, so live LangSmith capture cannot be completed from this environment.
+Shared Langfuse trace links are pending. As of 2026-05-26, the local shell has no `OPENAI_API_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, or `LANGFUSE_BASE_URL`, so live Langfuse capture cannot be completed from this environment.
 
 Configured runtime sources:
 
 - Local development: `api/.env.local` or `api/.env` loaded by `api/src/db/client.ts` and FleetGraph config.
-- Local template: `api/.env.example` documents `OPENAI_API_KEY`, `LANGCHAIN_API_KEY`, `LANGCHAIN_TRACING_V2=true`, and `LANGCHAIN_PROJECT`.
-- Production SSM: `api/src/config/ssm.ts` loads `/ship/{env}/OPENAI_API_KEY`, `/ship/{env}/LANGCHAIN_API_KEY`, `/ship/{env}/LANGCHAIN_TRACING_V2`, and `/ship/{env}/LANGCHAIN_PROJECT`.
-- FleetGraph config validation: `api/src/fleetgraph/config.ts` requires tracing to be explicitly enabled with `LANGCHAIN_TRACING_V2=true`.
+- Local template: `api/.env.example` documents `OPENAI_API_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL`, `LANGFUSE_TRACING_ENVIRONMENT`, and `LANGFUSE_RELEASE`.
+- Production SSM: `api/src/config/ssm.ts` loads `/ship/{env}/OPENAI_API_KEY`, `/ship/{env}/LANGFUSE_PUBLIC_KEY`, `/ship/{env}/LANGFUSE_SECRET_KEY`, and `/ship/{env}/LANGFUSE_BASE_URL`; `LANGFUSE_TRACING_ENVIRONMENT` and `LANGFUSE_RELEASE` are optional deployment env vars.
+- FleetGraph config validation: `api/src/fleetgraph/config.ts` requires OpenAI and Langfuse connection settings before FleetGraph model paths run.
 
 Local deterministic evidence:
 
@@ -274,12 +274,12 @@ Headless authentication:
 
 ## Test Cases
 
-Shared trace links are not yet captured because LangSmith credentials are missing locally. The deterministic local evidence above verifies the two MVP proactive graph paths and usage metadata that the shared traces must show once credentials are available. The timed latency proof in `docs/fleetgraph-latency-proof.md` verifies the mutation-triggered path against the five-minute target using the real trigger controller, advisory lock, context builder, guard, graph, policy, and persistence path with a deterministic local reasoner.
+Shared trace links are not yet captured because Langfuse credentials are missing locally. The deterministic local evidence above verifies the two MVP proactive graph paths and usage metadata that the shared traces must show once credentials are available. The timed latency proof in `docs/fleetgraph-latency-proof.md` verifies the mutation-triggered path against the five-minute target using the real trigger controller, advisory lock, context builder, guard, graph, policy, and persistence path with a deterministic local reasoner.
 
 | # | Ship state | Expected output | Required trace path | Trace link status |
 |---|------------|-----------------|---------------------|------------------|
-| 1 | Active Week has stalled high-priority issues and an unresolved blocker. | Open finding with severity, evidence, owner, and action candidate. | Proactive changed -> pre-filter yes -> reason -> pending approval. | Local deterministic run passed; shared LangSmith URL pending credentials. |
-| 2 | Active Week has no blockers or high-priority blocked issues. | Quiet exit; no duplicate notification and no model reasoning call. | Proactive changed -> pre-filter no -> quiet end. | Local deterministic run passed; shared LangSmith URL pending credentials. |
+| 1 | Active Week has stalled high-priority issues and an unresolved blocker. | Open finding with severity, evidence, owner, and action candidate. | Proactive changed -> pre-filter yes -> reason -> pending approval. | Local deterministic run passed; shared Langfuse URL pending credentials. |
+| 2 | Active Week has no blockers or high-priority blocked issues. | Quiet exit; no duplicate notification and no model reasoning call. | Proactive changed -> pre-filter no -> quiet end. | Local deterministic run passed; shared Langfuse URL pending credentials. |
 | 3 | Same active Week is scanned again with a suppressing pending finding. | Quiet exit; no duplicate notification and no expensive reasoning call. | Proactive guard -> quiet end. | Guard suppression covered by detector tests; shared URL pending credentials. |
 | 4 | Blocker crosses elapsed-time threshold without a row edit. | Finding resurfaces because elapsed-time signal changed. | Proactive changed -> pre-filter yes -> reason. | Extension case; not part of the two MVP traces. |
 | 5 | User opens a Week document and asks, "What is blocking this?" | SSE streamed answer grounded in that Week's issues, standups, and findings. | On-demand answer -> reason -> stream. | Embedded chat implemented and E2E-covered; shared URL pending credentials. |
@@ -453,11 +453,11 @@ If Bedrock is unavailable:
 - On-demand chat returns a clear unavailable response instead of a 500.
 - Health/status endpoints expose agent availability.
 
-If LangSmith is unavailable:
+If Langfuse is unavailable:
 
 - The graph still runs.
 - Tracing degradation is reported separately.
-- Required share links cannot be captured until LangSmith is restored.
+- Required share links cannot be captured until Langfuse is restored.
 
 If Ship data fetch fails:
 
@@ -472,7 +472,7 @@ If HITL resume fails:
 
 ## Cost Analysis
 
-These are design estimates plus current deterministic implementation telemetry. Shared LangSmith traces should replace the local evidence rows once credentials are available.
+These are design estimates plus current deterministic implementation telemetry. Shared Langfuse traces should replace the local evidence rows once credentials are available.
 
 ### Cost Controls
 
@@ -530,7 +530,7 @@ Runtime model spend for the MVP at-risk Week detector is now persisted in `fleet
 | Finding path run | 850 input / 172 output tokens, `$0.000231` |
 | Total deterministic graph invocations captured | 2 |
 | Total deterministic graph spend captured | `$0.000231` |
-| Shared LangSmith trace spend | Pending credentials |
+| Shared Langfuse trace spend | Pending credentials |
 
 ## Submission Status
 
@@ -540,7 +540,7 @@ Runtime model spend for the MVP at-risk Week detector is now persisted in `fleet
 | Graph Diagram | Defined in this document |
 | Use Cases | Defined in this document |
 | Trigger Model | Defined in this document |
-| Test Cases | MVP proactive paths verified locally; shared trace links require LangSmith credentials |
+| Test Cases | MVP proactive paths verified locally; shared trace links require Langfuse credentials |
 | Architecture Decisions | Defined in this document |
 | Cost Analysis | Design estimate plus deterministic runtime telemetry captured |
 | Timed Latency Proof | Passed locally at 45.113 seconds; see `docs/fleetgraph-latency-proof.md` |

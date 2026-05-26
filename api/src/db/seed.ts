@@ -446,7 +446,7 @@ async function seed() {
         impact: 4,
         confidence: 4,
         ease: 2,
-        plan: 'Attach LangSmith run metadata, model usage, and durable decision evidence to every FleetGraph outcome.',
+        plan: 'Attach Langfuse trace metadata, model usage, and durable decision evidence to every FleetGraph outcome.',
         monetary_impact_expected: 30000,
         targetDateDays: 28,
       },
@@ -790,7 +790,7 @@ async function seed() {
         projectTitle: 'FleetGraph - Embedded Agent Chat',
       },
       {
-        title: 'Capture LangSmith trace URLs for shared review',
+        title: 'Capture Langfuse trace URLs for shared review',
         description: 'Record trace metadata for quiet and finding-producing runs so each demo can link back to model inputs, outputs, and branch decisions.',
         state: 'todo',
         sprintOffset: 0,
@@ -1523,7 +1523,7 @@ async function seed() {
            AND da.related_id = $2 AND da.relationship_type = 'program'
          WHERE d.workspace_id = $1
            AND d.document_type = 'issue'
-           AND d.title = 'Capture LangSmith trace URLs for shared review'`,
+           AND d.title = 'Capture Langfuse trace URLs for shared review'`,
         [workspaceId, fleetGraphProgram.id]
       );
       const traceIssue = traceIssueResult.rows[0];
@@ -1618,13 +1618,13 @@ async function seed() {
             JSON.stringify([{
               sourceType: 'issue',
               sourceDocumentId: traceIssue.id,
-              quote: 'Capture LangSmith trace URLs for shared review',
+              quote: 'Capture Langfuse trace URLs for shared review',
               observedAt,
             }]),
             JSON.stringify({
               kind: 'draft_comment',
               title: 'Request trace evidence update',
-              body: 'Please add the shared LangSmith trace URLs or note the credential blocker before the next FleetGraph review.',
+              body: 'Please add the shared Langfuse trace URLs or note the credential blocker before the next FleetGraph review.',
             }),
           ]
         );

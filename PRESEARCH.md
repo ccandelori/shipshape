@@ -150,7 +150,7 @@ FleetGraph fails closed for writes:
 - If model configuration is missing, chat returns a clear unavailable response.
 - If Ship context cannot be loaded, no partial write executes.
 - If approval resume fails, the action remains non-executed.
-- If LangSmith is unavailable, the graph can run but shared trace deliverables remain blocked.
+- If Langfuse is unavailable, the graph can run but shared trace deliverables remain blocked.
 
 Security boundaries:
 
@@ -178,7 +178,7 @@ Runtime components:
 Deployment requirements still to prove:
 
 - FleetGraph-enabled API deployed to the public Ship URL.
-- Required production env vars set: `OPENAI_API_KEY`, `LANGCHAIN_API_KEY`, `LANGCHAIN_TRACING_V2=true`, `LANGCHAIN_PROJECT`.
+- Required production env vars set: `OPENAI_API_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_BASE_URL`; optional deployment context set with `LANGFUSE_TRACING_ENVIRONMENT` and `LANGFUSE_RELEASE`.
 - Migrations applied in the deployed database.
 - Inbox and embedded chat smoke-tested from the public URL.
 - CloudFront or direct API path verified not to buffer chat SSE.
@@ -251,7 +251,7 @@ Local seed verification:
 | Requirement | Status |
 |-------------|--------|
 | Graph running with proactive detection E2E | Implemented locally |
-| LangSmith tracing enabled with two shared trace links | Blocked on credentials |
+| Langfuse tracing enabled with two shared trace links | Blocked on credentials |
 | `FLEETGRAPH.md` with responsibility and use cases | Present |
 | Graph outline with nodes, edges, and branches | Present |
 | Human-in-the-loop gate | Implemented |
@@ -264,7 +264,7 @@ Local seed verification:
 
 ## Known Gaps And Follow-Up Tasks
 
-1. LangSmith trace links are blocked until credentials are available.
+1. Langfuse trace links are blocked until credentials are available.
    - Taskmaster: task 12 remains blocked on shared trace capture.
 
 2. Public deployment is not yet verified with FleetGraph configuration.
@@ -289,7 +289,7 @@ FleetGraph is substantially implemented for the local MVP path: proactive detect
 
 The project is not submission-ready until these are resolved:
 
-- Shared LangSmith trace URLs for at least two different graph paths.
+- Shared Langfuse trace URLs for at least two different graph paths.
 - Public FleetGraph deployment with runtime env vars.
 - Timed latency proof showing event-to-finding under 5 minutes.
 - Documentation cleanup for the chat architecture and checkpointing deviations.

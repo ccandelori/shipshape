@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { pool } from '../db/client.js';
 import {
   buildFleetGraphChatPrompt,
+  createFleetGraphChatTraceContext,
   createOpenAIFleetGraphChatModel,
   defaultFleetGraphChatContextBuilders,
   evaluateFleetGraphChatRateLimit,
@@ -11,6 +12,7 @@ import {
   formatFleetGraphChatSseEvent,
   resolveFleetGraphChatScope,
   streamFleetGraphChatModelResponse,
+  traceFleetGraphChatCompletion,
   type FleetGraphChatContextBuilders,
   type FleetGraphChatModel,
   type FleetGraphChatModelMessage,
@@ -91,8 +93,13 @@ export function createFleetGraphChatRouter(dependencies: FleetGraphChatRouterDep
     }
 
     let promptMessages: FleetGraphChatModelMessage[];
+    let traceContext: ReturnType<typeof createFleetGraphChatTraceContext>;
     try {
-      await resolveFleetGraphChatScope(dependencies.client, actorContext.data.workspaceId, requestResult.data);
+      const scope = await resolveFleetGraphChatScope(
+        dependencies.client,
+        actorContext.data.workspaceId,
+        requestResult.data
+      );
       const prompt = await buildFleetGraphChatPrompt({
         client: dependencies.client,
         workspaceId: actorContext.data.workspaceId,
@@ -100,6 +107,12 @@ export function createFleetGraphChatRouter(dependencies: FleetGraphChatRouterDep
         contextBuilders: dependencies.contextBuilders,
       });
       promptMessages = prompt.messages;
+      traceContext = createFleetGraphChatTraceContext({
+        userId: actorContext.data.userId,
+        workspaceId: actorContext.data.workspaceId,
+        scope,
+        request: requestResult.data,
+      });
     } catch (error) {
       respondFleetGraphChatPreStreamError(res, error);
       return;
@@ -141,20 +154,24 @@ export function createFleetGraphChatRouter(dependencies: FleetGraphChatRouterDep
         heartbeatIntervalMs: dependencies.heartbeatIntervalMs,
       });
 
-      const completion = await streamFleetGraphChatModelResponse({
-        model,
-        messages: promptMessages,
-        abortSignal: abortController.signal,
-        onToken: async (token) => {
-          await writeFleetGraphChatSseEvent({
-            res,
-            abortSignal: abortController.signal,
-            event: {
-              event: 'token',
-              data: { token },
-            },
-          });
-        },
+      const completion = await traceFleetGraphChatCompletion({
+        traceContext,
+        operation: () => streamFleetGraphChatModelResponse({
+          model,
+          messages: promptMessages,
+          abortSignal: abortController.signal,
+          streamConfig: traceContext.streamConfig,
+          onToken: async (token) => {
+            await writeFleetGraphChatSseEvent({
+              res,
+              abortSignal: abortController.signal,
+              event: {
+                event: 'token',
+                data: { token },
+              },
+            });
+          },
+        }),
       });
 
       if (!abortController.signal.aborted) {

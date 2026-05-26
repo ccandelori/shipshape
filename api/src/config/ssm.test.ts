@@ -7,7 +7,7 @@ import {
 } from './ssm.js';
 
 describe('SSM production secret loading', () => {
-  it('includes FleetGraph OpenAI and LangSmith keys in the production SSM contract', () => {
+  it('includes FleetGraph OpenAI and Langfuse keys in the production SSM contract', () => {
     expect(productionSecretKeys).toEqual([
       'DATABASE_URL',
       'SESSION_SECRET',
@@ -15,11 +15,11 @@ describe('SSM production secret loading', () => {
       'CDN_DOMAIN',
       'APP_BASE_URL',
       'OPENAI_API_KEY',
-      'LANGCHAIN_API_KEY',
-      'LANGCHAIN_TRACING_V2',
-      'LANGCHAIN_PROJECT',
+      'LANGFUSE_PUBLIC_KEY',
+      'LANGFUSE_SECRET_KEY',
+      'LANGFUSE_BASE_URL',
     ]);
-    expect(buildProductionSecretParameterName('prod', 'LANGCHAIN_PROJECT')).toBe('/ship/prod/LANGCHAIN_PROJECT');
+    expect(buildProductionSecretParameterName('prod', 'LANGFUSE_BASE_URL')).toBe('/ship/prod/LANGFUSE_BASE_URL');
   });
 
   it('loads every required production secret from the environment-specific SSM path', async () => {
@@ -32,10 +32,10 @@ describe('SSM production secret loading', () => {
 
     expect(getSecret).toHaveBeenCalledTimes(productionSecretKeys.length);
     expect(getSecret).toHaveBeenCalledWith('/ship/staging/OPENAI_API_KEY');
-    expect(getSecret).toHaveBeenCalledWith('/ship/staging/LANGCHAIN_API_KEY');
-    expect(getSecret).toHaveBeenCalledWith('/ship/staging/LANGCHAIN_TRACING_V2');
-    expect(getSecret).toHaveBeenCalledWith('/ship/staging/LANGCHAIN_PROJECT');
-    expect(values.LANGCHAIN_TRACING_V2).toBe('value:/ship/staging/LANGCHAIN_TRACING_V2');
+    expect(getSecret).toHaveBeenCalledWith('/ship/staging/LANGFUSE_PUBLIC_KEY');
+    expect(getSecret).toHaveBeenCalledWith('/ship/staging/LANGFUSE_SECRET_KEY');
+    expect(getSecret).toHaveBeenCalledWith('/ship/staging/LANGFUSE_BASE_URL');
+    expect(values.LANGFUSE_BASE_URL).toBe('value:/ship/staging/LANGFUSE_BASE_URL');
   });
 
   it('does not skip SSM loading when FleetGraph tracing keys are missing', () => {
@@ -56,9 +56,9 @@ describe('SSM production secret loading', () => {
       CDN_DOMAIN: 'cdn.example.test',
       APP_BASE_URL: 'https://app.example.test',
       OPENAI_API_KEY: 'sk-test-openai',
-      LANGCHAIN_API_KEY: 'lsv2_test_langchain',
-      LANGCHAIN_TRACING_V2: 'true',
-      LANGCHAIN_PROJECT: 'ship-fleetgraph-prod',
+      LANGFUSE_PUBLIC_KEY: 'pk-lf-test',
+      LANGFUSE_SECRET_KEY: 'sk-lf-test',
+      LANGFUSE_BASE_URL: 'https://cloud.langfuse.com',
     })).toBe(true);
   });
 });

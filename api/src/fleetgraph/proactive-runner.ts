@@ -6,7 +6,7 @@ import { buildWeekContext } from './context.js';
 import {
   createAtRiskWeekCheckpointer,
   createInstrumentedAtRiskWeekTraceRunner,
-  createLangSmithAtRiskWeekTraceRunner,
+  createLangfuseAtRiskWeekTraceRunner,
   createOpenAIAtRiskWeekReasoner,
   runAtRiskWeekGraph,
   type AtRiskWeekGraphDependencies,
@@ -114,7 +114,7 @@ export function createProductionAtRiskWeekScopeRunner(
     buildWeekContext,
     shouldRunDetector,
     createReasoner: createOpenAIAtRiskWeekReasoner,
-    createTraceRunner: createLangSmithAtRiskWeekTraceRunner,
+    createTraceRunner: createLangfuseAtRiskWeekTraceRunner,
     createCheckpointer: createAtRiskWeekCheckpointer,
     broadcastToUser: productionBroadcastToUser,
     randomUUID,

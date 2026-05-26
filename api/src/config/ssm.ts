@@ -8,7 +8,7 @@
  * SSM Parameter Store (/ship/{env}/):
  *   - DATABASE_URL, SESSION_SECRET, CORS_ORIGIN
  *   - Application config that changes per environment
- *   - FleetGraph OpenAI and LangSmith runtime config
+ *   - FleetGraph OpenAI and Langfuse runtime config
  *   - CAIA OAuth credentials (CAIA_ISSUER_URL, CAIA_CLIENT_ID, etc.)
  */
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
@@ -20,9 +20,9 @@ export const productionSecretKeys = [
   'CDN_DOMAIN',
   'APP_BASE_URL',
   'OPENAI_API_KEY',
-  'LANGCHAIN_API_KEY',
-  'LANGCHAIN_TRACING_V2',
-  'LANGCHAIN_PROJECT',
+  'LANGFUSE_PUBLIC_KEY',
+  'LANGFUSE_SECRET_KEY',
+  'LANGFUSE_BASE_URL',
 ] as const;
 
 export type ProductionSecretKey = typeof productionSecretKeys[number];
@@ -90,9 +90,9 @@ export async function loadProductionSecretValues(
     CDN_DOMAIN: requireLoadedProductionSecret(values, 'CDN_DOMAIN'),
     APP_BASE_URL: requireLoadedProductionSecret(values, 'APP_BASE_URL'),
     OPENAI_API_KEY: requireLoadedProductionSecret(values, 'OPENAI_API_KEY'),
-    LANGCHAIN_API_KEY: requireLoadedProductionSecret(values, 'LANGCHAIN_API_KEY'),
-    LANGCHAIN_TRACING_V2: requireLoadedProductionSecret(values, 'LANGCHAIN_TRACING_V2'),
-    LANGCHAIN_PROJECT: requireLoadedProductionSecret(values, 'LANGCHAIN_PROJECT'),
+    LANGFUSE_PUBLIC_KEY: requireLoadedProductionSecret(values, 'LANGFUSE_PUBLIC_KEY'),
+    LANGFUSE_SECRET_KEY: requireLoadedProductionSecret(values, 'LANGFUSE_SECRET_KEY'),
+    LANGFUSE_BASE_URL: requireLoadedProductionSecret(values, 'LANGFUSE_BASE_URL'),
   };
 }
 
@@ -124,8 +124,7 @@ export async function loadProductionSecrets(): Promise<void> {
   console.log(`CORS_ORIGIN: ${values.CORS_ORIGIN}`);
   console.log(`CDN_DOMAIN: ${values.CDN_DOMAIN}`);
   console.log(`APP_BASE_URL: ${values.APP_BASE_URL}`);
-  console.log(`LANGCHAIN_TRACING_V2: ${values.LANGCHAIN_TRACING_V2}`);
-  console.log(`LANGCHAIN_PROJECT: ${values.LANGCHAIN_PROJECT}`);
+  console.log(`LANGFUSE_BASE_URL: ${values.LANGFUSE_BASE_URL}`);
 }
 
 function hasSecretValue(value: string | undefined): boolean {

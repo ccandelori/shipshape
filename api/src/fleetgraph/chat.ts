@@ -14,6 +14,13 @@ import {
   type WeekContext,
 } from './context.js';
 import type { FleetGraphConfig } from './config.js';
+import {
+  createFleetGraphLangfusePropagatedAttributes,
+  createFleetGraphLangfuseRunnableConfig,
+  fleetGraphLangfuseRuntime,
+  type FleetGraphLangfuseRuntime,
+  type FleetGraphLangfuseRunnableConfig,
+} from './langfuse.js';
 import { extractText } from '../utils/document-content.js';
 
 export const FLEETGRAPH_CHAT_CONTEXT_HISTORY_MESSAGE_LIMIT = 10;
@@ -107,7 +114,8 @@ export type FleetGraphChatModel = {
   modelName: string;
   stream: (
     messages: FleetGraphChatModelMessage[],
-    abortSignal: AbortSignal
+    abortSignal: AbortSignal,
+    streamConfig: FleetGraphLangfuseRunnableConfig
   ) => AsyncIterable<FleetGraphChatModelChunk>;
 };
 
@@ -126,6 +134,16 @@ export type FleetGraphChatRateLimitDecision = {
   allowed: false;
   retryAfterSeconds: number;
   resetAtMs: number;
+};
+
+export type FleetGraphChatTraceContext = {
+  traceName: string;
+  userId: string;
+  sessionId: string;
+  tags: string[];
+  metadata: Record<string, string>;
+  input: object;
+  streamConfig: FleetGraphLangfuseRunnableConfig;
 };
 
 export type FleetGraphChatContextBuilders = {
@@ -246,12 +264,13 @@ export async function streamFleetGraphChatModelResponse(input: {
   model: FleetGraphChatModel;
   messages: FleetGraphChatModelMessage[];
   abortSignal: AbortSignal;
+  streamConfig: FleetGraphLangfuseRunnableConfig;
   onToken: (token: string) => void | Promise<void>;
 }): Promise<FleetGraphChatCompletion> {
   let response = '';
   let usage: FleetGraphChatUsage | null = null;
 
-  for await (const chunk of input.model.stream(input.messages, input.abortSignal)) {
+  for await (const chunk of input.model.stream(input.messages, input.abortSignal, input.streamConfig)) {
     if (input.abortSignal.aborted) {
       break;
     }
@@ -274,6 +293,116 @@ export async function streamFleetGraphChatModelResponse(input: {
     response,
     usage,
   };
+}
+
+export function createFleetGraphChatTraceContext(input: {
+  userId: string;
+  workspaceId: string;
+  scope: FleetGraphChatScope;
+  request: FleetGraphChatRequest;
+}): FleetGraphChatTraceContext {
+  const tags = [
+    'fleetgraph',
+    'mode:ondemand',
+    `document_type:${input.scope.documentType}`,
+    'trace_node:chat',
+  ];
+  const sessionId = `fleetgraph:chat:${input.userId}:${input.scope.documentId}`;
+  const metadata = {
+    workspaceId: input.workspaceId,
+    userId: input.userId,
+    documentId: input.scope.documentId,
+    documentType: input.scope.documentType,
+    questionLength: String(input.request.question.length),
+    historyMessageCount: String(input.request.conversationHistory.length),
+  };
+
+  return {
+    traceName: 'fleetgraph.chat.response',
+    userId: input.userId,
+    sessionId,
+    tags,
+    metadata,
+    input: {
+      workspaceId: input.workspaceId,
+      userId: input.userId,
+      documentId: input.scope.documentId,
+      documentType: input.scope.documentType,
+      documentTitle: input.scope.title,
+      questionLength: input.request.question.length,
+      historyMessageCount: input.request.conversationHistory.length,
+    },
+    streamConfig: createFleetGraphLangfuseRunnableConfig({
+      runName: 'fleetgraph.chat.llm',
+      tags: [...tags, 'llm'],
+      metadata,
+      userId: input.userId,
+      sessionId,
+    }),
+  };
+}
+
+export async function traceFleetGraphChatCompletion(input: {
+  traceContext: FleetGraphChatTraceContext;
+  operation: () => Promise<FleetGraphChatCompletion>;
+}): Promise<FleetGraphChatCompletion> {
+  return traceFleetGraphChatCompletionWithRuntime({
+    runtime: fleetGraphLangfuseRuntime,
+    traceContext: input.traceContext,
+    operation: input.operation,
+  });
+}
+
+export async function traceFleetGraphChatCompletionWithRuntime(input: {
+  runtime: FleetGraphLangfuseRuntime;
+  traceContext: FleetGraphChatTraceContext;
+  operation: () => Promise<FleetGraphChatCompletion>;
+}): Promise<FleetGraphChatCompletion> {
+  const propagatedAttributes = createFleetGraphLangfusePropagatedAttributes({
+    traceName: input.traceContext.traceName,
+    sessionId: input.traceContext.sessionId,
+    userId: input.traceContext.userId,
+    tags: input.traceContext.tags,
+    metadata: input.traceContext.metadata,
+  });
+
+  return input.runtime.startActiveObservation(input.traceContext.traceName, async (observation) => (
+    input.runtime.propagateAttributes(propagatedAttributes, async () => {
+      observation.update({
+        input: input.traceContext.input,
+        metadata: input.traceContext.metadata,
+      });
+
+      try {
+        const completion = await input.operation();
+        observation.update({
+          output: {
+            response: completion.response,
+            usage: completion.usage,
+          },
+          metadata: {
+            ...input.traceContext.metadata,
+            modelName: completion.usage.modelName,
+            inputTokens: completion.usage.inputTokens,
+            outputTokens: completion.usage.outputTokens,
+            totalTokens: completion.usage.totalTokens,
+          },
+          level: 'DEFAULT',
+        });
+
+        return completion;
+      } catch (error) {
+        observation.update({
+          output: {
+            errorMessage: errorMessage(error),
+          },
+          level: 'ERROR',
+          statusMessage: errorMessage(error),
+        });
+        throw error;
+      }
+    })
+  ), { asType: 'chain' });
 }
 
 export function selectFleetGraphChatContextHistory(
@@ -333,13 +462,14 @@ export function createOpenAIFleetGraphChatModel(config: FleetGraphConfig): Fleet
 
   return {
     modelName: fleetGraphChatModelName,
-    stream: async function* (messages, abortSignal) {
+    stream: async function* (messages, abortSignal, streamConfig) {
       if (abortSignal.aborted) {
         return;
       }
 
       const stream = await model.stream(messages.map(toLangChainChatMessage), {
         signal: abortSignal,
+        ...streamConfig,
       });
 
       for await (const chunk of stream) {
@@ -433,6 +563,14 @@ function nonnegativeIntegerOrNull(value: number | undefined): number | null {
   }
 
   return value;
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
 }
 
 async function loadFleetGraphChatContext(input: {

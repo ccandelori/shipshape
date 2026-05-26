@@ -19,9 +19,11 @@ describe('FleetGraph proactive at-risk Week runner', () => {
   it('invokes the at-risk Week graph with production dependencies for the requested scope', async () => {
     const config: FleetGraphConfig = {
       openaiApiKey: 'sk-test-openai',
-      langchainApiKey: 'lsv2-test-langsmith',
-      langchainTracingV2: true,
-      langchainProject: 'ship-fleetgraph-test',
+      langfusePublicKey: 'pk-lf-test',
+      langfuseSecretKey: 'sk-lf-test',
+      langfuseBaseUrl: 'https://cloud.langfuse.com',
+      langfuseTracingEnvironment: 'test',
+      langfuseRelease: 'fleetgraph-test',
     };
     const client = createQueryClient();
     const reasoner: AtRiskWeekStructuredReasoner = {

@@ -3,6 +3,7 @@ import { MemorySaver } from '@langchain/langgraph';
 import { AIMessage } from '@langchain/core/messages';
 import type { QueryResult, QueryResultRow } from 'pg';
 import type { WeekContext } from '../context.js';
+import type { FleetGraphLangfuseRuntime } from '../langfuse.js';
 import {
   atRiskWeekGraphInputSchema,
   atRiskWeekNodeContracts,
@@ -12,9 +13,11 @@ import {
   createAtRiskWeekCheckpointConfig,
   createAtRiskWeekCheckpointer,
   createAtRiskWeekInitialState,
+  createAtRiskWeekLangfusePropagatedMetadata,
   createAtRiskWeekTraceMetadata,
   createInstrumentedAtRiskWeekTraceRunner,
   createLangChainAtRiskWeekReasoner,
+  createLangfuseAtRiskWeekTraceRunnerWithRuntime,
   estimateAtRiskWeekModelCost,
   runAtRiskWeekGraph,
   guardNode,
@@ -135,6 +138,90 @@ describe('FleetGraph at-risk Week detector contracts', () => {
       activeNode: null,
       modelName: 'gpt-4o-mini',
       modelTemperature: 0,
+    });
+  });
+
+  it('wraps run-boundary traces with Langfuse observation attributes', async () => {
+    const initialState = createAtRiskWeekInitialState(graphInput);
+    const observation = {
+      update: vi.fn(),
+    };
+    const startActiveObservationSpy = vi.fn();
+    const propagateAttributesSpy = vi.fn();
+    const runtime: FleetGraphLangfuseRuntime = {
+      startActiveObservation: ((name: string, fn: (span: typeof observation) => Promise<unknown>, options: object) => {
+        startActiveObservationSpy(name, options);
+        return fn(observation);
+      }) as unknown as FleetGraphLangfuseRuntime['startActiveObservation'],
+      propagateAttributes: ((params: object, fn: () => Promise<unknown>) => {
+        propagateAttributesSpy(params);
+        return fn();
+      }) as unknown as FleetGraphLangfuseRuntime['propagateAttributes'],
+    };
+
+    const completedState = await traceAtRiskWeekRun(
+      initialState,
+      createLangfuseAtRiskWeekTraceRunnerWithRuntime(runtime),
+      async (currentState) => ({
+        ...currentState,
+        status: 'completed',
+        activeNode: null,
+        completedAt: '2026-05-26T05:03:00.000Z',
+      })
+    );
+
+    expect(completedState.status).toBe('completed');
+    expect(startActiveObservationSpy).toHaveBeenCalledWith('fleetgraph.at_risk_week.run', { asType: 'chain' });
+    expect(propagateAttributesSpy).toHaveBeenCalledWith(expect.objectContaining({
+      traceName: 'fleetgraph.at_risk_week.run',
+      sessionId: initialState.scope.checkpointThreadId,
+      tags: expect.arrayContaining(['fleetgraph', 'trace_node:run']),
+      metadata: expect.objectContaining({
+        detectorType: 'at_risk_week',
+        traceNode: 'run',
+        runStatus: 'running',
+      }),
+      asBaggage: false,
+    }));
+    expect(observation.update).toHaveBeenCalledWith(expect.objectContaining({
+      input: {
+        traceMetadata: expect.objectContaining({
+          traceNode: 'run',
+          runStatus: 'running',
+        }),
+      },
+      metadata: expect.objectContaining({
+        traceNode: 'run',
+        runStatus: 'running',
+      }),
+    }));
+    expect(observation.update).toHaveBeenLastCalledWith(expect.objectContaining({
+      output: expect.objectContaining({
+        runStatus: 'completed',
+        activeNode: null,
+      }),
+      metadata: expect.objectContaining({
+        traceNode: 'run',
+        runStatus: 'completed',
+      }),
+      level: 'DEFAULT',
+    }));
+  });
+
+  it('keeps propagated Langfuse metadata short, string-only, and non-sensitive', () => {
+    const metadata = createAtRiskWeekTraceMetadata(createAtRiskWeekInitialState(graphInput), 'run');
+
+    expect(createAtRiskWeekLangfusePropagatedMetadata(metadata)).toEqual({
+      detectorType: 'at_risk_week',
+      detectorVersion: 'v1',
+      triggerSource: 'poll',
+      workspaceId,
+      scopedDocumentId: scopedDocId,
+      runId,
+      traceNode: 'run',
+      runStatus: 'running',
+      activeNode: 'scope',
+      materialChangeKey: 'none',
     });
   });
 
@@ -908,7 +995,11 @@ describe('FleetGraph at-risk Week detector contracts', () => {
         parsed: reasoningOutput,
       })),
     };
-    const reasoner = createLangChainAtRiskWeekReasoner('gpt-4o-mini', structuredModel);
+    const runnableConfig = {
+      runName: 'test-run',
+      tags: ['fleetgraph'],
+    };
+    const reasoner = createLangChainAtRiskWeekReasoner('gpt-4o-mini', structuredModel, () => runnableConfig);
 
     const result = await reasoner.invoke([
       { role: 'system', content: 'system prompt' },
@@ -925,7 +1016,7 @@ describe('FleetGraph at-risk Week detector contracts', () => {
     expect(structuredModel.invoke).toHaveBeenCalledWith([
       expect.objectContaining({ content: 'system prompt' }),
       expect.objectContaining({ content: 'user prompt' }),
-    ]);
+    ], runnableConfig);
   });
 
   it('surfaces malformed structured model output with model context', async () => {
@@ -949,7 +1040,7 @@ describe('FleetGraph at-risk Week detector contracts', () => {
         },
       })),
     };
-    const reasoner = createLangChainAtRiskWeekReasoner('gpt-4o-mini', structuredModel);
+    const reasoner = createLangChainAtRiskWeekReasoner('gpt-4o-mini', structuredModel, () => ({}));
 
     await expect(reasoner.invoke([
       { role: 'system', content: 'system prompt' },

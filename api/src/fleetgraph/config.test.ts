@@ -9,57 +9,68 @@ describe('FleetGraph config', () => {
   it('parses a valid environment into typed FleetGraph config', () => {
     const config = parseFleetGraphConfig({
       OPENAI_API_KEY: 'sk-test-openai',
-      LANGCHAIN_API_KEY: 'lsv2_test_langchain',
-      LANGCHAIN_TRACING_V2: 'true',
-      LANGCHAIN_PROJECT: 'ship-fleetgraph-test',
+      LANGFUSE_PUBLIC_KEY: 'pk-lf-test',
+      LANGFUSE_SECRET_KEY: 'sk-lf-test',
+      LANGFUSE_BASE_URL: 'https://cloud.langfuse.com',
+      LANGFUSE_TRACING_ENVIRONMENT: 'test',
+      LANGFUSE_RELEASE: 'fleetgraph-test',
     });
 
     expect(config).toEqual({
       openaiApiKey: 'sk-test-openai',
-      langchainApiKey: 'lsv2_test_langchain',
-      langchainTracingV2: true,
-      langchainProject: 'ship-fleetgraph-test',
+      langfusePublicKey: 'pk-lf-test',
+      langfuseSecretKey: 'sk-lf-test',
+      langfuseBaseUrl: 'https://cloud.langfuse.com',
+      langfuseTracingEnvironment: 'test',
+      langfuseRelease: 'fleetgraph-test',
     });
   });
 
   it('throws a clear error listing every missing required environment variable', () => {
     expect(() => parseFleetGraphConfig({})).toThrow(
-      'FleetGraph configuration is missing required environment variables: OPENAI_API_KEY, LANGCHAIN_API_KEY, LANGCHAIN_TRACING_V2, LANGCHAIN_PROJECT'
+      'FleetGraph configuration is missing required environment variables: OPENAI_API_KEY, LANGFUSE_PUBLIC_KEY, LANGFUSE_SECRET_KEY, LANGFUSE_BASE_URL'
     );
   });
 
-  it('rejects FleetGraph config when LangSmith tracing is not explicitly enabled', () => {
-    expect(() => parseFleetGraphConfig({
+  it('normalizes optional Langfuse deployment fields to null when omitted', () => {
+    expect(parseFleetGraphConfig({
       OPENAI_API_KEY: 'sk-test-openai',
-      LANGCHAIN_API_KEY: 'lsv2_test_langchain',
-      LANGCHAIN_TRACING_V2: 'false',
-      LANGCHAIN_PROJECT: 'ship-fleetgraph-test',
-    })).toThrow('FleetGraph configuration requires LANGCHAIN_TRACING_V2=true');
+      LANGFUSE_PUBLIC_KEY: 'pk-lf-test',
+      LANGFUSE_SECRET_KEY: 'sk-lf-test',
+      LANGFUSE_BASE_URL: 'https://cloud.langfuse.com',
+    })).toMatchObject({
+      langfuseTracingEnvironment: null,
+      langfuseRelease: null,
+    });
   });
 
   it('loads FleetGraph config from process environment', () => {
     vi.stubEnv('OPENAI_API_KEY', 'sk-test-openai');
-    vi.stubEnv('LANGCHAIN_API_KEY', 'lsv2_test_langchain');
-    vi.stubEnv('LANGCHAIN_TRACING_V2', 'true');
-    vi.stubEnv('LANGCHAIN_PROJECT', 'ship-fleetgraph-test');
+    vi.stubEnv('LANGFUSE_PUBLIC_KEY', 'pk-lf-test');
+    vi.stubEnv('LANGFUSE_SECRET_KEY', 'sk-lf-test');
+    vi.stubEnv('LANGFUSE_BASE_URL', 'https://cloud.langfuse.com');
+    vi.stubEnv('LANGFUSE_TRACING_ENVIRONMENT', 'local');
+    vi.stubEnv('LANGFUSE_RELEASE', 'dev-build');
 
     expect(loadFleetGraphConfig()).toEqual({
       openaiApiKey: 'sk-test-openai',
-      langchainApiKey: 'lsv2_test_langchain',
-      langchainTracingV2: true,
-      langchainProject: 'ship-fleetgraph-test',
+      langfusePublicKey: 'pk-lf-test',
+      langfuseSecretKey: 'sk-lf-test',
+      langfuseBaseUrl: 'https://cloud.langfuse.com',
+      langfuseTracingEnvironment: 'local',
+      langfuseRelease: 'dev-build',
     });
   });
 
   it('reports FleetGraph as available only when config is valid', () => {
     vi.stubEnv('OPENAI_API_KEY', 'sk-test-openai');
-    vi.stubEnv('LANGCHAIN_API_KEY', 'lsv2_test_langchain');
-    vi.stubEnv('LANGCHAIN_TRACING_V2', 'true');
-    vi.stubEnv('LANGCHAIN_PROJECT', 'ship-fleetgraph-test');
+    vi.stubEnv('LANGFUSE_PUBLIC_KEY', 'pk-lf-test');
+    vi.stubEnv('LANGFUSE_SECRET_KEY', 'sk-lf-test');
+    vi.stubEnv('LANGFUSE_BASE_URL', 'https://cloud.langfuse.com');
 
     expect(isFleetGraphAvailable()).toBe(true);
 
-    vi.stubEnv('LANGCHAIN_PROJECT', '');
+    vi.stubEnv('LANGFUSE_BASE_URL', '');
 
     expect(isFleetGraphAvailable()).toBe(false);
   });
