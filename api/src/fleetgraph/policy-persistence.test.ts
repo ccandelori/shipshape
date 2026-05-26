@@ -3,6 +3,7 @@ import { pool } from '../db/client.js';
 import {
   autoExecuteIfAllowed,
   persistPendingAction,
+  FleetGraphActionExecutionError,
   FleetGraphPendingActionPersistenceError,
   type FleetGraphPendingActionFinding,
 } from './policy.js';
@@ -203,6 +204,107 @@ describe('FleetGraph pending action persistence', () => {
     }
   });
 
+  it('leaves explicit approval candidates pending without execution', async () => {
+    const client = await pool.connect();
+    const finding = await createFinding('pending_review');
+
+    try {
+      const result = await autoExecuteIfAllowed(
+        client,
+        {
+          id: finding.id,
+          workspaceId,
+          scopedDocumentId: targetDocumentId,
+          expectedLifecycleState: 'pending_review',
+        },
+        createActionCandidate()
+      );
+
+      expect(result).toEqual({
+        executed: false,
+        lifecycleState: 'pending_review',
+      });
+
+      const lifecycleResult = await pool.query<FindingLifecycleRow>(
+        `SELECT lifecycle_state
+         FROM fleetgraph_findings
+         WHERE id = $1`,
+        [finding.id]
+      );
+      expect(lifecycleResult.rows[0]!.lifecycle_state).toBe('pending_review');
+    } finally {
+      client.release();
+    }
+  });
+
+  it('rolls back execution when an automatic candidate contains a visible write', async () => {
+    const client = await pool.connect();
+    const finding = await createFinding('open');
+
+    try {
+      await expect(autoExecuteIfAllowed(
+        client,
+        {
+          id: finding.id,
+          workspaceId,
+          scopedDocumentId: targetDocumentId,
+          expectedLifecycleState: 'open',
+        },
+        createMalformedAutomaticVisibleActionCandidate()
+      )).rejects.toThrow(FleetGraphActionExecutionError);
+
+      const lifecycleResult = await pool.query<FindingLifecycleRow>(
+        `SELECT lifecycle_state
+         FROM fleetgraph_findings
+         WHERE id = $1`,
+        [finding.id]
+      );
+      expect(lifecycleResult.rows[0]!.lifecycle_state).toBe('open');
+    } finally {
+      client.release();
+    }
+  });
+
+  it('rejects repeated automatic execution attempts without changing executed state again', async () => {
+    const client = await pool.connect();
+    const finding = await createFinding('open');
+    const actionCandidate = createAutoActionCandidate();
+
+    try {
+      await autoExecuteIfAllowed(
+        client,
+        {
+          id: finding.id,
+          workspaceId,
+          scopedDocumentId: targetDocumentId,
+          expectedLifecycleState: 'open',
+        },
+        actionCandidate
+      );
+
+      await expect(autoExecuteIfAllowed(
+        client,
+        {
+          id: finding.id,
+          workspaceId,
+          scopedDocumentId: targetDocumentId,
+          expectedLifecycleState: 'open',
+        },
+        actionCandidate
+      )).rejects.toThrow(FleetGraphActionExecutionError);
+
+      const lifecycleResult = await pool.query<FindingLifecycleRow>(
+        `SELECT lifecycle_state
+         FROM fleetgraph_findings
+         WHERE id = $1`,
+        [finding.id]
+      );
+      expect(lifecycleResult.rows[0]!.lifecycle_state).toBe('executed');
+    } finally {
+      client.release();
+    }
+  });
+
   async function createFinding(lifecycleState: string): Promise<IdRow> {
     const result = await pool.query<IdRow>(
       `INSERT INTO fleetgraph_findings (
@@ -263,6 +365,13 @@ describe('FleetGraph pending action persistence', () => {
       },
       approvalLevel: 'none',
       reversibility: 'reversible',
+    };
+  }
+
+  function createMalformedAutomaticVisibleActionCandidate(): ActionCandidate {
+    return {
+      ...createActionCandidate(),
+      approvalLevel: 'none',
     };
   }
 });
