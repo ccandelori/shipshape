@@ -18,6 +18,8 @@ import { extractText } from '../utils/document-content.js';
 
 export const FLEETGRAPH_CHAT_CONTEXT_HISTORY_MESSAGE_LIMIT = 10;
 export const FLEETGRAPH_CHAT_REQUEST_HISTORY_MESSAGE_LIMIT = 50;
+export const FLEETGRAPH_CHAT_RATE_LIMIT_MAX_REQUESTS = 10;
+export const FLEETGRAPH_CHAT_RATE_LIMIT_WINDOW_MS = 60 * 60 * 1_000;
 export const FLEETGRAPH_CHAT_QUESTION_MAX_LENGTH = 4_000;
 export const FLEETGRAPH_CHAT_MESSAGE_MAX_LENGTH = 8_000;
 
@@ -109,6 +111,18 @@ export type FleetGraphChatModel = {
 export type FleetGraphChatCompletion = {
   response: string;
   usage: FleetGraphChatUsage;
+};
+
+export type FleetGraphChatRateLimitState = ReadonlyMap<string, readonly number[]>;
+
+export type FleetGraphChatRateLimitDecision = {
+  allowed: true;
+  remaining: number;
+  resetAtMs: number;
+} | {
+  allowed: false;
+  retryAfterSeconds: number;
+  resetAtMs: number;
 };
 
 export type FleetGraphChatContextBuilders = {
@@ -212,7 +226,7 @@ export async function buildFleetGraphChatPrompt(input: {
       role: 'system',
       content: renderFleetGraphChatSystemPrompt(),
     },
-    ...input.request.conversationHistory,
+    ...selectFleetGraphChatContextHistory(input.request.conversationHistory),
     {
       role: 'user',
       content: renderFleetGraphChatUserPrompt(input.request.question, loadedContext),
@@ -251,6 +265,52 @@ export async function streamFleetGraphChatModelResponse(input: {
   return {
     response,
     usage,
+  };
+}
+
+export function selectFleetGraphChatContextHistory(
+  conversationHistory: FleetGraphChatMessage[]
+): FleetGraphChatMessage[] {
+  return conversationHistory.slice(-FLEETGRAPH_CHAT_CONTEXT_HISTORY_MESSAGE_LIMIT);
+}
+
+export function evaluateFleetGraphChatRateLimit(input: {
+  state: FleetGraphChatRateLimitState;
+  userId: string;
+  nowMs: number;
+}): {
+  state: FleetGraphChatRateLimitState;
+  decision: FleetGraphChatRateLimitDecision;
+} {
+  const activeRequestTimestamps = (input.state.get(input.userId) ?? [])
+    .filter((timestampMs) => input.nowMs - timestampMs < FLEETGRAPH_CHAT_RATE_LIMIT_WINDOW_MS);
+  const nextState = new Map(input.state);
+
+  if (activeRequestTimestamps.length >= FLEETGRAPH_CHAT_RATE_LIMIT_MAX_REQUESTS) {
+    const resetAtMs = activeRequestTimestamps[0]! + FLEETGRAPH_CHAT_RATE_LIMIT_WINDOW_MS;
+    nextState.set(input.userId, activeRequestTimestamps);
+
+    return {
+      state: nextState,
+      decision: {
+        allowed: false,
+        retryAfterSeconds: Math.ceil((resetAtMs - input.nowMs) / 1_000),
+        resetAtMs,
+      },
+    };
+  }
+
+  const updatedRequestTimestamps = [...activeRequestTimestamps, input.nowMs];
+  const resetAtMs = updatedRequestTimestamps[0]! + FLEETGRAPH_CHAT_RATE_LIMIT_WINDOW_MS;
+  nextState.set(input.userId, updatedRequestTimestamps);
+
+  return {
+    state: nextState,
+    decision: {
+      allowed: true,
+      remaining: FLEETGRAPH_CHAT_RATE_LIMIT_MAX_REQUESTS - updatedRequestTimestamps.length,
+      resetAtMs,
+    },
   };
 }
 
