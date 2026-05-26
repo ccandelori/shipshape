@@ -145,6 +145,16 @@ export type AtRiskWeekBranchDecision = {
   reason: string;
 };
 
+export type AtRiskWeekGuardDecision = 'quiet' | 'run';
+
+export type AtRiskWeekBranchPath =
+  | 'scope-exit'
+  | 'guard-exit'
+  | 'prefilter-exit'
+  | 'model-reason'
+  | 'policy'
+  | 'output';
+
 export type AtRiskWeekTraceTiming = {
   traceNode: AtRiskWeekTraceNode;
   startedAt: string;
@@ -178,6 +188,7 @@ export type AtRiskWeekTraceNode = AtRiskWeekNodeName | 'run';
 export type AtRiskWeekTraceMetadata = {
   detectorType: typeof atRiskWeekDetectorType;
   detectorVersion: typeof atRiskWeekDetectorVersion;
+  trigger: AtRiskWeekTriggerSource;
   triggerSource: AtRiskWeekTriggerSource;
   workspaceId: string;
   scopedDocumentId: string;
@@ -188,6 +199,8 @@ export type AtRiskWeekTraceMetadata = {
   runStatus: AtRiskWeekRunStatus;
   activeNode: AtRiskWeekNodeName | null;
   materialChangeKey: string | null;
+  guardDecision: AtRiskWeekGuardDecision | null;
+  branchPath: AtRiskWeekBranchPath | null;
   guardShouldRun: boolean | null;
   guardSuppressed: boolean | null;
   guardDecisionReason: string | null;
@@ -688,6 +701,7 @@ export function createAtRiskWeekTraceMetadata(
   return {
     detectorType: atRiskWeekDetectorType,
     detectorVersion: atRiskWeekDetectorVersion,
+    trigger: state.trace.triggerSource,
     triggerSource: state.trace.triggerSource,
     workspaceId: state.scope.workspaceId,
     scopedDocumentId: state.scope.scopedDocId,
@@ -698,6 +712,8 @@ export function createAtRiskWeekTraceMetadata(
     runStatus: state.status,
     activeNode: state.activeNode,
     materialChangeKey: state.scope.materialChangeKey,
+    guardDecision: deriveAtRiskWeekGuardDecision(state.guard),
+    branchPath: deriveAtRiskWeekBranchPath(state),
     guardShouldRun: state.guard?.shouldRun ?? null,
     guardSuppressed: state.guard === null ? null : !state.guard.shouldRun,
     guardDecisionReason: state.guard?.reason ?? null,
@@ -728,6 +744,46 @@ export function createAtRiskWeekTraceMetadata(
     latencyTargetMet: graphTiming === null ? null : graphTiming.durationMs <= atRiskWeekLatencyTargetMs,
     completedAt: state.completedAt,
   };
+}
+
+function deriveAtRiskWeekGuardDecision(guard: DetectorRunDecision | null): AtRiskWeekGuardDecision | null {
+  if (guard === null) {
+    return null;
+  }
+
+  return guard.shouldRun ? 'run' : 'quiet';
+}
+
+function deriveAtRiskWeekBranchPath(state: AtRiskWeekGraphState): AtRiskWeekBranchPath | null {
+  if (state.persistence !== null || state.status === 'completed') {
+    return 'output';
+  }
+
+  if (state.policy !== null) {
+    return 'policy';
+  }
+
+  if (state.reasoning !== null || state.trace.modelUsage !== null) {
+    return 'model-reason';
+  }
+
+  if (state.preFilter?.shouldReason === true) {
+    return 'model-reason';
+  }
+
+  if (state.preFilter?.shouldReason === false || state.earlyExit?.reason === 'pre_filter_safe') {
+    return 'prefilter-exit';
+  }
+
+  if (state.earlyExit?.reason === 'guard_suppressed') {
+    return 'guard-exit';
+  }
+
+  if (state.earlyExit?.reason === 'scope_not_found') {
+    return 'scope-exit';
+  }
+
+  return null;
 }
 
 function recordAtRiskWeekTraceTiming(

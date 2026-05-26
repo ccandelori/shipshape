@@ -329,6 +329,11 @@ describe('FleetGraph at-risk Week detector contracts', () => {
       message: 'suppressed_open_finding:finding-1:v1:key',
       materialChangeKey: 'v1:key',
     });
+    expect(createAtRiskWeekTraceMetadata(guardedState, 'guard')).toMatchObject({
+      trigger: 'poll',
+      guardDecision: 'quiet',
+      branchPath: 'guard-exit',
+    });
     expect(dependencies.shouldRunDetector).toHaveBeenCalledWith(
       dependencies.client,
       workspaceId,
@@ -425,11 +430,14 @@ describe('FleetGraph at-risk Week detector contracts', () => {
     expect(scopeTrace.definition.inputMetadata).toMatchObject({
       detectorType: 'at_risk_week',
       detectorVersion: 'v1',
+      trigger: 'poll',
       triggerSource: 'poll',
       workspaceId,
       scopedDocumentId: scopedDocId,
       weekId: scopedDocId,
       traceNode: 'scope',
+      guardDecision: null,
+      branchPath: null,
       guardShouldRun: null,
       preFilterShouldReason: null,
       inputTokens: null,
@@ -441,6 +449,9 @@ describe('FleetGraph at-risk Week detector contracts', () => {
     expect(preFilterTrace.outputMetadata).toMatchObject({
       traceNode: 'preFilter',
       runStatus: 'exited',
+      trigger: 'poll',
+      guardDecision: 'run',
+      branchPath: 'prefilter-exit',
       guardShouldRun: true,
       guardSuppressed: false,
       guardDecisionReason: 'run_material_changed_no_suppression:v1:safe',
@@ -613,6 +624,11 @@ describe('FleetGraph at-risk Week detector contracts', () => {
         'High-priority blocked issue: Launch approval blocked',
         'Standup blocker: Blocked waiting on security approval.',
       ],
+    });
+    expect(createAtRiskWeekTraceMetadata(preFilteredState, 'preFilter')).toMatchObject({
+      trigger: 'poll',
+      guardDecision: 'run',
+      branchPath: 'model-reason',
     });
     expect(preFilteredState.earlyExit).toBe(null);
   });
@@ -1023,9 +1039,25 @@ describe('FleetGraph at-risk Week detector contracts', () => {
     ]);
 
     const outputTrace = requireCapturedTrace(capturedTraces, capturedTraces.length - 1);
+    const policyTrace = requireCapturedTrace(capturedTraces, 0);
+    expect(policyTrace.outputMetadata).toMatchObject({
+      traceNode: 'policy',
+      trigger: 'poll',
+      guardDecision: 'run',
+      branchPath: 'policy',
+    });
+    expect(outputTrace.definition.inputMetadata).toMatchObject({
+      traceNode: 'output',
+      trigger: 'poll',
+      guardDecision: 'run',
+      branchPath: 'policy',
+    });
     expect(outputTrace.outputMetadata).toMatchObject({
       traceNode: 'output',
       runStatus: 'completed',
+      trigger: 'poll',
+      guardDecision: 'run',
+      branchPath: 'output',
       guardShouldRun: true,
       preFilterShouldReason: true,
       modelName: 'gpt-4o-mini',
