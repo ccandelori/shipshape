@@ -12,18 +12,27 @@ import {
   createAtRiskWeekCheckpointConfig,
   createAtRiskWeekCheckpointer,
   createAtRiskWeekInitialState,
+  createAtRiskWeekTraceMetadata,
   createLangChainAtRiskWeekReasoner,
   guardNode,
+  outputNode,
+  passthroughAtRiskWeekTraceRunner,
   policyNode,
   preFilterNode,
   reasonNode,
   renderAtRiskWeekReasoningPrompt,
   recordAtRiskWeekEarlyExit,
   scopeNode,
+  traceAtRiskWeekNode,
+  traceAtRiskWeekRun,
   atRiskWeekPromptBoundary,
   AtRiskWeekModelInvocationError,
+  type AtRiskWeekTraceDefinition,
+  type AtRiskWeekTraceMetadata,
+  type AtRiskWeekTraceRunner,
   type AtRiskWeekNodeDependencies,
   type AtRiskWeekGraphInput,
+  type AtRiskWeekOutputNodeDependencies,
   type AtRiskWeekReasonNodeDependencies,
   type AtRiskWeekReasoningOutput,
   type AtRiskWeekStructuredModelInvoker,
@@ -89,6 +98,37 @@ describe('FleetGraph at-risk Week detector contracts', () => {
       },
     });
     expect(createAtRiskWeekCheckpointer()).toBeInstanceOf(MemorySaver);
+  });
+
+  it('creates run-boundary trace metadata with stable detector and scope fields', async () => {
+    const initialState = createAtRiskWeekInitialState(graphInput);
+    const completedState = await traceAtRiskWeekRun(
+      initialState,
+      passthroughAtRiskWeekTraceRunner,
+      async (currentState) => ({
+        ...currentState,
+        status: 'completed',
+        activeNode: null,
+        completedAt: '2026-05-26T05:03:00.000Z',
+      })
+    );
+
+    expect(completedState.status).toBe('completed');
+    expect(createAtRiskWeekTraceMetadata(completedState, 'run')).toMatchObject({
+      detectorType: 'at_risk_week',
+      detectorVersion: 'v1',
+      triggerSource: 'poll',
+      workspaceId,
+      scopedDocumentId: scopedDocId,
+      scopedDocumentType: 'sprint',
+      weekId: scopedDocId,
+      runId,
+      traceNode: 'run',
+      runStatus: 'completed',
+      activeNode: null,
+      modelName: 'gpt-4o-mini',
+      modelTemperature: 0,
+    });
   });
 
   it('records early exits as immutable terminal state transitions', () => {
@@ -313,6 +353,98 @@ describe('FleetGraph at-risk Week detector contracts', () => {
       node: 'preFilter',
       reason: 'pre_filter_safe',
       materialChangeKey: 'v1:safe',
+    });
+  });
+
+  it('records consistent trace metadata for quiet branch paths', async () => {
+    const capturedTraces: CapturedTrace[] = [];
+    const traceRunner = createCapturingTraceRunner(capturedTraces);
+    const dependencies = createNodeDependencies({
+      scopeRows: [{ id: scopedDocId }],
+      weekContext: createWeekContext({ issues: [] }),
+      guardDecision: {
+        shouldRun: true,
+        reason: 'run_material_changed_no_suppression:v1:safe',
+        materialChangeKey: 'v1:safe',
+      },
+    });
+
+    let tracedState = createAtRiskWeekInitialState(graphInput);
+    tracedState = await traceAtRiskWeekNode(
+      tracedState,
+      'scope',
+      traceRunner,
+      (currentState) => scopeNode(currentState, dependencies)
+    );
+    tracedState = await traceAtRiskWeekNode(
+      tracedState,
+      'context',
+      traceRunner,
+      (currentState) => contextNode(currentState, dependencies)
+    );
+    tracedState = await traceAtRiskWeekNode(
+      tracedState,
+      'guard',
+      traceRunner,
+      (currentState) => guardNode(currentState, dependencies)
+    );
+    tracedState = await traceAtRiskWeekNode(
+      tracedState,
+      'preFilter',
+      traceRunner,
+      (currentState) => preFilterNode(currentState, dependencies)
+    );
+
+    expect(tracedState.status).toBe('exited');
+    expect(capturedTraces.map((trace) => trace.definition.name)).toEqual([
+      'fleetgraph.at_risk_week.scope',
+      'fleetgraph.at_risk_week.context',
+      'fleetgraph.at_risk_week.guard',
+      'fleetgraph.at_risk_week.preFilter',
+    ]);
+    const scopeTrace = requireCapturedTrace(capturedTraces, 0);
+    expect(scopeTrace.definition.tags).toEqual([
+      'fleetgraph',
+      'detector:at_risk_week',
+      'detector_version:v1',
+      'trigger:poll',
+      'trace_node:scope',
+    ]);
+    expect(scopeTrace.definition.inputMetadata).toMatchObject({
+      detectorType: 'at_risk_week',
+      detectorVersion: 'v1',
+      triggerSource: 'poll',
+      workspaceId,
+      scopedDocumentId: scopedDocId,
+      weekId: scopedDocId,
+      traceNode: 'scope',
+      guardShouldRun: null,
+      preFilterShouldReason: null,
+      inputTokens: null,
+      outputTokens: null,
+      findingId: null,
+    });
+
+    const preFilterTrace = requireCapturedTrace(capturedTraces, capturedTraces.length - 1);
+    expect(preFilterTrace.outputMetadata).toMatchObject({
+      traceNode: 'preFilter',
+      runStatus: 'exited',
+      guardShouldRun: true,
+      guardSuppressed: false,
+      guardDecisionReason: 'run_material_changed_no_suppression:v1:safe',
+      preFilterShouldReason: false,
+      preFilterDecisionReason: 'no_blockers_or_blocked_high_priority_issues',
+      earlyExitNode: 'preFilter',
+      earlyExitReason: 'pre_filter_safe',
+      latestBranchDecision: 'pre_filter_safe',
+      latestBranchReason: 'No blockers or high-priority blocked issues were present.',
+      modelName: 'gpt-4o-mini',
+      modelTemperature: 0,
+      inputTokens: null,
+      outputTokens: null,
+      lifecycleState: null,
+      findingId: null,
+      broadcastEvent: null,
     });
   });
 
@@ -692,7 +824,76 @@ describe('FleetGraph at-risk Week detector contracts', () => {
       },
     });
   });
+
+  it('records model, policy, and persistence metadata for finding paths', async () => {
+    const capturedTraces: CapturedTrace[] = [];
+    const traceRunner = createCapturingTraceRunner(capturedTraces);
+    const outputDependencies = createOutputNodeDependencies();
+    let tracedState = await createReasonedAtRiskState(createWeekContext({
+      ownerUserId,
+      issues: [{
+        id: '44444444-4444-4444-8444-444444444444',
+        title: 'Launch approval blocked',
+        state: 'blocked',
+        priority: 'high',
+      }],
+      blockerText: 'Blocked waiting on security approval.',
+    }));
+
+    tracedState = await traceAtRiskWeekNode(
+      tracedState,
+      'policy',
+      traceRunner,
+      (currentState) => policyNode(currentState)
+    );
+    tracedState = await traceAtRiskWeekNode(
+      tracedState,
+      'output',
+      traceRunner,
+      (currentState) => outputNode(currentState, outputDependencies)
+    );
+
+    expect(tracedState.status).toBe('completed');
+    expect(capturedTraces.map((trace) => trace.definition.name)).toEqual([
+      'fleetgraph.at_risk_week.policy',
+      'fleetgraph.at_risk_week.output',
+    ]);
+
+    const outputTrace = requireCapturedTrace(capturedTraces, capturedTraces.length - 1);
+    expect(outputTrace.outputMetadata).toMatchObject({
+      traceNode: 'output',
+      runStatus: 'completed',
+      guardShouldRun: true,
+      preFilterShouldReason: true,
+      modelName: 'gpt-4o-mini',
+      modelTemperature: 0,
+      inputTokens: 850,
+      outputTokens: 172,
+      estimatedCost: 0,
+      lifecycleState: 'pending_review',
+      approvalLevel: 'approval_required',
+      reversibility: 'reversible',
+      actionCandidatePresent: true,
+      findingId: '88888888-8888-4888-8888-888888888888',
+      actionCandidateId: '99999999-9999-4999-8999-999999999999',
+      broadcastEvent: 'fleetgraph:finding_created',
+    });
+    expect(outputDependencies.broadcastToUser).toHaveBeenCalledWith(ownerUserId, 'fleetgraph:finding_created', {
+      workspaceId,
+      scopedDocumentId: scopedDocId,
+      findingId: '88888888-8888-4888-8888-888888888888',
+      actionCandidateId: '99999999-9999-4999-8999-999999999999',
+      detectorType: 'at_risk_week',
+      severity: 'high',
+      lifecycleState: 'pending_review',
+    });
+  });
 });
+
+type CapturedTrace = {
+  definition: AtRiskWeekTraceDefinition;
+  outputMetadata: AtRiskWeekTraceMetadata;
+};
 
 type ScopeRow = QueryResultRow & {
   id: string;
@@ -761,6 +962,64 @@ function createReasonNodeDependencies(fixture: ReasonNodeDependencyFixture): AtR
       warn: fixture.warn ?? vi.fn(),
     },
     now: () => '2026-05-26T05:02:00.000Z',
+  };
+}
+
+function createCapturingTraceRunner(capturedTraces: CapturedTrace[]): AtRiskWeekTraceRunner {
+  return async (definition, state, operation) => {
+    const outputState = await operation(state);
+
+    capturedTraces.push({
+      definition,
+      outputMetadata: createAtRiskWeekTraceMetadata(outputState, definition.inputMetadata.traceNode),
+    });
+
+    return outputState;
+  };
+}
+
+function requireCapturedTrace(capturedTraces: CapturedTrace[], index: number): CapturedTrace {
+  const capturedTrace = capturedTraces[index];
+
+  if (!capturedTrace) {
+    throw new Error(`Expected captured FleetGraph trace at index=${index}`);
+  }
+
+  return capturedTrace;
+}
+
+function createOutputNodeDependencies(): AtRiskWeekOutputNodeDependencies {
+  const query = async <T extends QueryResultRow>(
+    queryText: string,
+    _values: unknown[]
+  ): Promise<QueryResult<T>> => {
+    if (queryText.startsWith('INSERT INTO fleetgraph_findings')) {
+      return createQueryResult([{ id: '88888888-8888-4888-8888-888888888888' }] as unknown as T[]);
+    }
+
+    if (queryText.startsWith('INSERT INTO fleetgraph_action_candidates')) {
+      return createQueryResult([{ id: '99999999-9999-4999-8999-999999999999' }] as unknown as T[]);
+    }
+
+    return createQueryResult([]);
+  };
+
+  return {
+    client: {
+      query,
+    },
+    broadcastToUser: vi.fn(),
+    now: () => '2026-05-26T05:03:00.000Z',
+  };
+}
+
+function createQueryResult<T extends QueryResultRow>(rows: T[]): QueryResult<T> {
+  return {
+    rows,
+    rowCount: rows.length,
+    command: '',
+    oid: 0,
+    fields: [],
   };
 }
 

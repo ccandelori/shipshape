@@ -1,6 +1,7 @@
 import { HumanMessage, SystemMessage, type BaseMessage } from '@langchain/core/messages';
 import { MemorySaver, type BaseCheckpointSaver } from '@langchain/langgraph';
 import { ChatOpenAI } from '@langchain/openai';
+import { getCurrentRunTree, traceable } from 'langsmith/traceable';
 import type { QueryResultRow } from 'pg';
 import { z } from 'zod';
 import type { FleetGraphConfig } from '../config.js';
@@ -22,6 +23,7 @@ import {
 import { extractText } from '../../utils/document-content.js';
 
 export const atRiskWeekDetectorType = 'at_risk_week';
+export const atRiskWeekDetectorVersion = 'v1';
 
 export const atRiskWeekPromptBoundary = {
   open: '<ship_fleetgraph_context_data>',
@@ -29,6 +31,7 @@ export const atRiskWeekPromptBoundary = {
 } as const;
 
 export const atRiskWeekReasoningModelName = 'gpt-4o-mini';
+export const atRiskWeekReasoningModelTemperature = 0;
 
 export const atRiskWeekTriggerSourceSchema = z.enum(['poll', 'mutation', 'ondemand', 'resume']);
 export type AtRiskWeekTriggerSource = z.infer<typeof atRiskWeekTriggerSourceSchema>;
@@ -130,7 +133,7 @@ export type AtRiskWeekBranchDecision = {
   reason: string;
 };
 
-export type AtRiskWeekTraceMetadata = {
+export type AtRiskWeekStateTrace = {
   detector: typeof atRiskWeekDetectorType;
   triggerSource: AtRiskWeekTriggerSource;
   workspaceId: string;
@@ -140,6 +143,63 @@ export type AtRiskWeekTraceMetadata = {
   branchDecisions: AtRiskWeekBranchDecision[];
   modelUsage: AtRiskWeekModelUsage | null;
 };
+
+export type AtRiskWeekTraceNode = AtRiskWeekNodeName | 'run';
+
+export type AtRiskWeekTraceMetadata = {
+  detectorType: typeof atRiskWeekDetectorType;
+  detectorVersion: typeof atRiskWeekDetectorVersion;
+  triggerSource: AtRiskWeekTriggerSource;
+  workspaceId: string;
+  scopedDocumentId: string;
+  scopedDocumentType: 'sprint';
+  weekId: string;
+  runId: string;
+  traceNode: AtRiskWeekTraceNode;
+  runStatus: AtRiskWeekRunStatus;
+  activeNode: AtRiskWeekNodeName | null;
+  materialChangeKey: string | null;
+  guardShouldRun: boolean | null;
+  guardSuppressed: boolean | null;
+  guardDecisionReason: string | null;
+  preFilterShouldReason: boolean | null;
+  preFilterDecisionReason: AtRiskWeekPreFilterDecision['reason'] | null;
+  earlyExitNode: AtRiskWeekNodeName | null;
+  earlyExitReason: AtRiskWeekEarlyExitReason | null;
+  earlyExitMessage: string | null;
+  branchDecisionCount: number;
+  latestBranchNode: AtRiskWeekNodeName | null;
+  latestBranchDecision: string | null;
+  latestBranchReason: string | null;
+  modelName: typeof atRiskWeekReasoningModelName;
+  modelTemperature: typeof atRiskWeekReasoningModelTemperature;
+  inputTokens: number | null;
+  outputTokens: number | null;
+  estimatedCost: number | null;
+  lifecycleState: FleetGraphLifecycleState | null;
+  approvalLevel: FleetGraphApprovalLevel | null;
+  reversibility: FleetGraphReversibility | null;
+  actionCandidatePresent: boolean | null;
+  findingId: string | null;
+  actionCandidateId: string | null;
+  broadcastEvent: AtRiskWeekPersistenceArtifacts['broadcastEvent'];
+  completedAt: string | null;
+};
+
+export type AtRiskWeekTraceDefinition = {
+  name: string;
+  runType: 'chain';
+  tags: string[];
+  inputMetadata: AtRiskWeekTraceMetadata;
+};
+
+export type AtRiskWeekTraceOperation = (state: AtRiskWeekGraphState) => Promise<AtRiskWeekGraphState>;
+
+export type AtRiskWeekTraceRunner = (
+  definition: AtRiskWeekTraceDefinition,
+  state: AtRiskWeekGraphState,
+  operation: AtRiskWeekTraceOperation
+) => Promise<AtRiskWeekGraphState>;
 
 export type AtRiskWeekNodeError = {
   node: AtRiskWeekNodeName;
@@ -168,7 +228,7 @@ export type AtRiskWeekGraphState = {
   persistence: AtRiskWeekPersistenceArtifacts | null;
   earlyExit: AtRiskWeekEarlyExit | null;
   errors: AtRiskWeekNodeError[];
-  trace: AtRiskWeekTraceMetadata;
+  trace: AtRiskWeekStateTrace;
   requestedAt: string;
   completedAt: string | null;
 };
@@ -335,6 +395,16 @@ type InsertedIdRow = QueryResultRow & {
   id: string;
 };
 
+type AtRiskWeekTraceInvocationInput = {
+  state: AtRiskWeekGraphState;
+  metadata: AtRiskWeekTraceMetadata;
+};
+
+type AtRiskWeekTraceInvocationOutput = {
+  state: AtRiskWeekGraphState;
+  metadata: AtRiskWeekTraceMetadata;
+};
+
 export function createAtRiskWeekInitialState(input: AtRiskWeekGraphInput): AtRiskWeekGraphState {
   const parsedInput = atRiskWeekGraphInputSchema.parse(input);
   const scope = createAtRiskWeekScopeState(parsedInput);
@@ -365,6 +435,139 @@ export function createAtRiskWeekInitialState(input: AtRiskWeekGraphInput): AtRis
     },
     requestedAt: parsedInput.requestedAt,
     completedAt: null,
+  };
+}
+
+export const passthroughAtRiskWeekTraceRunner: AtRiskWeekTraceRunner = async (
+  _definition,
+  state,
+  operation
+) => operation(state);
+
+export async function traceAtRiskWeekRun(
+  state: AtRiskWeekGraphState,
+  runner: AtRiskWeekTraceRunner,
+  operation: AtRiskWeekTraceOperation
+): Promise<AtRiskWeekGraphState> {
+  return runner(createAtRiskWeekTraceDefinition(state, 'run'), state, operation);
+}
+
+export async function traceAtRiskWeekNode(
+  state: AtRiskWeekGraphState,
+  node: AtRiskWeekNodeName,
+  runner: AtRiskWeekTraceRunner,
+  operation: AtRiskWeekTraceOperation
+): Promise<AtRiskWeekGraphState> {
+  return runner(createAtRiskWeekTraceDefinition(state, node), state, operation);
+}
+
+export function createLangSmithAtRiskWeekTraceRunner(config: FleetGraphConfig): AtRiskWeekTraceRunner {
+  return async (definition, state, operation) => {
+    const tracedOperation = traceable(
+      async (input: AtRiskWeekTraceInvocationInput): Promise<AtRiskWeekTraceInvocationOutput> => {
+        const outputState = await operation(input.state);
+        const outputMetadata = createAtRiskWeekTraceMetadata(outputState, input.metadata.traceNode);
+        const runTree = getCurrentRunTree();
+
+        if (runTree) {
+          runTree.metadata = {
+            ...runTree.metadata,
+            ...outputMetadata,
+          };
+        }
+
+        return {
+          state: outputState,
+          metadata: outputMetadata,
+        };
+      },
+      {
+        name: definition.name,
+        run_type: definition.runType,
+        project_name: config.langchainProject,
+        tags: definition.tags,
+        metadata: definition.inputMetadata,
+        processInputs: (input: Readonly<AtRiskWeekTraceInvocationInput>) => ({
+          traceMetadata: input.metadata,
+        }),
+        processOutputs: (output: Readonly<AtRiskWeekTraceInvocationOutput>) => ({
+          traceMetadata: output.metadata,
+          runStatus: output.state.status,
+          activeNode: output.state.activeNode,
+        }),
+      }
+    );
+    const output = await tracedOperation({
+      state,
+      metadata: definition.inputMetadata,
+    });
+
+    return output.state;
+  };
+}
+
+export function createAtRiskWeekTraceDefinition(
+  state: AtRiskWeekGraphState,
+  traceNode: AtRiskWeekTraceNode
+): AtRiskWeekTraceDefinition {
+  return {
+    name: `fleetgraph.at_risk_week.${traceNode}`,
+    runType: 'chain',
+    tags: [
+      'fleetgraph',
+      `detector:${atRiskWeekDetectorType}`,
+      `detector_version:${atRiskWeekDetectorVersion}`,
+      `trigger:${state.trace.triggerSource}`,
+      `trace_node:${traceNode}`,
+    ],
+    inputMetadata: createAtRiskWeekTraceMetadata(state, traceNode),
+  };
+}
+
+export function createAtRiskWeekTraceMetadata(
+  state: AtRiskWeekGraphState,
+  traceNode: AtRiskWeekTraceNode
+): AtRiskWeekTraceMetadata {
+  const latestBranchDecision = state.trace.branchDecisions[state.trace.branchDecisions.length - 1] ?? null;
+
+  return {
+    detectorType: atRiskWeekDetectorType,
+    detectorVersion: atRiskWeekDetectorVersion,
+    triggerSource: state.trace.triggerSource,
+    workspaceId: state.scope.workspaceId,
+    scopedDocumentId: state.scope.scopedDocId,
+    scopedDocumentType: 'sprint',
+    weekId: state.scope.scopedDocId,
+    runId: state.scope.runId,
+    traceNode,
+    runStatus: state.status,
+    activeNode: state.activeNode,
+    materialChangeKey: state.scope.materialChangeKey,
+    guardShouldRun: state.guard?.shouldRun ?? null,
+    guardSuppressed: state.guard === null ? null : !state.guard.shouldRun,
+    guardDecisionReason: state.guard?.reason ?? null,
+    preFilterShouldReason: state.preFilter?.shouldReason ?? null,
+    preFilterDecisionReason: state.preFilter?.reason ?? null,
+    earlyExitNode: state.earlyExit?.node ?? null,
+    earlyExitReason: state.earlyExit?.reason ?? null,
+    earlyExitMessage: state.earlyExit?.message ?? null,
+    branchDecisionCount: state.trace.branchDecisions.length,
+    latestBranchNode: latestBranchDecision?.node ?? null,
+    latestBranchDecision: latestBranchDecision?.decision ?? null,
+    latestBranchReason: latestBranchDecision?.reason ?? null,
+    modelName: atRiskWeekReasoningModelName,
+    modelTemperature: atRiskWeekReasoningModelTemperature,
+    inputTokens: state.trace.modelUsage?.inputTokens ?? null,
+    outputTokens: state.trace.modelUsage?.outputTokens ?? null,
+    estimatedCost: state.trace.modelUsage?.estimatedCost ?? null,
+    lifecycleState: state.policy?.lifecycleState ?? null,
+    approvalLevel: state.policy?.approvalLevel ?? null,
+    reversibility: state.policy?.reversibility ?? null,
+    actionCandidatePresent: state.policy === null ? null : state.policy.actionCandidate !== null,
+    findingId: state.persistence?.findingId ?? null,
+    actionCandidateId: state.persistence?.actionCandidateId ?? null,
+    broadcastEvent: state.persistence?.broadcastEvent ?? null,
+    completedAt: state.completedAt,
   };
 }
 
@@ -794,7 +997,7 @@ function requireInsertedId(
 export function createOpenAIAtRiskWeekReasoner(config: FleetGraphConfig): AtRiskWeekStructuredReasoner {
   const model = new ChatOpenAI({
     model: atRiskWeekReasoningModelName,
-    temperature: 0,
+    temperature: atRiskWeekReasoningModelTemperature,
     maxRetries: 0,
     apiKey: config.openaiApiKey,
   });
