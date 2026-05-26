@@ -2,6 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { Router, type Request, type Response } from 'express';
 import type { PoolClient } from 'pg';
 import { z } from 'zod';
+import { broadcastToUser } from '../collaboration/index.js';
 import { pool } from '../db/client.js';
 import { authMiddleware } from '../middleware/auth.js';
 
@@ -112,6 +113,8 @@ type FleetGraphActorContext = {
   isWorkspaceAdmin: boolean;
 };
 
+type FleetGraphFindingMutation = 'approved' | 'rejected' | 'dismissed' | 'snoozed' | 'executed';
+
 type FleetGraphDecisionFindingRow = {
   id: string;
   recipient_user_id: string | null;
@@ -153,6 +156,10 @@ type InsertedCommentRow = {
 
 type UpdatedFleetGraphFindingRow = {
   id: string;
+};
+
+type FleetGraphWorkspaceMemberRow = {
+  user_id: string;
 };
 
 type FleetGraphDecisionResult = {
@@ -319,6 +326,12 @@ router.post('/actions/:actionId/resume', authMiddleware, async (req: Request, re
       return;
     }
 
+    await broadcastFleetGraphFindingUpdated(
+      result.finding,
+      'executed',
+      paramsResult.data.actionId
+    );
+
     res.json(result.finding);
   } catch (error) {
     console.error('FleetGraph action resume failed:', error);
@@ -378,6 +391,8 @@ router.post('/findings/:id/snooze', authMiddleware, async (req: Request, res: Re
       return;
     }
 
+    await broadcastFleetGraphFindingUpdated(result.finding, 'snoozed', null);
+
     res.json(result.finding);
   } catch (error) {
     console.error('FleetGraph finding snooze failed:', error);
@@ -428,6 +443,8 @@ router.post('/findings/:id/dismiss', authMiddleware, async (req: Request, res: R
       res.status(result.statusCode).json({ error: result.error });
       return;
     }
+
+    await broadcastFleetGraphFindingUpdated(result.finding, 'dismissed', null);
 
     res.json(result.finding);
   } catch (error) {
@@ -480,6 +497,8 @@ router.post('/findings/:id/reject', authMiddleware, async (req: Request, res: Re
       return;
     }
 
+    await broadcastFleetGraphFindingUpdated(result.finding, 'rejected', null);
+
     res.json(result.finding);
   } catch (error) {
     console.error('FleetGraph finding rejection failed:', error);
@@ -531,6 +550,12 @@ router.post('/findings/:id/approve', authMiddleware, async (req: Request, res: R
       res.status(result.statusCode).json({ error: result.error });
       return;
     }
+
+    await broadcastFleetGraphFindingUpdated(
+      result.finding,
+      'approved',
+      resolveApprovedActionCandidateId(result.finding, bodyResult.data.action_candidate_id)
+    );
 
     res.json(result.finding);
   } catch (error) {
@@ -675,6 +700,44 @@ async function loadFleetGraphActionCandidates(
   );
 
   return result.rows;
+}
+
+async function broadcastFleetGraphFindingUpdated(
+  finding: FleetGraphFindingResponse,
+  mutation: FleetGraphFindingMutation,
+  actionCandidateId: string | null
+): Promise<void> {
+  const memberResult = await pool.query<FleetGraphWorkspaceMemberRow>(
+    `SELECT user_id
+     FROM workspace_memberships
+     WHERE workspace_id = $1`,
+    [finding.workspace_id]
+  );
+
+  for (const row of memberResult.rows) {
+    broadcastToUser(row.user_id, 'fleetgraph:finding_updated', {
+      workspaceId: finding.workspace_id,
+      findingId: finding.id,
+      lifecycleState: finding.lifecycle_state,
+      mutation,
+      actionCandidateId,
+    });
+  }
+}
+
+function resolveApprovedActionCandidateId(
+  finding: FleetGraphFindingResponse,
+  requestedActionCandidateId?: string
+): string | null {
+  if (requestedActionCandidateId) {
+    return requestedActionCandidateId;
+  }
+
+  if (finding.action_candidates.length === 1) {
+    return finding.action_candidates[0]!.id;
+  }
+
+  return null;
 }
 
 async function resumeFleetGraphAction(input: {

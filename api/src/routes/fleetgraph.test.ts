@@ -1,9 +1,16 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import request from 'supertest';
+import { broadcastToUser } from '../collaboration/index.js';
 import { pool } from '../db/client.js';
 import fleetGraphRouter from './fleetgraph.js';
+
+vi.mock('../collaboration/index.js', () => ({
+  broadcastToUser: vi.fn(),
+}));
+
+const broadcastToUserMock = vi.mocked(broadcastToUser);
 
 type IdRow = {
   id: string;
@@ -212,6 +219,10 @@ describe('FleetGraph inbox API', () => {
     if (otherUserId) {
       await pool.query('DELETE FROM users WHERE id = $1', [otherUserId]);
     }
+  });
+
+  afterEach(() => {
+    broadcastToUserMock.mockClear();
   });
 
   it('lists current-workspace findings sorted by created_at desc with nested recipient and action candidates', async () => {
@@ -579,6 +590,127 @@ describe('FleetGraph inbox API', () => {
     expect(suppressionResult.rows[0]!.count).toBe('0');
   });
 
+  it('broadcasts workspace invalidations after successful FleetGraph mutations', async () => {
+    const approvedFinding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Broadcast approval risk',
+      lifecycleState: 'pending_review',
+      materialChangeKey: `v1:inbox-${testRunId}:broadcast-approve`,
+      createdAt: '2026-05-26T15:10:00.000Z',
+    });
+    const approvedActionCandidateId = await createActionCandidate(approvedFinding.id, scopedDocumentId);
+
+    const approveResponse = await request(app)
+      .post(`/api/fleetgraph/findings/${approvedFinding.id}/approve`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ action_candidate_id: approvedActionCandidateId });
+
+    expect(approveResponse.status).toBe(200);
+    expectFleetGraphWorkspaceBroadcast({
+      findingId: approvedFinding.id,
+      lifecycleState: 'approved',
+      mutation: 'approved',
+      actionCandidateId: approvedActionCandidateId,
+    });
+
+    const rejectedFinding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Broadcast rejection risk',
+      lifecycleState: 'pending_review',
+      materialChangeKey: `v1:inbox-${testRunId}:broadcast-reject`,
+      createdAt: '2026-05-26T15:20:00.000Z',
+    });
+
+    const rejectResponse = await request(app)
+      .post(`/api/fleetgraph/findings/${rejectedFinding.id}/reject`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ reason: 'Broadcast rejection reason.' });
+
+    expect(rejectResponse.status).toBe(200);
+    expectFleetGraphWorkspaceBroadcast({
+      findingId: rejectedFinding.id,
+      lifecycleState: 'rejected',
+      mutation: 'rejected',
+      actionCandidateId: null,
+    });
+
+    const dismissedFinding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Broadcast dismissal risk',
+      lifecycleState: 'open',
+      materialChangeKey: `v1:inbox-${testRunId}:broadcast-dismiss`,
+      createdAt: '2026-05-26T15:30:00.000Z',
+    });
+
+    const dismissResponse = await request(app)
+      .post(`/api/fleetgraph/findings/${dismissedFinding.id}/dismiss`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ reason: 'Broadcast dismissal reason.' });
+
+    expect(dismissResponse.status).toBe(200);
+    expectFleetGraphWorkspaceBroadcast({
+      findingId: dismissedFinding.id,
+      lifecycleState: 'dismissed',
+      mutation: 'dismissed',
+      actionCandidateId: null,
+    });
+
+    const snoozedFinding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Broadcast snooze risk',
+      lifecycleState: 'open',
+      materialChangeKey: `v1:inbox-${testRunId}:broadcast-snooze`,
+      createdAt: '2026-05-26T15:40:00.000Z',
+    });
+    const snoozeExpiresAt = new Date(Date.now() + 90 * 60 * 1000).toISOString();
+
+    const snoozeResponse = await request(app)
+      .post(`/api/fleetgraph/findings/${snoozedFinding.id}/snooze`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ reason: 'Broadcast snooze reason.', expires_at: snoozeExpiresAt });
+
+    expect(snoozeResponse.status).toBe(200);
+    expectFleetGraphWorkspaceBroadcast({
+      findingId: snoozedFinding.id,
+      lifecycleState: 'snoozed',
+      mutation: 'snoozed',
+      actionCandidateId: null,
+    });
+
+    const executedFinding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Broadcast resume risk',
+      lifecycleState: 'approved',
+      materialChangeKey: `v1:inbox-${testRunId}:broadcast-resume`,
+      createdAt: '2026-05-26T15:50:00.000Z',
+    });
+    const executedActionCandidateId = await createActionCandidate(executedFinding.id, scopedDocumentId);
+    await createApproval(executedFinding.id, executedActionCandidateId, userId, 'approved', null);
+
+    const resumeResponse = await request(app)
+      .post(`/api/fleetgraph/actions/${executedActionCandidateId}/resume`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ idempotency_key: `broadcast-resume-${testRunId}` });
+
+    expect(resumeResponse.status).toBe(200);
+    expectFleetGraphWorkspaceBroadcast({
+      findingId: executedFinding.id,
+      lifecycleState: 'executed',
+      mutation: 'executed',
+      actionCandidateId: executedActionCandidateId,
+    });
+  });
+
   it('resumes an approved draft comment action exactly once for a repeated idempotency key', async () => {
     const finding = await createFinding({
       workspaceId,
@@ -592,6 +724,7 @@ describe('FleetGraph inbox API', () => {
     const actionCandidateId = await createActionCandidate(finding.id, scopedDocumentId);
     await createApproval(finding.id, actionCandidateId, userId, 'approved', null);
     const idempotencyKey = `resume-comment-${testRunId}`;
+    const beforeCommentCount = await countDocumentComments(scopedDocumentId);
 
     const firstResponse = await request(app)
       .post(`/api/fleetgraph/actions/${actionCandidateId}/resume`)
@@ -614,13 +747,15 @@ describe('FleetGraph inbox API', () => {
       id: finding.id,
       lifecycle_state: 'executed',
     });
+    await expect(countDocumentComments(scopedDocumentId)).resolves.toBe(beforeCommentCount + 1);
 
     const commentsResult = await pool.query<CommentRow>(
       `SELECT content, author_id
        FROM comments
        WHERE document_id = $1
          AND workspace_id = $2
-       ORDER BY created_at ASC`,
+       ORDER BY created_at DESC, id DESC
+       LIMIT 1`,
       [scopedDocumentId, workspaceId]
     );
     expect(commentsResult.rows).toEqual([{
@@ -664,6 +799,7 @@ describe('FleetGraph inbox API', () => {
       error: 'FleetGraph action resume requires the recipient or workspace admin',
     });
     await expect(countDocumentComments(scopedDocumentId)).resolves.toBe(beforeCommentCount);
+    expect(broadcastToUserMock).not.toHaveBeenCalled();
   });
 
   it('allows a workspace admin to resume a recipient action', async () => {
@@ -830,5 +966,26 @@ describe('FleetGraph inbox API', () => {
     );
 
     return Number.parseInt(result.rows[0]!.count, 10);
+  }
+
+  function expectFleetGraphWorkspaceBroadcast(input: {
+    findingId: string;
+    lifecycleState: string;
+    mutation: string;
+    actionCandidateId: string | null;
+  }): void {
+    const payload = expect.objectContaining({
+      workspaceId,
+      findingId: input.findingId,
+      lifecycleState: input.lifecycleState,
+      mutation: input.mutation,
+      actionCandidateId: input.actionCandidateId,
+    });
+
+    expect(broadcastToUserMock).toHaveBeenCalledTimes(3);
+    expect(broadcastToUserMock).toHaveBeenCalledWith(userId, 'fleetgraph:finding_updated', payload);
+    expect(broadcastToUserMock).toHaveBeenCalledWith(adminUserId, 'fleetgraph:finding_updated', payload);
+    expect(broadcastToUserMock).toHaveBeenCalledWith(otherUserId, 'fleetgraph:finding_updated', payload);
+    broadcastToUserMock.mockClear();
   }
 });
