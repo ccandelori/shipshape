@@ -35,13 +35,33 @@ type SuppressionAuditRow = {
   expires_at: Date | null;
 };
 
+type CommentRow = {
+  content: string;
+  author_id: string | null;
+};
+
+type ActionExecutionRow = {
+  idempotency_key: string | null;
+  result: unknown;
+};
+
+type TestRecommendedAction = {
+  kind: string;
+  title?: string;
+  body: string;
+};
+
 describe('FleetGraph inbox API', () => {
   const testRunId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
   const sessionId = `fleetgraph-inbox-${testRunId}`;
+  const adminSessionId = `fleetgraph-inbox-admin-${testRunId}`;
+  const otherSessionId = `fleetgraph-inbox-other-${testRunId}`;
   let app: express.Express;
   let workspaceId = '';
   let otherWorkspaceId = '';
   let userId = '';
+  let adminUserId = '';
+  let otherUserId = '';
   let scopedDocumentId = '';
   let otherScopedDocumentId = '';
   let openFinding: SeededFinding;
@@ -73,6 +93,22 @@ describe('FleetGraph inbox API', () => {
     );
     userId = userResult.rows[0]!.id;
 
+    const adminUserResult = await pool.query<IdRow>(
+      `INSERT INTO users (email, password_hash, name)
+       VALUES ($1, 'test-hash', 'FleetGraph Admin User')
+       RETURNING id`,
+      [`fleetgraph-inbox-admin-${testRunId}@test.local`]
+    );
+    adminUserId = adminUserResult.rows[0]!.id;
+
+    const otherUserResult = await pool.query<IdRow>(
+      `INSERT INTO users (email, password_hash, name)
+       VALUES ($1, 'test-hash', 'FleetGraph Other User')
+       RETURNING id`,
+      [`fleetgraph-inbox-other-${testRunId}@test.local`]
+    );
+    otherUserId = otherUserResult.rows[0]!.id;
+
     await pool.query(
       `INSERT INTO workspace_memberships (workspace_id, user_id, role)
        VALUES ($1, $2, 'member')`,
@@ -80,9 +116,33 @@ describe('FleetGraph inbox API', () => {
     );
 
     await pool.query(
+      `INSERT INTO workspace_memberships (workspace_id, user_id, role)
+       VALUES ($1, $2, 'admin')`,
+      [workspaceId, adminUserId]
+    );
+
+    await pool.query(
+      `INSERT INTO workspace_memberships (workspace_id, user_id, role)
+       VALUES ($1, $2, 'member')`,
+      [workspaceId, otherUserId]
+    );
+
+    await pool.query(
       `INSERT INTO sessions (id, user_id, workspace_id, expires_at, last_activity, created_at)
        VALUES ($1, $2, $3, now() + interval '1 hour', now(), now())`,
       [sessionId, userId, workspaceId]
+    );
+
+    await pool.query(
+      `INSERT INTO sessions (id, user_id, workspace_id, expires_at, last_activity, created_at)
+       VALUES ($1, $2, $3, now() + interval '1 hour', now(), now())`,
+      [adminSessionId, adminUserId, workspaceId]
+    );
+
+    await pool.query(
+      `INSERT INTO sessions (id, user_id, workspace_id, expires_at, last_activity, created_at)
+       VALUES ($1, $2, $3, now() + interval '1 hour', now(), now())`,
+      [otherSessionId, otherUserId, workspaceId]
     );
 
     const documentResult = await pool.query<IdRow>(
@@ -143,6 +203,14 @@ describe('FleetGraph inbox API', () => {
 
     if (userId) {
       await pool.query('DELETE FROM users WHERE id = $1', [userId]);
+    }
+
+    if (adminUserId) {
+      await pool.query('DELETE FROM users WHERE id = $1', [adminUserId]);
+    }
+
+    if (otherUserId) {
+      await pool.query('DELETE FROM users WHERE id = $1', [otherUserId]);
     }
   });
 
@@ -511,6 +579,156 @@ describe('FleetGraph inbox API', () => {
     expect(suppressionResult.rows[0]!.count).toBe('0');
   });
 
+  it('resumes an approved draft comment action exactly once for a repeated idempotency key', async () => {
+    const finding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Resume approved comment risk',
+      lifecycleState: 'approved',
+      materialChangeKey: `v1:inbox-${testRunId}:resume-comment`,
+      createdAt: '2026-05-26T16:00:00.000Z',
+    });
+    const actionCandidateId = await createActionCandidate(finding.id, scopedDocumentId);
+    await createApproval(finding.id, actionCandidateId, userId, 'approved', null);
+    const idempotencyKey = `resume-comment-${testRunId}`;
+
+    const firstResponse = await request(app)
+      .post(`/api/fleetgraph/actions/${actionCandidateId}/resume`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ idempotency_key: idempotencyKey });
+
+    expect(firstResponse.status).toBe(200);
+    expect(firstResponse.body).toMatchObject({
+      id: finding.id,
+      lifecycle_state: 'executed',
+    });
+
+    const secondResponse = await request(app)
+      .post(`/api/fleetgraph/actions/${actionCandidateId}/resume`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ idempotency_key: idempotencyKey });
+
+    expect(secondResponse.status).toBe(200);
+    expect(secondResponse.body).toMatchObject({
+      id: finding.id,
+      lifecycle_state: 'executed',
+    });
+
+    const commentsResult = await pool.query<CommentRow>(
+      `SELECT content, author_id
+       FROM comments
+       WHERE document_id = $1
+         AND workspace_id = $2
+       ORDER BY created_at ASC`,
+      [scopedDocumentId, workspaceId]
+    );
+    expect(commentsResult.rows).toEqual([{
+      content: 'Please post the current blocker owner and next step before standup.',
+      author_id: userId,
+    }]);
+
+    const executionResult = await pool.query<ActionExecutionRow>(
+      `SELECT idempotency_key, result
+       FROM fleetgraph_action_executions
+       WHERE action_candidate_id = $1`,
+      [actionCandidateId]
+    );
+    expect(executionResult.rows).toHaveLength(1);
+    expect(executionResult.rows[0]).toMatchObject({
+      idempotency_key: idempotencyKey,
+    });
+  });
+
+  it('denies resume for a non-recipient workspace member without executing the action', async () => {
+    const finding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Unauthorized resume risk',
+      lifecycleState: 'approved',
+      materialChangeKey: `v1:inbox-${testRunId}:resume-denied`,
+      createdAt: '2026-05-26T17:00:00.000Z',
+    });
+    const actionCandidateId = await createActionCandidate(finding.id, scopedDocumentId);
+    await createApproval(finding.id, actionCandidateId, userId, 'approved', null);
+    const beforeCommentCount = await countDocumentComments(scopedDocumentId);
+
+    const response = await request(app)
+      .post(`/api/fleetgraph/actions/${actionCandidateId}/resume`)
+      .set('Cookie', [`session_id=${otherSessionId}`])
+      .send({ idempotency_key: `resume-denied-${testRunId}` });
+
+    expect(response.status).toBe(403);
+    expect(response.body).toEqual({
+      error: 'FleetGraph action resume requires the recipient or workspace admin',
+    });
+    await expect(countDocumentComments(scopedDocumentId)).resolves.toBe(beforeCommentCount);
+  });
+
+  it('allows a workspace admin to resume a recipient action', async () => {
+    const finding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Admin resume risk',
+      lifecycleState: 'approved',
+      materialChangeKey: `v1:inbox-${testRunId}:resume-admin`,
+      createdAt: '2026-05-26T18:00:00.000Z',
+    });
+    const actionCandidateId = await createActionCandidate(finding.id, scopedDocumentId);
+    await createApproval(finding.id, actionCandidateId, userId, 'approved', null);
+    const beforeCommentCount = await countDocumentComments(scopedDocumentId);
+
+    const response = await request(app)
+      .post(`/api/fleetgraph/actions/${actionCandidateId}/resume`)
+      .set('Cookie', [`session_id=${adminSessionId}`])
+      .send({ idempotency_key: `resume-admin-${testRunId}` });
+
+    expect(response.status).toBe(200);
+    expect(response.body.lifecycle_state).toBe('executed');
+    await expect(countDocumentComments(scopedDocumentId)).resolves.toBe(beforeCommentCount + 1);
+
+    const latestCommentResult = await pool.query<CommentRow>(
+      `SELECT content, author_id
+       FROM comments
+       WHERE document_id = $1
+         AND workspace_id = $2
+       ORDER BY created_at DESC, id DESC
+       LIMIT 1`,
+      [scopedDocumentId, workspaceId]
+    );
+    expect(latestCommentResult.rows[0]).toEqual({
+      content: 'Please post the current blocker owner and next step before standup.',
+      author_id: adminUserId,
+    });
+  });
+
+  it('returns 409 and does not execute an action whose finding is not approved', async () => {
+    const finding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Premature resume risk',
+      lifecycleState: 'pending_review',
+      materialChangeKey: `v1:inbox-${testRunId}:resume-premature`,
+      createdAt: '2026-05-26T19:00:00.000Z',
+    });
+    const actionCandidateId = await createActionCandidate(finding.id, scopedDocumentId);
+    const beforeCommentCount = await countDocumentComments(scopedDocumentId);
+
+    const response = await request(app)
+      .post(`/api/fleetgraph/actions/${actionCandidateId}/resume`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ idempotency_key: `resume-premature-${testRunId}` });
+
+    expect(response.status).toBe(409);
+    expect(response.body).toEqual({
+      error: 'FleetGraph action can only resume from an approved finding',
+    });
+    await expect(countDocumentComments(scopedDocumentId)).resolves.toBe(beforeCommentCount);
+  });
+
   async function createFinding(input: {
     workspaceId: string;
     scopedDocumentId: string;
@@ -578,5 +796,39 @@ describe('FleetGraph inbox API', () => {
     );
 
     return result.rows[0]!.id;
+  }
+
+  async function createApproval(
+    findingId: string,
+    actionCandidateId: string,
+    actorUserId: string,
+    decision: 'approved' | 'edited',
+    editedAction: TestRecommendedAction | null
+  ): Promise<void> {
+    await pool.query(
+      `INSERT INTO fleetgraph_approvals (
+         finding_id, action_candidate_id, actor_user_id, decision, edited_action
+       )
+       VALUES ($1, $2, $3, $4, $5)`,
+      [
+        findingId,
+        actionCandidateId,
+        actorUserId,
+        decision,
+        editedAction ? JSON.stringify(editedAction) : null,
+      ]
+    );
+  }
+
+  async function countDocumentComments(documentId: string): Promise<number> {
+    const result = await pool.query<CountRow>(
+      `SELECT COUNT(*)::text AS count
+       FROM comments
+       WHERE document_id = $1
+         AND workspace_id = $2`,
+      [documentId, workspaceId]
+    );
+
+    return Number.parseInt(result.rows[0]!.count, 10);
   }
 });

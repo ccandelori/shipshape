@@ -6,6 +6,7 @@ const fleetGraphTables = [
   'fleetgraph_action_candidates',
   'fleetgraph_approvals',
   'fleetgraph_suppressions',
+  'fleetgraph_action_executions',
   'fleetgraph_usage',
 ] as const
 
@@ -56,6 +57,15 @@ const expectedColumns: Record<FleetGraphTable, readonly string[]> = {
     'expires_at',
     'created_at',
   ],
+  fleetgraph_action_executions: [
+    'id',
+    'finding_id',
+    'action_candidate_id',
+    'actor_user_id',
+    'idempotency_key',
+    'result',
+    'created_at',
+  ],
   fleetgraph_usage: [
     'id',
     'run_id',
@@ -77,6 +87,7 @@ const expectedIndexes = [
   'idx_fleetgraph_findings_material_change_key',
   'idx_fleetgraph_findings_expires_at',
   'idx_fleetgraph_suppressions_expires_at',
+  'idx_fleetgraph_action_executions_idempotency_key',
   'idx_fleetgraph_usage_workspace_id',
 ] as const
 
@@ -90,6 +101,8 @@ const expectedCheckConstraints = [
   'fleetgraph_approvals_decision_check',
   'fleetgraph_approvals_rejected_reason_check',
   'fleetgraph_suppressions_suppression_type_check',
+  'fleetgraph_action_executions_idempotency_key_not_blank_check',
+  'fleetgraph_action_executions_result_object_check',
   'fleetgraph_usage_trigger_check',
 ] as const
 

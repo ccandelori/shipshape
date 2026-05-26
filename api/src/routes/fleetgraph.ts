@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import { Router, type Request, type Response } from 'express';
 import type { PoolClient } from 'pg';
 import { z } from 'zod';
@@ -121,6 +122,39 @@ type FleetGraphActionCandidateIdRow = {
   id: string;
 };
 
+type FleetGraphResumeActionRow = {
+  action_candidate_id: string;
+  finding_id: string;
+  workspace_id: string;
+  scoped_document_id: string;
+  recipient_user_id: string | null;
+  lifecycle_state: string;
+  target_document_id: string;
+  recommended_action: string;
+  edited_action: string | null;
+};
+
+type FleetGraphActionExecutionRow = {
+  idempotency_key: string | null;
+  result: unknown;
+};
+
+type FleetGraphActionExecutionResult = {
+  kind: 'draft_comment';
+  documentId: string;
+  commentId: string;
+  commentThreadId: string;
+};
+
+type InsertedCommentRow = {
+  id: string;
+  comment_id: string;
+};
+
+type UpdatedFleetGraphFindingRow = {
+  id: string;
+};
+
 type FleetGraphDecisionResult = {
   success: true;
   finding: FleetGraphFindingResponse;
@@ -164,6 +198,10 @@ const fleetGraphFindingParamsSchema = z.object({
   id: z.string().uuid(),
 });
 
+const fleetGraphActionParamsSchema = z.object({
+  actionId: z.string().uuid(),
+});
+
 const fleetGraphApproveBodySchema = z.object({
   action_candidate_id: z.string().uuid().optional(),
   edited_action: recommendedActionSchema.nullable().optional(),
@@ -184,6 +222,10 @@ const fleetGraphSnoozeBodySchema = z.object({
   reason: z.string().trim().min(1).max(1000),
   expires_at: z.string().datetime({ offset: true }),
   idempotency_key: z.string().min(1).max(120).optional(),
+});
+
+const fleetGraphResumeBodySchema = z.object({
+  idempotency_key: z.string().trim().min(1).max(120).optional(),
 });
 
 router.get('/findings', authMiddleware, async (req: Request, res: Response) => {
@@ -230,6 +272,57 @@ router.get('/findings', authMiddleware, async (req: Request, res: Response) => {
   } catch (error) {
     console.error('FleetGraph findings list failed:', error);
     res.status(500).json({ error: 'Failed to list FleetGraph findings' });
+  }
+});
+
+router.post('/actions/:actionId/resume', authMiddleware, async (req: Request, res: Response) => {
+  const paramsResult = fleetGraphActionParamsSchema.safeParse(req.params);
+  const bodyResult = fleetGraphResumeBodySchema.safeParse(req.body ?? {});
+  const actorContext = getFleetGraphActorContext(req);
+
+  if (!paramsResult.success) {
+    res.status(400).json({
+      error: 'Invalid input',
+      details: paramsResult.error.issues.map((issue) => ({
+        path: issue.path,
+        message: issue.message,
+      })),
+    });
+    return;
+  }
+
+  if (!bodyResult.success) {
+    res.status(400).json({
+      error: 'Invalid input',
+      details: bodyResult.error.issues.map((issue) => ({
+        path: issue.path,
+        message: issue.message,
+      })),
+    });
+    return;
+  }
+
+  if (!actorContext.success) {
+    res.status(actorContext.statusCode).json({ error: actorContext.error });
+    return;
+  }
+
+  try {
+    const result = await resumeFleetGraphAction({
+      actionCandidateId: paramsResult.data.actionId,
+      actorContext: actorContext.data,
+      idempotencyKey: bodyResult.data.idempotency_key,
+    });
+
+    if (!result.success) {
+      res.status(result.statusCode).json({ error: result.error });
+      return;
+    }
+
+    res.json(result.finding);
+  } catch (error) {
+    console.error('FleetGraph action resume failed:', error);
+    res.status(500).json({ error: 'Failed to resume FleetGraph action' });
   }
 });
 
@@ -582,6 +675,270 @@ async function loadFleetGraphActionCandidates(
   );
 
   return result.rows;
+}
+
+async function resumeFleetGraphAction(input: {
+  actionCandidateId: string;
+  actorContext: FleetGraphActorContext;
+  idempotencyKey?: string;
+}): Promise<FleetGraphDecisionResult> {
+  const client = await pool.connect();
+  let findingId = '';
+
+  try {
+    await client.query('BEGIN');
+
+    const action = await loadResumeActionForUpdate(
+      client,
+      input.actorContext.workspaceId,
+      input.actionCandidateId
+    );
+
+    if (!action) {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        statusCode: 404,
+        error: 'FleetGraph action candidate not found',
+      };
+    }
+
+    findingId = action.finding_id;
+
+    if (!canActorDecideFinding(input.actorContext, {
+      id: action.finding_id,
+      recipient_user_id: action.recipient_user_id,
+      lifecycle_state: action.lifecycle_state,
+    })) {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        statusCode: 403,
+        error: 'FleetGraph action resume requires the recipient or workspace admin',
+      };
+    }
+
+    if (action.lifecycle_state === 'executed') {
+      const replay = await loadReplayExecution(
+        client,
+        input.actionCandidateId,
+        input.idempotencyKey
+      );
+      await client.query('ROLLBACK');
+
+      if (replay) {
+        const replayedFinding = await loadFleetGraphFindingById(
+          input.actorContext.workspaceId,
+          action.finding_id
+        );
+
+        if (!replayedFinding) {
+          throw new Error('Replayed FleetGraph finding could not be reloaded');
+        }
+
+        return {
+          success: true,
+          finding: replayedFinding,
+        };
+      }
+
+      return {
+        success: false,
+        statusCode: 409,
+        error: 'FleetGraph action has already been executed',
+      };
+    }
+
+    if (action.lifecycle_state !== 'approved') {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        statusCode: 409,
+        error: 'FleetGraph action can only resume from an approved finding',
+      };
+    }
+
+    const recommendedAction = parseResumeRecommendedAction(action);
+
+    if (recommendedAction.kind !== 'draft_comment') {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        statusCode: 409,
+        error: 'FleetGraph resume currently supports draft_comment actions only',
+      };
+    }
+
+    const executionResult = await executeFleetGraphRecommendedAction(
+      client,
+      input.actorContext,
+      action,
+      recommendedAction
+    );
+
+    await insertFleetGraphActionExecution(
+      client,
+      action,
+      input.actorContext.userId,
+      input.idempotencyKey,
+      executionResult
+    );
+
+    const updateResult = await client.query<UpdatedFleetGraphFindingRow>(
+      `UPDATE fleetgraph_findings
+       SET lifecycle_state = 'executed'
+       WHERE id = $1
+         AND workspace_id = $2
+         AND lifecycle_state = 'approved'
+       RETURNING id`,
+      [action.finding_id, input.actorContext.workspaceId]
+    );
+
+    if (!updateResult.rows[0]) {
+      throw new Error(`FleetGraph finding execution transition returned no row: findingId=${action.finding_id}`);
+    }
+
+    await client.query('COMMIT');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
+
+  const updatedFinding = await loadFleetGraphFindingById(
+    input.actorContext.workspaceId,
+    findingId
+  );
+
+  if (!updatedFinding) {
+    throw new Error('Executed FleetGraph finding could not be reloaded');
+  }
+
+  return {
+    success: true,
+    finding: updatedFinding,
+  };
+}
+
+async function loadResumeActionForUpdate(
+  client: PoolClient,
+  workspaceId: string,
+  actionCandidateId: string
+): Promise<FleetGraphResumeActionRow | null> {
+  const result = await client.query<FleetGraphResumeActionRow>(
+    `SELECT
+       action_candidate.id AS action_candidate_id,
+       finding.id AS finding_id,
+       finding.workspace_id,
+       finding.scoped_document_id,
+       finding.recipient_user_id,
+       finding.lifecycle_state,
+       action_candidate.target_document_id,
+       action_candidate.recommended_action,
+       approval.edited_action
+     FROM fleetgraph_action_candidates action_candidate
+     INNER JOIN fleetgraph_findings finding
+       ON finding.id = action_candidate.finding_id
+      AND finding.workspace_id = $2
+     INNER JOIN documents target_document
+       ON target_document.id = action_candidate.target_document_id
+      AND target_document.workspace_id = finding.workspace_id
+     LEFT JOIN LATERAL (
+       SELECT edited_action
+       FROM fleetgraph_approvals
+       WHERE finding_id = finding.id
+         AND (action_candidate_id = action_candidate.id OR action_candidate_id IS NULL)
+         AND decision IN ('approved', 'edited')
+       ORDER BY created_at DESC, id DESC
+       LIMIT 1
+     ) approval ON true
+     WHERE action_candidate.id = $1
+     FOR UPDATE OF finding`,
+    [actionCandidateId, workspaceId]
+  );
+
+  return result.rows[0] ?? null;
+}
+
+async function loadReplayExecution(
+  client: PoolClient,
+  actionCandidateId: string,
+  idempotencyKey?: string
+): Promise<FleetGraphActionExecutionRow | null> {
+  if (!idempotencyKey) {
+    return null;
+  }
+
+  const result = await client.query<FleetGraphActionExecutionRow>(
+    `SELECT idempotency_key, result
+     FROM fleetgraph_action_executions
+     WHERE action_candidate_id = $1
+       AND idempotency_key = $2`,
+    [actionCandidateId, idempotencyKey]
+  );
+
+  return result.rows[0] ?? null;
+}
+
+function parseResumeRecommendedAction(action: FleetGraphResumeActionRow): FleetGraphRecommendedAction {
+  const rawAction = action.edited_action ?? action.recommended_action;
+  return recommendedActionSchema.parse(JSON.parse(rawAction));
+}
+
+async function executeFleetGraphRecommendedAction(
+  client: PoolClient,
+  actorContext: FleetGraphActorContext,
+  action: FleetGraphResumeActionRow,
+  recommendedAction: FleetGraphRecommendedAction
+): Promise<FleetGraphActionExecutionResult> {
+  const commentThreadId = randomUUID();
+  const result = await client.query<InsertedCommentRow>(
+    `INSERT INTO comments (document_id, comment_id, parent_id, author_id, workspace_id, content)
+     VALUES ($1, $2, NULL, $3, $4, $5)
+     RETURNING id, comment_id`,
+    [
+      action.target_document_id,
+      commentThreadId,
+      actorContext.userId,
+      actorContext.workspaceId,
+      recommendedAction.body,
+    ]
+  );
+  const row = result.rows[0];
+
+  if (!row) {
+    throw new Error(`FleetGraph draft comment insert returned no row: actionCandidateId=${action.action_candidate_id}`);
+  }
+
+  return {
+    kind: 'draft_comment',
+    documentId: action.target_document_id,
+    commentId: row.id,
+    commentThreadId: row.comment_id,
+  };
+}
+
+async function insertFleetGraphActionExecution(
+  client: PoolClient,
+  action: FleetGraphResumeActionRow,
+  actorUserId: string,
+  idempotencyKey: string | undefined,
+  executionResult: FleetGraphActionExecutionResult
+): Promise<void> {
+  await client.query(
+    `INSERT INTO fleetgraph_action_executions (
+       finding_id, action_candidate_id, actor_user_id, idempotency_key, result
+     )
+     VALUES ($1, $2, $3, $4, $5::jsonb)`,
+    [
+      action.finding_id,
+      action.action_candidate_id,
+      actorUserId,
+      idempotencyKey ?? null,
+      JSON.stringify(executionResult),
+    ]
+  );
 }
 
 async function dismissFleetGraphFinding(input: {
