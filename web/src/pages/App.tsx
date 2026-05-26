@@ -18,6 +18,7 @@ import { programKeys } from '@/hooks/useProgramsQuery';
 import { useStandupStatusQuery } from '@/hooks/useStandupStatusQuery';
 import { useActionItemsQuery, actionItemsKeys } from '@/hooks/useActionItemsQuery';
 import { useTeamMembersQuery } from '@/hooks/useTeamMembersQuery';
+import { useFleetGraphRealtimeInvalidation } from '@/hooks/useFleetGraphRealtimeInvalidation';
 import { cn, getContrastTextColor } from '@/lib/cn';
 import { buildDocumentTree, DocumentTreeNode } from '@/lib/documentTree';
 import { CommandPalette } from '@/components/CommandPalette';
@@ -81,6 +82,7 @@ export function AppLayout() {
   const { data: actionItemsData } = useActionItemsQuery();
   const hasActionItems = (actionItemsData?.items?.length ?? 0) > 0;
   const queryClient = useQueryClient();
+  useFleetGraphRealtimeInvalidation();
 
   // Celebration state for when user completes an accountability item
   const [isCelebrating, setIsCelebrating] = useState(false);
