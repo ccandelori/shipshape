@@ -1,10 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
+  classifyApprovalLevel,
   classifyFleetGraphPolicy,
   fleetGraphApprovalPolicyExamples,
   fleetGraphApprovalPolicyLevels,
   fleetGraphApprovalPolicyTaxonomy,
   fleetGraphVisibleWriteActionKinds,
+  FleetGraphApprovalPolicyInputError,
 } from './policy.js';
 import type { FleetGraphPolicyInput } from './policy.js';
 
@@ -68,6 +70,47 @@ describe('FleetGraph policy classification', () => {
         approvalPolicyLevel: 'explicit_approval',
       },
     ]);
+  });
+
+  it('classifies known and unknown action kinds into the approval taxonomy', () => {
+    expect(classifyApprovalLevel({
+      kind: 'private_answer',
+      body: 'The blocker is waiting on launch approval.',
+    })).toBe('auto_answer');
+    expect(classifyApprovalLevel({
+      kind: 'notify',
+      body: 'Review the blocked launch approval before standup.',
+    })).toBe('quick_confirm');
+    expect(classifyApprovalLevel({
+      kind: 'draft_comment',
+      body: 'Please post the current blocker owner and next step.',
+    })).toBe('explicit_approval');
+    expect(classifyApprovalLevel({
+      kind: 'create_issue',
+      body: 'Create a follow-up issue for launch approval.',
+    })).toBe('explicit_approval');
+    expect(classifyApprovalLevel({
+      kind: 'update_issue_state',
+      body: 'Move the launch approval issue back to blocked.',
+    })).toBe('explicit_approval');
+    expect(classifyApprovalLevel({
+      kind: 'assign_issue',
+      body: 'Assign the launch approval issue to the Week owner.',
+    })).toBe('explicit_approval');
+    expect(classifyApprovalLevel({
+      kind: 'archive_project',
+      body: 'Unsupported actions default to the safer approval path.',
+    })).toBe('explicit_approval');
+  });
+
+  it('rejects structurally invalid approval candidates with a specific error', () => {
+    expect(() => classifyApprovalLevel({
+      body: 'Missing kind.',
+    })).toThrow(FleetGraphApprovalPolicyInputError);
+    expect(() => classifyApprovalLevel({
+      kind: '',
+      body: 'Blank kind.',
+    })).toThrow('FleetGraph approval candidate kind must be a non-empty string');
   });
 
   it('keeps notify-only findings out of pending approval', () => {

@@ -100,6 +100,13 @@ export const fleetGraphApprovalPolicyExamples: FleetGraphApprovalPolicyExample[]
   },
 ];
 
+export class FleetGraphApprovalPolicyInputError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'FleetGraphApprovalPolicyInputError';
+  }
+}
+
 export type FleetGraphPolicyInput = {
   targetDocumentId: string;
   ownerUserId: string | null;
@@ -117,7 +124,7 @@ export type FleetGraphPolicyDecision = {
 };
 
 export function classifyFleetGraphPolicy(input: FleetGraphPolicyInput): FleetGraphPolicyDecision {
-  const approvalLevel = classifyApprovalLevel(input.recommendedAction);
+  const approvalLevel = classifyPersistenceApprovalLevel(input.recommendedAction);
   const reversibility = classifyReversibility(input.recommendedAction);
 
   if (approvalLevel === 'notify_only') {
@@ -148,12 +155,48 @@ export function classifyFleetGraphPolicy(input: FleetGraphPolicyInput): FleetGra
   };
 }
 
-function classifyApprovalLevel(recommendedAction: RecommendedAction): FleetGraphApprovalLevel {
-  if (recommendedAction.kind === 'notify') {
+export function classifyApprovalLevel(actionCandidate: unknown): FleetGraphApprovalPolicyLevel {
+  const actionKind = requireApprovalActionKind(actionCandidate);
+
+  switch (actionKind) {
+    case 'private_answer':
+      return 'auto_answer';
+    case 'notify':
+      return 'quick_confirm';
+    case 'draft_comment':
+    case 'create_issue':
+    case 'update_issue_state':
+    case 'assign_issue':
+      return 'explicit_approval';
+    default:
+      return 'explicit_approval';
+  }
+}
+
+function classifyPersistenceApprovalLevel(recommendedAction: RecommendedAction): FleetGraphApprovalLevel {
+  const approvalPolicyLevel = classifyApprovalLevel(recommendedAction);
+
+  if (approvalPolicyLevel === 'quick_confirm') {
     return 'notify_only';
   }
 
   return 'approval_required';
+}
+
+function requireApprovalActionKind(actionCandidate: unknown): string {
+  if (!isRecord(actionCandidate)) {
+    throw new FleetGraphApprovalPolicyInputError('FleetGraph approval candidate must be an object');
+  }
+
+  const kind = actionCandidate.kind;
+
+  if (typeof kind !== 'string' || kind.trim().length === 0) {
+    throw new FleetGraphApprovalPolicyInputError(
+      'FleetGraph approval candidate kind must be a non-empty string'
+    );
+  }
+
+  return kind;
 }
 
 function classifyReversibility(recommendedAction: RecommendedAction): FleetGraphReversibility {
@@ -162,4 +205,8 @@ function classifyReversibility(recommendedAction: RecommendedAction): FleetGraph
   }
 
   return 'reversible';
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
