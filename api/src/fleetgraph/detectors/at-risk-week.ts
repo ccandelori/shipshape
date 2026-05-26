@@ -1,6 +1,9 @@
+import { HumanMessage, SystemMessage, type BaseMessage } from '@langchain/core/messages';
 import { MemorySaver, type BaseCheckpointSaver } from '@langchain/langgraph';
+import { ChatOpenAI } from '@langchain/openai';
 import type { QueryResultRow } from 'pg';
 import { z } from 'zod';
+import type { FleetGraphConfig } from '../config.js';
 import type { FleetGraphQueryClient, WeekContext } from '../context.js';
 import type { DetectorRunDecision } from '../guards.js';
 import {
@@ -21,6 +24,8 @@ export const atRiskWeekPromptBoundary = {
   open: '<ship_fleetgraph_context_data>',
   close: '</ship_fleetgraph_context_data>',
 } as const;
+
+export const atRiskWeekReasoningModelName = 'gpt-4o-mini';
 
 export const atRiskWeekTriggerSourceSchema = z.enum(['poll', 'mutation', 'ondemand', 'resume']);
 export type AtRiskWeekTriggerSource = z.infer<typeof atRiskWeekTriggerSourceSchema>;
@@ -236,6 +241,47 @@ export type AtRiskWeekReasoningPrompt = {
   user: string;
 };
 
+export type AtRiskWeekModelMessage = {
+  role: 'system' | 'user';
+  content: string;
+};
+
+export type AtRiskWeekReasonerResult = {
+  reasoning: AtRiskWeekReasoningOutput;
+  modelUsage: AtRiskWeekModelUsage | null;
+};
+
+export type AtRiskWeekStructuredModelResult = {
+  raw: BaseMessage;
+  parsed: unknown;
+};
+
+export type AtRiskWeekStructuredModelInvoker = {
+  invoke: (messages: BaseMessage[]) => Promise<AtRiskWeekStructuredModelResult>;
+};
+
+export type AtRiskWeekStructuredReasoner = {
+  modelName: string;
+  invoke: (messages: AtRiskWeekModelMessage[]) => Promise<AtRiskWeekReasonerResult>;
+};
+
+export type AtRiskWeekRetryPolicy = {
+  maxAttempts: number;
+  delayMs: number;
+  sleep: (delayMs: number) => Promise<void>;
+};
+
+export type AtRiskWeekReasonNodeLogger = {
+  warn: (message: string, fields: Record<string, string | number | boolean | null>) => void;
+};
+
+export type AtRiskWeekReasonNodeDependencies = {
+  reasoner: AtRiskWeekStructuredReasoner;
+  retryPolicy: AtRiskWeekRetryPolicy;
+  logger: AtRiskWeekReasonNodeLogger;
+  now: () => string;
+};
+
 export type AtRiskWeekNodeDependencies = {
   client: FleetGraphQueryClient;
   buildWeekContext: (
@@ -419,6 +465,88 @@ export async function preFilterNode(
   return preFilteredState;
 }
 
+export async function reasonNode(
+  state: AtRiskWeekGraphState,
+  dependencies: AtRiskWeekReasonNodeDependencies
+): Promise<AtRiskWeekGraphState> {
+  if (state.status !== 'running') {
+    return state;
+  }
+
+  requireAtRiskWeekContext(state, 'reason');
+  const guard = requireAtRiskWeekGuard(state, 'reason');
+  const preFilter = requireAtRiskWeekPreFilter(state, 'reason');
+
+  if (!preFilter.shouldReason) {
+    throw new AtRiskWeekNodeContractError('At-risk Week reason node requires a positive pre-filter decision');
+  }
+
+  const prompt = renderAtRiskWeekReasoningPrompt(state);
+  const messages: AtRiskWeekModelMessage[] = [
+    { role: 'system', content: prompt.system },
+    { role: 'user', content: prompt.user },
+  ];
+  const result = await invokeAtRiskWeekReasonerWithRetries(state, messages, dependencies);
+  const reasoning = atRiskWeekReasoningOutputSchema.parse(result.reasoning);
+
+  const reasonedState = completeAtRiskWeekNode(state, 'reason', 'policy', {
+    reasoning,
+    trace: {
+      ...state.trace,
+      modelUsage: result.modelUsage,
+    },
+  });
+
+  if (!reasoning.isAtRisk) {
+    return recordAtRiskWeekEarlyExit(
+      reasonedState,
+      {
+        node: 'reason',
+        reason: 'not_at_risk',
+        message: reasoning.rationale,
+        materialChangeKey: guard.materialChangeKey,
+      },
+      dependencies.now()
+    );
+  }
+
+  return reasonedState;
+}
+
+export function createOpenAIAtRiskWeekReasoner(config: FleetGraphConfig): AtRiskWeekStructuredReasoner {
+  const model = new ChatOpenAI({
+    model: atRiskWeekReasoningModelName,
+    temperature: 0,
+    maxRetries: 0,
+    apiKey: config.openaiApiKey,
+  });
+  const structuredModel = model.withStructuredOutput(atRiskWeekReasoningOutputSchema, {
+    name: 'at_risk_week_reasoning',
+    method: 'jsonSchema',
+    strict: true,
+    includeRaw: true,
+  });
+
+  return createLangChainAtRiskWeekReasoner(atRiskWeekReasoningModelName, structuredModel);
+}
+
+export function createLangChainAtRiskWeekReasoner(
+  modelName: string,
+  structuredModel: AtRiskWeekStructuredModelInvoker
+): AtRiskWeekStructuredReasoner {
+  return {
+    modelName,
+    invoke: async (messages) => {
+      const result = await structuredModel.invoke(messages.map(toLangChainMessage));
+
+      return {
+        reasoning: atRiskWeekReasoningOutputSchema.parse(result.parsed),
+        modelUsage: extractAtRiskWeekModelUsage(result.raw, modelName),
+      };
+    },
+  };
+}
+
 export function recordAtRiskWeekEarlyExit(
   state: AtRiskWeekGraphState,
   earlyExit: AtRiskWeekEarlyExit,
@@ -430,7 +558,9 @@ export function recordAtRiskWeekEarlyExit(
     ...state,
     status: 'exited',
     activeNode: null,
-    completedNodes: [...state.completedNodes, earlyExit.node],
+    completedNodes: state.completedNodes.includes(earlyExit.node)
+      ? state.completedNodes
+      : [...state.completedNodes, earlyExit.node],
     earlyExit,
     trace: {
       ...state.trace,
@@ -446,6 +576,49 @@ export function recordAtRiskWeekEarlyExit(
     },
     completedAt,
   };
+}
+
+async function invokeAtRiskWeekReasonerWithRetries(
+  state: AtRiskWeekGraphState,
+  messages: AtRiskWeekModelMessage[],
+  dependencies: AtRiskWeekReasonNodeDependencies
+): Promise<AtRiskWeekReasonerResult> {
+  const maxAttempts = dependencies.retryPolicy.maxAttempts;
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt += 1) {
+    try {
+      return await dependencies.reasoner.invoke(messages);
+    } catch (error) {
+      const errorDetails = describeAtRiskWeekReasonerError(error);
+
+      if (attempt >= maxAttempts) {
+        throw new AtRiskWeekModelInvocationError({
+          modelName: dependencies.reasoner.modelName,
+          attempts: maxAttempts,
+          workspaceId: state.scope.workspaceId,
+          scopedDocId: state.scope.scopedDocId,
+          runId: state.scope.runId,
+          statusCode: errorDetails.statusCode,
+          responseBody: errorDetails.responseBody,
+          causeMessage: errorDetails.errorMessage,
+        });
+      }
+
+      dependencies.logger.warn('fleetgraph.at_risk_week.reason_retry', {
+        attempt,
+        maxAttempts,
+        modelName: dependencies.reasoner.modelName,
+        workspaceId: state.scope.workspaceId,
+        scopedDocId: state.scope.scopedDocId,
+        runId: state.scope.runId,
+        statusCode: errorDetails.statusCode,
+        errorMessage: errorDetails.errorMessage,
+      });
+      await dependencies.retryPolicy.sleep(dependencies.retryPolicy.delayMs);
+    }
+  }
+
+  throw new AtRiskWeekNodeContractError('At-risk Week reason retry policy did not allow any model attempts');
 }
 
 export function createAtRiskWeekCheckpointConfig(state: AtRiskWeekGraphState): AtRiskWeekCheckpointConfig {
@@ -540,6 +713,48 @@ export class AtRiskWeekNodeContractError extends Error {
   }
 }
 
+type AtRiskWeekModelInvocationErrorInput = {
+  modelName: string;
+  attempts: number;
+  workspaceId: string;
+  scopedDocId: string;
+  runId: string;
+  statusCode: number | null;
+  responseBody: string | null;
+  causeMessage: string;
+};
+
+export class AtRiskWeekModelInvocationError extends Error {
+  readonly modelName: string;
+  readonly attempts: number;
+  readonly workspaceId: string;
+  readonly scopedDocId: string;
+  readonly runId: string;
+  readonly statusCode: number | null;
+  readonly responseBody: string | null;
+
+  constructor(input: AtRiskWeekModelInvocationErrorInput) {
+    super([
+      `At-risk Week reasoning failed after ${input.attempts} attempts`,
+      `modelName=${input.modelName}`,
+      `workspaceId=${input.workspaceId}`,
+      `scopedDocId=${input.scopedDocId}`,
+      `runId=${input.runId}`,
+      `statusCode=${input.statusCode ?? 'unknown'}`,
+      `responseBody=${input.responseBody ?? 'unavailable'}`,
+      `errorMessage=${input.causeMessage}`,
+    ].join(', '));
+    this.name = 'AtRiskWeekModelInvocationError';
+    this.modelName = input.modelName;
+    this.attempts = input.attempts;
+    this.workspaceId = input.workspaceId;
+    this.scopedDocId = input.scopedDocId;
+    this.runId = input.runId;
+    this.statusCode = input.statusCode;
+    this.responseBody = input.responseBody;
+  }
+}
+
 function createAtRiskWeekScopeState(input: AtRiskWeekGraphInput): AtRiskWeekScopeState {
   return {
     workspaceId: input.workspaceId,
@@ -591,6 +806,116 @@ function requireAtRiskWeekPreFilter(
   }
 
   return state.preFilter;
+}
+
+type BaseMessageWithUsageMetadata = BaseMessage & {
+  usage_metadata?: {
+    input_tokens?: unknown;
+    output_tokens?: unknown;
+  };
+};
+
+function toLangChainMessage(message: AtRiskWeekModelMessage): BaseMessage {
+  if (message.role === 'system') {
+    return new SystemMessage(message.content);
+  }
+
+  return new HumanMessage(message.content);
+}
+
+function extractAtRiskWeekModelUsage(raw: BaseMessage, modelName: string): AtRiskWeekModelUsage | null {
+  const usageMetadata = (raw as BaseMessageWithUsageMetadata).usage_metadata;
+  const inputTokens = integerOrNull(usageMetadata?.input_tokens);
+  const outputTokens = integerOrNull(usageMetadata?.output_tokens);
+
+  if (inputTokens === null || outputTokens === null) {
+    return null;
+  }
+
+  return {
+    modelName,
+    inputTokens,
+    outputTokens,
+    estimatedCost: 0,
+  };
+}
+
+function integerOrNull(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isInteger(value) && value >= 0) {
+    return value;
+  }
+
+  return null;
+}
+
+type AtRiskWeekReasonerErrorDetails = {
+  statusCode: number | null;
+  errorMessage: string;
+  responseBody: string | null;
+};
+
+type AtRiskWeekReasonerErrorLike = {
+  message?: unknown;
+  status?: unknown;
+  statusCode?: unknown;
+  body?: unknown;
+  response?: {
+    status?: unknown;
+    body?: unknown;
+    data?: unknown;
+  };
+};
+
+function describeAtRiskWeekReasonerError(error: unknown): AtRiskWeekReasonerErrorDetails {
+  const errorLike = toAtRiskWeekReasonerErrorLike(error);
+
+  return {
+    statusCode: numberOrNull(errorLike.statusCode)
+      ?? numberOrNull(errorLike.status)
+      ?? numberOrNull(errorLike.response?.status),
+    errorMessage: stringOrFallback(errorLike.message, 'Unknown model invocation error'),
+    responseBody: responseBodyOrNull(errorLike.response?.data)
+      ?? responseBodyOrNull(errorLike.response?.body)
+      ?? responseBodyOrNull(errorLike.body),
+  };
+}
+
+function toAtRiskWeekReasonerErrorLike(error: unknown): AtRiskWeekReasonerErrorLike {
+  if (typeof error === 'object' && error !== null) {
+    return error as AtRiskWeekReasonerErrorLike;
+  }
+
+  return {
+    message: String(error),
+  };
+}
+
+function numberOrNull(value: unknown): number | null {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value;
+  }
+
+  return null;
+}
+
+function stringOrFallback(value: unknown, fallback: string): string {
+  if (typeof value === 'string' && value.trim().length > 0) {
+    return value;
+  }
+
+  return fallback;
+}
+
+function responseBodyOrNull(value: unknown): string | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+
+  if (typeof value === 'string') {
+    return value;
+  }
+
+  return JSON.stringify(value);
 }
 
 function evaluateAtRiskWeekPreFilter(context: WeekContext): AtRiskWeekPreFilterDecision {
