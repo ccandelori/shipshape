@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import type { FleetGraphQueryClient } from './context.js';
 
 export const FLEETGRAPH_CHAT_CONTEXT_HISTORY_MESSAGE_LIMIT = 10;
 export const FLEETGRAPH_CHAT_REQUEST_HISTORY_MESSAGE_LIMIT = 50;
@@ -29,6 +30,36 @@ export const FleetGraphChatRequestSchema = z.object({
 export type FleetGraphChatDocumentType = z.infer<typeof FleetGraphChatDocumentTypeSchema>;
 export type FleetGraphChatMessage = z.infer<typeof FleetGraphChatMessageSchema>;
 export type FleetGraphChatRequest = z.infer<typeof FleetGraphChatRequestSchema>;
+
+export type FleetGraphChatScope = {
+  documentId: string;
+  documentType: FleetGraphChatDocumentType;
+  workspaceId: string;
+  title: string;
+};
+
+type FleetGraphChatScopeRow = {
+  id: string;
+  workspace_id: string;
+  document_type: string;
+  title: string;
+};
+
+export class FleetGraphChatScopeNotFoundError extends Error {
+  readonly workspaceId: string;
+  readonly documentId: string;
+  readonly documentType: FleetGraphChatDocumentType;
+
+  constructor(workspaceId: string, documentId: string, documentType: FleetGraphChatDocumentType) {
+    super(
+      `FleetGraph chat document not found: workspaceId=${workspaceId}, documentId=${documentId}, documentType=${documentType}`
+    );
+    this.name = 'FleetGraphChatScopeNotFoundError';
+    this.workspaceId = workspaceId;
+    this.documentId = documentId;
+    this.documentType = documentType;
+  }
+}
 
 export type FleetGraphChatUsage = {
   modelName: string;
@@ -66,4 +97,36 @@ export type FleetGraphChatSseEvent =
 
 export function formatFleetGraphChatSseEvent(event: FleetGraphChatSseEvent): string {
   return `event: ${event.event}\ndata: ${JSON.stringify(event.data)}\n\n`;
+}
+
+export async function resolveFleetGraphChatScope(
+  client: FleetGraphQueryClient,
+  workspaceId: string,
+  request: FleetGraphChatRequest
+): Promise<FleetGraphChatScope> {
+  const result = await client.query<FleetGraphChatScopeRow>(
+    `SELECT id, workspace_id, document_type::text AS document_type, title
+     FROM documents
+     WHERE workspace_id = $1
+       AND id = $2
+       AND document_type = $3
+       AND deleted_at IS NULL`,
+    [workspaceId, request.documentId, request.documentType]
+  );
+  const row = result.rows[0];
+
+  if (!row) {
+    throw new FleetGraphChatScopeNotFoundError(
+      workspaceId,
+      request.documentId,
+      request.documentType
+    );
+  }
+
+  return {
+    documentId: row.id,
+    documentType: FleetGraphChatDocumentTypeSchema.parse(row.document_type),
+    workspaceId: row.workspace_id,
+    title: row.title,
+  };
 }
