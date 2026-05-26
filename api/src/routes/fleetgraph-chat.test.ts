@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import cookieParser from 'cookie-parser';
 import express from 'express';
 import request from 'supertest';
@@ -28,8 +28,11 @@ describe('FleetGraph chat route SSE lifecycle', () => {
   const sessionId = `fleetgraph-chat-${testRunId}`;
   let app: express.Express;
   let workspaceId = '';
+  let otherWorkspaceId = '';
   let userId = '';
   let weekDocumentId = '';
+  let otherWeekDocumentId = '';
+  let modelFactoryCallCount = 0;
   const observedModelCalls: ObservedModelCall[] = [];
 
   beforeAll(async () => {
@@ -38,6 +41,12 @@ describe('FleetGraph chat route SSE lifecycle', () => {
       [`FleetGraph Chat ${testRunId}`]
     );
     workspaceId = workspaceResult.rows[0]!.id;
+
+    const otherWorkspaceResult = await pool.query<IdRow>(
+      `INSERT INTO workspaces (name) VALUES ($1) RETURNING id`,
+      [`Other FleetGraph Chat ${testRunId}`]
+    );
+    otherWorkspaceId = otherWorkspaceResult.rows[0]!.id;
 
     const userResult = await pool.query<IdRow>(
       `INSERT INTO users (email, password_hash, name)
@@ -67,21 +76,41 @@ describe('FleetGraph chat route SSE lifecycle', () => {
     );
     weekDocumentId = documentResult.rows[0]!.id;
 
+    const otherDocumentResult = await pool.query<IdRow>(
+      `INSERT INTO documents (workspace_id, document_type, title, visibility, created_by, properties)
+       VALUES ($1, 'sprint', 'Other Chat Week', 'workspace', $2, '{}'::jsonb)
+       RETURNING id`,
+      [otherWorkspaceId, userId]
+    );
+    otherWeekDocumentId = otherDocumentResult.rows[0]!.id;
+
     app = express();
     app.use(cookieParser());
     app.use(express.json());
     app.use('/api/fleetgraph', createFleetGraphChatRouter({
       client: pool,
       contextBuilders: createContextBuilders(),
-      createModel: () => createStreamingModel(observedModelCalls),
+      createModel: () => {
+        modelFactoryCallCount++;
+        return createStreamingModel(observedModelCalls);
+      },
       now: () => new Date('2026-05-26T12:00:00.000Z'),
       heartbeatIntervalMs: 60_000,
     }));
   });
 
+  beforeEach(() => {
+    modelFactoryCallCount = 0;
+    observedModelCalls.length = 0;
+  });
+
   afterAll(async () => {
     if (workspaceId) {
       await pool.query('DELETE FROM workspaces WHERE id = $1', [workspaceId]);
+    }
+
+    if (otherWorkspaceId) {
+      await pool.query('DELETE FROM workspaces WHERE id = $1', [otherWorkspaceId]);
     }
 
     if (userId) {
@@ -119,6 +148,103 @@ describe('FleetGraph chat route SSE lifecycle', () => {
     expect(observedModelCalls[0]!.abortSignal.aborted).toBe(false);
     expect(observedModelCalls[0]!.messages.at(-1)?.content).toContain('What is blocked?');
     expect(observedModelCalls[0]!.messages.at(-1)?.content).toContain('Procurement is blocked');
+  });
+
+  it('rejects cross-workspace document ids before constructing a model stream', async () => {
+    const response = await request(app)
+      .post('/api/fleetgraph/chat')
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({
+        documentId: otherWeekDocumentId,
+        documentType: 'sprint',
+        question: 'Can I read the other workspace?',
+        conversationHistory: [],
+      });
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'FleetGraph chat document not found' });
+    expect(modelFactoryCallCount).toBe(0);
+    expect(observedModelCalls).toHaveLength(0);
+  });
+
+  it('returns 429 for the eleventh request by the same user inside the rate-limit window', async () => {
+    const rateLimitModelCalls: ObservedModelCall[] = [];
+    const rateLimitedApp = express();
+    rateLimitedApp.use(cookieParser());
+    rateLimitedApp.use(express.json());
+    rateLimitedApp.use('/api/fleetgraph', createFleetGraphChatRouter({
+      client: pool,
+      contextBuilders: createContextBuilders(),
+      createModel: () => createStreamingModel(rateLimitModelCalls),
+      now: () => new Date('2026-05-26T12:00:00.000Z'),
+      heartbeatIntervalMs: 60_000,
+    }));
+
+    for (let requestIndex = 0; requestIndex < 10; requestIndex++) {
+      const allowedResponse = await request(rateLimitedApp)
+        .post('/api/fleetgraph/chat')
+        .set('Cookie', [`session_id=${sessionId}`])
+        .send({
+          documentId: weekDocumentId,
+          documentType: 'sprint',
+          question: `Allowed request ${requestIndex}`,
+          conversationHistory: [],
+        });
+
+      expect(allowedResponse.status).toBe(200);
+    }
+
+    const deniedResponse = await request(rateLimitedApp)
+      .post('/api/fleetgraph/chat')
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({
+        documentId: weekDocumentId,
+        documentType: 'sprint',
+        question: 'Should be rate limited',
+        conversationHistory: [],
+      });
+
+    expect(deniedResponse.status).toBe(429);
+    expect(deniedResponse.headers['retry-after']).toBe('3600');
+    expect(deniedResponse.body).toEqual({
+      error: 'FleetGraph chat rate limit exceeded',
+      retry_after_seconds: 3600,
+      reset_at: '2026-05-26T13:00:00.000Z',
+    });
+    expect(rateLimitModelCalls).toHaveLength(10);
+  });
+
+  it('passes only the latest ten conversation messages to the model', async () => {
+    const historyModelCalls: ObservedModelCall[] = [];
+    const historyApp = express();
+    historyApp.use(cookieParser());
+    historyApp.use(express.json());
+    historyApp.use('/api/fleetgraph', createFleetGraphChatRouter({
+      client: pool,
+      contextBuilders: createContextBuilders(),
+      createModel: () => createStreamingModel(historyModelCalls),
+      now: () => new Date('2026-05-26T12:00:00.000Z'),
+      heartbeatIntervalMs: 60_000,
+    }));
+    const conversationHistory = Array.from({ length: 12 }, (_value, index) => ({
+      role: index % 2 === 0 ? 'user' as const : 'assistant' as const,
+      content: `History message ${index}`,
+    }));
+
+    const response = await request(historyApp)
+      .post('/api/fleetgraph/chat')
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({
+        documentId: weekDocumentId,
+        documentType: 'sprint',
+        question: 'Use bounded history',
+        conversationHistory,
+      });
+
+    expect(response.status).toBe(200);
+    expect(historyModelCalls).toHaveLength(1);
+    expect(historyModelCalls[0]!.messages.slice(1, -1)).toEqual(conversationHistory.slice(2));
+    expect(historyModelCalls[0]!.messages.at(-1)?.content).toContain('Use bounded history');
   });
 });
 

@@ -90,14 +90,6 @@ export function createFleetGraphChatRouter(dependencies: FleetGraphChatRouterDep
       return;
     }
 
-    let model: FleetGraphChatModel;
-    try {
-      model = dependencies.createModel();
-    } catch (error) {
-      respondFleetGraphChatPreStreamError(res, error);
-      return;
-    }
-
     let promptMessages: FleetGraphChatModelMessage[];
     try {
       await resolveFleetGraphChatScope(dependencies.client, actorContext.data.workspaceId, requestResult.data);
@@ -108,6 +100,14 @@ export function createFleetGraphChatRouter(dependencies: FleetGraphChatRouterDep
         contextBuilders: dependencies.contextBuilders,
       });
       promptMessages = prompt.messages;
+    } catch (error) {
+      respondFleetGraphChatPreStreamError(res, error);
+      return;
+    }
+
+    let model: FleetGraphChatModel;
+    try {
+      model = dependencies.createModel();
     } catch (error) {
       respondFleetGraphChatPreStreamError(res, error);
       return;
