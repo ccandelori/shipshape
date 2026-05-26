@@ -165,6 +165,7 @@ type FleetGraphWorkspaceMemberRow = {
 type FleetGraphDecisionResult = {
   success: true;
   finding: FleetGraphFindingResponse;
+  mutationApplied: boolean;
 } | {
   success: false;
   statusCode: number;
@@ -326,11 +327,13 @@ router.post('/actions/:actionId/resume', authMiddleware, async (req: Request, re
       return;
     }
 
-    await broadcastFleetGraphFindingUpdated(
-      result.finding,
-      'executed',
-      paramsResult.data.actionId
-    );
+    if (result.mutationApplied) {
+      await broadcastFleetGraphFindingUpdated(
+        result.finding,
+        'executed',
+        paramsResult.data.actionId
+      );
+    }
 
     res.json(result.finding);
   } catch (error) {
@@ -391,7 +394,9 @@ router.post('/findings/:id/snooze', authMiddleware, async (req: Request, res: Re
       return;
     }
 
-    await broadcastFleetGraphFindingUpdated(result.finding, 'snoozed', null);
+    if (result.mutationApplied) {
+      await broadcastFleetGraphFindingUpdated(result.finding, 'snoozed', null);
+    }
 
     res.json(result.finding);
   } catch (error) {
@@ -444,7 +449,9 @@ router.post('/findings/:id/dismiss', authMiddleware, async (req: Request, res: R
       return;
     }
 
-    await broadcastFleetGraphFindingUpdated(result.finding, 'dismissed', null);
+    if (result.mutationApplied) {
+      await broadcastFleetGraphFindingUpdated(result.finding, 'dismissed', null);
+    }
 
     res.json(result.finding);
   } catch (error) {
@@ -497,7 +504,9 @@ router.post('/findings/:id/reject', authMiddleware, async (req: Request, res: Re
       return;
     }
 
-    await broadcastFleetGraphFindingUpdated(result.finding, 'rejected', null);
+    if (result.mutationApplied) {
+      await broadcastFleetGraphFindingUpdated(result.finding, 'rejected', null);
+    }
 
     res.json(result.finding);
   } catch (error) {
@@ -551,11 +560,13 @@ router.post('/findings/:id/approve', authMiddleware, async (req: Request, res: R
       return;
     }
 
-    await broadcastFleetGraphFindingUpdated(
-      result.finding,
-      'approved',
-      resolveApprovedActionCandidateId(result.finding, bodyResult.data.action_candidate_id)
-    );
+    if (result.mutationApplied) {
+      await broadcastFleetGraphFindingUpdated(
+        result.finding,
+        'approved',
+        resolveApprovedActionCandidateId(result.finding, bodyResult.data.action_candidate_id)
+      );
+    }
 
     res.json(result.finding);
   } catch (error) {
@@ -802,6 +813,7 @@ async function resumeFleetGraphAction(input: {
         return {
           success: true,
           finding: replayedFinding,
+          mutationApplied: false,
         };
       }
 
@@ -881,6 +893,7 @@ async function resumeFleetGraphAction(input: {
   return {
     success: true,
     finding: updatedFinding,
+    mutationApplied: true,
   };
 }
 
@@ -1117,6 +1130,7 @@ async function suppressFleetGraphFinding(input: {
   return {
     success: true,
     finding: updatedFinding,
+    mutationApplied: true,
   };
 }
 
@@ -1204,6 +1218,7 @@ async function rejectFleetGraphFinding(input: {
   return {
     success: true,
     finding: updatedFinding,
+    mutationApplied: true,
   };
 }
 
@@ -1301,6 +1316,7 @@ async function approveFleetGraphFinding(input: {
   return {
     success: true,
     finding: updatedFinding,
+    mutationApplied: true,
   };
 }
 

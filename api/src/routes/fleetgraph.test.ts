@@ -4,6 +4,10 @@ import express from 'express';
 import request from 'supertest';
 import { broadcastToUser } from '../collaboration/index.js';
 import { pool } from '../db/client.js';
+import {
+  FleetGraphFindingListResponseSchema,
+  FleetGraphFindingSchema,
+} from '../openapi/schemas/fleetgraph.js';
 import fleetGraphRouter from './fleetgraph.js';
 
 vi.mock('../collaboration/index.js', () => ({
@@ -57,6 +61,8 @@ type TestRecommendedAction = {
   title?: string;
   body: string;
 };
+
+type FindingAuditKind = 'approval' | 'suppression';
 
 describe('FleetGraph inbox API', () => {
   const testRunId = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -231,6 +237,7 @@ describe('FleetGraph inbox API', () => {
       .set('Cookie', [`session_id=${sessionId}`]);
 
     expect(response.status).toBe(200);
+    expectFleetGraphFindingListResponse(response.body);
     expect(response.body.items.map((finding: { id: string }) => finding.id)).toEqual([
       pendingFinding.id,
       openFinding.id,
@@ -311,6 +318,7 @@ describe('FleetGraph inbox API', () => {
       .send({ action_candidate_id: actionCandidateId });
 
     expect(response.status).toBe(200);
+    expectFleetGraphFindingResponse(response.body);
     expect(response.body).toMatchObject({
       id: finding.id,
       lifecycle_state: 'approved',
@@ -355,6 +363,7 @@ describe('FleetGraph inbox API', () => {
       });
 
     expect(response.status).toBe(200);
+    expectFleetGraphFindingResponse(response.body);
     expect(response.body.lifecycle_state).toBe('approved');
 
     const auditResult = await pool.query<ApprovalAuditRow>(
@@ -387,6 +396,7 @@ describe('FleetGraph inbox API', () => {
       .send({ reason });
 
     expect(response.status).toBe(200);
+    expectFleetGraphFindingResponse(response.body);
     expect(response.body).toMatchObject({
       id: finding.id,
       lifecycle_state: 'rejected',
@@ -453,6 +463,164 @@ describe('FleetGraph inbox API', () => {
     expect(response.body).toEqual({ error: 'FleetGraph finding not found' });
   });
 
+  it('requires an authenticated session for FleetGraph reads and mutations', async () => {
+    const finding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Unauthenticated mutation risk',
+      lifecycleState: 'pending_review',
+      materialChangeKey: `v1:inbox-${testRunId}:unauthenticated`,
+      createdAt: '2026-05-26T11:30:00.000Z',
+    });
+    const actionCandidateId = await createActionCandidate(finding.id, scopedDocumentId);
+    const expiresAt = new Date(Date.now() + 45 * 60 * 1000).toISOString();
+
+    const responses = [
+      await request(app).get('/api/fleetgraph/findings'),
+      await request(app)
+        .post(`/api/fleetgraph/findings/${finding.id}/approve`)
+        .send({ action_candidate_id: actionCandidateId }),
+      await request(app)
+        .post(`/api/fleetgraph/findings/${finding.id}/reject`)
+        .send({ reason: 'No session.' }),
+      await request(app)
+        .post(`/api/fleetgraph/findings/${finding.id}/dismiss`)
+        .send({ reason: 'No session.' }),
+      await request(app)
+        .post(`/api/fleetgraph/findings/${finding.id}/snooze`)
+        .send({ reason: 'No session.', expires_at: expiresAt }),
+      await request(app)
+        .post(`/api/fleetgraph/actions/${actionCandidateId}/resume`)
+        .send({ idempotency_key: `unauthenticated-${testRunId}` }),
+    ];
+
+    for (const response of responses) {
+      expect(response.status).toBe(401);
+      expect(response.body).toMatchObject({
+        success: false,
+        error: {
+          message: 'No session found',
+        },
+      });
+    }
+    expect(broadcastToUserMock).not.toHaveBeenCalled();
+  });
+
+  it('denies finding mutations by a non-recipient workspace member without side effects', async () => {
+    const mutationCases: Array<{
+      title: string;
+      route: (findingId: string, actionCandidateId: string) => string;
+      body: (actionCandidateId: string) => object;
+      auditKind: FindingAuditKind;
+    }> = [
+      {
+        title: 'approve',
+        route: (findingId: string) => `/api/fleetgraph/findings/${findingId}/approve`,
+        body: (actionCandidateId: string) => ({ action_candidate_id: actionCandidateId }),
+        auditKind: 'approval',
+      },
+      {
+        title: 'reject',
+        route: (findingId: string) => `/api/fleetgraph/findings/${findingId}/reject`,
+        body: () => ({ reason: 'The recipient should decide this.' }),
+        auditKind: 'approval',
+      },
+      {
+        title: 'dismiss',
+        route: (findingId: string) => `/api/fleetgraph/findings/${findingId}/dismiss`,
+        body: () => ({ reason: 'The recipient should decide this.' }),
+        auditKind: 'suppression',
+      },
+      {
+        title: 'snooze',
+        route: (findingId: string) => `/api/fleetgraph/findings/${findingId}/snooze`,
+        body: () => ({
+          reason: 'The recipient should decide this.',
+          expires_at: new Date(Date.now() + 45 * 60 * 1000).toISOString(),
+        }),
+        auditKind: 'suppression',
+      },
+    ];
+
+    for (const mutationCase of mutationCases) {
+      const finding = await createFinding({
+        workspaceId,
+        scopedDocumentId,
+        recipientUserId: userId,
+        title: `Unauthorized ${mutationCase.title} risk`,
+        lifecycleState: 'pending_review',
+        materialChangeKey: `v1:inbox-${testRunId}:unauthorized-${mutationCase.title}`,
+        createdAt: '2026-05-26T11:40:00.000Z',
+      });
+      const actionCandidateId = await createActionCandidate(finding.id, scopedDocumentId);
+      const beforeAuditCount = await countFindingAuditRows(mutationCase.auditKind, finding.id);
+
+      const response = await request(app)
+        .post(mutationCase.route(finding.id, actionCandidateId))
+        .set('Cookie', [`session_id=${otherSessionId}`])
+        .send(mutationCase.body(actionCandidateId));
+
+      expect(response.status).toBe(403);
+      expect(response.body).toEqual({
+        error: 'FleetGraph finding decision requires the recipient or workspace admin',
+      });
+      await expect(countFindingAuditRows(mutationCase.auditKind, finding.id)).resolves.toBe(beforeAuditCount);
+      await expect(loadFindingLifecycleState(finding.id)).resolves.toBe('pending_review');
+    }
+    expect(broadcastToUserMock).not.toHaveBeenCalled();
+  });
+
+  it('does not allow mutating findings or actions from another workspace', async () => {
+    const finding = await createFinding({
+      workspaceId: otherWorkspaceId,
+      scopedDocumentId: otherScopedDocumentId,
+      recipientUserId: userId,
+      title: 'Cross workspace mutation risk',
+      lifecycleState: 'pending_review',
+      materialChangeKey: `v1:inbox-${testRunId}:cross-workspace-mutations`,
+      createdAt: '2026-05-26T11:50:00.000Z',
+    });
+    const actionCandidateId = await createActionCandidate(finding.id, otherScopedDocumentId);
+    const expiresAt = new Date(Date.now() + 45 * 60 * 1000).toISOString();
+    const beforeCommentCount = await countDocumentCommentsInWorkspace(otherScopedDocumentId, otherWorkspaceId);
+
+    const responses = [
+      await request(app)
+        .post(`/api/fleetgraph/findings/${finding.id}/approve`)
+        .set('Cookie', [`session_id=${sessionId}`])
+        .send({ action_candidate_id: actionCandidateId }),
+      await request(app)
+        .post(`/api/fleetgraph/findings/${finding.id}/reject`)
+        .set('Cookie', [`session_id=${sessionId}`])
+        .send({ reason: 'Wrong workspace.' }),
+      await request(app)
+        .post(`/api/fleetgraph/findings/${finding.id}/dismiss`)
+        .set('Cookie', [`session_id=${sessionId}`])
+        .send({ reason: 'Wrong workspace.' }),
+      await request(app)
+        .post(`/api/fleetgraph/findings/${finding.id}/snooze`)
+        .set('Cookie', [`session_id=${sessionId}`])
+        .send({ reason: 'Wrong workspace.', expires_at: expiresAt }),
+    ];
+
+    for (const response of responses) {
+      expect(response.status).toBe(404);
+      expect(response.body).toEqual({ error: 'FleetGraph finding not found' });
+    }
+
+    const resumeResponse = await request(app)
+      .post(`/api/fleetgraph/actions/${actionCandidateId}/resume`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ idempotency_key: `cross-workspace-resume-${testRunId}` });
+
+    expect(resumeResponse.status).toBe(404);
+    expect(resumeResponse.body).toEqual({ error: 'FleetGraph action candidate not found' });
+    await expect(loadFindingLifecycleState(finding.id)).resolves.toBe('pending_review');
+    await expect(countDocumentCommentsInWorkspace(otherScopedDocumentId, otherWorkspaceId)).resolves.toBe(beforeCommentCount);
+    expect(broadcastToUserMock).not.toHaveBeenCalled();
+  });
+
   it('dismisses a pending finding and records an indefinite suppression', async () => {
     const finding = await createFinding({
       workspaceId,
@@ -471,6 +639,7 @@ describe('FleetGraph inbox API', () => {
       .send({ reason });
 
     expect(response.status).toBe(200);
+    expectFleetGraphFindingResponse(response.body);
     expect(response.body).toMatchObject({
       id: finding.id,
       lifecycle_state: 'dismissed',
@@ -508,6 +677,7 @@ describe('FleetGraph inbox API', () => {
       .send({ reason, expires_at: expiresAt });
 
     expect(response.status).toBe(200);
+    expectFleetGraphFindingResponse(response.body);
     expect(response.body).toMatchObject({
       id: finding.id,
       lifecycle_state: 'snoozed',
@@ -590,6 +760,64 @@ describe('FleetGraph inbox API', () => {
     expect(suppressionResult.rows[0]!.count).toBe('0');
   });
 
+  it('returns 409 for stale lifecycle transitions without creating side effects', async () => {
+    const rejectedFinding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Already rejected risk',
+      lifecycleState: 'rejected',
+      materialChangeKey: `v1:inbox-${testRunId}:already-rejected`,
+      createdAt: '2026-05-26T15:05:00.000Z',
+    });
+
+    const rejectResponse = await request(app)
+      .post(`/api/fleetgraph/findings/${rejectedFinding.id}/reject`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ reason: 'Already rejected.' });
+
+    expect(rejectResponse.status).toBe(409);
+    expect(rejectResponse.body).toEqual({ error: 'FleetGraph finding is not pending review' });
+    await expect(countFindingAuditRows('approval', rejectedFinding.id)).resolves.toBe(0);
+
+    const executedFinding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Executed suppression risk',
+      lifecycleState: 'executed',
+      materialChangeKey: `v1:inbox-${testRunId}:executed-suppression`,
+      createdAt: '2026-05-26T15:06:00.000Z',
+    });
+
+    const snoozeResponse = await request(app)
+      .post(`/api/fleetgraph/findings/${executedFinding.id}/snooze`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({
+        reason: 'Already executed.',
+        expires_at: new Date(Date.now() + 45 * 60 * 1000).toISOString(),
+      });
+
+    expect(snoozeResponse.status).toBe(409);
+    expect(snoozeResponse.body).toEqual({
+      error: 'FleetGraph finding cannot be suppressed from its current state',
+    });
+    await expect(countFindingAuditRows('suppression', executedFinding.id)).resolves.toBe(0);
+
+    const actionCandidateId = await createActionCandidate(executedFinding.id, scopedDocumentId);
+    const beforeCommentCount = await countDocumentComments(scopedDocumentId);
+
+    const resumeResponse = await request(app)
+      .post(`/api/fleetgraph/actions/${actionCandidateId}/resume`)
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ idempotency_key: `stale-resume-${testRunId}` });
+
+    expect(resumeResponse.status).toBe(409);
+    expect(resumeResponse.body).toEqual({ error: 'FleetGraph action has already been executed' });
+    await expect(countDocumentComments(scopedDocumentId)).resolves.toBe(beforeCommentCount);
+    expect(broadcastToUserMock).not.toHaveBeenCalled();
+  });
+
   it('broadcasts workspace invalidations after successful FleetGraph mutations', async () => {
     const approvedFinding = await createFinding({
       workspaceId,
@@ -608,6 +836,7 @@ describe('FleetGraph inbox API', () => {
       .send({ action_candidate_id: approvedActionCandidateId });
 
     expect(approveResponse.status).toBe(200);
+    expectFleetGraphFindingResponse(approveResponse.body);
     expectFleetGraphWorkspaceBroadcast({
       findingId: approvedFinding.id,
       lifecycleState: 'approved',
@@ -631,6 +860,7 @@ describe('FleetGraph inbox API', () => {
       .send({ reason: 'Broadcast rejection reason.' });
 
     expect(rejectResponse.status).toBe(200);
+    expectFleetGraphFindingResponse(rejectResponse.body);
     expectFleetGraphWorkspaceBroadcast({
       findingId: rejectedFinding.id,
       lifecycleState: 'rejected',
@@ -654,6 +884,7 @@ describe('FleetGraph inbox API', () => {
       .send({ reason: 'Broadcast dismissal reason.' });
 
     expect(dismissResponse.status).toBe(200);
+    expectFleetGraphFindingResponse(dismissResponse.body);
     expectFleetGraphWorkspaceBroadcast({
       findingId: dismissedFinding.id,
       lifecycleState: 'dismissed',
@@ -678,6 +909,7 @@ describe('FleetGraph inbox API', () => {
       .send({ reason: 'Broadcast snooze reason.', expires_at: snoozeExpiresAt });
 
     expect(snoozeResponse.status).toBe(200);
+    expectFleetGraphFindingResponse(snoozeResponse.body);
     expectFleetGraphWorkspaceBroadcast({
       findingId: snoozedFinding.id,
       lifecycleState: 'snoozed',
@@ -703,6 +935,7 @@ describe('FleetGraph inbox API', () => {
       .send({ idempotency_key: `broadcast-resume-${testRunId}` });
 
     expect(resumeResponse.status).toBe(200);
+    expectFleetGraphFindingResponse(resumeResponse.body);
     expectFleetGraphWorkspaceBroadcast({
       findingId: executedFinding.id,
       lifecycleState: 'executed',
@@ -732,9 +965,16 @@ describe('FleetGraph inbox API', () => {
       .send({ idempotency_key: idempotencyKey });
 
     expect(firstResponse.status).toBe(200);
+    expectFleetGraphFindingResponse(firstResponse.body);
     expect(firstResponse.body).toMatchObject({
       id: finding.id,
       lifecycle_state: 'executed',
+    });
+    expectFleetGraphWorkspaceBroadcast({
+      findingId: finding.id,
+      lifecycleState: 'executed',
+      mutation: 'executed',
+      actionCandidateId,
     });
 
     const secondResponse = await request(app)
@@ -743,10 +983,12 @@ describe('FleetGraph inbox API', () => {
       .send({ idempotency_key: idempotencyKey });
 
     expect(secondResponse.status).toBe(200);
+    expectFleetGraphFindingResponse(secondResponse.body);
     expect(secondResponse.body).toMatchObject({
       id: finding.id,
       lifecycle_state: 'executed',
     });
+    expect(broadcastToUserMock).not.toHaveBeenCalled();
     await expect(countDocumentComments(scopedDocumentId)).resolves.toBe(beforeCommentCount + 1);
 
     const commentsResult = await pool.query<CommentRow>(
@@ -822,6 +1064,7 @@ describe('FleetGraph inbox API', () => {
       .send({ idempotency_key: `resume-admin-${testRunId}` });
 
     expect(response.status).toBe(200);
+    expectFleetGraphFindingResponse(response.body);
     expect(response.body.lifecycle_state).toBe('executed');
     await expect(countDocumentComments(scopedDocumentId)).resolves.toBe(beforeCommentCount + 1);
 
@@ -957,15 +1200,64 @@ describe('FleetGraph inbox API', () => {
   }
 
   async function countDocumentComments(documentId: string): Promise<number> {
+    return countDocumentCommentsInWorkspace(documentId, workspaceId);
+  }
+
+  async function countDocumentCommentsInWorkspace(
+    documentId: string,
+    documentWorkspaceId: string
+  ): Promise<number> {
     const result = await pool.query<CountRow>(
       `SELECT COUNT(*)::text AS count
        FROM comments
        WHERE document_id = $1
          AND workspace_id = $2`,
-      [documentId, workspaceId]
+      [documentId, documentWorkspaceId]
     );
 
     return Number.parseInt(result.rows[0]!.count, 10);
+  }
+
+  async function countFindingAuditRows(auditKind: FindingAuditKind, findingId: string): Promise<number> {
+    const queryByAuditKind: Record<FindingAuditKind, string> = {
+      approval: `SELECT COUNT(*)::text AS count FROM fleetgraph_approvals WHERE finding_id = $1`,
+      suppression: `SELECT COUNT(*)::text AS count FROM fleetgraph_suppressions WHERE finding_id = $1`,
+    };
+    const result = await pool.query<CountRow>(queryByAuditKind[auditKind], [findingId]);
+
+    return Number.parseInt(result.rows[0]!.count, 10);
+  }
+
+  async function loadFindingLifecycleState(findingId: string): Promise<string> {
+    const result = await pool.query<{ lifecycle_state: string }>(
+      `SELECT lifecycle_state
+       FROM fleetgraph_findings
+       WHERE id = $1`,
+      [findingId]
+    );
+    const row = result.rows[0];
+
+    if (!row) {
+      throw new Error(`FleetGraph finding not found in test fixture: findingId=${findingId}`);
+    }
+
+    return row.lifecycle_state;
+  }
+
+  function expectFleetGraphFindingListResponse(body: object): void {
+    const parsed = FleetGraphFindingListResponseSchema.safeParse(body);
+
+    if (!parsed.success) {
+      throw new Error(`FleetGraph finding list response does not match OpenAPI schema: ${parsed.error.message}`);
+    }
+  }
+
+  function expectFleetGraphFindingResponse(body: object): void {
+    const parsed = FleetGraphFindingSchema.safeParse(body);
+
+    if (!parsed.success) {
+      throw new Error(`FleetGraph finding response does not match OpenAPI schema: ${parsed.error.message}`);
+    }
   }
 
   function expectFleetGraphWorkspaceBroadcast(input: {
