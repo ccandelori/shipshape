@@ -12,14 +12,18 @@ Use this block for the final walkthrough and submission review.
 |------|-------|
 | Public app | `https://143.198.163.184.nip.io/` |
 | Demo login | `dev@ship.local` / `admin123` |
+| Live finding recipient login | `henry.patel@ship.local` / `admin123` |
 | Week document for chat | `https://143.198.163.184.nip.io/documents/ae794fb3-2b32-449b-819f-34348d317295` |
 | Issue with FleetGraph comment | `https://143.198.163.184.nip.io/documents/27e15c1b-3f6c-4e1d-8880-15a5c5705459` |
+| Finding path trace | [Langfuse trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b7afd1de6573105920bd11e417da80a4) |
+| Quiet path trace | [Langfuse trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/3c825a35e75db07fec976a6e7c779cef) |
+| Chat trace | [Langfuse trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/4651d55b03a3cb8c937455ade6b2aeec) |
 | Demo script | `docs/fleetgraph-5-minute-demo-script.md` |
 | Latency proof | `docs/fleetgraph-latency-proof.md` |
 
-Trace links belong in the Test Cases table below. Current status: Langfuse instrumentation is implemented and the runtime keys have been configured for local exercise; shared Langfuse Cloud links still need to be captured from live quiet, finding, and chat runs and pasted here before final submission.
+The Langfuse links above are captured from the public droplet and open for authenticated Langfuse project members. Making them public share links requires an explicit data-exposure decision because traces contain prompt, context, and run metadata.
 
-Deployed smoke status, 2026-05-27 2:35 PM CDT: release `20260527-143158` is live on the public droplet. `/health` returns HTTP 200, `dev@ship.local` login works, FleetGraph inbox tabs render, the Needs Review finding exposes its "Why this?" run metadata panel, and the Week chat opens with source-linked context. Langfuse Cloud share links still need to be copied from generated traces and pasted into the Test Cases table.
+Deployed smoke status, 2026-05-27 3:10 PM CDT: release `20260527-151052` is live on the public droplet. `/health` returns HTTP 200, `dev@ship.local` and `henry.patel@ship.local` logins work, FleetGraph inbox tabs render, the live Needs Review finding exposes its "Why this?" run metadata panel with a Langfuse trace URL, and the Week chat streams source-linked context through the shared FleetGraph graph.
 
 ## Agent Responsibility
 
@@ -200,7 +204,7 @@ Trace paths required for validation:
 
 ## Trace Links And Runtime Evidence
 
-Shared Langfuse trace links are pending capture/share, not pending implementation. As of 2026-05-27, FleetGraph emits Langfuse traces and the local exercise environment has been configured with OpenAI and Langfuse keys. The remaining evidence work is to run the quiet path, finding path, and chat path with tracing enabled, make the Langfuse Cloud traces shareable, and paste the public URLs into the Test Cases table.
+FleetGraph emits Langfuse traces from both proactive and on-demand graph branches. As of 2026-05-27, the public droplet has captured authenticated Langfuse Cloud traces for the MVP finding path, quiet path, and on-demand chat path. Public sharing is a separate approval step because traces include prompt/context metadata.
 
 Configured runtime sources:
 
@@ -208,6 +212,14 @@ Configured runtime sources:
 - Local template: `api/.env.example` documents `OPENAI_API_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL`, `LANGFUSE_TRACING_ENVIRONMENT`, and `LANGFUSE_RELEASE`.
 - Production SSM: `api/src/config/ssm.ts` loads `/ship/{env}/OPENAI_API_KEY`, `/ship/{env}/LANGFUSE_PUBLIC_KEY`, `/ship/{env}/LANGFUSE_SECRET_KEY`, and `/ship/{env}/LANGFUSE_BASE_URL`; `LANGFUSE_TRACING_ENVIRONMENT` and `LANGFUSE_RELEASE` are optional deployment env vars.
 - FleetGraph config validation: `api/src/fleetgraph/config.ts` requires OpenAI and Langfuse connection settings before FleetGraph model paths run.
+
+Live droplet evidence:
+
+| Scenario | Trace | Branch path | Result | Model tokens | Estimated cost | Runtime evidence |
+|----------|-------|-------------|--------|--------------|----------------|------------------|
+| Finding with pending action | [Langfuse trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b7afd1de6573105920bd11e417da80a4) | `output` | Finding `c17a13f0-52a0-4192-9935-ad125eb0ff4d` plus action candidate `161d7930-487d-484d-be34-74341b590ffd` | 1317 input / 240 output | `$0.000342` | Created from deployed mutation-triggered run `b7da98bc-a27a-4ee0-a477-9dd6469ce8a2`; latency target met at `10.456s` graph latency. |
+| Quiet pre-filter exit | [Langfuse trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/3c825a35e75db07fec976a6e7c779cef) | `prefilter-exit` | No finding and no model generation observations | 0 input / 0 output | `$0.000000` | Poll-triggered run `0d248f04-4bf4-4094-b0a3-eaba2e2fb481`; pre-filter exited in `56.650ms`. |
+| On-demand Week chat | [Langfuse trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/4651d55b03a3cb8c937455ade6b2aeec) | `ondemand_chat` | SSE answer grounded in Week 14 and linked issues | 2043 input / 111 output | Captured in trace metadata | Generated by deployed `/api/fleetgraph/chat` against Week `ae794fb3-2b32-449b-819f-34348d317295`. |
 
 Local deterministic evidence:
 
@@ -291,15 +303,15 @@ Headless authentication:
 
 ## Test Cases
 
-Shared trace links are not yet pasted into this document. The deterministic local evidence above verifies the two MVP proactive graph paths and usage metadata that the shared traces must show. The timed latency proof in `docs/fleetgraph-latency-proof.md` verifies the mutation-triggered path against the five-minute target using the real trigger controller, advisory lock, context builder, guard, graph, policy, and persistence path with a deterministic local reasoner.
+The live trace links below are authenticated Langfuse Cloud links from the public droplet. They can be made public after approving trace disclosure. The deterministic local evidence above remains useful because it verifies the two MVP proactive graph paths and usage metadata without depending on model availability. The timed latency proof in `docs/fleetgraph-latency-proof.md` verifies the mutation-triggered path against the five-minute target using the real trigger controller, advisory lock, context builder, guard, graph, policy, and persistence path with a deterministic local reasoner.
 
 | # | Ship state | Expected output | Required trace path | Trace link status |
 |---|------------|-----------------|---------------------|------------------|
-| 1 | Active Week has stalled high-priority issues and an unresolved blocker. | Open finding with severity, evidence, owner, and action candidate. | Proactive changed -> pre-filter yes -> reason -> pending approval. | Local deterministic run passed; shared Langfuse URL pending capture/share. |
-| 2 | Active Week has no blockers or high-priority blocked issues. | Quiet exit; no duplicate notification and no model reasoning call. | Proactive changed -> pre-filter no -> quiet end. | Local deterministic run passed; shared Langfuse URL pending capture/share. |
-| 3 | Same active Week is scanned again with a suppressing pending finding. | Quiet exit; no duplicate notification and no expensive reasoning call. | Proactive guard -> quiet end. | Guard suppression covered by detector tests; shared URL pending capture/share. |
+| 1 | Active Week has stalled high-priority issues and an unresolved blocker. | Open finding with severity, evidence, owner, and action candidate. | Proactive changed -> pre-filter yes -> reason -> pending approval. | [Authenticated Langfuse trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b7afd1de6573105920bd11e417da80a4); local deterministic run passed. |
+| 2 | Active Week has no blockers or high-priority blocked issues. | Quiet exit; no duplicate notification and no model reasoning call. | Proactive changed -> pre-filter no -> quiet end. | [Authenticated Langfuse trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/3c825a35e75db07fec976a6e7c779cef); local deterministic run passed. |
+| 3 | Same active Week is scanned again with a suppressing pending finding. | Quiet exit; no duplicate notification and no expensive reasoning call. | Proactive guard -> quiet end. | Guard suppression covered by detector tests; not part of the required live trace pair. |
 | 4 | Blocker crosses elapsed-time threshold without a row edit. | Finding resurfaces because elapsed-time signal changed. | Proactive changed -> pre-filter yes -> reason. | Extension case; not part of the two MVP traces. |
-| 5 | User opens a Week document and asks, "What is blocking this?" | SSE streamed answer grounded in that Week's issues, standups, and findings. | On-demand answer -> reason -> stream. | Embedded chat implemented and E2E-covered; shared URL pending capture/share. |
+| 5 | User opens a Week document and asks, "What is blocking this?" | SSE streamed answer grounded in that Week's issues, standups, and findings. | On-demand chat branch -> model stream -> final response. | [Authenticated Langfuse trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/4651d55b03a3cb8c937455ade6b2aeec); embedded chat implemented and E2E-covered. |
 | 6 | User asks chat to create a follow-up item for a blocker. | Draft or pending action candidate scoped to the blocker and Week. | On-demand action request -> reason -> approval policy. | Architecture path documented; full execution staged after MVP. |
 | 7 | Unauthorized user attempts to resume a pending action. | Resume denied; no action executed. | Resume auth guard rejects. | API route coverage implemented. |
 | 8 | Two API instances tick the same project concurrently. | One instance acquires the advisory lock; exactly one graph run proceeds. | Proactive trigger -> advisory lock winner only. | Advisory lock controller covered by trigger tests. |
@@ -547,7 +559,8 @@ Runtime model spend for the MVP at-risk Week detector is now persisted in `fleet
 | Finding path run | 850 input / 172 output tokens, `$0.000231` |
 | Total deterministic graph invocations captured | 2 |
 | Total deterministic graph spend captured | `$0.000231` |
-| Shared Langfuse trace spend | Pending capture/share |
+| Live finding trace spend | 1317 input / 240 output tokens, `$0.000342` |
+| Live chat trace spend | 2043 input / 111 output tokens, captured in Langfuse trace metadata |
 
 ## Submission Status
 
@@ -557,7 +570,7 @@ Runtime model spend for the MVP at-risk Week detector is now persisted in `fleet
 | Graph Diagram | Defined in this document |
 | Use Cases | Defined in this document |
 | Trigger Model | Defined in this document |
-| Test Cases | MVP proactive paths verified locally; shared trace links require capture/share from Langfuse Cloud |
+| Test Cases | MVP proactive paths verified locally; authenticated live Langfuse trace links captured from public droplet |
 | Architecture Decisions | Defined in this document |
 | Cost Analysis | Design estimate plus deterministic runtime telemetry captured |
 | Timed Latency Proof | Passed locally at 45.113 seconds; see `docs/fleetgraph-latency-proof.md` |
