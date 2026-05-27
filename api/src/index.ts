@@ -28,6 +28,7 @@ async function main() {
   const { setupCollaboration } = await import('./collaboration/index.js');
   const {
     registerProactiveTriggerShutdownHandlers,
+    shouldStartProactiveTriggers,
     shutdown: shutdownProactiveTriggers,
     startProactiveTriggers,
   } = await import('./fleetgraph/triggers.js');
@@ -45,7 +46,15 @@ async function main() {
 
   // Setup WebSocket collaboration server
   setupCollaboration(server);
-  startProactiveTriggers();
+  if (shouldStartProactiveTriggers({
+    FLEETGRAPH_PROACTIVE_TRIGGERS_ENABLED: process.env.FLEETGRAPH_PROACTIVE_TRIGGERS_ENABLED,
+  })) {
+    startProactiveTriggers();
+  } else {
+    console.log('fleetgraph.proactive_trigger.disabled', {
+      reason: 'FLEETGRAPH_PROACTIVE_TRIGGERS_ENABLED',
+    });
+  }
   registerProactiveTriggerShutdownHandlers(process, shutdownProactiveTriggers);
   process.prependOnceListener('SIGTERM', () => {
     void shutdownFleetGraphLangfuseTracing().catch((error: unknown) => {

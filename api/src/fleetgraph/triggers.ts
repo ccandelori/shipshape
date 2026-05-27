@@ -97,6 +97,10 @@ export type ProactiveTriggerController = {
   pendingMutationCount: () => number;
 };
 
+export type ProactiveTriggerRuntimeEnv = {
+  FLEETGRAPH_PROACTIVE_TRIGGERS_ENABLED?: string;
+};
+
 export function createProactiveTriggerController(options: ProactiveTriggerControllerOptions): ProactiveTriggerController {
   let pollTimer: ProactiveTimer | null = null;
   const pendingMutationTimers = new Map<string, ProactiveTimer>();
@@ -265,6 +269,16 @@ let defaultController: ProactiveTriggerController | null = null;
 
 export function startProactiveTriggers(): void {
   getDefaultController().startProactiveTriggers();
+}
+
+export function shouldStartProactiveTriggers(env: ProactiveTriggerRuntimeEnv): boolean {
+  const configuredValue = env.FLEETGRAPH_PROACTIVE_TRIGGERS_ENABLED;
+
+  if (!configuredValue || configuredValue.trim().length === 0) {
+    return true;
+  }
+
+  return ['1', 'true', 'yes', 'on'].includes(configuredValue.trim().toLowerCase());
 }
 
 export function runProactiveCheck(): Promise<ProactiveRunSummary> {

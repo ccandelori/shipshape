@@ -4,6 +4,7 @@ import {
   createProactiveTriggerController,
   proactivePollIntervalMs,
   registerProactiveTriggerShutdownHandlers,
+  shouldStartProactiveTriggers,
   type FleetGraphTriggerLockClient,
   type FleetGraphTriggerPool,
   type ProactiveScopeRunInput,
@@ -44,6 +45,15 @@ describe('FleetGraph proactive triggers', () => {
     controller.shutdown();
 
     expect(clearIntervalSpy).toHaveBeenCalledWith(intervalToken);
+  });
+
+  it('allows proactive trigger startup to be disabled by runtime env', () => {
+    expect(shouldStartProactiveTriggers({})).toBe(true);
+    expect(shouldStartProactiveTriggers({ FLEETGRAPH_PROACTIVE_TRIGGERS_ENABLED: '' })).toBe(true);
+    expect(shouldStartProactiveTriggers({ FLEETGRAPH_PROACTIVE_TRIGGERS_ENABLED: 'true' })).toBe(true);
+    expect(shouldStartProactiveTriggers({ FLEETGRAPH_PROACTIVE_TRIGGERS_ENABLED: '1' })).toBe(true);
+    expect(shouldStartProactiveTriggers({ FLEETGRAPH_PROACTIVE_TRIGGERS_ENABLED: 'false' })).toBe(false);
+    expect(shouldStartProactiveTriggers({ FLEETGRAPH_PROACTIVE_TRIGGERS_ENABLED: '0' })).toBe(false);
   });
 
   it('registers removable process shutdown handlers for proactive trigger timers', () => {
