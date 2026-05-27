@@ -83,6 +83,50 @@ describe('EmbeddedChat', () => {
     });
   });
 
+  it('sends when crypto.randomUUID is unavailable (HTTP deploy)', async () => {
+    const originalRandomUUID = globalThis.crypto.randomUUID;
+    Object.defineProperty(globalThis.crypto, 'randomUUID', {
+      configurable: true,
+      value: () => {
+        throw new TypeError('randomUUID is not available');
+      },
+    });
+
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input);
+      const method = init?.method ?? 'GET';
+
+      if (url === '/api/csrf-token' && method === 'GET') {
+        return jsonResponse({ token: 'csrf-token' }, 200);
+      }
+
+      if (url === '/api/fleetgraph/chat' && method === 'POST') {
+        return sseResponse([
+          'event: final\ndata: {"response":"ok on http","usage":{"modelName":"gpt-4o-mini","inputTokens":1,"outputTokens":1,"totalTokens":2}}\n\n',
+        ]);
+      }
+
+      throw new Error(`Unexpected request: ${method} ${url}`);
+    });
+    global.fetch = fetchMock as typeof fetch;
+
+    try {
+      render(<EmbeddedChat documentId="week-1" documentType="sprint" />);
+
+      fireEvent.change(screen.getByLabelText('Ask FleetGraph'), {
+        target: { value: 'Hello?' },
+      });
+      fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
+
+      expect(await screen.findByText('ok on http')).toBeInTheDocument();
+    } finally {
+      Object.defineProperty(globalThis.crypto, 'randomUUID', {
+        configurable: true,
+        value: originalRandomUUID,
+      });
+    }
+  });
+
   it('shows rate-limit errors without leaving the composer disabled', async () => {
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
       const url = requestUrl(input);

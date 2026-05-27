@@ -234,9 +234,13 @@ export const CommentDisplayExtension = Extension.create<Record<string, never>, C
               }
             }
 
+            const renderedThreadIds = new Set<string>();
+
             for (const [commentId, blockEndPos] of sortedEntries) {
               const thread = threads.get(commentId);
               if (!thread || thread.length === 0) continue;
+
+              renderedThreadIds.add(commentId);
 
               // Find the quoted text for this comment
               let quotedText = '';
@@ -263,6 +267,33 @@ export const CommentDisplayExtension = Extension.create<Record<string, never>, C
               }, {
                 side: 1, // Render after the position
                 key: `comment-${commentId}-${thread.length}-${thread[0]?.resolved_at || 'open'}`,
+              });
+
+              decorations.push(widget);
+            }
+
+            // Comments without a commentMark in the doc (e.g. FleetGraph draft_comment resume)
+            // still exist in the API — render them at the end of the document.
+            for (const [commentId, thread] of threads.entries()) {
+              if (renderedThreadIds.has(commentId)) {
+                continue;
+              }
+
+              const root = thread.find((comment) => !comment.parent_id) ?? thread[0];
+              if (!root) {
+                continue;
+              }
+
+              const widget = Decoration.widget(doc.content.size, () => {
+                return InlineCommentThread({
+                  thread,
+                  quotedText: 'Agent comment on this document',
+                  onReply: storage.onReply,
+                  onResolve: storage.onResolve,
+                });
+              }, {
+                side: 1,
+                key: `comment-orphan-${commentId}-${thread.length}-${root.resolved_at || 'open'}`,
               });
 
               decorations.push(widget);

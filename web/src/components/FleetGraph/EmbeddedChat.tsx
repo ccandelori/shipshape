@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { apiPost } from '@/lib/api';
 import { cn } from '@/lib/cn';
+import { createId } from '@/lib/createId';
 import {
   createFleetGraphChatStreamState,
   reduceFleetGraphChatStreamEvent,
@@ -59,45 +60,58 @@ export function EmbeddedChat({ documentId, documentType, className }: EmbeddedCh
     };
   }, []);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const submitQuestion = () => {
     const trimmedQuestion = question.trim();
 
     if (trimmedQuestion.length === 0 || isStreaming) {
       return;
     }
 
-    const requestId = requestIdRef.current + 1;
-    requestIdRef.current = requestId;
-    const userMessage: EmbeddedChatMessage = {
-      id: crypto.randomUUID(),
-      role: 'user',
-      content: trimmedQuestion,
-      status: 'sent',
-    };
-    const assistantMessageId = crypto.randomUUID();
-    const assistantMessage: EmbeddedChatMessage = {
-      id: assistantMessageId,
-      role: 'assistant',
-      content: '',
-      status: 'streaming',
-    };
-    const conversationHistory = buildConversationHistory(messages);
+    try {
+      const requestId = requestIdRef.current + 1;
+      requestIdRef.current = requestId;
+      const userMessage: EmbeddedChatMessage = {
+        id: createId('user'),
+        role: 'user',
+        content: trimmedQuestion,
+        status: 'sent',
+      };
+      const assistantMessageId = createId('assistant');
+      const assistantMessage: EmbeddedChatMessage = {
+        id: assistantMessageId,
+        role: 'assistant',
+        content: '',
+        status: 'streaming',
+      };
+      const conversationHistory = buildConversationHistory(messages);
 
-    setQuestion('');
-    setStreamState(createFleetGraphChatStreamState());
-    setMessages((currentMessages) => [...currentMessages, userMessage, assistantMessage]);
+      setQuestion('');
+      setStreamState(createFleetGraphChatStreamState());
+      setMessages((currentMessages) => [...currentMessages, userMessage, assistantMessage]);
 
-    void sendFleetGraphChatRequest({
-      requestId,
-      assistantMessageId,
-      body: {
-        documentId,
-        documentType,
-        question: trimmedQuestion,
-        conversationHistory,
-      },
-    });
+      void sendFleetGraphChatRequest({
+        requestId,
+        assistantMessageId,
+        body: {
+          documentId,
+          documentType,
+          question: trimmedQuestion,
+          conversationHistory,
+        },
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'FleetGraph chat could not start';
+      setStreamState({
+        ...createFleetGraphChatStreamState(),
+        status: 'failed',
+        error: message,
+      });
+    }
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    submitQuestion();
   };
 
   const sendFleetGraphChatRequest = async (input: {
@@ -117,6 +131,7 @@ export function EmbeddedChat({ documentId, documentType, className }: EmbeddedCh
       await readFleetGraphChatSseStream(response, (event) => {
         applyStreamEvent(input.requestId, input.assistantMessageId, event);
       });
+      finalizeStreamIfNeeded(input.requestId, input.assistantMessageId);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'FleetGraph chat request failed';
       applyStreamFailure(input.requestId, input.assistantMessageId, message);
@@ -157,6 +172,30 @@ export function EmbeddedChat({ documentId, documentType, className }: EmbeddedCh
           : message
       )));
     }
+  };
+
+  const finalizeStreamIfNeeded = (requestId: number, assistantMessageId: string) => {
+    if (requestIdRef.current !== requestId) {
+      return;
+    }
+
+    setStreamState((currentState) => {
+      if (currentState.status !== 'streaming') {
+        return currentState;
+      }
+
+      return {
+        ...currentState,
+        status: 'completed',
+        error: null,
+      };
+    });
+
+    setMessages((currentMessages) => currentMessages.map((chatMessage) => (
+      chatMessage.id === assistantMessageId && chatMessage.status === 'streaming'
+        ? { ...chatMessage, status: 'completed' }
+        : chatMessage
+    )));
   };
 
   const applyStreamFailure = (
