@@ -11,8 +11,6 @@ import {
   FleetGraphChatScopeNotFoundError,
   formatFleetGraphChatSseEvent,
   resolveFleetGraphChatScope,
-  streamFleetGraphChatModelResponse,
-  traceFleetGraphChatCompletion,
   type FleetGraphChatContextBuilders,
   type FleetGraphChatModel,
   type FleetGraphChatModelMessage,
@@ -22,12 +20,22 @@ import {
 } from '../fleetgraph/chat.js';
 import { FleetGraphConfigError, loadFleetGraphConfig } from '../fleetgraph/config.js';
 import type { FleetGraphQueryClient } from '../fleetgraph/context.js';
+import {
+  runFleetGraphGraph,
+  type FleetGraphGraphDependencies,
+  type FleetGraphGraphInput,
+  type FleetGraphGraphState,
+} from '../fleetgraph/graph.js';
 import { authMiddleware } from '../middleware/auth.js';
 
 type FleetGraphChatRouterDependencies = {
   client: FleetGraphQueryClient;
   contextBuilders: FleetGraphChatContextBuilders;
   createModel: () => FleetGraphChatModel;
+  runGraph?: (
+    input: FleetGraphGraphInput,
+    dependencies: FleetGraphGraphDependencies
+  ) => Promise<FleetGraphGraphState>;
   now: () => Date;
   heartbeatIntervalMs: number;
 };
@@ -154,13 +162,13 @@ export function createFleetGraphChatRouter(dependencies: FleetGraphChatRouterDep
         heartbeatIntervalMs: dependencies.heartbeatIntervalMs,
       });
 
-      const completion = await traceFleetGraphChatCompletion({
-        traceContext,
-        operation: () => streamFleetGraphChatModelResponse({
+      const graphState = await (dependencies.runGraph ?? runFleetGraphGraph)({
+        mode: 'ondemand_chat',
+        chat: {
           model,
           messages: promptMessages,
           abortSignal: abortController.signal,
-          streamConfig: traceContext.streamConfig,
+          traceContext,
           onToken: async (token) => {
             await writeFleetGraphChatSseEvent({
               res,
@@ -171,8 +179,13 @@ export function createFleetGraphChatRouter(dependencies: FleetGraphChatRouterDep
               },
             });
           },
-        }),
-      });
+        },
+      }, {});
+      const completion = graphState.chat?.completion;
+
+      if (completion === undefined) {
+        throw new Error('FleetGraph chat graph completed without a chat completion');
+      }
 
       if (!abortController.signal.aborted) {
         await writeFleetGraphChatSseEvent({

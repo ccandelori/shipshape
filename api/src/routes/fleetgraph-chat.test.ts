@@ -12,6 +12,11 @@ import {
   type FleetGraphChatModel,
   type FleetGraphChatModelMessage,
 } from '../fleetgraph/chat.js';
+import type {
+  FleetGraphGraphDependencies,
+  FleetGraphGraphInput,
+  FleetGraphGraphState,
+} from '../fleetgraph/graph.js';
 import { createFleetGraphChatRouter } from './fleetgraph-chat.js';
 
 type IdRow = {
@@ -148,6 +153,82 @@ describe('FleetGraph chat route SSE lifecycle', () => {
     expect(observedModelCalls[0]!.abortSignal.aborted).toBe(false);
     expect(observedModelCalls[0]!.messages.at(-1)?.content).toContain('What is blocked?');
     expect(observedModelCalls[0]!.messages.at(-1)?.content).toContain('Procurement is blocked');
+  });
+
+  it('streams chat by entering the unified FleetGraph graph', async () => {
+    const graphInputs: FleetGraphGraphInput[] = [];
+    const graphApp = express();
+    graphApp.use(cookieParser());
+    graphApp.use(express.json());
+    graphApp.use('/api/fleetgraph', createFleetGraphChatRouter({
+      client: pool,
+      contextBuilders: createContextBuilders(),
+      createModel: () => createStreamingModel([]),
+      runGraph: async (
+        input: FleetGraphGraphInput,
+        _dependencies: FleetGraphGraphDependencies
+      ): Promise<FleetGraphGraphState> => {
+        graphInputs.push(input);
+
+        if (input.mode !== 'ondemand_chat') {
+          throw new Error(`Unexpected FleetGraph graph mode: ${input.mode}`);
+        }
+
+        await input.chat.onToken('Graph answer');
+
+        return {
+          graphName: 'fleetgraph.runtime',
+          input,
+          status: 'completed',
+          activeNode: null,
+          completedNodes: ['branch', 'ondemand_chat'],
+          branch: 'ondemand_chat',
+          proactiveAtRiskWeek: null,
+          chat: {
+            completion: {
+              response: 'Graph answer',
+              usage: {
+                modelName: 'graph-test-model',
+                inputTokens: 8,
+                outputTokens: 2,
+                totalTokens: 10,
+              },
+            },
+          },
+        };
+      },
+      now: () => new Date('2026-05-26T12:00:00.000Z'),
+      heartbeatIntervalMs: 60_000,
+    }));
+
+    const response = await request(graphApp)
+      .post('/api/fleetgraph/chat')
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({
+        documentId: weekDocumentId,
+        documentType: 'sprint',
+        question: 'Does chat enter the graph?',
+        conversationHistory: [],
+      });
+
+    expect(response.status).toBe(200);
+    expect(response.text).toBe(
+      'event: heartbeat\n' +
+      'data: {"sentAt":"2026-05-26T12:00:00.000Z"}\n\n' +
+      'event: token\n' +
+      'data: {"token":"Graph answer"}\n\n' +
+      'event: final\n' +
+      'data: {"response":"Graph answer","usage":{"modelName":"graph-test-model","inputTokens":8,"outputTokens":2,"totalTokens":10}}\n\n'
+    );
+    expect(graphInputs).toHaveLength(1);
+    expect(graphInputs[0]!.mode).toBe('ondemand_chat');
+    const graphInput = graphInputs[0]!;
+
+    if (graphInput.mode !== 'ondemand_chat') {
+      throw new Error(`Unexpected FleetGraph graph mode: ${graphInput.mode}`);
+    }
+
+    expect(graphInput.chat.messages.at(-1)?.content).toContain('Does chat enter the graph?');
   });
 
   it('rejects cross-workspace document ids before constructing a model stream', async () => {

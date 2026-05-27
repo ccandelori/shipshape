@@ -276,8 +276,8 @@ Local seed verification:
 4. Timed detection proof is still required.
    - Taskmaster: task 15.
 
-5. On-demand chat is functional, but it is implemented as direct OpenAI streaming rather than a compiled LangGraph path.
-   - Taskmaster: task 16 tracks either documentation of the MVP deviation or unification onto the shared graph.
+5. On-demand chat is functional and now enters the shared compiled FleetGraph LangGraph runtime for traced model streaming.
+   - Remaining follow-up: chat-initiated write actions should use the same approval model as proactive findings.
 
 6. Checkpoint durability should be reconciled.
    - `FLEETGRAPH.md` mentions `PostgresSaver`; current code uses `MemorySaver`.

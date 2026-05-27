@@ -12,6 +12,7 @@ import {
   type AtRiskWeekStructuredReasoner,
 } from '../detectors/at-risk-week.js';
 import { shouldRunDetector } from '../guards.js';
+import { runFleetGraphGraph } from '../graph.js';
 import { createAtRiskWeekScopeRunner } from '../proactive-runner.js';
 import {
   createProactiveTriggerController,
@@ -254,7 +255,8 @@ async function runMutationTriggerProof(
     pool,
     runScope: createAtRiskWeekScopeRunner({
       loadConfig: () => proofConfig,
-      runGraph: runAtRiskWeekGraph,
+      runFleetGraph: runFleetGraphGraph,
+      runAtRiskWeekGraph,
       buildWeekContext,
       shouldRunDetector,
       createReasoner: () => createProofReasoner(mutation, runId),

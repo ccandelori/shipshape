@@ -11,6 +11,7 @@ import {
   runAtRiskWeekGraph,
   type AtRiskWeekGraphDependencies,
   type AtRiskWeekGraphInput,
+  type AtRiskWeekGraphState,
   type AtRiskWeekNodeDependencies,
   type AtRiskWeekOutputNodeDependencies,
   type AtRiskWeekReasonNodeDependencies,
@@ -18,6 +19,11 @@ import {
   type AtRiskWeekTraceClock,
   type AtRiskWeekTraceRunner,
 } from './detectors/at-risk-week.js';
+import {
+  runFleetGraphGraph,
+  type FleetGraphGraphDependencies,
+  type FleetGraphGraphInput,
+} from './graph.js';
 import { shouldRunDetector } from './guards.js';
 import type {
   FleetGraphTriggerLogger,
@@ -29,7 +35,11 @@ export const atRiskWeekReasonerRetryDelayMs = 1_000;
 
 export type AtRiskWeekScopeRunnerOptions = {
   loadConfig: () => FleetGraphConfig;
-  runGraph: (input: AtRiskWeekGraphInput, dependencies: AtRiskWeekGraphDependencies) => Promise<unknown>;
+  runFleetGraph: (input: FleetGraphGraphInput, dependencies: FleetGraphGraphDependencies) => Promise<unknown>;
+  runAtRiskWeekGraph: (
+    input: AtRiskWeekGraphInput,
+    dependencies: AtRiskWeekGraphDependencies
+  ) => Promise<AtRiskWeekGraphState>;
   buildWeekContext: AtRiskWeekNodeDependencies['buildWeekContext'];
   shouldRunDetector: AtRiskWeekNodeDependencies['shouldRunDetector'];
   createReasoner: (config: FleetGraphConfig) => AtRiskWeekStructuredReasoner;
@@ -79,27 +89,38 @@ export function createAtRiskWeekScopeRunner(options: AtRiskWeekScopeRunnerOption
 
   return async (input) => {
     const shared = getSharedDependencies();
-    await options.runGraph({
+    const atRiskWeekInput: AtRiskWeekGraphInput = {
       workspaceId: input.workspaceId,
       scopedDocId: input.scopedDocId,
       runId: options.randomUUID(),
       triggerSource: input.triggerSource,
       requestedAt: options.now(),
+    };
+    await options.runFleetGraph({
+      mode: 'proactive_at_risk_week',
+      atRiskWeek: {
+        input: atRiskWeekInput,
+      },
     }, {
-      nodeDependencies: {
-        client: input.client,
-        buildWeekContext: options.buildWeekContext,
-        shouldRunDetector: options.shouldRunDetector,
-        now: options.now,
+      proactiveAtRiskWeek: {
+        runGraph: options.runAtRiskWeekGraph,
+        dependencies: {
+          nodeDependencies: {
+            client: input.client,
+            buildWeekContext: options.buildWeekContext,
+            shouldRunDetector: options.shouldRunDetector,
+            now: options.now,
+          },
+          reasonNodeDependencies: shared.reasonNodeDependencies,
+          outputNodeDependencies: {
+            client: input.client,
+            broadcastToUser: options.broadcastToUser,
+            now: options.now,
+          },
+          traceRunner: shared.traceRunner,
+          checkpointer: shared.checkpointer,
+        },
       },
-      reasonNodeDependencies: shared.reasonNodeDependencies,
-      outputNodeDependencies: {
-        client: input.client,
-        broadcastToUser: options.broadcastToUser,
-        now: options.now,
-      },
-      traceRunner: shared.traceRunner,
-      checkpointer: shared.checkpointer,
     });
   };
 }
@@ -110,7 +131,8 @@ export function createProductionAtRiskWeekScopeRunner(
 ): ProactiveScopeRunner {
   return createAtRiskWeekScopeRunner({
     loadConfig: loadFleetGraphConfig,
-    runGraph: runAtRiskWeekGraph,
+    runFleetGraph: runFleetGraphGraph,
+    runAtRiskWeekGraph,
     buildWeekContext,
     shouldRunDetector,
     createReasoner: createOpenAIAtRiskWeekReasoner,

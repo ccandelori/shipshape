@@ -23,7 +23,7 @@ Deployed smoke status, 2026-05-27 11:26 AM CDT: release `20260527-110954` is liv
 
 ## Agent Responsibility
 
-FleetGraph has two modes that share Ship context, authorization, model configuration, and outcome policy concepts. The current MVP implementation is not fully unified into one compiled graph: proactive detection runs through LangGraph, while on-demand chat uses direct OpenAI token streaming with the same context builders.
+FleetGraph has two modes that now enter the same compiled LangGraph runtime. The top-level `fleetgraph.runtime` graph branches by mode: proactive at-risk Week detection delegates to the existing detector graph, while on-demand chat executes its token streaming model call inside the on-demand graph branch. The HTTP route still owns request validation, auth, rate limiting, SSE framing, heartbeat, and abort cleanup.
 
 ### Proactive Mode
 
@@ -73,7 +73,7 @@ On-demand mode reasons about:
 
 On-demand is not answer-only. The MVP can stream answers first, but the architecture supports action requests by producing draft actions or pending approvals rather than pretending chat cannot do work.
 
-Implementation status as of 2026-05-26: MVP on-demand chat is implemented in `api/src/fleetgraph/chat.ts` and `api/src/routes/fleetgraph-chat.ts` as a direct OpenAI streaming path. It reuses FleetGraph context builders, workspace authorization, rate limits, SSE framing, and model configuration, but it is not yet a LangGraph node path. This is an intentional MVP deviation to preserve stable token streaming and avoid reworking chat abort, heartbeat, and SSE behavior during submission hardening.
+Implementation status as of 2026-05-27: on-demand chat is routed through `api/src/fleetgraph/graph.ts` with `mode: 'ondemand_chat'`. The route prepares the authorized prompt context before opening SSE so it can still return normal HTTP errors for invalid scope or missing model configuration. Once streaming starts, the compiled graph branch owns Langfuse tracing and model token streaming through the same FleetGraph runtime entry point used by proactive mode.
 
 ### Autonomy Rules
 
@@ -154,7 +154,7 @@ The database-backed FleetGraph inbox is the source of truth. WebSocket `/events`
 
 ## Graph Diagram
 
-This diagram is the target agent architecture. The implemented Week 5 graph-backed path is the proactive at-risk Week detector. The on-demand branch is represented because it is the intended unification path, but the current MVP chat route streams directly through `api/src/fleetgraph/chat.ts`.
+This diagram shows the current shared runtime plus the target extension slots. The implemented graph-backed paths are proactive at-risk Week detection and on-demand chat streaming; later detector families and chat-initiated write actions can reuse the same top-level runtime.
 
 ```mermaid
 flowchart TD
@@ -328,8 +328,8 @@ FleetGraph is organized around three layers.
    - Findings, action candidates, approvals, dismissals, snoozes, and context-scoped chat answers.
 
 3. Execution layer:
-   - Current MVP: a compiled LangGraph path for proactive at-risk Week detection plus a direct SSE path for on-demand chat.
-   - Target architecture: one graph branches by trigger, intent, material change, suppression state, approval policy, and output surface.
+   - Current MVP: one top-level compiled LangGraph runtime with branches for proactive at-risk Week detection and on-demand chat streaming.
+   - Target architecture: expand that runtime with more detector families, graph-native action-request approval, durable graph checkpoints, and additional Ship write primitives.
 
 This avoids the anti-pattern of building a detector service and bolting on a chatbot. The agent receives events, reasons with dynamic Ship context, calls primitive Ship tools, and persists visible outcomes.
 

@@ -297,7 +297,7 @@ If the second window does not visibly update, click `Refresh` to distinguish a W
 
 ## Exercise Embedded Chat
 
-This exercises FleetGraph's on-demand chat surface. Current architecture note: chat uses the scoped context builders plus direct OpenAI streaming and Langfuse tracing. It is not the same compiled LangGraph path as the proactive detector.
+This exercises FleetGraph's on-demand chat surface. Current architecture note: chat now enters the shared compiled `fleetgraph.runtime` LangGraph path. The route still validates scope before opening SSE, but the traced model stream runs inside the on-demand graph branch.
 
 1. Make sure the API process has `OPENAI_API_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_BASE_URL`.
 2. Open a FleetGraph project, issue, or week document. Good seeded targets include:
