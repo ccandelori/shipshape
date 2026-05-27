@@ -2,24 +2,40 @@
 
 Last updated: 2026-05-26
 
-This guide walks through the manual paths needed to exercise FleetGraph's MVP agent functionality in the local Ship app. It covers the proactive findings inbox, human review actions, action resume, realtime invalidation, embedded context chat, deterministic latency proof, and the evidence worth collecting before submission.
+This guide walks through FleetGraph's local exercise paths in the Ship app. It separates product acceptance from agent acceptance so the evidence is honest: seeded rows can prove the inbox, review, resume, chat shell, and telemetry plumbing, but they do not prove that the proactive LangGraph agent noticed a real Ship event.
+
+Run the product acceptance sections first to confirm the user-facing workflow. Then run the agent acceptance sections to prove proactive detection, quiet exits, real model reasoning, guard behavior, and trace evidence.
 
 ## Scope
 
-Use this when you want to prove that FleetGraph works end to end against real Ship data.
+Use this when you want to prove FleetGraph against local Ship data.
 
-It exercises:
+Product acceptance exercises:
 
 - Seeded FleetGraph programs, projects, issues, weeks, findings, action candidates, and usage rows.
-- Proactive findings shown in the FleetGraph inbox.
+- Inbox rendering for open findings.
 - Finding lifecycle actions: dismiss, snooze, reject, approve, and resume.
 - Authenticated FleetGraph API reads and mutations.
 - Realtime invalidation after a FleetGraph decision.
 - Embedded FleetGraph chat from project, issue, and week documents.
-- Deterministic `< 5 min` proactive detection proof.
-- Usage and trace evidence checks.
+
+Agent acceptance exercises:
+
+- A route-level Ship mutation that enqueues the proactive detector.
+- A quiet pre-filter path that exits without a model call.
+- A finding path that uses the real OpenAI reasoner and records Langfuse traces.
+- Deduplication and suppression behavior.
+- HITL authorization and transition guards.
+- A deterministic `< 5 min` orchestration latency proof.
+- Usage and trace evidence checks that distinguish seeded, deterministic, and live runs.
 
 Current UI caveat: the sidebar inbox renders open findings by default. Pending review, approved, executed, rejected, dismissed, and snoozed states are supported by the API, but the current modal does not expose a lifecycle filter. The steps below use the UI where it exists and the authenticated browser console for lifecycle states that are not currently filterable in the modal.
+
+Important evidence boundary:
+
+- Seeded findings prove the outcome layer: UI, API lifecycle, action resume, and DB persistence.
+- `src/fleetgraph/scripts/verify-latency.ts` proves trigger orchestration timing with a deterministic proof reasoner. It does not prove live model detection quality.
+- Live agent proof requires a Ship route mutation, a proactive run from the running API process, non-seed `fleetgraph_usage` rows, and Langfuse traces from the real reasoner.
 
 ## Prerequisites
 
@@ -355,6 +371,8 @@ If the second window does not visibly update, click `Refresh` to distinguish a W
 
 ## Exercise Embedded Chat
 
+This exercises FleetGraph's on-demand chat surface. Current architecture note: chat uses the scoped context builders plus direct OpenAI streaming and Langfuse tracing. It is not the same compiled LangGraph path as the proactive detector.
+
 1. Make sure the API process has `OPENAI_API_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and `LANGFUSE_BASE_URL`.
 2. Open a FleetGraph project, issue, or week document. Good seeded targets include:
    - `FleetGraph - Embedded Agent Chat`
@@ -383,9 +401,218 @@ Expected failure paths:
 - More than 10 chat requests in an hour for the same user: `FleetGraph chat rate limit exceeded`.
 - Invalid or inaccessible document scope: `FleetGraph chat document not found`.
 
+Verify a Langfuse chat trace:
+
+```bash
+cd /Users/sheep/Desktop/Gauntlet/ship/api
+set -a; source .env.local; set +a; export LANGFUSE_HOST="$LANGFUSE_BASE_URL"; npx langfuse-cli api traces list --name fleetgraph.chat.response --limit 5 --order-by timestamp.desc --fields core,metrics
+```
+
+Expected:
+
+- At least one recent `fleetgraph.chat.response` trace.
+- Non-zero latency and, when OpenAI responded, non-zero cost or token usage.
+- `public` may be `false`; create the shared review link from the Langfuse UI if the CLI only lists private traces.
+
+## Exercise A Route-Level Mutation Trigger
+
+This is the first agent-layer proof. It uses an authenticated Ship route that calls `enqueueMutationCheck`, waits for the 45 second debounce, and lets the running API process invoke the production proactive runner.
+
+Get the current seeded FleetGraph week ID:
+
+```bash
+docker exec ship-postgres-1 psql -U ship -d ship_dev -t -A -c "select scoped_document_id from fleetgraph_findings where material_change_key = 'seed:fleetgraph:pending-review:trace-evidence:v1';"
+```
+
+In the browser console, set that value:
+
+```js
+const liveSprintId = 'paste-week-id-here';
+```
+
+Create a real standup blocker through the Ship API:
+
+```js
+await fleetGraphPost(`/api/weeks/${liveSprintId}/standups`, {
+  title: 'FleetGraph exercise blocker',
+  content: {
+    type: 'doc',
+    content: [
+      {
+        type: 'paragraph',
+        content: [
+          {
+            type: 'text',
+            text: `Blocked on shared Langfuse trace URLs for the FleetGraph submission exercise at ${new Date().toISOString()}.`,
+          },
+        ],
+      },
+    ],
+  },
+});
+```
+
+Add a route-level iteration blocker as a stronger signal:
+
+```js
+await fleetGraphPost(`/api/weeks/${liveSprintId}/iterations`, {
+  story_title: 'Capture Langfuse trace URLs for shared review',
+  status: 'fail',
+  what_attempted: 'Ran the FleetGraph agent exercise against the seeded workspace.',
+  blockers_encountered: `Shared quiet and finding-path trace URLs are still blocked at ${new Date().toISOString()}.`,
+});
+```
+
+Wait 60 to 90 seconds. Expected API log:
+
+```text
+fleetgraph.proactive_trigger.scope_processed
+triggerSource: mutation
+scopedDocId: <liveSprintId>
+```
+
+Verify a non-seed proactive usage row:
+
+```bash
+docker exec ship-postgres-1 psql -U ship -d ship_dev -c "select run_id, trigger, detector, model_name, input_tokens, output_tokens, estimated_cost_usd, trace_metadata from fleetgraph_usage where run_id not like 'seed-%' order by created_at desc limit 10;"
+```
+
+Expected:
+
+- At least one recent row with `trigger = proactive`.
+- `trace_metadata` references the scoped week.
+- A real finding path has non-zero `input_tokens` and `output_tokens`.
+
+Verify whether the run produced a finding:
+
+```bash
+docker exec ship-postgres-1 psql -U ship -d ship_dev -c "select id, lifecycle_state, severity, detector_type, material_change_key, created_at from fleetgraph_findings where detector_type = 'at_risk_week' and material_change_key not like 'seed:%' order by created_at desc limit 10;"
+```
+
+Expected for the finding path:
+
+- A non-seed `at_risk_week` finding appears.
+- Lifecycle state is usually `pending_review` when the policy proposes a human-approved action.
+- Severity reflects the model's judgment over the scoped Week context.
+
+If no finding appears, the route trigger still ran. Use the usage row and Langfuse trace to inspect whether the graph exited at pre-filter or model reasoning returned `not_at_risk`.
+
+## Exercise The Quiet Path
+
+The quiet path proves FleetGraph can stay silent. Use a Week with no blocker standups, no iteration blockers, and no high-priority blocked issues, or run the deterministic branch test below when you need stable evidence.
+
+Automated quiet branch evidence:
+
+```bash
+cd /Users/sheep/Desktop/Gauntlet/ship/api
+DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev ./node_modules/.bin/vitest run src/fleetgraph/demo-scenarios.test.ts
+```
+
+Expected:
+
+- The `quiet_prefilter` scenario exits before the reason node.
+- Usage has zero input tokens, zero output tokens, and zero estimated cost.
+- No finding is created for the quiet scenario.
+
+Live quiet evidence, when you have a clean Week:
+
+```bash
+docker exec ship-postgres-1 psql -U ship -d ship_dev -c "select run_id, trace_metadata->>'branchPath' as branch_path, trace_metadata->>'earlyExitNode' as early_exit_node, trace_metadata->>'preFilterShouldReason' as should_reason, input_tokens, output_tokens from fleetgraph_usage where run_id not like 'seed-%' order by created_at desc limit 20;"
+```
+
+Expected quiet row:
+
+- `early_exit_node` is `preFilter`, or the branch path shows a pre-filter exit.
+- `should_reason` is `false`.
+- `input_tokens` and `output_tokens` are `0`.
+
+## Exercise The Finding Path With The Real Reasoner
+
+The route-level mutation section above is the preferred manual path for live finding evidence. The strongest signal is an iteration with non-empty `blockers_encountered`, because `evaluateAtRiskWeekPreFilter` treats that as candidate risk before calling the model.
+
+After the run, verify the model path:
+
+```bash
+docker exec ship-postgres-1 psql -U ship -d ship_dev -c "select run_id, model_name, input_tokens, output_tokens, estimated_cost_usd, trace_metadata from fleetgraph_usage where run_id not like 'seed-%' and input_tokens > 0 order by created_at desc limit 10;"
+```
+
+Expected:
+
+- `model_name` is an OpenAI model, not `deterministic-demo` or `proof-reasoner`.
+- `input_tokens` and `output_tokens` are greater than zero.
+- `trace_metadata` identifies the branch and scoped document.
+
+Verify Langfuse recorded the reason path:
+
+```bash
+cd /Users/sheep/Desktop/Gauntlet/ship/api
+set -a; source .env.local; set +a; export LANGFUSE_HOST="$LANGFUSE_BASE_URL"; npx langfuse-cli api traces list --tags trace_node:reason --limit 5 --order-by timestamp.desc --fields core,metrics
+```
+
+Expected:
+
+- A recent `fleetgraph.at_risk_week.reason` trace or a trace tagged `trace_node:reason`.
+- Non-zero model latency.
+- Token and cost metadata when Langfuse receives the model usage fields.
+
+Create the shared trace URL from the Langfuse UI for submission evidence.
+
+## Exercise Deduplication And Suppression
+
+Deduplication proves the agent does not spam unchanged findings.
+
+Record the current non-seed finding count:
+
+```bash
+docker exec ship-postgres-1 psql -U ship -d ship_dev -c "select material_change_key, count(*) from fleetgraph_findings where detector_type = 'at_risk_week' and material_change_key not like 'seed:%' group by material_change_key order by count(*) desc, material_change_key;"
+```
+
+Trigger the same Week again without changing the blocker text. You can save the same standup or wait for the poll interval. Then rerun the query.
+
+Expected:
+
+- No material change key has a count greater than `1`.
+- The second run either reuses the existing finding state or exits through guard/suppression logic.
+
+Suppression proof:
+
+1. Dismiss or snooze the live finding from the inbox or API.
+2. Trigger the same Week again without changing blocker evidence.
+3. Confirm no new open or pending review finding appears for the same material key.
+
+Verify:
+
+```bash
+docker exec ship-postgres-1 psql -U ship -d ship_dev -c "select f.id, f.lifecycle_state, f.material_change_key, s.suppression_type, s.expires_at from fleetgraph_findings f left join fleetgraph_suppressions s on s.finding_id = f.id where f.detector_type = 'at_risk_week' and f.material_change_key not like 'seed:%' order by f.created_at desc limit 10;"
+```
+
+Expected:
+
+- Dismissed findings have a dismissal suppression.
+- Snoozed findings have an expiry-backed suppression.
+- Re-running unchanged context does not create a duplicate active finding.
+
+## Exercise HITL Authorization Guards
+
+The manual console path proves valid reviewer actions. Authorization edge cases are better exercised with the API test suite because it switches users and verifies transition failures directly.
+
+Run:
+
+```bash
+cd /Users/sheep/Desktop/Gauntlet/ship/api
+DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev ./node_modules/.bin/vitest run src/routes/fleetgraph.test.ts
+```
+
+Expected coverage:
+
+- Non-recipient users cannot approve, reject, dismiss, snooze, or resume another user's finding.
+- Workspace admins can review and resume when policy allows it.
+- Invalid lifecycle transitions return errors instead of mutating state.
+- Idempotency keys replay prior decisions instead of double-executing actions.
+
 ## Exercise The Proactive Latency Proof
 
-The deterministic latency proof creates a real blocked issue mutation, runs the same proactive trigger path, waits for a finding, and fails if the finding does not appear within five minutes.
+This is an orchestration proof, not a live model-quality proof. The script creates proof data, enqueues the same proactive trigger controller, waits for a finding, and fails if the finding does not appear within five minutes. It intentionally uses `createProofReasoner`, so token usage is zero and OpenAI/Langfuse keys are not required.
 
 From the API package:
 
@@ -399,12 +626,17 @@ Expected output is JSON like:
 ```json
 {
   "runId": "...",
+  "workspaceId": "...",
+  "weekId": "...",
+  "issueId": "...",
   "findingId": "...",
   "lifecycleState": "pending_review",
   "severity": "high",
+  "mutationDebounceMs": 45000,
   "observedLatencyMs": 45113,
   "targetLatencyMs": 300000,
-  "latencyTargetMet": true
+  "latencyTargetMet": true,
+  "materialChangeKey": "..."
 }
 ```
 
@@ -424,9 +656,15 @@ Verify the finding row:
 docker exec ship-postgres-1 psql -U ship -d ship_dev -c "select lifecycle_state, severity, material_change_key, created_at from fleetgraph_findings order by created_at desc limit 5;"
 ```
 
+Interpretation:
+
+- Passing this script proves the trigger controller, advisory lock, context build, guard path, output persistence, and five-minute timer can work within the target.
+- It does not prove OpenAI reasoning latency or detection quality because `modelName` is `fleetgraph-latency-proof-deterministic`.
+- Pair it with the live route-level mutation and real reasoner sections above for submission-grade agent evidence.
+
 ## Exercise Usage And Trace Evidence
 
-Confirm seeded or live usage rows:
+Confirm usage rows:
 
 ```bash
 docker exec ship-postgres-1 psql -U ship -d ship_dev -c "select run_id, trigger, detector, model_name, input_tokens, output_tokens, estimated_cost_usd, trace_metadata from fleetgraph_usage order by created_at desc limit 10;"
@@ -435,16 +673,35 @@ docker exec ship-postgres-1 psql -U ship -d ship_dev -c "select run_id, trigger,
 Expected:
 
 - Seed rows include `seed-fleetgraph-quiet-prefilter` and `seed-fleetgraph-pending-action`.
-- Live proactive graph runs add additional rows with trigger `proactive`.
-- `trace_metadata` records branch path, scoped document, and related run metadata.
+- Deterministic demo rows use `deterministic-demo` or proof model names and may have zero token usage.
+- Live proactive graph runs add non-seed rows with trigger `proactive`.
+- Live reasoner runs have an OpenAI model name and non-zero token usage.
+- `trace_metadata` records branch path, scoped document, early exits, and related run metadata.
 
 If Langfuse credentials are configured:
 
 1. Run one quiet or no-finding scenario.
-2. Run one pending action scenario.
+2. Run one finding-producing scenario with the real reasoner.
 3. Open the Langfuse project associated with `LANGFUSE_PUBLIC_KEY`.
 4. Capture shared trace URLs for both runs.
 5. Add those URLs to the FleetGraph submission evidence.
+
+Useful Langfuse CLI checks:
+
+```bash
+cd /Users/sheep/Desktop/Gauntlet/ship/api
+set -a; source .env.local; set +a; export LANGFUSE_HOST="$LANGFUSE_BASE_URL"; npx langfuse-cli api traces list --limit 10 --order-by timestamp.desc --fields core,metrics
+```
+
+```bash
+cd /Users/sheep/Desktop/Gauntlet/ship/api
+set -a; source .env.local; set +a; export LANGFUSE_HOST="$LANGFUSE_BASE_URL"; npx langfuse-cli api traces list --tags fleetgraph --limit 10 --order-by timestamp.desc --fields core,metrics
+```
+
+```bash
+cd /Users/sheep/Desktop/Gauntlet/ship/api
+set -a; source .env.local; set +a; export LANGFUSE_HOST="$LANGFUSE_BASE_URL"; npx langfuse-cli api traces list --tags trace_node:reason --limit 10 --order-by timestamp.desc --fields core,metrics
+```
 
 Without Langfuse credentials, this step remains blocked by environment, not by the local product path.
 
@@ -462,9 +719,14 @@ cd /Users/sheep/Desktop/Gauntlet/ship/api
 DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev ./node_modules/.bin/vitest run src/fleetgraph/proactive-runner.test.ts src/fleetgraph/triggers.test.ts src/routes/fleetgraph.test.ts src/routes/fleetgraph-chat.test.ts
 ```
 
+```bash
+cd /Users/sheep/Desktop/Gauntlet/ship/api
+DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev ./node_modules/.bin/vitest run src/fleetgraph/demo-scenarios.test.ts
+```
+
 ## Evidence Checklist
 
-Collect these artifacts for a full FleetGraph exercise pass:
+Collect product acceptance artifacts:
 
 - Screenshot of the open finding in the FleetGraph inbox.
 - Screenshot after dismiss or snooze showing the open inbox cleared.
@@ -473,6 +735,18 @@ Collect these artifacts for a full FleetGraph exercise pass:
 - Browser console response for resume with `lifecycle_state: "executed"`.
 - Database output showing the inserted `fleetgraph_action_executions` row.
 - Screenshot of embedded chat streaming an answer from a project, issue, or week.
-- Latency proof JSON showing `latencyTargetMet: true`.
-- `fleetgraph_usage` output showing recorded usage rows.
-- Langfuse shared trace URLs when credentials are available.
+
+Collect agent acceptance artifacts:
+
+- Browser console response for a standup or iteration mutation on `/api/weeks/:id/...`.
+- API log showing `fleetgraph.proactive_trigger.scope_processed` with `triggerSource: mutation`.
+- Non-seed `fleetgraph_usage` row for the live proactive run.
+- Live reasoner usage row with OpenAI model name and non-zero token counts.
+- Non-seed `at_risk_week` finding row, if the live reasoner classifies the Week as at risk.
+- Quiet path evidence showing pre-filter exit and zero model tokens.
+- Deduplication query showing no duplicate material change keys.
+- Suppression query showing dismissed or snoozed findings prevent unchanged re-alerting.
+- `src/routes/fleetgraph.test.ts` output proving authorization and invalid-transition guards.
+- Latency proof JSON showing `latencyTargetMet: true`, labeled as orchestration-only evidence.
+- Langfuse shared trace URL for a quiet or no-finding branch.
+- Langfuse shared trace URL for a real reasoner finding branch.
