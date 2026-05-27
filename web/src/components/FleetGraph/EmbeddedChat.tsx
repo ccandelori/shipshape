@@ -1,7 +1,18 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type SetStateAction } from 'react';
 import { apiPost } from '@/lib/api';
 import { cn } from '@/lib/cn';
 import { createId } from '@/lib/createId';
+import {
+  FLEETGRAPH_CHAT_MEMORY_MESSAGE_LIMIT,
+  buildFleetGraphChatMemoryKey,
+  getFleetGraphChatMemoryStorage,
+  loadFleetGraphChatMemory,
+  saveFleetGraphChatMemory,
+  type FleetGraphChatMemoryDocumentType,
+  type FleetGraphChatMemoryMessage,
+  type FleetGraphChatMemoryRole,
+  type FleetGraphChatMemoryStatus,
+} from '@/lib/fleetgraphChatMemory';
 import {
   createFleetGraphChatStreamState,
   reduceFleetGraphChatStreamEvent,
@@ -10,22 +21,33 @@ import {
 } from '@/lib/fleetgraphChatState';
 import { readFleetGraphChatSseStream } from '@/lib/fleetgraphChatStream';
 
-export type FleetGraphChatDocumentType = 'sprint' | 'project' | 'issue';
+export type FleetGraphChatDocumentType = FleetGraphChatMemoryDocumentType;
 
 interface EmbeddedChatProps {
   documentId: string;
   documentType: FleetGraphChatDocumentType;
+  memoryScope?: EmbeddedChatMemoryScope | null;
   className?: string;
 }
 
-type EmbeddedChatRole = 'user' | 'assistant';
-type EmbeddedChatMessageStatus = 'sent' | 'streaming' | 'completed' | 'failed';
+interface EmbeddedChatMemoryScope {
+  workspaceId: string;
+  userId: string;
+}
+
+type EmbeddedChatRole = FleetGraphChatMemoryRole;
+type EmbeddedChatMessageStatus = FleetGraphChatMemoryStatus;
 
 interface EmbeddedChatMessage {
   id: string;
   role: EmbeddedChatRole;
   content: string;
   status: EmbeddedChatMessageStatus;
+}
+
+interface EmbeddedChatState {
+  memoryKey: string;
+  messages: EmbeddedChatMessage[];
 }
 
 interface FleetGraphChatRequestMessage {
@@ -45,20 +67,59 @@ interface FleetGraphChatErrorResponse {
   retry_after_seconds?: number;
 }
 
-export function EmbeddedChat({ documentId, documentType, className }: EmbeddedChatProps) {
-  const [messages, setMessages] = useState<EmbeddedChatMessage[]>([]);
+export function EmbeddedChat({ documentId, documentType, memoryScope, className }: EmbeddedChatProps) {
+  const memoryKey = buildFleetGraphChatMemoryKey({
+    documentId,
+    documentType,
+    workspaceId: memoryScope?.workspaceId,
+    userId: memoryScope?.userId,
+  });
+  const [chatState, setChatState] = useState<EmbeddedChatState>(() => ({
+    memoryKey,
+    messages: loadFleetGraphChatMemory(getFleetGraphChatMemoryStorage(), memoryKey),
+  }));
   const [question, setQuestion] = useState('');
   const [streamState, setStreamState] = useState<FleetGraphChatStreamState>(
     createFleetGraphChatStreamState()
   );
   const requestIdRef = useRef(0);
+  const messages = chatState.messages;
   const isStreaming = streamState.status === 'streaming';
+
+  const setMessages = (action: SetStateAction<EmbeddedChatMessage[]>) => {
+    setChatState((currentState) => ({
+      ...currentState,
+      messages: resolveMessageStateAction(action, currentState.messages),
+    }));
+  };
 
   useEffect(() => {
     return () => {
       requestIdRef.current += 1;
     };
   }, []);
+
+  useEffect(() => {
+    if (chatState.memoryKey === memoryKey) {
+      return;
+    }
+
+    requestIdRef.current += 1;
+    setQuestion('');
+    setStreamState(createFleetGraphChatStreamState());
+    setChatState({
+      memoryKey,
+      messages: loadFleetGraphChatMemory(getFleetGraphChatMemoryStorage(), memoryKey),
+    });
+  }, [chatState.memoryKey, memoryKey]);
+
+  useEffect(() => {
+    saveFleetGraphChatMemory(
+      getFleetGraphChatMemoryStorage(),
+      chatState.memoryKey,
+      toFleetGraphChatMemoryMessages(chatState.messages)
+    );
+  }, [chatState]);
 
   const submitQuestion = () => {
     const trimmedQuestion = question.trim();
@@ -295,10 +356,33 @@ function ChatMessageBubble({ message }: { message: EmbeddedChatMessage }) {
 function buildConversationHistory(messages: EmbeddedChatMessage[]): FleetGraphChatRequestMessage[] {
   return messages
     .filter((message) => message.content.trim().length > 0 && message.status !== 'failed')
+    .slice(-FLEETGRAPH_CHAT_MEMORY_MESSAGE_LIMIT)
     .map((message) => ({
       role: message.role,
       content: message.content,
     }));
+}
+
+function resolveMessageStateAction(
+  action: SetStateAction<EmbeddedChatMessage[]>,
+  currentMessages: EmbeddedChatMessage[]
+): EmbeddedChatMessage[] {
+  if (typeof action === 'function') {
+    return action(currentMessages);
+  }
+
+  return action;
+}
+
+function toFleetGraphChatMemoryMessages(
+  messages: readonly EmbeddedChatMessage[]
+): FleetGraphChatMemoryMessage[] {
+  return messages.map((message) => ({
+    id: message.id,
+    role: message.role,
+    content: message.content,
+    status: message.status,
+  }));
 }
 
 async function readFleetGraphChatErrorMessage(response: Response): Promise<string> {

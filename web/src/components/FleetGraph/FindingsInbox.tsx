@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import { FindingCard, type FindingCardActionHandlers, type FindingCardPendingAction } from './FindingCard';
 import type { FleetGraphFinding, FleetGraphLifecycleState } from '@/hooks/useFleetGraphQuery';
 import {
@@ -11,16 +12,52 @@ import {
 import { cn } from '@/lib/cn';
 
 interface FindingsInboxProps {
-  lifecycleState?: FleetGraphLifecycleState;
+  lifecycleState?: FindingsInboxLifecycleState;
   limit?: number;
   className?: string;
 }
 
+type FindingsInboxLifecycleState = Extract<
+  FleetGraphLifecycleState,
+  'open' | 'pending_review' | 'approved'
+>;
+
+interface FindingsInboxLifecycleTab {
+  label: string;
+  lifecycleState: FindingsInboxLifecycleState;
+  emptyTitle: string;
+  emptyBody: string;
+}
+
+const lifecycleTabs = [
+  {
+    label: 'Open',
+    lifecycleState: 'open',
+    emptyTitle: 'No open findings',
+    emptyBody: 'FleetGraph has not surfaced anything that needs triage.',
+  },
+  {
+    label: 'Needs Review',
+    lifecycleState: 'pending_review',
+    emptyTitle: 'No findings need review',
+    emptyBody: 'There are no agent actions waiting for human approval.',
+  },
+  {
+    label: 'Approved',
+    lifecycleState: 'approved',
+    emptyTitle: 'No approved actions',
+    emptyBody: 'Approved FleetGraph actions will appear here until they are resumed.',
+  },
+] as const satisfies readonly FindingsInboxLifecycleTab[];
+
 export function FindingsInbox({ lifecycleState, limit, className }: FindingsInboxProps) {
-  const effectiveLifecycleState = lifecycleState ?? 'open';
+  const [selectedLifecycleState, setSelectedLifecycleState] = useState<FindingsInboxLifecycleState>(
+    lifecycleState ?? 'open'
+  );
   const effectiveLimit = limit ?? 20;
+  const activeTab = lifecycleTabs.find((tab) => tab.lifecycleState === selectedLifecycleState) ?? lifecycleTabs[0];
   const findingsQuery = useFleetGraphFindingsQuery({
-    lifecycleState: effectiveLifecycleState,
+    lifecycleState: selectedLifecycleState,
     limit: effectiveLimit,
   }, { enabled: true });
   const approveMutation = useApproveFleetGraphFindingMutation();
@@ -40,6 +77,12 @@ export function FindingsInbox({ lifecycleState, limit, className }: FindingsInbo
   const findings = findingsQuery.data?.items ?? [];
   const visibleCount = findings.length;
 
+  useEffect(() => {
+    if (lifecycleState !== undefined) {
+      setSelectedLifecycleState(lifecycleState);
+    }
+  }, [lifecycleState]);
+
   return (
     <section className={cn('flex h-full min-h-0 flex-col bg-background', className)} aria-label="FleetGraph findings inbox">
       <header className="border-b border-border px-5 py-4">
@@ -58,6 +101,29 @@ export function FindingsInbox({ lifecycleState, limit, className }: FindingsInbo
           >
             {findingsQuery.isFetching ? 'Refreshing...' : 'Refresh'}
           </button>
+        </div>
+        <div className="mt-4 flex gap-1" role="tablist" aria-label="FleetGraph finding lifecycle">
+          {lifecycleTabs.map((tab) => {
+            const selected = tab.lifecycleState === selectedLifecycleState;
+
+            return (
+              <button
+                key={tab.lifecycleState}
+                type="button"
+                role="tab"
+                aria-selected={selected}
+                onClick={() => setSelectedLifecycleState(tab.lifecycleState)}
+                className={cn(
+                  'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
+                  selected
+                    ? 'bg-accent text-white'
+                    : 'text-muted hover:bg-border/60 hover:text-foreground'
+                )}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
         </div>
       </header>
 
@@ -83,8 +149,8 @@ export function FindingsInbox({ lifecycleState, limit, className }: FindingsInbo
 
         {!findingsQuery.isLoading && !findingsQuery.isError && findings.length === 0 && (
           <div className="rounded-lg border border-border bg-border/10 px-4 py-8 text-center">
-            <p className="text-sm font-medium text-foreground">No open findings</p>
-            <p className="mt-1 text-sm text-muted">FleetGraph has no findings in this state.</p>
+            <p className="text-sm font-medium text-foreground">{activeTab.emptyTitle}</p>
+            <p className="mt-1 text-sm text-muted">{activeTab.emptyBody}</p>
           </div>
         )}
 

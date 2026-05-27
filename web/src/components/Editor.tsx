@@ -39,6 +39,8 @@ import { CommentDisplayExtension } from './editor/CommentDisplay';
 import { AIScoringDisplayExtension } from './editor/AIScoringDisplay';
 import { PlanReferenceBlockExtension } from './editor/PlanReferenceBlock';
 import { EmbeddedChat, type FleetGraphChatDocumentType } from '@/components/FleetGraph/EmbeddedChat';
+import { useWorkspace } from '@/contexts/WorkspaceContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useCommentsQuery, useCreateComment, useUpdateComment } from '@/hooks/useCommentsQuery';
 import { BubbleMenu } from '@tiptap/react';
 import 'tippy.js/dist/tippy.css';
@@ -185,6 +187,8 @@ export function Editor({
   aiScoringAnalysis,
   titleSuffix,
 }: EditorProps) {
+  const { user } = useAuth();
+  const { currentWorkspace } = useWorkspace();
   const [title, setTitle] = useState(initialTitle === 'Untitled' ? '' : initialTitle);
   const titleInputRef = useRef<HTMLTextAreaElement>(null);
 
@@ -822,6 +826,32 @@ export function Editor({
     onTitleChange?.(newTitle);
   }, [onTitleChange]);
 
+  const focusEditorAtEnd = useCallback(() => {
+    if (!editor) return;
+    const lastNode = editor.state.doc.lastChild;
+    const isLastNodeEmpty = lastNode?.type.name === 'paragraph' && lastNode.content.size === 0;
+
+    if (isLastNodeEmpty) {
+      editor.chain().focus('end').run();
+      return;
+    }
+
+    const endPos = editor.state.doc.content.size;
+    editor.chain()
+      .insertContentAt(endPos, { type: 'paragraph' })
+      .focus('end')
+      .run();
+  }, [editor]);
+
+  const handleEditorSpacerKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key !== 'Enter' && event.key !== ' ') {
+      return;
+    }
+
+    event.preventDefault();
+    focusEditorAtEnd();
+  }, [focusEditorAtEnd]);
+
   return (
     <div className="flex h-full flex-col">
       {/* Compact header - breadcrumb, title, status, presence all in one row */}
@@ -1035,30 +1065,22 @@ export function Editor({
           {/* Spacer to fill remaining height - clickable to focus editor at end */}
           <div
             className="flex-1 min-h-[200px]"
-            onClick={() => {
-              if (!editor) return;
-              // Focus editor at the end
-              const lastNode = editor.state.doc.lastChild;
-              const isLastNodeEmpty = lastNode?.type.name === 'paragraph' && lastNode.content.size === 0;
-
-              if (isLastNodeEmpty) {
-                // Focus the existing empty paragraph at the end
-                editor.chain().focus('end').run();
-              } else {
-                // Insert a new empty paragraph at the end of the document and focus it
-                const endPos = editor.state.doc.content.size;
-                editor.chain()
-                  .insertContentAt(endPos, { type: 'paragraph' })
-                  .focus('end')
-                  .run();
-              }
-            }}
+            role="button"
+            tabIndex={0}
+            aria-label="Focus editor at end"
+            onClick={focusEditorAtEnd}
+            onKeyDown={handleEditorSpacerKeyDown}
           />
         </div>
         {fleetGraphChatOpen && fleetGraphChatDocumentType && (
           <EmbeddedChat
             documentId={documentId}
             documentType={fleetGraphChatDocumentType}
+            memoryScope={
+              user && currentWorkspace
+                ? { userId: user.id, workspaceId: currentWorkspace.id }
+                : null
+            }
             className="w-80 shrink-0"
           />
         )}

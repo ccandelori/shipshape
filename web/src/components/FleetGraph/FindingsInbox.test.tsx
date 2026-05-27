@@ -94,8 +94,9 @@ describe('FindingsInbox', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders open findings and approves through the FleetGraph API mutation', async () => {
+  it('switches lifecycle tabs and approves a pending-review finding through the FleetGraph API mutation', async () => {
     const openFinding = createFinding('open');
+    const pendingFinding = createFinding('pending_review');
     const approvedFinding = createFinding('approved');
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
       const url = requestUrl(input);
@@ -104,6 +105,15 @@ describe('FindingsInbox', () => {
       if (url === '/api/fleetgraph/findings?lifecycle_state=open&limit=20' && method === 'GET') {
         return jsonResponse({
           items: [openFinding],
+          limit: 20,
+          hasMore: false,
+          next_cursor: null,
+        }, 200);
+      }
+
+      if (url === '/api/fleetgraph/findings?lifecycle_state=pending_review&limit=20' && method === 'GET') {
+        return jsonResponse({
+          items: [pendingFinding],
           limit: 20,
           hasMore: false,
           next_cursor: null,
@@ -130,6 +140,11 @@ describe('FindingsInbox', () => {
     render(<FindingsInbox />, { wrapper: createWrapper(createQueryClient()) });
 
     expect(await screen.findByText('Week 12')).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Open' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.queryByRole('button', { name: 'Approve finding' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Needs Review' }));
+    expect(await screen.findByRole('button', { name: 'Approve finding' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Approve finding' }));
 
     await waitFor(() => {
@@ -138,5 +153,103 @@ describe('FindingsInbox', () => {
         && init?.method === 'POST'
       ))).toBe(true);
     });
+  });
+
+  it('rejects a pending-review finding through the FleetGraph API mutation', async () => {
+    const pendingFinding = createFinding('pending_review');
+    const rejectedFinding = createFinding('rejected');
+    let rejected = false;
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input);
+      const method = init?.method ?? 'GET';
+
+      if (url === '/api/fleetgraph/findings?lifecycle_state=open&limit=20' && method === 'GET') {
+        return jsonResponse({
+          items: [],
+          limit: 20,
+          hasMore: false,
+          next_cursor: null,
+        }, 200);
+      }
+
+      if (url === '/api/fleetgraph/findings?lifecycle_state=pending_review&limit=20' && method === 'GET') {
+        return jsonResponse({
+          items: rejected ? [] : [pendingFinding],
+          limit: 20,
+          hasMore: false,
+          next_cursor: null,
+        }, 200);
+      }
+
+      if (url === '/api/csrf-token' && method === 'GET') {
+        return jsonResponse({ token: 'csrf-token' }, 200);
+      }
+
+      if (url === '/api/fleetgraph/findings/finding-1/reject' && method === 'POST') {
+        rejected = true;
+        expect(JSON.parse(String(init?.body))).toEqual({ reason: 'Already handled by team lead' });
+        expect(init?.headers).toEqual({
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': 'csrf-token',
+        });
+        return jsonResponse(rejectedFinding, 200);
+      }
+
+      throw new Error(`Unexpected request: ${method} ${url}`);
+    });
+    global.fetch = fetchMock as typeof fetch;
+
+    render(<FindingsInbox />, { wrapper: createWrapper(createQueryClient()) });
+
+    expect(await screen.findByText('No open findings')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Needs Review' }));
+    expect(await screen.findByRole('button', { name: 'Reject finding' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Reject finding' }));
+    fireEvent.change(screen.getByLabelText('Reject reason'), {
+      target: { value: 'Already handled by team lead' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm reject' }));
+
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([input, init]) => (
+        requestUrl(input) === '/api/fleetgraph/findings/finding-1/reject'
+        && init?.method === 'POST'
+      ))).toBe(true);
+    });
+    expect(await screen.findByText('No findings need review')).toBeInTheDocument();
+  });
+
+  it('names the selected lifecycle in the empty state', async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input);
+      const method = init?.method ?? 'GET';
+
+      if (url === '/api/fleetgraph/findings?lifecycle_state=open&limit=20' && method === 'GET') {
+        return jsonResponse({
+          items: [],
+          limit: 20,
+          hasMore: false,
+          next_cursor: null,
+        }, 200);
+      }
+
+      if (url === '/api/fleetgraph/findings?lifecycle_state=pending_review&limit=20' && method === 'GET') {
+        return jsonResponse({
+          items: [],
+          limit: 20,
+          hasMore: false,
+          next_cursor: null,
+        }, 200);
+      }
+
+      throw new Error(`Unexpected request: ${method} ${url}`);
+    });
+    global.fetch = fetchMock as typeof fetch;
+
+    render(<FindingsInbox />, { wrapper: createWrapper(createQueryClient()) });
+
+    expect(await screen.findByText('No open findings')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Needs Review' }));
+    expect(await screen.findByText('No findings need review')).toBeInTheDocument();
   });
 });

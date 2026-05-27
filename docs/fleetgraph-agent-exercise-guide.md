@@ -29,7 +29,7 @@ Agent acceptance exercises:
 - A deterministic `< 5 min` orchestration latency proof.
 - Usage and trace evidence checks that distinguish seeded, deterministic, and live runs.
 
-Current UI caveat: the sidebar inbox renders open findings by default. Pending review, approved, executed, rejected, dismissed, and snoozed states are supported by the API, but the current modal does not expose a lifecycle filter. The steps below use the UI where it exists and the authenticated browser console for lifecycle states that are not currently filterable in the modal.
+Current UI caveat: the sidebar inbox exposes `Open`, `Needs Review`, and `Approved` lifecycle tabs. Executed, rejected, dismissed, snoozed, and expired states remain API/database verification states rather than primary modal tabs.
 
 Important evidence boundary:
 
@@ -156,11 +156,11 @@ Expected:
 - The modal shows `FleetGraph - HITL Findings Inbox`.
 - The card has severity `Medium`, state `Open`, and detector `Ownership Unclear`.
 - The evidence says ownership for daily triage has not been written into the project plan.
-- The card shows `Approve`, `Reject`, `Dismiss`, and `Snooze`.
+- The card shows `Dismiss` and `Snooze`.
 
 Expected caveat:
 
-- `Approve` and `Reject` are only valid for `pending_review` findings. On the seeded `open` finding, use `Dismiss` or `Snooze`. Approving this open finding should fail with `FleetGraph finding is not pending review`.
+- `Approve` and `Reject` are only valid for `pending_review` findings under the `Needs Review` tab. On the seeded `open` finding, use `Dismiss` or `Snooze`.
 
 ## Exercise Dismiss
 
@@ -203,70 +203,20 @@ Verify in the database:
 docker exec ship-postgres-1 psql -U ship -d ship_dev -c "select lifecycle_state, expires_at from fleetgraph_findings where material_change_key = 'seed:fleetgraph:open:inbox-visible:v1';"
 ```
 
-## Use The Authenticated API From The Browser
-
-After signing in, open browser DevTools on `http://localhost:5173` and use this helper in the console. It reuses your authenticated app session and fetches CSRF tokens for state-changing requests.
-
-```js
-const fleetGraphGet = async (path) => {
-  const response = await fetch(path, { credentials: 'include' });
-  const body = await response.json();
-  return { status: response.status, body };
-};
-
-const fleetGraphPost = async (path, body) => {
-  const tokenResponse = await fetch('/api/csrf-token', { credentials: 'include' });
-  const tokenBody = await tokenResponse.json();
-  const response = await fetch(path, {
-    method: 'POST',
-    credentials: 'include',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-CSRF-Token': tokenBody.token,
-    },
-    body: JSON.stringify(body),
-  });
-  const text = await response.text();
-  return {
-    status: response.status,
-    body: text.length > 0 ? JSON.parse(text) : null,
-  };
-};
-
-const fleetGraphFindings = async (state) => (
-  fleetGraphGet(`/api/fleetgraph/findings?lifecycle_state=${state}&limit=20`)
-);
-```
-
 ## Exercise Reject
 
 1. Reset the pending review action finding.
-2. In the browser console, load pending review findings:
-
-```js
-const pendingResponse = await fleetGraphFindings('pending_review');
-const pendingFinding = pendingResponse.body.items[0];
-pendingFinding;
-```
-
-Expected:
-
-- `pendingFinding.lifecycle_state` is `pending_review`.
-- `pendingFinding.action_candidates[0].recommended_action.kind` is `draft_comment`.
-
-Reject the finding:
-
-```js
-await fleetGraphPost(`/api/fleetgraph/findings/${pendingFinding.id}/reject`, {
-  reason: 'Exercise: action is not the right next step',
-  idempotency_key: crypto.randomUUID(),
-});
-```
+2. Open the FleetGraph inbox.
+3. Click the `Needs Review` tab.
+4. Confirm the pending card is visible and shows a `draft_comment` recommended action.
+5. Click `Reject`.
+6. Enter `Exercise: action is not the right next step`.
+7. Click `Confirm`.
 
 Expected:
 
-- The response status is `200`.
-- The response body has `lifecycle_state: "rejected"`.
+- The card leaves the `Needs Review` tab.
+- The finding state is now `rejected`.
 - A row is written to `fleetgraph_approvals` with decision `rejected` and the supplied reason.
 
 Verify:
@@ -278,34 +228,21 @@ docker exec ship-postgres-1 psql -U ship -d ship_dev -c "select decision, reason
 ## Exercise Approve
 
 1. Reset the pending review action finding.
-2. Load the pending review finding:
-
-```js
-const approvePendingResponse = await fleetGraphFindings('pending_review');
-const approveFinding = approvePendingResponse.body.items[0];
-const actionCandidate = approveFinding.action_candidates[0];
-```
-
-Approve the action candidate:
-
-```js
-await fleetGraphPost(`/api/fleetgraph/findings/${approveFinding.id}/approve`, {
-  action_candidate_id: actionCandidate.id,
-  idempotency_key: crypto.randomUUID(),
-});
-```
+2. Open the FleetGraph inbox.
+3. Click the `Needs Review` tab.
+4. Confirm the pending card is visible and shows the `draft_comment` recommended action.
+5. Click `Approve`.
 
 Expected:
 
-- The response status is `200`.
-- The response body has `lifecycle_state: "approved"`.
-- The finding is no longer pending review.
+- The card leaves the `Needs Review` tab.
+- The finding appears under the `Approved` tab after refresh/invalidation.
 - A row is written to `fleetgraph_approvals` with decision `approved`.
 
 Verify:
 
-```js
-await fleetGraphFindings('approved');
+```bash
+docker exec ship-postgres-1 psql -U ship -d ship_dev -c "select lifecycle_state from fleetgraph_findings where material_change_key = 'seed:fleetgraph:pending-review:trace-evidence:v1';"
 ```
 
 ## Exercise Resume
@@ -313,26 +250,15 @@ await fleetGraphFindings('approved');
 Resume takes an approved action candidate and executes the supported Ship write. The seeded candidate is a `draft_comment`, so resume writes a comment to the target issue and transitions the finding to `executed`.
 
 1. Approve the pending review finding first.
-2. Load the approved finding:
-
-```js
-const approvedResponse = await fleetGraphFindings('approved');
-const approvedFinding = approvedResponse.body.items[0];
-const approvedActionCandidate = approvedFinding.action_candidates[0];
-```
-
-Resume the approved action:
-
-```js
-await fleetGraphPost(`/api/fleetgraph/actions/${approvedActionCandidate.id}/resume`, {
-  idempotency_key: crypto.randomUUID(),
-});
-```
+2. Open the FleetGraph inbox.
+3. Click the `Approved` tab.
+4. Confirm the approved card is visible.
+5. Click `Resume`.
 
 Expected:
 
-- The response status is `200`.
-- The response body has `lifecycle_state: "executed"`.
+- The card leaves the `Approved` tab after the action executes.
+- The finding state is now `executed`.
 - A comment is inserted on the action candidate target document.
 - A row is written to `fleetgraph_action_executions`.
 
@@ -413,6 +339,33 @@ Expected:
 - At least one recent `fleetgraph.chat.response` trace.
 - Non-zero latency and, when OpenAI responded, non-zero cost or token usage.
 - `public` may be `false`; create the shared review link from the Langfuse UI if the CLI only lists private traces.
+
+## Use The Authenticated API From The Browser
+
+The normal HITL path above is browser-only through the inbox tabs. Use this DevTools helper only for advanced agent-acceptance steps that need to create standup or iteration mutations through authenticated Ship routes.
+
+After signing in, open browser DevTools on `http://localhost:5173` and paste:
+
+```js
+const fleetGraphPost = async (path, body) => {
+  const tokenResponse = await fetch('/api/csrf-token', { credentials: 'include' });
+  const tokenBody = await tokenResponse.json();
+  const response = await fetch(path, {
+    method: 'POST',
+    credentials: 'include',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRF-Token': tokenBody.token,
+    },
+    body: JSON.stringify(body),
+  });
+  const text = await response.text();
+  return {
+    status: response.status,
+    body: text.length > 0 ? JSON.parse(text) : null,
+  };
+};
+```
 
 ## Exercise A Route-Level Mutation Trigger
 
@@ -730,9 +683,10 @@ Collect product acceptance artifacts:
 
 - Screenshot of the open finding in the FleetGraph inbox.
 - Screenshot after dismiss or snooze showing the open inbox cleared.
-- Browser console response for reject with `lifecycle_state: "rejected"`.
-- Browser console response for approve with `lifecycle_state: "approved"`.
-- Browser console response for resume with `lifecycle_state: "executed"`.
+- Screenshot of the `Needs Review` tab showing the pending review card.
+- Screenshot or database output after reject with `lifecycle_state: "rejected"`.
+- Screenshot or database output after approve with `lifecycle_state: "approved"`.
+- Screenshot or database output after resume with `lifecycle_state: "executed"`.
 - Database output showing the inserted `fleetgraph_action_executions` row.
 - Screenshot of embedded chat streaming an answer from a project, issue, or week.
 

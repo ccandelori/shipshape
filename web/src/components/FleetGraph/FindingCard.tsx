@@ -53,7 +53,7 @@ interface FindingCardProps {
 
 type DecisionFormKind = 'reject' | 'dismiss' | 'snooze';
 
-const actionableLifecycleStates: readonly FleetGraphLifecycleState[] = ['open', 'pending_review'];
+const suppressibleLifecycleStates: readonly FleetGraphLifecycleState[] = ['open', 'pending_review'];
 
 const severityClasses: Record<FleetGraphSeverity, string> = {
   low: 'border-blue-500/30 bg-blue-500/10 text-blue-300',
@@ -78,7 +78,8 @@ export function FindingCard({ finding, actions, pendingAction }: FindingCardProp
   const [reason, setReason] = useState('');
   const [snoozeExpiresAt, setSnoozeExpiresAt] = useState('');
   const primaryActionCandidate = finding.action_candidates[0] ?? null;
-  const canDecide = actionableLifecycleStates.includes(finding.lifecycle_state);
+  const canReview = finding.lifecycle_state === 'pending_review';
+  const canSuppress = suppressibleLifecycleStates.includes(finding.lifecycle_state);
   const canResume = finding.lifecycle_state === 'approved' && primaryActionCandidate !== null;
   const isBusy = pendingAction !== null;
   const decisionFormTitle = useMemo(() => {
@@ -186,7 +187,7 @@ export function FindingCard({ finding, actions, pendingAction }: FindingCardProp
       )}
 
       <div className="mt-4 flex flex-wrap gap-2">
-        {canDecide && (
+        {canReview && (
           <>
             <button
               type="button"
@@ -206,6 +207,10 @@ export function FindingCard({ finding, actions, pendingAction }: FindingCardProp
             >
               Reject
             </button>
+          </>
+        )}
+        {canSuppress && (
+          <>
             <button
               type="button"
               aria-label="Dismiss finding"

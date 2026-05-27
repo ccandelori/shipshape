@@ -2,7 +2,7 @@
 # Deploy Ship to a DigitalOcean droplet (or any single-box Linux host).
 #
 # Pipeline:
-#   1. local build  (pnpm build → api/dist + web/dist + shared/dist)
+#   1. local build  (pnpm build:api + pnpm build:web → api/dist + web/dist + shared/dist)
 #   2. pnpm deploy --legacy --filter=@ship/api --prod  → self-contained api bundle
 #   3. strip non-runtime cruft (.env files, coverage, src, vitest, eb files)
 #   4. rsync api bundle  → /opt/ship/releases/<ts>/api/
@@ -34,8 +34,9 @@ REMOTE_RELEASE="/opt/ship/releases/${TS}"
 
 cd "$REPO_ROOT"
 
-echo "==> [1/8] local build (pnpm build)"
-pnpm build
+echo "==> [1/8] local build (API + web)"
+pnpm build:api
+pnpm build:web
 
 echo "==> [2/8] pnpm deploy --legacy → ${BUNDLE_DIR}"
 pnpm deploy --legacy --filter=@ship/api --prod "${BUNDLE_DIR#$REPO_ROOT/}"
@@ -70,7 +71,20 @@ REMOTE
 
 echo "==> [8/8] smoke /health through nginx"
 PROBE_URL="http://${DROPLET_HOST#*@}/health"
-curl -sS -o /dev/null -w "  /health → HTTP %{http_code} in %{time_total}s\n" --max-time 10 "${PROBE_URL}"
+for attempt in {1..15}; do
+  probe_result="$(curl -sS -o /dev/null -w "%{http_code} %{time_total}" --max-time 10 "${PROBE_URL}" || true)"
+  probe_status="${probe_result%% *}"
+  probe_time="${probe_result#* }"
+  echo "  /health attempt ${attempt} → HTTP ${probe_status} in ${probe_time}s"
+  if [ "${probe_status}" = "200" ]; then
+    break
+  fi
+  if [ "${attempt}" = "15" ]; then
+    echo "ERROR: /health did not return HTTP 200 after deploy" >&2
+    exit 1
+  fi
+  sleep 2
+done
 
 echo
 echo "✅ deployed release ${TS} to ${DROPLET_HOST}"

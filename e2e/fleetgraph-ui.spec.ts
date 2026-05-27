@@ -1,15 +1,8 @@
 import { expect, test, type Page } from './fixtures/isolated-env';
 import type { Route } from '@playwright/test';
 
-type FleetGraphLifecycleState = 'open' | 'approved';
+type FleetGraphLifecycleState = 'open' | 'pending_review' | 'approved' | 'executed';
 type FleetGraphChatMode = 'success' | 'rate-limit';
-
-interface FleetGraphRealtimePayload {
-  type: 'fleetgraph:finding_updated';
-  data: {
-    findingId: string;
-  };
-}
 
 interface FleetGraphChatRequestMessage {
   role: string;
@@ -25,7 +18,6 @@ interface FleetGraphChatRequestBody {
 
 declare global {
   interface Window {
-    __shipEmitRealtimeEvent: (payload: FleetGraphRealtimePayload) => void;
     __shipFleetGraphChatRequests: FleetGraphChatRequestBody[];
     __shipSetFleetGraphChatMode: (mode: FleetGraphChatMode) => void;
   }
@@ -106,47 +98,30 @@ interface FleetGraphApproveRequest {
 
 interface FleetGraphInboxMockState {
   getRequests: number;
-  realtimeTriggered: boolean;
-  approvedFindingIds: Set<string>;
+  lifecycleByFindingId: Map<string, FleetGraphLifecycleState>;
   approveRequests: FleetGraphApproveRequest[];
+  resumeRequests: string[];
 }
 
 test.describe('FleetGraph UI', () => {
-  test('inbox approves a finding and refreshes after a realtime finding update', async ({ page }) => {
-    await installRealtimeEventsMock(page);
-
-    const firstFinding = createFleetGraphFinding({
+  test('inbox reviews and resumes a pending FleetGraph action without console helpers', async ({ page }) => {
+    const reviewFinding = createFleetGraphFinding({
       id: 'finding-1',
       actionCandidateId: 'action-1',
       title: 'Week 12 delivery is at risk',
-      lifecycleState: 'open',
-    });
-    const secondFinding = createFleetGraphFinding({
-      id: 'finding-2',
-      actionCandidateId: 'action-2',
-      title: 'Week 13 needs owner follow-up',
-      lifecycleState: 'open',
+      lifecycleState: 'pending_review',
     });
     const state = createFleetGraphInboxMockState();
-    await installFleetGraphInboxRoutes(page, state, firstFinding, secondFinding);
+    await installFleetGraphInboxRoutes(page, state, [reviewFinding]);
 
     await login(page);
     await page.getByRole('button', { name: 'FleetGraph' }).click();
 
     await expect(page.getByRole('dialog', { name: 'FleetGraph Inbox' })).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('No open findings')).toBeVisible({ timeout: 10000 });
+    await page.getByRole('tab', { name: 'Needs Review' }).click();
     await expect(page.getByText('Week 12 delivery is at risk')).toBeVisible({ timeout: 10000 });
     await expect.poll(() => state.getRequests).toBeGreaterThanOrEqual(1);
-
-    state.realtimeTriggered = true;
-    await page.evaluate(() => {
-      window.__shipEmitRealtimeEvent({
-        type: 'fleetgraph:finding_updated',
-        data: { findingId: 'finding-2' },
-      });
-    });
-
-    await expect(page.getByText('Week 13 needs owner follow-up')).toBeVisible({ timeout: 10000 });
-    await expect.poll(() => state.getRequests).toBeGreaterThanOrEqual(2);
 
     const firstFindingCard = page.locator('article').filter({ hasText: 'Week 12 delivery is at risk' });
     await firstFindingCard.getByRole('button', { name: 'Approve finding' }).click();
@@ -154,7 +129,15 @@ test.describe('FleetGraph UI', () => {
     await expect.poll(() => state.approveRequests).toHaveLength(1);
     expect(state.approveRequests[0]).toEqual({ action_candidate_id: 'action-1' });
     await expect(firstFindingCard).not.toBeVisible({ timeout: 10000 });
-    await expect(page.getByText('Week 13 needs owner follow-up')).toBeVisible();
+
+    await page.getByRole('tab', { name: 'Approved' }).click();
+    await expect(page.getByText('Week 12 delivery is at risk')).toBeVisible({ timeout: 10000 });
+    await page.locator('article').filter({ hasText: 'Week 12 delivery is at risk' })
+      .getByRole('button', { name: 'Resume approved action' })
+      .click();
+
+    await expect.poll(() => state.resumeRequests).toEqual(['action-1']);
+    await expect(page.getByText('Week 12 delivery is at risk')).not.toBeVisible({ timeout: 10000 });
   });
 
   test('embedded chat streams assistant output and recovers after a rate-limit failure', async ({ page }) => {
@@ -173,6 +156,10 @@ test.describe('FleetGraph UI', () => {
     await page.getByRole('button', { name: 'Send message' }).click();
 
     await expect(page.getByText('Drafting from FleetGraph context...')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Week 12 is at risk because the partner API is still blocked.')).toBeVisible({ timeout: 10000 });
+    await page.getByRole('button', { name: 'Close FleetGraph chat' }).click();
+    await page.getByRole('button', { name: 'Open FleetGraph chat' }).click();
+    await expect(page.getByText('What changed this week?')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Week 12 is at risk because the partner API is still blocked.')).toBeVisible({ timeout: 10000 });
 
     const chatRequests = await page.evaluate(() => window.__shipFleetGraphChatRequests);
@@ -211,18 +198,21 @@ async function login(page: Page): Promise<void> {
 function createFleetGraphInboxMockState(): FleetGraphInboxMockState {
   return {
     getRequests: 0,
-    realtimeTriggered: false,
-    approvedFindingIds: new Set<string>(),
+    lifecycleByFindingId: new Map<string, FleetGraphLifecycleState>(),
     approveRequests: [],
+    resumeRequests: [],
   };
 }
 
 async function installFleetGraphInboxRoutes(
   page: Page,
   state: FleetGraphInboxMockState,
-  firstFinding: FleetGraphFinding,
-  secondFinding: FleetGraphFinding
+  findings: FleetGraphFinding[]
 ): Promise<void> {
+  for (const finding of findings) {
+    state.lifecycleByFindingId.set(finding.id, finding.lifecycle_state);
+  }
+
   await page.route('**/api/fleetgraph/**', async (route) => {
     const request = route.request();
     const url = new URL(request.url());
@@ -230,7 +220,7 @@ async function installFleetGraphInboxRoutes(
 
     if (method === 'GET' && url.pathname === '/api/fleetgraph/findings') {
       state.getRequests += 1;
-      const response = buildFleetGraphFindingsResponse(state, firstFinding, secondFinding);
+      const response = buildFleetGraphFindingsResponse(state, findings, url.searchParams.get('lifecycle_state'));
       await fulfillJson(route, 200, response);
       return;
     }
@@ -239,11 +229,25 @@ async function installFleetGraphInboxRoutes(
     if (method === 'POST' && approveFindingId !== null) {
       const body = parseRouteJsonBody<FleetGraphApproveRequest>(request.postData());
       state.approveRequests.push(body);
-      state.approvedFindingIds.add(approveFindingId);
+      state.lifecycleByFindingId.set(approveFindingId, 'approved');
+      const finding = findFleetGraphFinding(findings, approveFindingId);
       await fulfillJson(route, 200, {
-        ...firstFinding,
+        ...finding,
         lifecycle_state: 'approved',
         updated_at: '2026-05-26T12:05:00.000Z',
+      });
+      return;
+    }
+
+    const resumeActionId = parseResumeActionId(url.pathname);
+    if (method === 'POST' && resumeActionId !== null) {
+      state.resumeRequests.push(resumeActionId);
+      const finding = findFleetGraphFindingByActionId(findings, resumeActionId);
+      state.lifecycleByFindingId.set(finding.id, 'executed');
+      await fulfillJson(route, 200, {
+        ...finding,
+        lifecycle_state: 'executed',
+        updated_at: '2026-05-26T12:06:00.000Z',
       });
       return;
     }
@@ -254,13 +258,15 @@ async function installFleetGraphInboxRoutes(
 
 function buildFleetGraphFindingsResponse(
   state: FleetGraphInboxMockState,
-  firstFinding: FleetGraphFinding,
-  secondFinding: FleetGraphFinding
+  findings: FleetGraphFinding[],
+  lifecycleState: string | null
 ): FleetGraphFindingListResponse {
-  const availableFindings = state.realtimeTriggered
-    ? [firstFinding, secondFinding]
-    : [firstFinding];
-  const items = availableFindings.filter((finding) => !state.approvedFindingIds.has(finding.id));
+  const items = findings
+    .map((finding) => ({
+      ...finding,
+      lifecycle_state: state.lifecycleByFindingId.get(finding.id) ?? finding.lifecycle_state,
+    }))
+    .filter((finding) => lifecycleState === null || finding.lifecycle_state === lifecycleState);
 
   return {
     items,
@@ -273,6 +279,33 @@ function buildFleetGraphFindingsResponse(
 function parseApproveFindingId(pathname: string): string | null {
   const match = pathname.match(/^\/api\/fleetgraph\/findings\/([^/]+)\/approve$/);
   return match?.[1] ?? null;
+}
+
+function parseResumeActionId(pathname: string): string | null {
+  const match = pathname.match(/^\/api\/fleetgraph\/actions\/([^/]+)\/resume$/);
+  return match?.[1] ?? null;
+}
+
+function findFleetGraphFinding(findings: FleetGraphFinding[], findingId: string): FleetGraphFinding {
+  const finding = findings.find((candidate) => candidate.id === findingId);
+
+  if (!finding) {
+    throw new Error(`FleetGraph finding not found in mock: ${findingId}`);
+  }
+
+  return finding;
+}
+
+function findFleetGraphFindingByActionId(findings: FleetGraphFinding[], actionId: string): FleetGraphFinding {
+  const finding = findings.find((candidate) => (
+    candidate.action_candidates.some((actionCandidate) => actionCandidate.id === actionId)
+  ));
+
+  if (!finding) {
+    throw new Error(`FleetGraph action not found in mock: ${actionId}`);
+  }
+
+  return finding;
 }
 
 function parseRouteJsonBody<T>(body: string | null): T {
@@ -288,65 +321,6 @@ async function fulfillJson(route: Route, status: number, body: object): Promise<
     status,
     contentType: 'application/json',
     body: JSON.stringify(body),
-  });
-}
-
-async function installRealtimeEventsMock(page: Page): Promise<void> {
-  await page.addInitScript(() => {
-    const sockets: FakeRealtimeWebSocket[] = [];
-
-    class FakeRealtimeWebSocket extends EventTarget {
-      static readonly CONNECTING: 0 = 0;
-      static readonly OPEN: 1 = 1;
-      static readonly CLOSING: 2 = 2;
-      static readonly CLOSED: 3 = 3;
-
-      readonly url: string;
-      readonly protocol = '';
-      readonly extensions = '';
-      binaryType: BinaryType = 'blob';
-      bufferedAmount = 0;
-      readyState = FakeRealtimeWebSocket.CONNECTING;
-      onopen: WebSocket['onopen'] = null;
-      onmessage: WebSocket['onmessage'] = null;
-      onerror: WebSocket['onerror'] = null;
-      onclose: WebSocket['onclose'] = null;
-
-      constructor(url: string | URL, _protocols?: string | string[]) {
-        super();
-        this.url = String(url);
-        sockets.push(this);
-        window.setTimeout(() => {
-          this.readyState = FakeRealtimeWebSocket.OPEN;
-          const event = new Event('open');
-          this.onopen?.call(this, event);
-          this.dispatchEvent(event);
-        }, 0);
-      }
-
-      send(_data: string | ArrayBufferLike | Blob | ArrayBufferView): void {
-      }
-
-      close(_code?: number, _reason?: string): void {
-        this.readyState = FakeRealtimeWebSocket.CLOSED;
-        const event = new CloseEvent('close');
-        this.onclose?.call(this, event);
-        this.dispatchEvent(event);
-      }
-
-      emit(data: string): void {
-        const event = new MessageEvent('message', { data });
-        this.onmessage?.call(this, event);
-        this.dispatchEvent(event);
-      }
-    }
-
-    window.WebSocket = FakeRealtimeWebSocket;
-    window.__shipEmitRealtimeEvent = (payload: FleetGraphRealtimePayload) => {
-      for (const socket of sockets) {
-        socket.emit(JSON.stringify(payload));
-      }
-    };
   });
 }
 

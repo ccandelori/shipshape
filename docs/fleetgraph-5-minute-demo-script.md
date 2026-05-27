@@ -73,6 +73,8 @@ Pick **one** environment and use its login + bookmarks for the whole rehearsal a
 
 No Docker or terminal required for the **on-stage** flow if you complete **Part 3B** (pre-staging) once.
 
+If the **Action Items** modal opens over the document, click **Got it** before opening FleetGraph chat. The chat button is in the document toolbar behind that modal.
+
 #### Important: `/my-week` is NOT where chat lives
 
 After login, Ship often lands on **My Week** (`/my-week`). That page shows your plan, standups, and assigned **projects** — it does **not** include FleetGraph chat.
@@ -165,12 +167,21 @@ Confirm `api/.env.local` has `OPENAI_API_KEY` and Langfuse keys if you want live
 **Test Langfuse tab**
 
 1. Log in to your Langfuse project (URL from `LANGFUSE_BASE_URL` in `api/.env.local`).
-2. Find a recent trace named like `fleetgraph.chat.response` or with tag `trace_node:reason`.
-3. Open it and leave the tab open for the recording.
+2. Run one chat question in the Week chat. That generates a `fleetgraph.chat.response` trace.
+3. If you ran a proactive Week-risk check before the demo, find the trace with tags like `fleetgraph`, `detector:at_risk_week`, or `trace_node:reason`.
+4. Open the trace and leave the tab open for the recording.
 
-### 3C — Pre-stage the “agent wrote a comment” beat (important)
+**When traces are generated**
 
-The inbox UI only lists **`open`** findings. The **pending_review** finding (approve → resume → comment) **does not appear in the inbox**. You must create the comment **once** before recording, then open the issue on stage.
+| Demo action | Trace you should see in Langfuse |
+|-------------|-----------------------------------|
+| Chat question streams in the Week panel | `fleetgraph.chat.response` |
+| Proactive Week detector reasons about a risky Week | `fleetgraph.at_risk_week.reason` or a trace tagged `detector:at_risk_week` |
+| Quiet detector path exits before model reasoning | A shorter trace with guard/pre-filter metadata and no reason-model span |
+
+Langfuse is the observability proof: do not search for traces during the recording. Generate them in pre-flight, open the useful trace, then show the already-loaded tab.
+
+### 3C — Verify the HITL “agent wrote a comment” beat
 
 **What you need**
 
@@ -179,49 +190,23 @@ The inbox UI only lists **`open`** findings. The **pending_review** finding (app
 - After approve + resume: a **comment card** at the **bottom of the issue document** (gray box, author **Dev User**, text about Langfuse trace URLs).  
   There is no separate “Comments” tab — scroll the **main editor area** to the end.
 
-**Why you might see nothing (two common causes)**
+**Browser-only setup**
+
+1. Sign in to Ship.
+2. Click **FleetGraph** on the left rail.
+3. Click the **Needs Review** tab.
+4. Confirm the pending card is visible.
+5. Click **Approve**.
+6. Click the **Approved** tab.
+7. Click **Resume** on the approved card.
+8. Open the trace issue URL above and hard-refresh (`Cmd+Shift+R`).
+9. Confirm the FleetGraph comment is visible at the bottom of the document.
+
+**Why you might see nothing**
 
 1. **Approve + resume never run** — the comment is not automatic; seed data only prepares a `pending_review` finding.
 2. **UI gap (fixed in latest web build)** — older builds saved the comment in the database but only showed comments tied to highlighted text. FleetGraph writes unanchored comments; redeploy web or use localhost after pulling the fix.
-
-**One-time setup in the browser console (deploy or local)**
-
-1. Sign in to Ship.
-2. Press **F12** → **Console**.
-3. Paste the helper from `docs/fleetgraph-agent-exercise-guide.md` (section **“Use The Authenticated API From The Browser”**).
-4. Paste and run this **approve + resume** block:
-
-```js
-const pending = await fleetGraphFindings('pending_review');
-const finding = pending.body.items.find(
-  (item) => item.material_change_key === 'seed:fleetgraph:pending-review:trace-evidence:v1'
-) ?? pending.body.items[0];
-
-if (!finding) {
-  throw new Error('No pending_review finding — maybe already executed. Try fleetGraphFindings("executed")');
-}
-
-const action = finding.action_candidates[0];
-await fleetGraphPost(`/api/fleetgraph/findings/${finding.id}/approve`, {
-  action_candidate_id: action.id,
-  idempotency_key: `demo-approve-${Date.now()}`,
-});
-
-const approved = await fleetGraphFindings('approved');
-const approvedFinding = approved.body.items[0];
-const approvedAction = approvedFinding.action_candidates[0];
-
-await fleetGraphPost(`/api/fleetgraph/actions/${approvedAction.id}/resume`, {
-  idempotency_key: `demo-resume-${Date.now()}`,
-});
-
-console.log('Done — open the trace issue and hard-refresh (Cmd+Shift+R)');
-```
-
-5. Open the trace issue URL above. **Hard-refresh** (`Cmd+Shift+R`).
-6. Scroll to the **bottom** of the page content. You should see the comment card.
-
-If the script says the finding is already **executed**, the comment may already exist — refresh the issue page (latest web build required to see it).
+3. **Wrong tab** — approve lives under **Needs Review**; resume lives under **Approved**. The default **Open** tab only has dismiss/snooze triage.
 
 **What to say on stage:**  
 *“Before recording I approved and resumed the agent’s draft comment; this is the gated write on the issue.”*  
@@ -234,7 +219,7 @@ Do **not** claim the **open inbox card** was created live during the recording.
 | **1 — Ship (inbox)** | App URL → sign in → click **FleetGraph** so inbox is ready (or open app and you’ll open inbox in step 1 of Part 4) |
 | **2 — Issue with comment** | Trace issue bookmark (Part 2) |
 | **3 — Week 14 + chat** | Week 14 bookmark → open **FleetGraph Chat** panel so the Week is ready |
-| **4 — Langfuse** | Proactive `reason` trace (or chat trace) already loaded |
+| **4 — Langfuse** | Proactive `reason` trace or `fleetgraph.chat.response` trace already loaded |
 
 ---
 
@@ -271,6 +256,8 @@ Use a **full-width** browser window. Have tabs 1–4 from Part 3D ready.
 > This is the human review surface. Findings include severity and evidence. Visible writes are gated — the agent recommends actions, but a person decides.
 
 **Clarification (if asked):** This card is **demo seed data** to show the inbox UI. Your **live** proactive story is the **issue comment** in the next step.
+
+**If you need to show HITL instead of dismiss:** click **Needs Review**, approve the pending card, click **Approved**, then resume it. For the main 5-minute script, do this in pre-flight so the issue comment is already visible.
 
 ---
 
@@ -315,16 +302,17 @@ Use a **full-width** browser window. Have tabs 1–4 from Part 3D ready.
 
 1. Switch to **Tab 3** (Week 14 document URL — **not** `/my-week`).
 2. Confirm the page heading says **Week 14** and you see tabs **Overview / Issues / Review / Standups**.
-3. If **FleetGraph Chat** is not open on the right, click the **small speech-bubble icon** in the top toolbar (tooltip: **Open FleetGraph chat**).
-4. In the bottom **Ask FleetGraph** box, paste exactly:
+3. If the **Action Items** modal appears, click **Got it**.
+4. If **FleetGraph Chat** is not open on the right, click the **small speech-bubble icon** in the top toolbar (tooltip: **Open FleetGraph chat**).
+5. In the bottom **Ask FleetGraph** box, paste exactly:
 
    ```text
    What is blocking this week, who owns recovery, and what should we do next?
    ```
 
-5. Click **Send**.
-6. Wait for the assistant bubble to **stream** text (do not talk over the first sentence).
-7. Optionally point at one issue or blocker name in the answer.
+6. Click **Send**.
+7. Wait for the assistant bubble to **stream** text (do not talk over the first sentence).
+8. Optionally point at one issue or blocker name in the answer.
 
 **Say (after streaming starts):**
 
@@ -340,6 +328,7 @@ Use a **full-width** browser window. Have tabs 1–4 from Part 3D ready.
 
 1. Switch to **Tab 4** (Langfuse, already open).
 2. Point at: trace name, **reason** span or chat trace, token/latency fields, tags like `fleetgraph` / `detector:at_risk_week`.
+3. If you used the chat trace, say it was generated by the question you just asked. If you used the proactive trace, say it was generated during pre-flight by the Week-risk detector.
 
 **Say:**
 
@@ -376,11 +365,11 @@ What is blocking this week, who owns recovery, and what should we do next?
 
 | Button | Meaning |
 |--------|---------|
-| **Approve** | Allow the proposed action (only valid for `open` / `pending_review` — inbox only shows `open` today) |
-| **Reject** | Decline with a reason |
-| **Dismiss** | Mark handled; stop resurfacing |
-| **Snooze** | Hide until a date |
-| **Resume** | Run an **approved** action (e.g. post the draft comment) — shown after approve, not on the seeded `open` card |
+| **Approve** | Allow the proposed action — shown on **Needs Review** findings |
+| **Reject** | Decline with a reason — shown on **Needs Review** findings |
+| **Dismiss** | Mark handled; stop resurfacing — shown on **Open** and **Needs Review** findings |
+| **Snooze** | Hide until a date — shown on **Open** and **Needs Review** findings |
+| **Resume** | Run an **approved** action, such as posting the draft comment — shown on **Approved** findings |
 
 ### Navigate without bookmarks (if you get lost)
 

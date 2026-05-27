@@ -78,7 +78,7 @@ function createActionHandlers(): FindingCardActionHandlers {
 }
 
 describe('FindingCard', () => {
-  it('renders evidence and submits lifecycle actions for an open finding', () => {
+  it('renders evidence and limits open findings to suppressing actions', () => {
     const actions = createActionHandlers();
     render(
       <FindingCard
@@ -91,13 +91,35 @@ describe('FindingCard', () => {
     expect(screen.getByText('Week 12')).toBeInTheDocument();
     expect(screen.getByText('Blocked on partner API')).toBeInTheDocument();
     expect(screen.getByText('Ask Morgan for the concrete unblock plan before Friday.')).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Approve finding' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Reject finding' })).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss finding' }));
+    fireEvent.change(screen.getByLabelText('Dismiss reason'), {
+      target: { value: 'Known and tracked elsewhere' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm dismiss' }));
+    expect(actions.onDismiss).toHaveBeenCalledWith({
+      findingId: 'finding-1',
+      reason: 'Known and tracked elsewhere',
+    });
+  });
+
+  it('approves and rejects pending-review findings', () => {
+    const actions = createActionHandlers();
+    render(
+      <FindingCard
+        finding={createFinding('pending_review')}
+        actions={actions}
+        pendingAction={null}
+      />
+    );
 
     fireEvent.click(screen.getByRole('button', { name: 'Approve finding' }));
     expect(actions.onApprove).toHaveBeenCalledWith({
       findingId: 'finding-1',
       actionCandidateId: 'action-1',
     });
-
     fireEvent.click(screen.getByRole('button', { name: 'Reject finding' }));
     fireEvent.change(screen.getByLabelText('Reject reason'), {
       target: { value: 'Needs human review first' },
@@ -129,7 +151,7 @@ describe('FindingCard', () => {
     const actions = createActionHandlers();
     render(
       <FindingCard
-        finding={createFinding('pending_review')}
+        finding={createFinding('open')}
         actions={actions}
         pendingAction={null}
       />

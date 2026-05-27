@@ -4,6 +4,23 @@ A project-intelligence agent for Ship.
 
 FleetGraph reads the state of a Ship project, reasons about what changed or what a user is asking, and turns that context into findings, next actions, approvals, and context-scoped answers. It is not a standalone chatbot and not just a detector service. It is a Ship-native agent loop with access to the same work graph and action surfaces that users operate through the UI.
 
+## Grader Quick Start
+
+Use this block for the final walkthrough and submission review.
+
+| Item | Value |
+|------|-------|
+| Public app | `http://143.198.163.184/` |
+| Demo login | `dev@ship.local` / `admin123` |
+| Week document for chat | `http://143.198.163.184/documents/ae794fb3-2b32-449b-819f-34348d317295` |
+| Issue with FleetGraph comment | `http://143.198.163.184/documents/27e15c1b-3f6c-4e1d-8880-15a5c5705459` |
+| Demo script | `docs/fleetgraph-5-minute-demo-script.md` |
+| Latency proof | `docs/fleetgraph-latency-proof.md` |
+
+Trace links belong in the Test Cases table below. Current status: Langfuse instrumentation is implemented and the runtime keys have been configured for local exercise; shared Langfuse Cloud links still need to be captured from live quiet, finding, and chat runs and pasted here before final submission.
+
+Deployed smoke status, 2026-05-27 11:26 AM CDT: release `20260527-110954` is live on the public droplet. `/health` returns HTTP 200, `dev@ship.local` login works, FleetGraph inbox tabs render, and the Week chat streamed a production response from the public URL. Langfuse Cloud share links still need to be copied from the generated traces and pasted into the Test Cases table.
+
 ## Agent Responsibility
 
 FleetGraph has two modes that share Ship context, authorization, model configuration, and outcome policy concepts. The current MVP implementation is not fully unified into one compiled graph: proactive detection runs through LangGraph, while on-demand chat uses direct OpenAI token streaming with the same context builders.
@@ -183,7 +200,7 @@ Trace paths required for validation:
 
 ## Trace Links And Runtime Evidence
 
-Shared Langfuse trace links are pending. As of 2026-05-26, the local shell has no `OPENAI_API_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, or `LANGFUSE_BASE_URL`, so live Langfuse capture cannot be completed from this environment.
+Shared Langfuse trace links are pending capture/share, not pending implementation. As of 2026-05-27, FleetGraph emits Langfuse traces and the local exercise environment has been configured with OpenAI and Langfuse keys. The remaining evidence work is to run the quiet path, finding path, and chat path with tracing enabled, make the Langfuse Cloud traces shareable, and paste the public URLs into the Test Cases table.
 
 Configured runtime sources:
 
@@ -216,7 +233,7 @@ Verification run:
 | 4 | PM | A Week starts without a plan or active work lacks hypothesis context. | Accountability finding linked to weekly plan and project hypothesis. | Create plan task, notify owner, or mark intentionally deferred. |
 | 5 | Director / PM | Scope, issue count, or assignment load suggests overload. | Overload or scope-creep finding with evidence and tradeoff recommendation. | Rebalance work, accept risk, ask team for clarification, or defer. |
 | 6 | Any user | User asks contextual chat what is blocked, risky, or next. | Answer scoped to the visible issue, project, or Week document. | Use the answer or ask for a follow-up. |
-| 7 | Any user | User asks contextual chat to take action. | Draft action or pending approval using the same action model as proactive mode. | Approve, edit, reject, or leave as draft. |
+| 7 | Any user | User asks contextual chat to take action. | Draft action or pending approval using the same action model as proactive mode. | Approve, reject, or leave as draft; API-level edited approval is available for post-MVP UI polish. |
 
 MVP implementation scope:
 
@@ -274,15 +291,15 @@ Headless authentication:
 
 ## Test Cases
 
-Shared trace links are not yet captured because Langfuse credentials are missing locally. The deterministic local evidence above verifies the two MVP proactive graph paths and usage metadata that the shared traces must show once credentials are available. The timed latency proof in `docs/fleetgraph-latency-proof.md` verifies the mutation-triggered path against the five-minute target using the real trigger controller, advisory lock, context builder, guard, graph, policy, and persistence path with a deterministic local reasoner.
+Shared trace links are not yet pasted into this document. The deterministic local evidence above verifies the two MVP proactive graph paths and usage metadata that the shared traces must show. The timed latency proof in `docs/fleetgraph-latency-proof.md` verifies the mutation-triggered path against the five-minute target using the real trigger controller, advisory lock, context builder, guard, graph, policy, and persistence path with a deterministic local reasoner.
 
 | # | Ship state | Expected output | Required trace path | Trace link status |
 |---|------------|-----------------|---------------------|------------------|
-| 1 | Active Week has stalled high-priority issues and an unresolved blocker. | Open finding with severity, evidence, owner, and action candidate. | Proactive changed -> pre-filter yes -> reason -> pending approval. | Local deterministic run passed; shared Langfuse URL pending credentials. |
-| 2 | Active Week has no blockers or high-priority blocked issues. | Quiet exit; no duplicate notification and no model reasoning call. | Proactive changed -> pre-filter no -> quiet end. | Local deterministic run passed; shared Langfuse URL pending credentials. |
-| 3 | Same active Week is scanned again with a suppressing pending finding. | Quiet exit; no duplicate notification and no expensive reasoning call. | Proactive guard -> quiet end. | Guard suppression covered by detector tests; shared URL pending credentials. |
+| 1 | Active Week has stalled high-priority issues and an unresolved blocker. | Open finding with severity, evidence, owner, and action candidate. | Proactive changed -> pre-filter yes -> reason -> pending approval. | Local deterministic run passed; shared Langfuse URL pending capture/share. |
+| 2 | Active Week has no blockers or high-priority blocked issues. | Quiet exit; no duplicate notification and no model reasoning call. | Proactive changed -> pre-filter no -> quiet end. | Local deterministic run passed; shared Langfuse URL pending capture/share. |
+| 3 | Same active Week is scanned again with a suppressing pending finding. | Quiet exit; no duplicate notification and no expensive reasoning call. | Proactive guard -> quiet end. | Guard suppression covered by detector tests; shared URL pending capture/share. |
 | 4 | Blocker crosses elapsed-time threshold without a row edit. | Finding resurfaces because elapsed-time signal changed. | Proactive changed -> pre-filter yes -> reason. | Extension case; not part of the two MVP traces. |
-| 5 | User opens a Week document and asks, "What is blocking this?" | SSE streamed answer grounded in that Week's issues, standups, and findings. | On-demand answer -> reason -> stream. | Embedded chat implemented and E2E-covered; shared URL pending credentials. |
+| 5 | User opens a Week document and asks, "What is blocking this?" | SSE streamed answer grounded in that Week's issues, standups, and findings. | On-demand answer -> reason -> stream. | Embedded chat implemented and E2E-covered; shared URL pending capture/share. |
 | 6 | User asks chat to create a follow-up item for a blocker. | Draft or pending action candidate scoped to the blocker and Week. | On-demand action request -> reason -> approval policy. | Architecture path documented; full execution staged after MVP. |
 | 7 | Unauthorized user attempts to resume a pending action. | Resume denied; no action executed. | Resume auth guard rejects. | API route coverage implemented. |
 | 8 | Two API instances tick the same project concurrently. | One instance acquires the advisory lock; exactly one graph run proceeds. | Proactive trigger -> advisory lock winner only. | Advisory lock controller covered by trigger tests. |
@@ -354,7 +371,7 @@ Durable state includes:
 
 - LangGraph checkpointing currently uses `MemorySaver`; durable FleetGraph state is persisted in outcome tables. `PostgresSaver` remains the intended production checkpointer after credentialed deployment hardening.
 - FleetGraph finding rows with `workspace_id`, `project_id`, `detector_type`, `content_hash`, status, severity, payload, recipient list, snooze state, and pending action metadata.
-- Chat thread ids scoped as `chat:{userId}:{hash(docId)}` with a sliding message window.
+- MVP chat memory is client-side and scoped by workspace, user, document type, and document id with a bounded sliding message window. Durable server-side chat thread ids remain a post-MVP extension.
 
 ### Agent Tool Parity
 
@@ -409,7 +426,7 @@ The confirmation experience lives in FleetGraph Inbox. Pending cards show:
 - Target document.
 - Responsible owner.
 - Proposed action.
-- Approve, edit, reject, dismiss, and snooze controls.
+- Approve, reject, dismiss, and snooze controls. The API supports edited approval payloads; a browser edit-before-approve control is post-MVP.
 
 Dismiss and snooze are durable suppression choices, not just UI state.
 
@@ -472,7 +489,7 @@ If HITL resume fails:
 
 ## Cost Analysis
 
-These are design estimates plus current deterministic implementation telemetry. Shared Langfuse traces should replace the local evidence rows once credentials are available.
+These are design estimates plus current deterministic implementation telemetry. Shared Langfuse traces should replace the local evidence rows once Langfuse Cloud trace links are captured and shared.
 
 ### Cost Controls
 
@@ -530,7 +547,7 @@ Runtime model spend for the MVP at-risk Week detector is now persisted in `fleet
 | Finding path run | 850 input / 172 output tokens, `$0.000231` |
 | Total deterministic graph invocations captured | 2 |
 | Total deterministic graph spend captured | `$0.000231` |
-| Shared Langfuse trace spend | Pending credentials |
+| Shared Langfuse trace spend | Pending capture/share |
 
 ## Submission Status
 
@@ -540,7 +557,7 @@ Runtime model spend for the MVP at-risk Week detector is now persisted in `fleet
 | Graph Diagram | Defined in this document |
 | Use Cases | Defined in this document |
 | Trigger Model | Defined in this document |
-| Test Cases | MVP proactive paths verified locally; shared trace links require Langfuse credentials |
+| Test Cases | MVP proactive paths verified locally; shared trace links require capture/share from Langfuse Cloud |
 | Architecture Decisions | Defined in this document |
 | Cost Analysis | Design estimate plus deterministic runtime telemetry captured |
 | Timed Latency Proof | Passed locally at 45.113 seconds; see `docs/fleetgraph-latency-proof.md` |
