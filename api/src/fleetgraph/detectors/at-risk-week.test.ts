@@ -143,25 +143,11 @@ describe('FleetGraph at-risk Week detector contracts', () => {
 
   it('wraps run-boundary traces with Langfuse observation attributes', async () => {
     const initialState = createAtRiskWeekInitialState(graphInput);
-    const observation = {
-      update: vi.fn(),
-    };
-    const startActiveObservationSpy = vi.fn();
-    const propagateAttributesSpy = vi.fn();
-    const runtime: FleetGraphLangfuseRuntime = {
-      startActiveObservation: ((name: string, fn: (span: typeof observation) => Promise<unknown>, options: object) => {
-        startActiveObservationSpy(name, options);
-        return fn(observation);
-      }) as unknown as FleetGraphLangfuseRuntime['startActiveObservation'],
-      propagateAttributes: ((params: object, fn: () => Promise<unknown>) => {
-        propagateAttributesSpy(params);
-        return fn();
-      }) as unknown as FleetGraphLangfuseRuntime['propagateAttributes'],
-    };
+    const langfuse = createCapturingLangfuseRuntime();
 
     const completedState = await traceAtRiskWeekRun(
       initialState,
-      createLangfuseAtRiskWeekTraceRunnerWithRuntime(runtime),
+      createLangfuseAtRiskWeekTraceRunnerWithRuntime(langfuse.runtime),
       async (currentState) => ({
         ...currentState,
         status: 'completed',
@@ -171,8 +157,8 @@ describe('FleetGraph at-risk Week detector contracts', () => {
     );
 
     expect(completedState.status).toBe('completed');
-    expect(startActiveObservationSpy).toHaveBeenCalledWith('fleetgraph.at_risk_week.run', { asType: 'chain' });
-    expect(propagateAttributesSpy).toHaveBeenCalledWith(expect.objectContaining({
+    expect(langfuse.startActiveObservationSpy).toHaveBeenCalledWith('fleetgraph.at_risk_week.run', { asType: 'chain' });
+    expect(langfuse.propagateAttributesSpy).toHaveBeenCalledWith(expect.objectContaining({
       traceName: 'fleetgraph.at_risk_week.run',
       sessionId: initialState.scope.checkpointThreadId,
       tags: expect.arrayContaining(['fleetgraph', 'trace_node:run']),
@@ -183,7 +169,7 @@ describe('FleetGraph at-risk Week detector contracts', () => {
       }),
       asBaggage: false,
     }));
-    expect(observation.update).toHaveBeenCalledWith(expect.objectContaining({
+    expect(langfuse.observation.update).toHaveBeenCalledWith(expect.objectContaining({
       input: {
         traceMetadata: expect.objectContaining({
           traceNode: 'run',
@@ -195,7 +181,7 @@ describe('FleetGraph at-risk Week detector contracts', () => {
         runStatus: 'running',
       }),
     }));
-    expect(observation.update).toHaveBeenLastCalledWith(expect.objectContaining({
+    expect(langfuse.observation.update).toHaveBeenLastCalledWith(expect.objectContaining({
       output: expect.objectContaining({
         runStatus: 'completed',
         activeNode: null,
@@ -205,6 +191,183 @@ describe('FleetGraph at-risk Week detector contracts', () => {
         runStatus: 'completed',
       }),
       level: 'DEFAULT',
+    }));
+  });
+
+  it('does not export quiet poll run exits to Langfuse', async () => {
+    const langfuse = createCapturingLangfuseRuntime();
+    const dependencies = createNodeDependencies({
+      scopeRows: [{ id: scopedDocId }],
+      weekContext: createWeekContext({ issues: [] }),
+      guardDecision: {
+        shouldRun: true,
+        reason: 'run_material_changed_no_suppression:v1:safe',
+        materialChangeKey: 'v1:safe',
+      },
+    });
+
+    const completedState = await traceAtRiskWeekRun(
+      createAtRiskWeekInitialState(graphInput),
+      createLangfuseAtRiskWeekTraceRunnerWithRuntime(langfuse.runtime),
+      async (currentState) => {
+        const scopedState = await scopeNode(currentState, dependencies);
+        const contextState = await contextNode(scopedState, dependencies);
+        const guardedState = await guardNode(contextState, dependencies);
+        return preFilterNode(guardedState, dependencies);
+      }
+    );
+
+    expect(completedState.status).toBe('exited');
+    expect(completedState.earlyExit?.node).toBe('preFilter');
+    expect(langfuse.startActiveObservationSpy).not.toHaveBeenCalled();
+    expect(langfuse.propagateAttributesSpy).not.toHaveBeenCalled();
+  });
+
+  it('does not export quiet poll pre-filter exits to Langfuse', async () => {
+    const langfuse = createCapturingLangfuseRuntime();
+    const dependencies = createNodeDependencies({
+      scopeRows: [{ id: scopedDocId }],
+      weekContext: createWeekContext({ issues: [] }),
+      guardDecision: {
+        shouldRun: true,
+        reason: 'run_material_changed_no_suppression:v1:safe',
+        materialChangeKey: 'v1:safe',
+      },
+    });
+    const scopedState = await scopeNode(createAtRiskWeekInitialState(graphInput), dependencies);
+    const contextState = await contextNode(scopedState, dependencies);
+    const guardedState = await guardNode(contextState, dependencies);
+
+    const completedState = await traceAtRiskWeekNode(
+      guardedState,
+      'preFilter',
+      createLangfuseAtRiskWeekTraceRunnerWithRuntime(langfuse.runtime),
+      (currentState) => preFilterNode(currentState, dependencies)
+    );
+
+    expect(completedState.status).toBe('exited');
+    expect(completedState.earlyExit?.node).toBe('preFilter');
+    expect(langfuse.startActiveObservationSpy).not.toHaveBeenCalled();
+    expect(langfuse.propagateAttributesSpy).not.toHaveBeenCalled();
+  });
+
+  it('does not export quiet poll setup nodes before pre-filter', async () => {
+    const langfuse = createCapturingLangfuseRuntime();
+    const traceRunner = createLangfuseAtRiskWeekTraceRunnerWithRuntime(langfuse.runtime);
+    const dependencies = createNodeDependencies({
+      scopeRows: [{ id: scopedDocId }],
+      weekContext: createWeekContext({ issues: [] }),
+      guardDecision: {
+        shouldRun: true,
+        reason: 'run_material_changed_no_suppression:v1:safe',
+        materialChangeKey: 'v1:safe',
+      },
+    });
+
+    const scopedState = await traceAtRiskWeekNode(
+      createAtRiskWeekInitialState(graphInput),
+      'scope',
+      traceRunner,
+      (currentState) => scopeNode(currentState, dependencies)
+    );
+    const contextState = await traceAtRiskWeekNode(
+      scopedState,
+      'context',
+      traceRunner,
+      (currentState) => contextNode(currentState, dependencies)
+    );
+    const guardedState = await traceAtRiskWeekNode(
+      contextState,
+      'guard',
+      traceRunner,
+      (currentState) => guardNode(currentState, dependencies)
+    );
+
+    expect(guardedState.status).toBe('running');
+    expect(guardedState.activeNode).toBe('preFilter');
+    expect(langfuse.startActiveObservationSpy).not.toHaveBeenCalled();
+    expect(langfuse.propagateAttributesSpy).not.toHaveBeenCalled();
+  });
+
+  it('keeps mutation-triggered quiet exits visible in Langfuse', async () => {
+    const langfuse = createCapturingLangfuseRuntime();
+    const dependencies = createNodeDependencies({
+      scopeRows: [{ id: scopedDocId }],
+      weekContext: createWeekContext({ issues: [] }),
+      guardDecision: {
+        shouldRun: true,
+        reason: 'run_material_changed_no_suppression:v1:safe',
+        materialChangeKey: 'v1:safe',
+      },
+    });
+    const mutationInput: AtRiskWeekGraphInput = {
+      ...graphInput,
+      triggerSource: 'mutation',
+    };
+    const scopedState = await scopeNode(createAtRiskWeekInitialState(mutationInput), dependencies);
+    const contextState = await contextNode(scopedState, dependencies);
+    const guardedState = await guardNode(contextState, dependencies);
+
+    const completedState = await traceAtRiskWeekNode(
+      guardedState,
+      'preFilter',
+      createLangfuseAtRiskWeekTraceRunnerWithRuntime(langfuse.runtime),
+      (currentState) => preFilterNode(currentState, dependencies)
+    );
+
+    expect(completedState.status).toBe('exited');
+    expect(completedState.earlyExit?.node).toBe('preFilter');
+    expect(langfuse.startActiveObservationSpy).toHaveBeenCalledWith('fleetgraph.at_risk_week.preFilter', {
+      asType: 'chain',
+    });
+    expect(langfuse.propagateAttributesSpy).toHaveBeenCalledWith(expect.objectContaining({
+      traceName: 'fleetgraph.at_risk_week.preFilter',
+      metadata: expect.objectContaining({
+        triggerSource: 'mutation',
+        traceNode: 'preFilter',
+      }),
+    }));
+  });
+
+  it('keeps poll traces that route to model reasoning visible in Langfuse', async () => {
+    const langfuse = createCapturingLangfuseRuntime();
+    const dependencies = createNodeDependencies({
+      scopeRows: [{ id: scopedDocId }],
+      weekContext: createWeekContext({
+        issues: [{
+          id: '44444444-4444-4444-8444-444444444444',
+          title: 'Deploy blocker',
+          state: 'blocked',
+          priority: 'high',
+        }],
+      }),
+      guardDecision: {
+        shouldRun: true,
+        reason: 'run_material_changed_no_suppression:v1:blocked',
+        materialChangeKey: 'v1:blocked',
+      },
+    });
+    const scopedState = await scopeNode(createAtRiskWeekInitialState(graphInput), dependencies);
+    const contextState = await contextNode(scopedState, dependencies);
+    const guardedState = await guardNode(contextState, dependencies);
+
+    const completedState = await traceAtRiskWeekNode(
+      guardedState,
+      'preFilter',
+      createLangfuseAtRiskWeekTraceRunnerWithRuntime(langfuse.runtime),
+      (currentState) => preFilterNode(currentState, dependencies)
+    );
+
+    expect(completedState.status).toBe('running');
+    expect(completedState.preFilter?.shouldReason).toBe(true);
+    expect(langfuse.startActiveObservationSpy).toHaveBeenCalledWith('fleetgraph.at_risk_week.preFilter', {
+      asType: 'chain',
+    });
+    expect(langfuse.observation.update).toHaveBeenLastCalledWith(expect.objectContaining({
+      metadata: expect.objectContaining({
+        branchPath: 'model-reason',
+        preFilterShouldReason: true,
+      }),
     }));
   });
 
@@ -1329,6 +1492,15 @@ type CapturedTrace = {
   outputMetadata: AtRiskWeekTraceMetadata;
 };
 
+type CapturedLangfuseRuntime = {
+  runtime: FleetGraphLangfuseRuntime;
+  observation: {
+    update: ReturnType<typeof vi.fn>;
+  };
+  startActiveObservationSpy: ReturnType<typeof vi.fn>;
+  propagateAttributesSpy: ReturnType<typeof vi.fn>;
+};
+
 type ScopeRow = QueryResultRow & {
   id: string;
 };
@@ -1442,6 +1614,31 @@ function createCapturingTraceRunner(capturedTraces: CapturedTrace[]): AtRiskWeek
     });
 
     return outputState;
+  };
+}
+
+function createCapturingLangfuseRuntime(): CapturedLangfuseRuntime {
+  const observation = {
+    update: vi.fn(),
+  };
+  const startActiveObservationSpy = vi.fn();
+  const propagateAttributesSpy = vi.fn();
+  const runtime: FleetGraphLangfuseRuntime = {
+    startActiveObservation: ((name: string, fn: (span: typeof observation) => Promise<unknown>, options: object) => {
+      startActiveObservationSpy(name, options);
+      return fn(observation);
+    }) as unknown as FleetGraphLangfuseRuntime['startActiveObservation'],
+    propagateAttributes: ((params: object, fn: () => Promise<unknown>) => {
+      propagateAttributesSpy(params);
+      return fn();
+    }) as unknown as FleetGraphLangfuseRuntime['propagateAttributes'],
+  };
+
+  return {
+    runtime,
+    observation,
+    startActiveObservationSpy,
+    propagateAttributesSpy,
   };
 }
 

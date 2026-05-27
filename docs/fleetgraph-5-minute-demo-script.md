@@ -184,9 +184,13 @@ These links require Langfuse project access unless you explicitly make each trac
 |-------------|-----------------------------------|
 | Chat question streams in the Week panel | `fleetgraph.chat.response` |
 | Proactive Week detector reasons about a risky Week | `fleetgraph.at_risk_week.reason` or a trace tagged `detector:at_risk_week` |
-| Quiet detector path exits before model reasoning | A shorter trace with guard/pre-filter metadata and no reason-model span |
+| Quiet detector path exits before model reasoning | A selected demo trace only; routine quiet poll exits are suppressed to protect Langfuse volume |
 
 Langfuse is the observability proof: do not search for traces during the recording. Generate them in pre-flight, open the useful trace, then show the already-loaded tab. If public links are required, make only the selected traces public after reviewing their prompt/context content.
+
+**Interview note: observability volume edge case**
+
+The first Langfuse rollout traced every proactive poll scope, including quiet pre-filter exits. With roughly 75 active Weeks and a 3-minute poll interval, that created about 1,500 quiet graph runs per hour before counting node-level observations. The fix was semantic trace gating: keep local `fleetgraph_usage` rows for every run, but export Langfuse traces only for chat, mutation-triggered checks, model reasoning, findings, errors, and intentionally selected demo runs. This preserves debugging evidence without turning “nothing changed” polls into a cloud observability bill.
 
 ### 3C — Verify the HITL “agent wrote a comment” beat
 

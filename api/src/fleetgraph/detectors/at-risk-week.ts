@@ -724,46 +724,165 @@ export function createLangfuseAtRiskWeekTraceRunnerWithRuntime(
   runtime: FleetGraphLangfuseRuntime
 ): AtRiskWeekTraceRunner {
   return async (definition, state, operation) => {
-    const propagatedAttributes = createFleetGraphLangfusePropagatedAttributes({
-      traceName: definition.name,
-      sessionId: state.scope.checkpointThreadId,
-      userId: null,
-      tags: definition.tags,
-      metadata: createAtRiskWeekLangfusePropagatedMetadata(definition.inputMetadata),
-    });
+    if (shouldDeferAtRiskWeekLangfuseTrace(definition.inputMetadata)) {
+      return runDeferredAtRiskWeekLangfuseTrace(runtime, definition, state, operation);
+    }
 
-    return runtime.startActiveObservation(definition.name, async (observation) => (
-      runtime.propagateAttributes(propagatedAttributes, async () => {
+    return runImmediateAtRiskWeekLangfuseTrace(runtime, definition, state, operation);
+  };
+}
+
+async function runImmediateAtRiskWeekLangfuseTrace(
+  runtime: FleetGraphLangfuseRuntime,
+  definition: AtRiskWeekTraceDefinition,
+  state: AtRiskWeekGraphState,
+  operation: AtRiskWeekTraceOperation
+): Promise<AtRiskWeekGraphState> {
+  return runtime.startActiveObservation(definition.name, async (observation) => (
+    runtime.propagateAttributes(createAtRiskWeekLangfuseAttributes(definition, state), async () => {
+      observation.update({
+        input: createAtRiskWeekLangfuseInput(definition.inputMetadata),
+        metadata: definition.inputMetadata,
+      });
+
+      try {
+        const outputState = await operation(state);
+        const outputMetadata = createAtRiskWeekTraceMetadata(outputState, definition.inputMetadata.traceNode);
+
         observation.update({
-          input: createAtRiskWeekLangfuseInput(definition.inputMetadata),
-          metadata: definition.inputMetadata,
+          output: createAtRiskWeekLangfuseOutput(outputState, outputMetadata),
+          metadata: outputMetadata,
+          level: 'DEFAULT',
         });
 
-        try {
-          const outputState = await operation(state);
-          const outputMetadata = createAtRiskWeekTraceMetadata(outputState, definition.inputMetadata.traceNode);
+        return outputState;
+      } catch (error) {
+        observation.update({
+          output: {
+            traceMetadata: definition.inputMetadata,
+            errorMessage: errorMessage(error),
+          },
+          level: 'ERROR',
+          statusMessage: errorMessage(error),
+        });
+        throw error;
+      }
+    })
+  ), { asType: definition.runType });
+}
 
-          observation.update({
-            output: createAtRiskWeekLangfuseOutput(outputState, outputMetadata),
-            metadata: outputMetadata,
-            level: 'DEFAULT',
-          });
+async function runDeferredAtRiskWeekLangfuseTrace(
+  runtime: FleetGraphLangfuseRuntime,
+  definition: AtRiskWeekTraceDefinition,
+  state: AtRiskWeekGraphState,
+  operation: AtRiskWeekTraceOperation
+): Promise<AtRiskWeekGraphState> {
+  try {
+    const outputState = await operation(state);
+    const outputMetadata = createAtRiskWeekTraceMetadata(outputState, definition.inputMetadata.traceNode);
 
-          return outputState;
-        } catch (error) {
-          observation.update({
-            output: {
-              traceMetadata: definition.inputMetadata,
-              errorMessage: errorMessage(error),
-            },
-            level: 'ERROR',
-            statusMessage: errorMessage(error),
-          });
-          throw error;
-        }
-      })
-    ), { asType: definition.runType });
-  };
+    if (!shouldExportAtRiskWeekLangfuseTrace(definition.inputMetadata, outputMetadata)) {
+      return outputState;
+    }
+
+    await emitCompletedAtRiskWeekLangfuseTrace(runtime, definition, state, outputState, outputMetadata);
+    return outputState;
+  } catch (error) {
+    await emitFailedAtRiskWeekLangfuseTrace(runtime, definition, state, error);
+    throw error;
+  }
+}
+
+async function emitCompletedAtRiskWeekLangfuseTrace(
+  runtime: FleetGraphLangfuseRuntime,
+  definition: AtRiskWeekTraceDefinition,
+  state: AtRiskWeekGraphState,
+  outputState: AtRiskWeekGraphState,
+  outputMetadata: AtRiskWeekTraceMetadata
+): Promise<void> {
+  await runtime.startActiveObservation(definition.name, async (observation) => (
+    runtime.propagateAttributes(createAtRiskWeekLangfuseAttributes(definition, state), async () => {
+      observation.update({
+        input: createAtRiskWeekLangfuseInput(definition.inputMetadata),
+        metadata: definition.inputMetadata,
+      });
+      observation.update({
+        output: createAtRiskWeekLangfuseOutput(outputState, outputMetadata),
+        metadata: outputMetadata,
+        level: 'DEFAULT',
+      });
+    })
+  ), { asType: definition.runType });
+}
+
+async function emitFailedAtRiskWeekLangfuseTrace(
+  runtime: FleetGraphLangfuseRuntime,
+  definition: AtRiskWeekTraceDefinition,
+  state: AtRiskWeekGraphState,
+  error: unknown
+): Promise<void> {
+  await runtime.startActiveObservation(definition.name, async (observation) => (
+    runtime.propagateAttributes(createAtRiskWeekLangfuseAttributes(definition, state), async () => {
+      observation.update({
+        input: createAtRiskWeekLangfuseInput(definition.inputMetadata),
+        metadata: definition.inputMetadata,
+      });
+      observation.update({
+        output: {
+          traceMetadata: definition.inputMetadata,
+          errorMessage: errorMessage(error),
+        },
+        level: 'ERROR',
+        statusMessage: errorMessage(error),
+      });
+    })
+  ), { asType: definition.runType });
+}
+
+function createAtRiskWeekLangfuseAttributes(
+  definition: AtRiskWeekTraceDefinition,
+  state: AtRiskWeekGraphState
+): ReturnType<typeof createFleetGraphLangfusePropagatedAttributes> {
+  return createFleetGraphLangfusePropagatedAttributes({
+    traceName: definition.name,
+    sessionId: state.scope.checkpointThreadId,
+    userId: null,
+    tags: definition.tags,
+    metadata: createAtRiskWeekLangfusePropagatedMetadata(definition.inputMetadata),
+  });
+}
+
+function shouldDeferAtRiskWeekLangfuseTrace(metadata: AtRiskWeekTraceMetadata): boolean {
+  if (metadata.triggerSource !== 'poll') {
+    return false;
+  }
+
+  return metadata.traceNode === 'run'
+    || metadata.traceNode === 'scope'
+    || metadata.traceNode === 'context'
+    || metadata.traceNode === 'guard'
+    || metadata.traceNode === 'preFilter';
+}
+
+function shouldExportAtRiskWeekLangfuseTrace(
+  inputMetadata: AtRiskWeekTraceMetadata,
+  outputMetadata: AtRiskWeekTraceMetadata
+): boolean {
+  if (inputMetadata.triggerSource !== 'poll') {
+    return true;
+  }
+
+  if (
+    outputMetadata.traceNode === 'scope'
+    || outputMetadata.traceNode === 'context'
+    || outputMetadata.traceNode === 'guard'
+  ) {
+    return false;
+  }
+
+  return outputMetadata.branchPath !== 'prefilter-exit'
+    && outputMetadata.branchPath !== 'guard-exit'
+    && outputMetadata.branchPath !== 'scope-exit';
 }
 
 export function createAtRiskWeekTraceDefinition(
