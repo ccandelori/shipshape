@@ -916,24 +916,6 @@ export function Editor({
             );
           })()}
 
-          {/* Delete button */}
-          {fleetGraphChatDocumentType && (
-            <Tooltip content={fleetGraphChatOpen ? 'Close FleetGraph chat' : 'Open FleetGraph chat'}>
-              <button
-                onClick={() => setFleetGraphChatOpen((open) => !open)}
-                className={cn(
-                  'flex h-6 w-6 items-center justify-center rounded transition-colors',
-                  fleetGraphChatOpen
-                    ? 'bg-accent/20 text-accent'
-                    : 'text-muted hover:bg-border hover:text-foreground'
-                )}
-                aria-label={fleetGraphChatOpen ? 'Close FleetGraph chat' : 'Open FleetGraph chat'}
-              >
-                <FleetGraphChatIcon />
-              </button>
-            </Tooltip>
-          )}
-
           {onDelete && (
             <Tooltip content="Delete document">
               <button
@@ -971,7 +953,29 @@ export function Editor({
       {/* Content area with optional sidebar */}
       <div className="flex flex-1 overflow-hidden">
         {/* Editor area - clickable to focus at end */}
-        <div className="flex flex-1 flex-col overflow-auto cursor-text pb-32">
+        <div className="relative flex flex-1 flex-col overflow-auto cursor-text pb-32">
+          {fleetGraphChatDocumentType && (
+            <div className="pointer-events-none sticky top-0 z-20 -mb-10 flex justify-end px-6 pt-5">
+              <Tooltip content={fleetGraphChatOpen ? 'Hide FleetGraph chat' : 'Ask FleetGraph about this document'}>
+                <button
+                  type="button"
+                  onClick={() => setFleetGraphChatOpen((open) => !open)}
+                  className={cn(
+                    'pointer-events-auto inline-flex h-9 items-center gap-2 rounded-md border px-3 text-sm font-medium shadow-sm transition-colors',
+                    'focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background',
+                    fleetGraphChatOpen
+                      ? 'border-accent/50 bg-accent/20 text-accent shadow-accent/10'
+                      : 'border-border bg-background/95 text-foreground hover:border-accent/40 hover:bg-border/60 hover:text-accent'
+                  )}
+                  aria-expanded={fleetGraphChatOpen}
+                  aria-controls="fleetgraph-chat-panel"
+                >
+                  <FleetGraphChatIcon />
+                  <span>Ask FleetGraph</span>
+                </button>
+              </Tooltip>
+            </div>
+          )}
           <div className="mx-auto max-w-3xl w-full py-8 pr-8 pl-12">
             {/* Breadcrumbs above title */}
             {breadcrumbs && (

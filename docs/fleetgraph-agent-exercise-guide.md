@@ -304,7 +304,7 @@ This exercises FleetGraph's on-demand chat surface. Current architecture note: c
    - `FleetGraph - Embedded Agent Chat`
    - `Expose scoped FleetGraph chat in editor`
    - The current FleetGraph week under the `FleetGraph MVP` program
-3. In the editor header, click the FleetGraph chat bubble button.
+3. Near the upper-right of the document canvas, click the **Ask FleetGraph** pill.
 4. Ask one of these questions:
 
 ```text

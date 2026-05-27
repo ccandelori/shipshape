@@ -65,15 +65,15 @@ Pick **one** environment and use its login + bookmarks for the whole rehearsal a
 
 | Item | Value |
 |------|--------|
-| **App URL** | http://143.198.163.184/ |
+| **App URL** | https://143.198.163.184.nip.io/ |
 | **Email** | `dev@ship.local` |
 | **Password** | `admin123` |
-| **Week 14 (chat)** | http://143.198.163.184/documents/ae794fb3-2b32-449b-819f-34348d317295 |
-| **Trace issue (comment)** | http://143.198.163.184/documents/27e15c1b-3f6c-4e1d-8880-15a5c5705459 |
+| **Week 14 (chat)** | https://143.198.163.184.nip.io/documents/ae794fb3-2b32-449b-819f-34348d317295 |
+| **Trace issue (comment)** | https://143.198.163.184.nip.io/documents/27e15c1b-3f6c-4e1d-8880-15a5c5705459 |
 
 No Docker or terminal required for the **on-stage** flow if you complete **Part 3B** (pre-staging) once.
 
-If the **Action Items** modal opens over the document, click **Got it** before opening FleetGraph chat. The chat button is in the document toolbar behind that modal.
+If the **Action Items** modal opens over the document, click **Got it** before opening FleetGraph chat. The chat button is the **Ask FleetGraph** pill near the upper-right of the document canvas.
 
 #### Important: `/my-week` is NOT where chat lives
 
@@ -150,10 +150,10 @@ Confirm `api/.env.local` has `OPENAI_API_KEY` and Langfuse keys if you want live
    Do **not** stay on `/my-week`.
 2. Dismiss **Action Items** if it appears (**Got it**).
 3. Confirm the URL looks like `/documents/ae794fb3-...` and the big title is **Week 14** with tabs **Overview · Issues · Review · Standups**.
-4. In the **top toolbar** (same row as the Week title / “Back to weeks”), find the **small chat icon** (speech bubble). It has **no text label** — hover it to see the tooltip **“Open FleetGraph chat”**.
-   - It sits near **Delete document** (trash icon), to the left of the trash.
-   - If you cannot click it, **widen the browser window** or collapse the **Docs** tree on the left (chevron / “Collapse sidebar”).
-5. Click that icon. A **FleetGraph Chat** panel opens on the **right** side of the page.
+4. Near the upper-right of the document canvas, find the **Ask FleetGraph** pill.
+   - It sits inside the document area, just left of the properties panel.
+   - If the page is narrow, **widen the browser window** or collapse the **Docs** tree on the left (chevron / “Collapse sidebar”).
+5. Click **Ask FleetGraph**. A **FleetGraph Chat** panel opens on the **right** side of the page.
 6. In **Ask FleetGraph**, paste the question from Part 5, click **Send**, and wait until text streams in.
 
 **Open Week 14 for chat (without the bookmark)**
@@ -303,7 +303,7 @@ Use a **full-width** browser window. Have tabs 1–4 from Part 3D ready.
 1. Switch to **Tab 3** (Week 14 document URL — **not** `/my-week`).
 2. Confirm the page heading says **Week 14** and you see tabs **Overview / Issues / Review / Standups**.
 3. If the **Action Items** modal appears, click **Got it**.
-4. If **FleetGraph Chat** is not open on the right, click the **small speech-bubble icon** in the top toolbar (tooltip: **Open FleetGraph chat**).
+4. If **FleetGraph Chat** is not open on the right, click the **Ask FleetGraph** pill near the upper-right of the document canvas.
 5. In the bottom **Ask FleetGraph** box, paste exactly:
 
    ```text
@@ -422,6 +422,6 @@ Only if you need **live proactive traces** or submission URLs:
 - [ ] **FleetGraph** icon opens the inbox and shows **1** open card (or I know the fallback line).
 - [ ] **Dismiss** works and inbox can close.
 - [ ] Trace **issue** tab shows the agent **comment**.
-- [ ] **Week 14** tab: **Open FleetGraph chat** → **Send** → text streams.
+- [ ] **Week 14** tab: **Ask FleetGraph** → **Send** → text streams.
 - [ ] **Langfuse** tab is already open.
 - [ ] I can deliver the closing line in ~20 seconds without rushing.

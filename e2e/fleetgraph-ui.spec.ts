@@ -149,7 +149,9 @@ test.describe('FleetGraph UI', () => {
     await expect(page).toHaveURL(/\/documents\/[a-f0-9-]+/, { timeout: 10000 });
     await expect(page.locator('.ProseMirror, .tiptap')).toBeVisible({ timeout: 10000 });
 
-    await page.getByRole('button', { name: 'Open FleetGraph chat' }).click();
+    await expect(page.getByRole('button', { name: 'Open FleetGraph chat' })).toHaveCount(0);
+
+    await page.getByRole('button', { name: 'Ask FleetGraph' }).click();
     await expect(page.getByRole('region', { name: 'FleetGraph chat' })).toBeVisible({ timeout: 10000 });
 
     await page.getByLabel('Ask FleetGraph').fill('What changed this week?');
@@ -157,8 +159,9 @@ test.describe('FleetGraph UI', () => {
 
     await expect(page.getByText('Drafting from FleetGraph context...')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Week 12 is at risk because the partner API is still blocked.')).toBeVisible({ timeout: 10000 });
-    await page.getByRole('button', { name: 'Close FleetGraph chat' }).click();
-    await page.getByRole('button', { name: 'Open FleetGraph chat' }).click();
+    await page.getByRole('button', { name: 'Ask FleetGraph' }).click();
+    await expect(page.getByRole('region', { name: 'FleetGraph chat' })).toBeHidden({ timeout: 10000 });
+    await page.getByRole('button', { name: 'Ask FleetGraph' }).click();
     await expect(page.getByText('What changed this week?')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Week 12 is at risk because the partner API is still blocked.')).toBeVisible({ timeout: 10000 });
 

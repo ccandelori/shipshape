@@ -58,8 +58,8 @@ To find it:
 
 1. Close the FleetGraph Inbox modal.
 2. Open a FleetGraph project, issue, or week document.
-3. Look near the editor header for the small chat bubble button.
-4. Click it to open embedded FleetGraph chat.
+3. Look near the upper-right of the document canvas for the **Ask FleetGraph** pill.
+4. Click **Ask FleetGraph** to open embedded FleetGraph chat.
 
 Chat is scoped to the document you are viewing. For example, if you open a FleetGraph issue, chat should answer based on that issue and related project or week context.
 

@@ -281,7 +281,11 @@ export function EmbeddedChat({ documentId, documentType, memoryScope, className 
   };
 
   return (
-    <section className={cn('flex h-full min-h-0 flex-col border-l border-border bg-background', className)} aria-label="FleetGraph chat">
+    <section
+      id="fleetgraph-chat-panel"
+      className={cn('flex h-full min-h-0 flex-col border-l border-border bg-background', className)}
+      aria-label="FleetGraph chat"
+    >
       <header className="border-b border-border px-4 py-3">
         <h2 className="text-sm font-semibold text-foreground">FleetGraph Chat</h2>
         <p className="mt-0.5 text-xs text-muted">{formatDocumentType(documentType)} context</p>
