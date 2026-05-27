@@ -31,6 +31,8 @@ import dashboardRoutes from './routes/dashboard.js';
 import associationsRoutes from './routes/associations.js';
 import accountabilityRoutes from './routes/accountability.js';
 import aiRoutes from './routes/ai.js';
+import fleetGraphRoutes from './routes/fleetgraph.js';
+import fleetGraphChatRoutes from './routes/fleetgraph-chat.js';
 import weeklyPlansRoutes, { weeklyRetrosRouter } from './routes/weekly-plans.js';
 import { documentCommentsRouter, commentsRouter } from './routes/comments.js';
 import healthCollaborationRoutes from './routes/health-collaboration.js';
@@ -229,6 +231,10 @@ export function createApp(corsOrigin: string = 'http://localhost:5173'): express
 
   // Accountability routes - inference-based action items (read-only GET)
   app.use('/api/accountability', accountabilityRoutes);
+
+  // FleetGraph inbox routes - read-only listing plus CSRF-protected mutations
+  app.use('/api/fleetgraph', conditionalCsrf, fleetGraphRoutes);
+  app.use('/api/fleetgraph', conditionalCsrf, fleetGraphChatRoutes);
 
   // AI analysis routes - plan and retro quality feedback (CSRF protected)
   app.use('/api/ai', conditionalCsrf, aiRoutes);

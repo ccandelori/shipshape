@@ -1,8 +1,14 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest'
+import { describe, it, expect, beforeAll, afterAll, beforeEach, vi } from 'vitest'
 import request from 'supertest'
 import crypto from 'crypto'
+
+vi.mock('../fleetgraph/triggers.js', () => ({
+  enqueueMutationCheck: vi.fn(),
+}))
+
 import { createApp } from '../app.js'
 import { pool } from '../db/client.js'
+import { enqueueMutationCheck } from '../fleetgraph/triggers.js'
 
 describe('Standups API', () => {
   const app = createApp()
@@ -131,6 +137,8 @@ describe('Standups API', () => {
   })
 
   beforeEach(async () => {
+    vi.mocked(enqueueMutationCheck).mockClear()
+
     // Clean up standups before each test
     await pool.query(
       `DELETE FROM documents WHERE workspace_id = $1 AND document_type = 'standup'`,
@@ -154,6 +162,7 @@ describe('Standups API', () => {
       expect(response.body.sprint_id).toBe(testSprintId)
       expect(response.body.author_id).toBe(testUserId)
       expect(response.body.title).toBe('Daily Standup')
+      expect(enqueueMutationCheck).toHaveBeenCalledWith(testWorkspaceId, testSprintId)
     })
 
     it('returns 404 for non-existent sprint', async () => {
@@ -257,6 +266,7 @@ describe('Standups API', () => {
       expect(response.status).toBe(200)
       expect(response.body.title).toBe('Updated Title')
       expect(response.body.content).toEqual(newContent)
+      expect(enqueueMutationCheck).toHaveBeenCalledWith(testWorkspaceId, testSprintId)
     })
 
     it('returns 403 for non-author', async () => {

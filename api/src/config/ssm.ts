@@ -8,9 +8,37 @@
  * SSM Parameter Store (/ship/{env}/):
  *   - DATABASE_URL, SESSION_SECRET, CORS_ORIGIN
  *   - Application config that changes per environment
+ *   - FleetGraph OpenAI and Langfuse runtime config
  *   - CAIA OAuth credentials (CAIA_ISSUER_URL, CAIA_CLIENT_ID, etc.)
  */
 import { SSMClient, GetParameterCommand } from '@aws-sdk/client-ssm';
+
+export const productionSecretKeys = [
+  'DATABASE_URL',
+  'SESSION_SECRET',
+  'CORS_ORIGIN',
+  'CDN_DOMAIN',
+  'APP_BASE_URL',
+  'OPENAI_API_KEY',
+  'LANGFUSE_PUBLIC_KEY',
+  'LANGFUSE_SECRET_KEY',
+  'LANGFUSE_BASE_URL',
+] as const;
+
+export type ProductionSecretKey = typeof productionSecretKeys[number];
+
+export type ProductionSecretValues = {
+  [key in ProductionSecretKey]: string;
+};
+
+export type ProductionSecretEnv = Record<string, string | undefined>;
+
+export type ProductionSecretLoader = (name: string) => Promise<string>;
+
+export interface LoadProductionSecretValuesInput {
+  environment: string;
+  getSecret: ProductionSecretLoader;
+}
 
 // Lazy-initialized client to avoid keeping Node.js alive during import tests
 let _client: SSMClient | null = null;
@@ -35,18 +63,46 @@ export async function getSSMSecret(name: string): Promise<string> {
   return response.Parameter.Value;
 }
 
+export function buildProductionSecretParameterName(
+  environment: string,
+  key: ProductionSecretKey
+): string {
+  return `/ship/${environment}/${key}`;
+}
+
+export function shouldSkipProductionSecretLoading(env: ProductionSecretEnv): boolean {
+  return productionSecretKeys.every((key) => hasSecretValue(env[key]));
+}
+
+export async function loadProductionSecretValues(
+  input: LoadProductionSecretValuesInput
+): Promise<ProductionSecretValues> {
+  const values: Partial<Record<ProductionSecretKey, string>> = {};
+
+  for (const key of productionSecretKeys) {
+    values[key] = await input.getSecret(buildProductionSecretParameterName(input.environment, key));
+  }
+
+  return {
+    DATABASE_URL: requireLoadedProductionSecret(values, 'DATABASE_URL'),
+    SESSION_SECRET: requireLoadedProductionSecret(values, 'SESSION_SECRET'),
+    CORS_ORIGIN: requireLoadedProductionSecret(values, 'CORS_ORIGIN'),
+    CDN_DOMAIN: requireLoadedProductionSecret(values, 'CDN_DOMAIN'),
+    APP_BASE_URL: requireLoadedProductionSecret(values, 'APP_BASE_URL'),
+    OPENAI_API_KEY: requireLoadedProductionSecret(values, 'OPENAI_API_KEY'),
+    LANGFUSE_PUBLIC_KEY: requireLoadedProductionSecret(values, 'LANGFUSE_PUBLIC_KEY'),
+    LANGFUSE_SECRET_KEY: requireLoadedProductionSecret(values, 'LANGFUSE_SECRET_KEY'),
+    LANGFUSE_BASE_URL: requireLoadedProductionSecret(values, 'LANGFUSE_BASE_URL'),
+  };
+}
+
 export async function loadProductionSecrets(): Promise<void> {
   if (process.env.NODE_ENV !== 'production') {
     return; // Use .env files for local dev
   }
 
-  // Skip SSM if the required secrets are already in process.env. This lets the
-  // app run on non-AWS hosts (e.g. a DigitalOcean droplet using a systemd
-  // EnvironmentFile, or any platform where secrets come from elsewhere) while
-  // keeping AWS Elastic Beanstalk deployments unchanged — EB doesn't pre-set
-  // DATABASE_URL, so it falls through to the SSM path below.
-  if (process.env.DATABASE_URL && process.env.SESSION_SECRET) {
-    console.log('DATABASE_URL + SESSION_SECRET already set; skipping SSM secret loading');
+  if (shouldSkipProductionSecretLoading(process.env)) {
+    console.log('Production secrets already set; skipping SSM secret loading');
     return;
   }
 
@@ -55,22 +111,35 @@ export async function loadProductionSecrets(): Promise<void> {
 
   console.log(`Loading secrets from SSM path: ${basePath}`);
 
-  const [databaseUrl, sessionSecret, corsOrigin, cdnDomain, appBaseUrl] = await Promise.all([
-    getSSMSecret(`${basePath}/DATABASE_URL`),
-    getSSMSecret(`${basePath}/SESSION_SECRET`),
-    getSSMSecret(`${basePath}/CORS_ORIGIN`),
-    getSSMSecret(`${basePath}/CDN_DOMAIN`),
-    getSSMSecret(`${basePath}/APP_BASE_URL`),
-  ]);
+  const values = await loadProductionSecretValues({
+    environment,
+    getSecret: getSSMSecret,
+  });
 
-  process.env.DATABASE_URL = databaseUrl;
-  process.env.SESSION_SECRET = sessionSecret;
-  process.env.CORS_ORIGIN = corsOrigin;
-  process.env.CDN_DOMAIN = cdnDomain;
-  process.env.APP_BASE_URL = appBaseUrl;
+  for (const key of productionSecretKeys) {
+    process.env[key] = values[key];
+  }
 
   console.log('Secrets loaded from SSM Parameter Store');
-  console.log(`CORS_ORIGIN: ${corsOrigin}`);
-  console.log(`CDN_DOMAIN: ${cdnDomain}`);
-  console.log(`APP_BASE_URL: ${appBaseUrl}`);
+  console.log(`CORS_ORIGIN: ${values.CORS_ORIGIN}`);
+  console.log(`CDN_DOMAIN: ${values.CDN_DOMAIN}`);
+  console.log(`APP_BASE_URL: ${values.APP_BASE_URL}`);
+  console.log(`LANGFUSE_BASE_URL: ${values.LANGFUSE_BASE_URL}`);
+}
+
+function hasSecretValue(value: string | undefined): boolean {
+  return value !== undefined && value.trim().length > 0;
+}
+
+function requireLoadedProductionSecret(
+  values: Partial<Record<ProductionSecretKey, string>>,
+  key: ProductionSecretKey
+): string {
+  const value = values[key];
+
+  if (value === undefined || value.trim().length === 0) {
+    throw new Error(`SSM parameter /ship/{env}/${key} returned an empty value`);
+  }
+
+  return value;
 }

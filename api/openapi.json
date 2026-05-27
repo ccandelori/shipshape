@@ -5421,6 +5421,643 @@
         "required": [
           "available"
         ]
+      },
+      "FleetGraphDetectorType": {
+        "type": "string",
+        "enum": [
+          "at_risk_week",
+          "stale_blocker",
+          "missing_standup",
+          "planless_week",
+          "scope_creep",
+          "ownership_unclear"
+        ],
+        "description": "FleetGraph detector that produced the finding"
+      },
+      "FleetGraphSeverity": {
+        "type": "string",
+        "enum": [
+          "low",
+          "medium",
+          "high",
+          "critical"
+        ],
+        "description": "Risk severity assigned by the detector"
+      },
+      "FleetGraphLifecycleState": {
+        "type": "string",
+        "enum": [
+          "open",
+          "pending_review",
+          "approved",
+          "executed",
+          "rejected",
+          "dismissed",
+          "snoozed",
+          "expired"
+        ],
+        "description": "Current state in the FleetGraph finding lifecycle"
+      },
+      "FleetGraphActionKind": {
+        "type": "string",
+        "enum": [
+          "notify",
+          "draft_comment",
+          "create_issue",
+          "update_issue_state",
+          "assign_issue"
+        ],
+        "description": "Recommended action type"
+      },
+      "FleetGraphApprovalLevel": {
+        "type": "string",
+        "enum": [
+          "none",
+          "notify_only",
+          "approval_required"
+        ],
+        "description": "Persistence-level approval gate for the action candidate"
+      },
+      "FleetGraphReversibility": {
+        "type": "string",
+        "enum": [
+          "reversible",
+          "partially_reversible",
+          "irreversible"
+        ],
+        "description": "How safely the recommended action can be undone after execution"
+      },
+      "FleetGraphEvidenceItem": {
+        "type": "object",
+        "properties": {
+          "source_type": {
+            "type": "string",
+            "enum": [
+              "document",
+              "issue",
+              "standup",
+              "iteration",
+              "accountability",
+              "finding"
+            ]
+          },
+          "source_document_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "quote": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Evidence quote or extracted signal supporting the finding"
+          },
+          "observed_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 datetime string",
+            "example": "2025-01-30T14:30:00.000Z"
+          }
+        },
+        "required": [
+          "source_type",
+          "quote"
+        ]
+      },
+      "FleetGraphRecommendedAction": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "notify",
+              "draft_comment",
+              "create_issue",
+              "update_issue_state",
+              "assign_issue"
+            ],
+            "description": "Recommended action type"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000
+          }
+        },
+        "required": [
+          "kind",
+          "body"
+        ]
+      },
+      "FleetGraphScopedDocument": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "document_type": {
+            "type": "string",
+            "description": "Ship document type for the scoped document"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "document_type",
+          "title"
+        ]
+      },
+      "FleetGraphActionCandidate": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "finding_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "target_document": {
+            "$ref": "#/components/schemas/FleetGraphScopedDocument"
+          },
+          "owner_user": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserReference"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "role_reason": {
+            "type": "string",
+            "minLength": 1
+          },
+          "urgency": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "description": "Risk severity assigned by the detector"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FleetGraphEvidenceItem"
+            },
+            "minItems": 1
+          },
+          "recommended_action": {
+            "$ref": "#/components/schemas/FleetGraphRecommendedAction"
+          },
+          "approval_level": {
+            "type": "string",
+            "enum": [
+              "none",
+              "notify_only",
+              "approval_required"
+            ],
+            "description": "Persistence-level approval gate for the action candidate"
+          },
+          "reversibility": {
+            "type": "string",
+            "enum": [
+              "reversible",
+              "partially_reversible",
+              "irreversible"
+            ],
+            "description": "How safely the recommended action can be undone after execution"
+          }
+        },
+        "required": [
+          "id",
+          "finding_id",
+          "target_document",
+          "owner_user",
+          "role_reason",
+          "urgency",
+          "evidence",
+          "recommended_action",
+          "approval_level",
+          "reversibility"
+        ]
+      },
+      "FleetGraphFinding": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "workspace_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "UUID identifier",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "scoped_document": {
+            "$ref": "#/components/schemas/FleetGraphScopedDocument"
+          },
+          "detector_type": {
+            "type": "string",
+            "enum": [
+              "at_risk_week",
+              "stale_blocker",
+              "missing_standup",
+              "planless_week",
+              "scope_creep",
+              "ownership_unclear"
+            ],
+            "description": "FleetGraph detector that produced the finding"
+          },
+          "severity": {
+            "type": "string",
+            "enum": [
+              "low",
+              "medium",
+              "high",
+              "critical"
+            ],
+            "description": "Risk severity assigned by the detector"
+          },
+          "evidence": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FleetGraphEvidenceItem"
+            },
+            "minItems": 1
+          },
+          "recipient_user": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UserReference"
+              },
+              {
+                "nullable": true
+              }
+            ]
+          },
+          "lifecycle_state": {
+            "type": "string",
+            "enum": [
+              "open",
+              "pending_review",
+              "approved",
+              "executed",
+              "rejected",
+              "dismissed",
+              "snoozed",
+              "expired"
+            ],
+            "description": "Current state in the FleetGraph finding lifecycle"
+          },
+          "material_change_key": {
+            "type": "string",
+            "minLength": 1
+          },
+          "created_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 datetime string",
+            "example": "2025-01-30T14:30:00.000Z"
+          },
+          "updated_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 datetime string",
+            "example": "2025-01-30T14:30:00.000Z"
+          },
+          "expires_at": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time",
+            "description": "ISO 8601 datetime string",
+            "example": "2025-01-30T14:30:00.000Z"
+          },
+          "action_candidates": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FleetGraphActionCandidate"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "workspace_id",
+          "scoped_document",
+          "detector_type",
+          "severity",
+          "evidence",
+          "recipient_user",
+          "lifecycle_state",
+          "material_change_key",
+          "created_at",
+          "updated_at",
+          "expires_at",
+          "action_candidates"
+        ]
+      },
+      "FleetGraphFindingListQuery": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 100,
+            "default": 20,
+            "description": "Items per page (max 100)"
+          },
+          "cursor": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Opaque cursor returned by the previous page. Encodes the last seen created_at and id."
+          },
+          "lifecycle_state": {
+            "type": "string",
+            "enum": [
+              "open",
+              "pending_review",
+              "approved",
+              "executed",
+              "rejected",
+              "dismissed",
+              "snoozed",
+              "expired"
+            ],
+            "description": "Filter by a single lifecycle_state. Results are always sorted by created_at desc.",
+            "example": "pending_review"
+          },
+          "detector_type": {
+            "type": "string",
+            "enum": [
+              "at_risk_week",
+              "stale_blocker",
+              "missing_standup",
+              "planless_week",
+              "scope_creep",
+              "ownership_unclear"
+            ],
+            "description": "FleetGraph detector that produced the finding"
+          },
+          "recipient_user_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Filter to findings assigned to a recipient user",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          }
+        }
+      },
+      "FleetGraphFindingListResponse": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FleetGraphFinding"
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "hasMore": {
+            "type": "boolean"
+          },
+          "next_cursor": {
+            "type": "string",
+            "nullable": true,
+            "description": "Opaque cursor for the next page, or null when no more findings are available"
+          }
+        },
+        "required": [
+          "items",
+          "limit",
+          "hasMore",
+          "next_cursor"
+        ]
+      },
+      "FleetGraphApproveFindingRequest": {
+        "type": "object",
+        "properties": {
+          "action_candidate_id": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Specific action candidate to approve when the finding has multiple candidates",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "edited_action": {
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FleetGraphRecommendedAction"
+              },
+              {
+                "nullable": true,
+                "description": "Optional human-edited replacement for the recommended action"
+              }
+            ]
+          },
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Client-generated key for safely retrying duplicate approval submissions"
+          }
+        }
+      },
+      "FleetGraphRejectFindingRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "FleetGraphDismissFindingRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
+      "FleetGraphSnoozeFindingRequest": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          },
+          "expires_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Timestamp when the snoozed finding becomes eligible again",
+            "example": "2025-01-30T14:30:00.000Z"
+          },
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "reason",
+          "expires_at"
+        ]
+      },
+      "FleetGraphResumeActionRequest": {
+        "type": "object",
+        "properties": {
+          "idempotency_key": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120,
+            "description": "Client-generated key for safely retrying duplicate resume submissions"
+          }
+        }
+      },
+      "FleetGraphChatDocumentType": {
+        "type": "string",
+        "enum": [
+          "sprint",
+          "project",
+          "issue"
+        ],
+        "description": "Document types supported by FleetGraph chat context loading"
+      },
+      "FleetGraphChatMessage": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant"
+            ],
+            "description": "Conversation message author role"
+          },
+          "content": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 8000,
+            "description": "Prior conversation message content"
+          }
+        },
+        "required": [
+          "role",
+          "content"
+        ]
+      },
+      "FleetGraphChatRequest": {
+        "type": "object",
+        "properties": {
+          "documentId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "Scoped Ship document id. Must belong to the authenticated workspace.",
+            "example": "550e8400-e29b-41d4-a716-446655440000"
+          },
+          "documentType": {
+            "type": "string",
+            "enum": [
+              "sprint",
+              "project",
+              "issue"
+            ],
+            "description": "Document types supported by FleetGraph chat context loading"
+          },
+          "question": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 4000,
+            "description": "User question to answer using only the scoped Ship context"
+          },
+          "conversationHistory": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FleetGraphChatMessage"
+            },
+            "maxItems": 50,
+            "description": "Bounded prior user/assistant messages. The server uses the most recent 10 messages for model context."
+          }
+        },
+        "required": [
+          "documentId",
+          "documentType",
+          "question",
+          "conversationHistory"
+        ]
+      },
+      "FleetGraphChatRateLimitResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string"
+          },
+          "retry_after_seconds": {
+            "type": "integer",
+            "minimum": 0,
+            "exclusiveMinimum": true
+          },
+          "reset_at": {
+            "type": "string",
+            "format": "date-time",
+            "description": "ISO 8601 datetime string",
+            "example": "2025-01-30T14:30:00.000Z"
+          }
+        },
+        "required": [
+          "error",
+          "retry_after_seconds",
+          "reset_at"
+        ]
+      },
+      "FleetGraphChatSseStream": {
+        "type": "string",
+        "description": "Server-Sent Events stream. Frames are newline-delimited and use named events: heartbeat, token, final, and error. The server sets Cache-Control: no-cache, no-transform and X-Accel-Buffering: no.",
+        "example": "event: heartbeat\ndata: {\"sentAt\":\"2026-05-26T12:00:00.000Z\"}\n\nevent: token\ndata: {\"token\":\"The \"}\n\nevent: token\ndata: {\"token\":\"answer\"}\n\nevent: final\ndata: {\"response\":\"The answer\",\"usage\":{\"modelName\":\"gpt-4o-mini\",\"inputTokens\":12,\"outputTokens\":4,\"totalTokens\":16}}\n"
       }
     },
     "parameters": {}
@@ -11203,6 +11840,707 @@
           },
           "429": {
             "description": "Rate limit exceeded (max 10 per hour)"
+          }
+        }
+      }
+    },
+    "/fleetgraph/findings": {
+      "get": {
+        "tags": [
+          "FleetGraph"
+        ],
+        "summary": "List FleetGraph findings",
+        "description": "Lists findings for the current workspace, filterable by lifecycle_state and sorted by created_at desc.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 100,
+              "default": 20,
+              "description": "Items per page (max 100)"
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "Opaque cursor returned by the previous page. Encodes the last seen created_at and id."
+            },
+            "required": false,
+            "name": "cursor",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "open",
+                "pending_review",
+                "approved",
+                "executed",
+                "rejected",
+                "dismissed",
+                "snoozed",
+                "expired"
+              ],
+              "description": "Filter by a single lifecycle_state. Results are always sorted by created_at desc.",
+              "example": "pending_review"
+            },
+            "required": false,
+            "name": "lifecycle_state",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "at_risk_week",
+                "stale_blocker",
+                "missing_standup",
+                "planless_week",
+                "scope_creep",
+                "ownership_unclear"
+              ],
+              "description": "FleetGraph detector that produced the finding"
+            },
+            "required": false,
+            "name": "detector_type",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Filter to findings assigned to a recipient user",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": false,
+            "name": "recipient_user_id",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "FleetGraph findings for the current workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FleetGraphFindingListResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Current user cannot access this workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fleetgraph/chat": {
+      "post": {
+        "tags": [
+          "FleetGraph"
+        ],
+        "summary": "Stream a context-scoped FleetGraph chat answer",
+        "description": "Starts an on-demand FleetGraph chat response scoped to a sprint, project, or issue document in the current workspace. Successful responses are streamed as text/event-stream frames with heartbeat, token, final, and error events. The transport sets Content-Type: text/event-stream, Cache-Control: no-cache, no-transform, Connection: keep-alive, and X-Accel-Buffering: no. Reverse proxies and CDNs must not buffer or cache this route.",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FleetGraphChatRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "SSE stream of FleetGraph chat events",
+            "headers": {
+              "Cache-Control": {
+                "description": "Disables cache and transformation buffering for the stream",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "no-cache, no-transform"
+              },
+              "Connection": {
+                "description": "Keeps the response connection open for streaming",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "keep-alive"
+              },
+              "X-Accel-Buffering": {
+                "description": "Disables nginx response buffering where supported",
+                "schema": {
+                  "type": "string"
+                },
+                "example": "no"
+              }
+            },
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "type": "string",
+                  "description": "Server-Sent Events stream. Frames are newline-delimited and use named events: heartbeat, token, final, and error. The server sets Cache-Control: no-cache, no-transform and X-Accel-Buffering: no.",
+                  "example": "event: heartbeat\ndata: {\"sentAt\":\"2026-05-26T12:00:00.000Z\"}\n\nevent: token\ndata: {\"token\":\"The \"}\n\nevent: token\ndata: {\"token\":\"answer\"}\n\nevent: final\ndata: {\"response\":\"The answer\",\"usage\":{\"modelName\":\"gpt-4o-mini\",\"inputTokens\":12,\"outputTokens\":4,\"totalTokens\":16}}\n"
+                },
+                "examples": {
+                  "heartbeat": {
+                    "summary": "Heartbeat frame",
+                    "value": "event: heartbeat\ndata: {\"sentAt\":\"2026-05-26T12:00:00.000Z\"}\n\n"
+                  },
+                  "token": {
+                    "summary": "Token frame",
+                    "value": "event: token\ndata: {\"token\":\"The \"}\n\n"
+                  },
+                  "final": {
+                    "summary": "Final answer frame",
+                    "value": "event: final\ndata: {\"response\":\"The answer\",\"usage\":{\"modelName\":\"gpt-4o-mini\",\"inputTokens\":12,\"outputTokens\":4,\"totalTokens\":16}}\n\n"
+                  },
+                  "error": {
+                    "summary": "Post-stream error frame",
+                    "value": "event: error\ndata: {\"error\":\"FleetGraph chat stream failed\"}\n\n"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Scoped document not found in the current workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Per-user FleetGraph chat rate limit exceeded",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FleetGraphChatRateLimitResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "FleetGraph chat is not configured",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fleetgraph/findings/{id}/approve": {
+      "post": {
+        "tags": [
+          "FleetGraph"
+        ],
+        "summary": "Approve a FleetGraph action candidate",
+        "description": "Allowed transition: pending_review -> approved. Duplicate approvals for an already approved finding return 409 unless the same idempotency_key is replayed.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUID identifier",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FleetGraphApproveFindingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "FleetGraph finding approved",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FleetGraphFinding"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Current user is not allowed to mutate this finding",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Finding or action candidate not found in the current workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lifecycle conflict or duplicate submission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fleetgraph/findings/{id}/reject": {
+      "post": {
+        "tags": [
+          "FleetGraph"
+        ],
+        "summary": "Reject a FleetGraph action candidate",
+        "description": "Allowed transition: pending_review -> rejected. Duplicate or stale submissions return 409.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUID identifier",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FleetGraphRejectFindingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "FleetGraph finding rejected",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FleetGraphFinding"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Current user is not allowed to mutate this finding",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Finding or action candidate not found in the current workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lifecycle conflict or duplicate submission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fleetgraph/findings/{id}/dismiss": {
+      "post": {
+        "tags": [
+          "FleetGraph"
+        ],
+        "summary": "Dismiss a FleetGraph finding",
+        "description": "Allowed transition: open or pending_review -> dismissed. Creates a dismissed suppression record and stale submissions return 409.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUID identifier",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FleetGraphDismissFindingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "FleetGraph finding dismissed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FleetGraphFinding"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Current user is not allowed to mutate this finding",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Finding or action candidate not found in the current workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lifecycle conflict or duplicate submission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fleetgraph/findings/{id}/snooze": {
+      "post": {
+        "tags": [
+          "FleetGraph"
+        ],
+        "summary": "Snooze a FleetGraph finding",
+        "description": "Allowed transition: open or pending_review -> snoozed. Creates a snoozed suppression with expires_at and stale submissions return 409.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUID identifier",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FleetGraphSnoozeFindingRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "FleetGraph finding snoozed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FleetGraphFinding"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Current user is not allowed to mutate this finding",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Finding or action candidate not found in the current workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lifecycle conflict or duplicate submission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/fleetgraph/actions/{actionId}/resume": {
+      "post": {
+        "tags": [
+          "FleetGraph"
+        ],
+        "summary": "Resume an approved FleetGraph action",
+        "description": "Allowed transition: approved -> executed. Only the recipient user or a workspace admin can resume; duplicate execution attempts return 409 unless the same idempotency_key is replayed.",
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid",
+              "description": "UUID identifier",
+              "example": "550e8400-e29b-41d4-a716-446655440000"
+            },
+            "required": true,
+            "name": "actionId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FleetGraphResumeActionRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "FleetGraph action resumed and executed",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FleetGraphFinding"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid request body",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Authentication required",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Current user is not allowed to mutate this finding",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Finding or action candidate not found in the current workspace",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Lifecycle conflict or duplicate submission",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
           }
         }
       }

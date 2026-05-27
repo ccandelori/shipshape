@@ -1,0 +1,326 @@
+import { useEffect, useRef, useState } from 'react';
+import { apiPost } from '@/lib/api';
+import { cn } from '@/lib/cn';
+import { createId } from '@/lib/createId';
+import {
+  createFleetGraphChatStreamState,
+  reduceFleetGraphChatStreamEvent,
+  type FleetGraphChatSseEvent,
+  type FleetGraphChatStreamState,
+} from '@/lib/fleetgraphChatState';
+import { readFleetGraphChatSseStream } from '@/lib/fleetgraphChatStream';
+
+export type FleetGraphChatDocumentType = 'sprint' | 'project' | 'issue';
+
+interface EmbeddedChatProps {
+  documentId: string;
+  documentType: FleetGraphChatDocumentType;
+  className?: string;
+}
+
+type EmbeddedChatRole = 'user' | 'assistant';
+type EmbeddedChatMessageStatus = 'sent' | 'streaming' | 'completed' | 'failed';
+
+interface EmbeddedChatMessage {
+  id: string;
+  role: EmbeddedChatRole;
+  content: string;
+  status: EmbeddedChatMessageStatus;
+}
+
+interface FleetGraphChatRequestMessage {
+  role: EmbeddedChatRole;
+  content: string;
+}
+
+interface FleetGraphChatRequestBody {
+  documentId: string;
+  documentType: FleetGraphChatDocumentType;
+  question: string;
+  conversationHistory: FleetGraphChatRequestMessage[];
+}
+
+interface FleetGraphChatErrorResponse {
+  error?: string;
+  retry_after_seconds?: number;
+}
+
+export function EmbeddedChat({ documentId, documentType, className }: EmbeddedChatProps) {
+  const [messages, setMessages] = useState<EmbeddedChatMessage[]>([]);
+  const [question, setQuestion] = useState('');
+  const [streamState, setStreamState] = useState<FleetGraphChatStreamState>(
+    createFleetGraphChatStreamState()
+  );
+  const requestIdRef = useRef(0);
+  const isStreaming = streamState.status === 'streaming';
+
+  useEffect(() => {
+    return () => {
+      requestIdRef.current += 1;
+    };
+  }, []);
+
+  const submitQuestion = () => {
+    const trimmedQuestion = question.trim();
+
+    if (trimmedQuestion.length === 0 || isStreaming) {
+      return;
+    }
+
+    try {
+      const requestId = requestIdRef.current + 1;
+      requestIdRef.current = requestId;
+      const userMessage: EmbeddedChatMessage = {
+        id: createId('user'),
+        role: 'user',
+        content: trimmedQuestion,
+        status: 'sent',
+      };
+      const assistantMessageId = createId('assistant');
+      const assistantMessage: EmbeddedChatMessage = {
+        id: assistantMessageId,
+        role: 'assistant',
+        content: '',
+        status: 'streaming',
+      };
+      const conversationHistory = buildConversationHistory(messages);
+
+      setQuestion('');
+      setStreamState(createFleetGraphChatStreamState());
+      setMessages((currentMessages) => [...currentMessages, userMessage, assistantMessage]);
+
+      void sendFleetGraphChatRequest({
+        requestId,
+        assistantMessageId,
+        body: {
+          documentId,
+          documentType,
+          question: trimmedQuestion,
+          conversationHistory,
+        },
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'FleetGraph chat could not start';
+      setStreamState({
+        ...createFleetGraphChatStreamState(),
+        status: 'failed',
+        error: message,
+      });
+    }
+  };
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    submitQuestion();
+  };
+
+  const sendFleetGraphChatRequest = async (input: {
+    requestId: number;
+    assistantMessageId: string;
+    body: FleetGraphChatRequestBody;
+  }): Promise<void> => {
+    try {
+      const response = await apiPost('/api/fleetgraph/chat', input.body);
+
+      if (!response.ok) {
+        const message = await readFleetGraphChatErrorMessage(response);
+        applyStreamFailure(input.requestId, input.assistantMessageId, message);
+        return;
+      }
+
+      await readFleetGraphChatSseStream(response, (event) => {
+        applyStreamEvent(input.requestId, input.assistantMessageId, event);
+      });
+      finalizeStreamIfNeeded(input.requestId, input.assistantMessageId);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'FleetGraph chat request failed';
+      applyStreamFailure(input.requestId, input.assistantMessageId, message);
+    }
+  };
+
+  const applyStreamEvent = (
+    requestId: number,
+    assistantMessageId: string,
+    event: FleetGraphChatSseEvent
+  ) => {
+    if (requestIdRef.current !== requestId) {
+      return;
+    }
+
+    setStreamState((currentState) => reduceFleetGraphChatStreamEvent(currentState, event));
+
+    if (event.event === 'token') {
+      setMessages((currentMessages) => currentMessages.map((message) => (
+        message.id === assistantMessageId
+          ? { ...message, content: message.content + event.data.token, status: 'streaming' }
+          : message
+      )));
+    }
+
+    if (event.event === 'final') {
+      setMessages((currentMessages) => currentMessages.map((message) => (
+        message.id === assistantMessageId
+          ? { ...message, content: event.data.response, status: 'completed' }
+          : message
+      )));
+    }
+
+    if (event.event === 'error') {
+      setMessages((currentMessages) => currentMessages.map((message) => (
+        message.id === assistantMessageId
+          ? { ...message, status: 'failed' }
+          : message
+      )));
+    }
+  };
+
+  const finalizeStreamIfNeeded = (requestId: number, assistantMessageId: string) => {
+    if (requestIdRef.current !== requestId) {
+      return;
+    }
+
+    setStreamState((currentState) => {
+      if (currentState.status !== 'streaming') {
+        return currentState;
+      }
+
+      return {
+        ...currentState,
+        status: 'completed',
+        error: null,
+      };
+    });
+
+    setMessages((currentMessages) => currentMessages.map((chatMessage) => (
+      chatMessage.id === assistantMessageId && chatMessage.status === 'streaming'
+        ? { ...chatMessage, status: 'completed' }
+        : chatMessage
+    )));
+  };
+
+  const applyStreamFailure = (
+    requestId: number,
+    assistantMessageId: string,
+    message: string
+  ) => {
+    if (requestIdRef.current !== requestId) {
+      return;
+    }
+
+    setStreamState({
+      ...createFleetGraphChatStreamState(),
+      status: 'failed',
+      error: message,
+    });
+    setMessages((currentMessages) => currentMessages.map((chatMessage) => (
+      chatMessage.id === assistantMessageId
+        ? { ...chatMessage, content: message, status: 'failed' }
+        : chatMessage
+    )));
+  };
+
+  return (
+    <section className={cn('flex h-full min-h-0 flex-col border-l border-border bg-background', className)} aria-label="FleetGraph chat">
+      <header className="border-b border-border px-4 py-3">
+        <h2 className="text-sm font-semibold text-foreground">FleetGraph Chat</h2>
+        <p className="mt-0.5 text-xs text-muted">{formatDocumentType(documentType)} context</p>
+      </header>
+
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
+        {messages.length === 0 && (
+          <div className="rounded-lg border border-border bg-border/10 px-3 py-4 text-sm text-muted">
+            Ask about risks, blockers, ownership, or likely next actions.
+          </div>
+        )}
+
+        {messages.map((message) => (
+          <ChatMessageBubble key={message.id} message={message} />
+        ))}
+      </div>
+
+      {streamState.error && (
+        <div className="border-t border-red-500/30 bg-red-500/10 px-4 py-2 text-sm text-red-300" role="alert">
+          {streamState.error}
+        </div>
+      )}
+
+      <form onSubmit={handleSubmit} className="border-t border-border p-3">
+        <label className="mb-2 block text-xs font-medium text-muted" htmlFor="fleetgraph-chat-question">
+          Ask FleetGraph
+        </label>
+        <div className="flex items-end gap-2">
+          <textarea
+            id="fleetgraph-chat-question"
+            value={question}
+            onChange={(event) => setQuestion(event.target.value)}
+            rows={3}
+            disabled={isStreaming}
+            className="min-h-[72px] flex-1 resize-none rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-accent focus:outline-none disabled:opacity-60"
+            placeholder="What changed this week?"
+          />
+          <button
+            type="submit"
+            aria-label="Send message"
+            disabled={question.trim().length === 0 || isStreaming}
+            className="rounded-md bg-accent px-3 py-2 text-sm font-medium text-white transition-colors hover:bg-accent/90 disabled:opacity-50"
+          >
+            {isStreaming ? 'Sending...' : 'Send'}
+          </button>
+        </div>
+      </form>
+    </section>
+  );
+}
+
+function ChatMessageBubble({ message }: { message: EmbeddedChatMessage }) {
+  const isUser = message.role === 'user';
+
+  return (
+    <div className={cn('flex', isUser ? 'justify-end' : 'justify-start')}>
+      <div
+        className={cn(
+          'max-w-[85%] rounded-lg px-3 py-2 text-sm',
+          isUser
+            ? 'bg-accent text-white'
+            : 'border border-border bg-border/10 text-foreground',
+          message.status === 'failed' && 'border-red-500/30 bg-red-500/10 text-red-300'
+        )}
+      >
+        <p className="whitespace-pre-wrap">{message.content || (message.status === 'streaming' ? '...' : '')}</p>
+      </div>
+    </div>
+  );
+}
+
+function buildConversationHistory(messages: EmbeddedChatMessage[]): FleetGraphChatRequestMessage[] {
+  return messages
+    .filter((message) => message.content.trim().length > 0 && message.status !== 'failed')
+    .map((message) => ({
+      role: message.role,
+      content: message.content,
+    }));
+}
+
+async function readFleetGraphChatErrorMessage(response: Response): Promise<string> {
+  const body = await response.text();
+
+  if (body.length === 0) {
+    return `FleetGraph chat request failed with status ${response.status}`;
+  }
+
+  try {
+    const data = JSON.parse(body) as FleetGraphChatErrorResponse;
+    if (response.status === 429 && data.retry_after_seconds !== undefined) {
+      return `FleetGraph chat rate limit exceeded. Try again in ${data.retry_after_seconds} seconds.`;
+    }
+    return data.error ?? `FleetGraph chat request failed with status ${response.status}`;
+  } catch {
+    return `FleetGraph chat request failed with status ${response.status}: ${body}`;
+  }
+}
+
+function formatDocumentType(documentType: FleetGraphChatDocumentType): string {
+  if (documentType === 'sprint') return 'Week';
+  if (documentType === 'project') return 'Project';
+  return 'Issue';
+}

@@ -18,6 +18,7 @@ import { programKeys } from '@/hooks/useProgramsQuery';
 import { useStandupStatusQuery } from '@/hooks/useStandupStatusQuery';
 import { useActionItemsQuery, actionItemsKeys } from '@/hooks/useActionItemsQuery';
 import { useTeamMembersQuery } from '@/hooks/useTeamMembersQuery';
+import { useFleetGraphRealtimeInvalidation } from '@/hooks/useFleetGraphRealtimeInvalidation';
 import { cn, getContrastTextColor } from '@/lib/cn';
 import { buildDocumentTree, DocumentTreeNode } from '@/lib/documentTree';
 import { CommandPalette } from '@/components/CommandPalette';
@@ -36,6 +37,7 @@ import { SelectionPersistenceProvider } from '@/contexts/SelectionPersistenceCon
 import { ActionItemsModal } from '@/components/ActionItemsModal';
 import { AccountabilityBanner } from '@/components/AccountabilityBanner';
 import { ProjectContextSidebar } from '@/components/sidebars/ProjectContextSidebar';
+import { FleetGraphInboxModal } from '@/components/FleetGraph/FleetGraphInboxModal';
 
 type Mode = 'docs' | 'issues' | 'projects' | 'programs' | 'sprints' | 'team' | 'settings' | 'dashboard' | 'project-context';
 
@@ -56,6 +58,7 @@ export function AppLayout() {
   const [projectSetupWizardOpen, setProjectSetupWizardOpen] = useState(false);
   const [actionItemsModalOpen, setActionItemsModalOpen] = useState(false);
   const [actionItemsModalShownOnLoad, setActionItemsModalShownOnLoad] = useState(false);
+  const [fleetGraphInboxOpen, setFleetGraphInboxOpen] = useState(false);
 
   // Session timeout handling
   const handleSessionTimeout = useCallback(() => {
@@ -79,6 +82,7 @@ export function AppLayout() {
   const { data: actionItemsData } = useActionItemsQuery();
   const hasActionItems = (actionItemsData?.items?.length ?? 0) > 0;
   const queryClient = useQueryClient();
+  useFleetGraphRealtimeInvalidation();
 
   // Celebration state for when user completes an accountability item
   const [isCelebrating, setIsCelebrating] = useState(false);
@@ -402,6 +406,12 @@ export function AppLayout() {
           {/* User avatar & settings at bottom */}
           <div className="flex flex-col items-center gap-2">
             <RailIcon
+              icon={<FleetGraphIcon />}
+              label="FleetGraph"
+              active={fleetGraphInboxOpen}
+              onClick={() => setFleetGraphInboxOpen(true)}
+            />
+            <RailIcon
               icon={<SettingsIcon />}
               label="Settings"
               active={activeMode === 'settings'}
@@ -574,6 +584,11 @@ export function AppLayout() {
       <ActionItemsModal
         open={actionItemsModalOpen}
         onClose={() => setActionItemsModalOpen(false)}
+      />
+
+      <FleetGraphInboxModal
+        open={fleetGraphInboxOpen}
+        onClose={() => setFleetGraphInboxOpen(false)}
       />
     </div>
     </SelectionPersistenceProvider>
@@ -1806,6 +1821,14 @@ function TeamIcon() {
   return (
     <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z" />
+    </svg>
+  );
+}
+
+function FleetGraphIcon() {
+  return (
+    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 8a2 2 0 100-4 2 2 0 000 4zm12 6a2 2 0 100-4 2 2 0 000 4zM7.75 7.25l8.5 3.5M6 20a2 2 0 100-4 2 2 0 000 4zm1.75-3.25l8.5-3.5" />
     </svg>
   );
 }

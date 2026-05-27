@@ -17,9 +17,20 @@ async function main() {
     await loadProductionSecrets();
   }
 
+  const {
+    shutdownFleetGraphLangfuseTracing,
+    startFleetGraphLangfuseTracingFromEnvironment,
+  } = await import('./fleetgraph/langfuse.js');
+  startFleetGraphLangfuseTracingFromEnvironment();
+
   // Now import app after secrets are loaded
   const { createApp } = await import('./app.js');
   const { setupCollaboration } = await import('./collaboration/index.js');
+  const {
+    registerProactiveTriggerShutdownHandlers,
+    shutdown: shutdownProactiveTriggers,
+    startProactiveTriggers,
+  } = await import('./fleetgraph/triggers.js');
 
   const PORT = process.env.PORT || 3000;
   const CORS_ORIGIN = process.env.CORS_ORIGIN || 'http://localhost:5173';
@@ -34,6 +45,18 @@ async function main() {
 
   // Setup WebSocket collaboration server
   setupCollaboration(server);
+  startProactiveTriggers();
+  registerProactiveTriggerShutdownHandlers(process, shutdownProactiveTriggers);
+  process.prependOnceListener('SIGTERM', () => {
+    void shutdownFleetGraphLangfuseTracing().catch((error: unknown) => {
+      console.error('fleetgraph.langfuse.shutdown_failed', error);
+    });
+  });
+  process.prependOnceListener('SIGINT', () => {
+    void shutdownFleetGraphLangfuseTracing().catch((error: unknown) => {
+      console.error('fleetgraph.langfuse.shutdown_failed', error);
+    });
+  });
 
   // Start server
   server.listen(PORT, () => {
