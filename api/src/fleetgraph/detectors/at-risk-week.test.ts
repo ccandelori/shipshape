@@ -1019,6 +1019,64 @@ describe('FleetGraph at-risk Week detector contracts', () => {
     ], runnableConfig);
   });
 
+  it('maps strict OpenAI nullable fields into domain reasoning optional fields', async () => {
+    const rawMessage = new AIMessage({
+      content: '',
+      usage_metadata: {
+        input_tokens: 900,
+        output_tokens: 120,
+        total_tokens: 1_020,
+      },
+    });
+    const structuredModel: AtRiskWeekStructuredModelInvoker = {
+      invoke: vi.fn(async () => ({
+        raw: rawMessage,
+        parsed: {
+          isAtRisk: true,
+          severity: 'high',
+          evidence: [{
+            sourceType: 'iteration',
+            sourceDocumentId: null,
+            quote: 'The proof path is blocked on shared trace URLs.',
+            observedAt: null,
+          }],
+          recommendedAction: {
+            kind: 'draft_comment',
+            title: null,
+            body: 'Please assign an owner to capture the shared trace URLs before submission.',
+          },
+          rationale: 'A failing iteration reports a submission blocker with no recovery owner.',
+        },
+      })),
+    };
+    const reasoner = createLangChainAtRiskWeekReasoner('gpt-4o-mini', structuredModel, () => ({}));
+
+    const result = await reasoner.invoke([
+      { role: 'system', content: 'system prompt' },
+      { role: 'user', content: 'user prompt' },
+    ]);
+
+    expect(result.reasoning).toEqual({
+      isAtRisk: true,
+      severity: 'high',
+      evidence: [{
+        sourceType: 'iteration',
+        quote: 'The proof path is blocked on shared trace URLs.',
+      }],
+      recommendedAction: {
+        kind: 'draft_comment',
+        body: 'Please assign an owner to capture the shared trace URLs before submission.',
+      },
+      rationale: 'A failing iteration reports a submission blocker with no recovery owner.',
+    });
+    expect(result.modelUsage).toEqual({
+      modelName: 'gpt-4o-mini',
+      inputTokens: 900,
+      outputTokens: 120,
+      estimatedCost: 0.000207,
+    });
+  });
+
   it('surfaces malformed structured model output with model context', async () => {
     const rawMessage = new AIMessage({
       content: '',

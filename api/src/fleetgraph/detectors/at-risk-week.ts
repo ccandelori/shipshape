@@ -20,6 +20,8 @@ import {
 } from '../policy.js';
 import {
   evidenceItemSchema,
+  fleetGraphActionKindSchema,
+  fleetGraphEvidenceSourceTypeSchema,
   fleetGraphSeveritySchema,
   recommendedActionSchema,
   uuidSchema,
@@ -125,6 +127,80 @@ export const atRiskWeekReasoningOutputSchema = z.discriminatedUnion('isAtRisk', 
   }),
 ]);
 export type AtRiskWeekReasoningOutput = z.infer<typeof atRiskWeekReasoningOutputSchema>;
+
+const atRiskWeekStructuredEvidenceItemSchema = z.object({
+  sourceType: fleetGraphEvidenceSourceTypeSchema,
+  sourceDocumentId: uuidSchema.nullable(),
+  quote: z.string().min(1).max(600),
+  observedAt: isoDateTimeSchema.nullable(),
+});
+
+const atRiskWeekStructuredRecommendedActionSchema = z.object({
+  kind: fleetGraphActionKindSchema,
+  title: z.string().min(1).max(120).nullable(),
+  body: z.string().min(1).max(1_000),
+});
+
+export const atRiskWeekStructuredReasoningOutputSchema = z.object({
+  isAtRisk: z.boolean(),
+  severity: fleetGraphSeveritySchema.nullable(),
+  evidence: z.array(atRiskWeekStructuredEvidenceItemSchema).max(6),
+  recommendedAction: atRiskWeekStructuredRecommendedActionSchema.nullable(),
+  rationale: z.string().min(1).max(1_200),
+}).superRefine((value, context) => {
+  if (value.isAtRisk) {
+    if (value.severity === null) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['severity'],
+        message: 'At-risk reasoning must include severity.',
+      });
+    }
+
+    if (value.evidence.length === 0) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['evidence'],
+        message: 'At-risk reasoning must include evidence.',
+      });
+    }
+
+    if (value.recommendedAction === null) {
+      context.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['recommendedAction'],
+        message: 'At-risk reasoning must include a recommended action.',
+      });
+    }
+
+    return;
+  }
+
+  if (value.severity !== null) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['severity'],
+      message: 'Quiet reasoning must not include severity.',
+    });
+  }
+
+  if (value.evidence.length > 0) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['evidence'],
+      message: 'Quiet reasoning must not include evidence.',
+    });
+  }
+
+  if (value.recommendedAction !== null) {
+    context.addIssue({
+      code: z.ZodIssueCode.custom,
+      path: ['recommendedAction'],
+      message: 'Quiet reasoning must not include a recommended action.',
+    });
+  }
+});
+type AtRiskWeekStructuredReasoningOutput = z.infer<typeof atRiskWeekStructuredReasoningOutputSchema>;
 
 export type AtRiskWeekPolicyDecision = {
   lifecycleState: FleetGraphLifecycleState;
@@ -1414,7 +1490,7 @@ export function createOpenAIAtRiskWeekReasoner(config: FleetGraphConfig): AtRisk
     maxRetries: 0,
     apiKey: config.openaiApiKey,
   });
-  const structuredModel = model.withStructuredOutput(atRiskWeekReasoningOutputSchema, {
+  const structuredModel = model.withStructuredOutput(atRiskWeekStructuredReasoningOutputSchema, {
     name: 'at_risk_week_reasoning',
     method: 'jsonSchema',
     strict: true,
@@ -1465,7 +1541,9 @@ export function createLangChainAtRiskWeekReasoner(
 
 function parseAtRiskWeekStructuredOutput(parsed: unknown, modelName: string): AtRiskWeekReasoningOutput {
   try {
-    return atRiskWeekReasoningOutputSchema.parse(parsed);
+    return atRiskWeekReasoningOutputSchema.parse(
+      normalizeAtRiskWeekStructuredOutput(atRiskWeekStructuredReasoningOutputSchema.parse(parsed))
+    );
   } catch (error) {
     throw new AtRiskWeekStructuredOutputError({
       modelName,
@@ -1473,6 +1551,44 @@ function parseAtRiskWeekStructuredOutput(parsed: unknown, modelName: string): At
       parsed,
     });
   }
+}
+
+function normalizeAtRiskWeekStructuredOutput(
+  structured: AtRiskWeekStructuredReasoningOutput
+): AtRiskWeekReasoningOutput {
+  if (!structured.isAtRisk) {
+    return {
+      isAtRisk: false,
+      severity: null,
+      evidence: [],
+      recommendedAction: null,
+      rationale: structured.rationale,
+    };
+  }
+
+  if (structured.severity === null || structured.recommendedAction === null) {
+    throw new Error('At-risk structured output was parsed without required at-risk fields.');
+  }
+
+  const recommendedAction = {
+    kind: structured.recommendedAction.kind,
+    body: structured.recommendedAction.body,
+    ...(structured.recommendedAction.title === null ? {} : { title: structured.recommendedAction.title }),
+  };
+  const normalized = {
+    isAtRisk: true,
+    severity: structured.severity,
+    evidence: structured.evidence.map((item) => ({
+      sourceType: item.sourceType,
+      quote: item.quote,
+      ...(item.sourceDocumentId === null ? {} : { sourceDocumentId: item.sourceDocumentId }),
+      ...(item.observedAt === null ? {} : { observedAt: item.observedAt }),
+    })),
+    recommendedAction,
+    rationale: structured.rationale,
+  };
+
+  return atRiskWeekReasoningOutputSchema.parse(normalized);
 }
 
 export function recordAtRiskWeekEarlyExit(
