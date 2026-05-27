@@ -32,6 +32,7 @@ function createFinding(lifecycleState: FleetGraphFinding['lifecycle_state']): Fl
     created_at: '2026-05-26T12:00:00.000Z',
     updated_at: '2026-05-26T12:00:00.000Z',
     expires_at: null,
+    trace: null,
     action_candidates: [
       {
         id: 'action-1',
@@ -103,6 +104,47 @@ describe('FindingCard', () => {
       findingId: 'finding-1',
       reason: 'Known and tracked elsewhere',
     });
+  });
+
+  it('shows why the finding exists and links its trace when run metadata is available', () => {
+    const actions = createActionHandlers();
+    const finding: FleetGraphFinding = {
+      ...createFinding('pending_review'),
+      trace: {
+        run_id: 'fleetgraph-run-123',
+        trigger: 'proactive',
+        detector: 'at_risk_week',
+        model_name: 'gpt-4.1-mini',
+        input_tokens: 1180,
+        output_tokens: 260,
+        estimated_cost_usd: '0.000900',
+        branch_path: 'output',
+        trace_url: 'https://cloud.langfuse.com/project/demo/traces/fleetgraph-run-123',
+        created_at: '2026-05-26T12:01:00.000Z',
+      },
+    };
+
+    render(
+      <FindingCard
+        finding={finding}
+        actions={actions}
+        pendingAction={null}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Why this?' }));
+
+    expect(screen.getByText('Agent run')).toBeInTheDocument();
+    expect(screen.getByText('Run fleetgraph-run-123')).toBeInTheDocument();
+    expect(screen.getByText('Branch Output')).toBeInTheDocument();
+    expect(screen.getByText('Tokens 1,440')).toBeInTheDocument();
+    expect(screen.getByText('Cost $0.000900')).toBeInTheDocument();
+    expect(screen.getByText('Material key')).toBeInTheDocument();
+    expect(screen.getByText('material-key-1')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Open trace' })).toHaveAttribute(
+      'href',
+      'https://cloud.langfuse.com/project/demo/traces/fleetgraph-run-123'
+    );
   });
 
   it('approves and rejects pending-review findings', () => {

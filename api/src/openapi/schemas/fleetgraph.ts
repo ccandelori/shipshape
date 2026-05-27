@@ -120,6 +120,31 @@ export const FleetGraphActionCandidateSchema = z.object({
 
 registry.register('FleetGraphActionCandidate', FleetGraphActionCandidateSchema);
 
+export const FleetGraphFindingTraceSchema = z.object({
+  run_id: z.string().min(1).openapi({
+    description: 'FleetGraph run identifier recorded with usage metadata',
+  }),
+  trigger: z.string().min(1).openapi({
+    description: 'Trigger source for the agent run',
+  }),
+  detector: FleetGraphDetectorTypeSchema,
+  model_name: z.string().min(1),
+  input_tokens: z.number().int().min(0),
+  output_tokens: z.number().int().min(0),
+  estimated_cost_usd: z.string().openapi({
+    description: 'Estimated run cost as a decimal string',
+  }),
+  branch_path: z.string().nullable().openapi({
+    description: 'Graph branch path that produced or exited the finding',
+  }),
+  trace_url: z.string().url().nullable().openapi({
+    description: 'Optional shared Langfuse trace URL',
+  }),
+  created_at: DateTimeSchema,
+}).openapi('FleetGraphFindingTrace');
+
+registry.register('FleetGraphFindingTrace', FleetGraphFindingTraceSchema);
+
 export const FleetGraphFindingSchema = z.object({
   id: UuidSchema,
   workspace_id: UuidSchema,
@@ -133,6 +158,7 @@ export const FleetGraphFindingSchema = z.object({
   created_at: DateTimeSchema,
   updated_at: DateTimeSchema,
   expires_at: DateTimeSchema.nullable(),
+  trace: FleetGraphFindingTraceSchema.nullable(),
   action_candidates: z.array(FleetGraphActionCandidateSchema),
 }).openapi('FleetGraphFinding');
 

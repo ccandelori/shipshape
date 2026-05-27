@@ -44,6 +44,19 @@ type FleetGraphActionCandidateResponse = {
   reversibility: string;
 };
 
+type FleetGraphFindingTraceResponse = {
+  run_id: string;
+  trigger: string;
+  detector: string;
+  model_name: string;
+  input_tokens: number;
+  output_tokens: number;
+  estimated_cost_usd: string;
+  branch_path: string | null;
+  trace_url: string | null;
+  created_at: string;
+};
+
 type FleetGraphFindingResponse = {
   id: string;
   workspace_id: string;
@@ -57,6 +70,7 @@ type FleetGraphFindingResponse = {
   created_at: string;
   updated_at: string;
   expires_at: string | null;
+  trace: FleetGraphFindingTraceResponse | null;
   action_candidates: FleetGraphActionCandidateResponse[];
 };
 
@@ -94,6 +108,20 @@ type FleetGraphActionCandidateRow = {
   recommended_action: string;
   approval_level: string;
   reversibility: string;
+};
+
+type FleetGraphFindingTraceRow = {
+  finding_id: string;
+  run_id: string;
+  trigger: string;
+  detector: string;
+  model_name: string;
+  input_tokens: number;
+  output_tokens: number;
+  estimated_cost_usd: string;
+  branch_path: string | null;
+  trace_url: string | null;
+  created_at: Date;
 };
 
 type FleetGraphCursor = {
@@ -263,6 +291,7 @@ router.get('/findings', authMiddleware, async (req: Request, res: Response) => {
     const findingIds = visibleFindings.map((finding) => finding.id);
     const actionCandidates = await loadFleetGraphActionCandidates(workspaceId, findingIds);
     const actionCandidatesByFindingId = groupActionCandidatesByFindingId(actionCandidates);
+    const tracesByFindingId = await loadFleetGraphFindingTraces(workspaceId, findingIds);
     const hasMore = findings.length > queryResult.data.limit;
     const nextCursor = hasMore
       ? encodeFleetGraphCursor(visibleFindings[visibleFindings.length - 1]!)
@@ -271,7 +300,8 @@ router.get('/findings', authMiddleware, async (req: Request, res: Response) => {
     res.json({
       items: visibleFindings.map((finding) => mapFindingResponse(
         finding,
-        actionCandidatesByFindingId.get(finding.id) ?? []
+        actionCandidatesByFindingId.get(finding.id) ?? [],
+        tracesByFindingId.get(finding.id) ?? null
       )),
       limit: queryResult.data.limit,
       hasMore,
@@ -668,8 +698,9 @@ async function loadFleetGraphFindingById(
   }
 
   const actionCandidates = await loadFleetGraphActionCandidates(workspaceId, [finding.id]);
+  const tracesByFindingId = await loadFleetGraphFindingTraces(workspaceId, [finding.id]);
 
-  return mapFindingResponse(finding, actionCandidates);
+  return mapFindingResponse(finding, actionCandidates, tracesByFindingId.get(finding.id) ?? null);
 }
 
 async function loadFleetGraphActionCandidates(
@@ -711,6 +742,46 @@ async function loadFleetGraphActionCandidates(
   );
 
   return result.rows;
+}
+
+async function loadFleetGraphFindingTraces(
+  workspaceId: string,
+  findingIds: string[]
+): Promise<Map<string, FleetGraphFindingTraceRow>> {
+  if (findingIds.length === 0) {
+    return new Map();
+  }
+
+  const result = await pool.query<FleetGraphFindingTraceRow>(
+    `SELECT DISTINCT ON (usage.trace_metadata->>'findingId')
+       usage.trace_metadata->>'findingId' AS finding_id,
+       usage.run_id,
+       usage.trigger,
+       usage.detector,
+       usage.model_name,
+       usage.input_tokens,
+       usage.output_tokens,
+       usage.estimated_cost_usd::text AS estimated_cost_usd,
+       COALESCE(
+         usage.trace_metadata->>'branchPath',
+         usage.trace_metadata->>'branch_path',
+         usage.trace_metadata->>'branch'
+       ) AS branch_path,
+       COALESCE(
+         usage.trace_metadata->>'traceUrl',
+         usage.trace_metadata->>'trace_url',
+         usage.trace_metadata->>'langfuseUrl',
+         usage.trace_metadata->>'langfuse_url'
+       ) AS trace_url,
+       usage.created_at
+     FROM fleetgraph_usage usage
+     WHERE usage.workspace_id = $1
+       AND usage.trace_metadata->>'findingId' = ANY($2::text[])
+     ORDER BY usage.trace_metadata->>'findingId', usage.created_at DESC, usage.id DESC`,
+    [workspaceId, findingIds]
+  );
+
+  return new Map(result.rows.map((trace) => [trace.finding_id, trace]));
 }
 
 async function broadcastFleetGraphFindingUpdated(
@@ -1556,7 +1627,8 @@ function groupActionCandidatesByFindingId(
 
 function mapFindingResponse(
   finding: FleetGraphFindingRow,
-  actionCandidates: FleetGraphActionCandidateRow[]
+  actionCandidates: FleetGraphActionCandidateRow[],
+  trace: FleetGraphFindingTraceRow | null
 ): FleetGraphFindingResponse {
   return {
     id: finding.id,
@@ -1579,7 +1651,23 @@ function mapFindingResponse(
     created_at: finding.created_at.toISOString(),
     updated_at: finding.updated_at.toISOString(),
     expires_at: finding.expires_at?.toISOString() ?? null,
+    trace: trace ? mapFindingTraceResponse(trace) : null,
     action_candidates: actionCandidates.map(mapActionCandidateResponse),
+  };
+}
+
+function mapFindingTraceResponse(trace: FleetGraphFindingTraceRow): FleetGraphFindingTraceResponse {
+  return {
+    run_id: trace.run_id,
+    trigger: trace.trigger,
+    detector: trace.detector,
+    model_name: trace.model_name,
+    input_tokens: trace.input_tokens,
+    output_tokens: trace.output_tokens,
+    estimated_cost_usd: trace.estimated_cost_usd,
+    branch_path: trace.branch_path,
+    trace_url: trace.trace_url,
+    created_at: trace.created_at.toISOString(),
   };
 }
 

@@ -51,6 +51,7 @@ function createFinding(lifecycleState: FleetGraphFinding['lifecycle_state']): Fl
     created_at: '2026-05-26T12:00:00.000Z',
     updated_at: '2026-05-26T12:00:00.000Z',
     expires_at: null,
+    trace: null,
     action_candidates: [
       {
         id: 'action-1',

@@ -232,6 +232,12 @@ describe('FleetGraph inbox API', () => {
   });
 
   it('lists current-workspace findings sorted by created_at desc with nested recipient and action candidates', async () => {
+    await createUsageTrace({
+      findingId: pendingFinding.id,
+      runId: `fleetgraph-run-${testRunId}`,
+      traceUrl: `https://cloud.langfuse.com/project/demo/traces/fleetgraph-run-${testRunId}`,
+    });
+
     const response = await request(app)
       .get('/api/fleetgraph/findings')
       .set('Cookie', [`session_id=${sessionId}`]);
@@ -256,6 +262,18 @@ describe('FleetGraph inbox API', () => {
         email: `fleetgraph-inbox-${testRunId}@test.local`,
       },
       lifecycle_state: 'pending_review',
+      trace: {
+        run_id: `fleetgraph-run-${testRunId}`,
+        trigger: 'proactive',
+        detector: 'at_risk_week',
+        model_name: 'gpt-4.1-mini',
+        input_tokens: 1180,
+        output_tokens: 260,
+        estimated_cost_usd: '0.000900',
+        branch_path: 'output',
+        trace_url: `https://cloud.langfuse.com/project/demo/traces/fleetgraph-run-${testRunId}`,
+        created_at: expect.any(String),
+      },
       action_candidates: [{
         target_document: {
           id: scopedDocumentId,
@@ -1144,6 +1162,30 @@ describe('FleetGraph inbox API', () => {
       title: input.title,
       lifecycleState: input.lifecycleState,
     };
+  }
+
+  async function createUsageTrace(input: {
+    findingId: string;
+    runId: string;
+    traceUrl: string;
+  }): Promise<void> {
+    await pool.query(
+      `INSERT INTO fleetgraph_usage (
+         run_id, workspace_id, trigger, detector, model_name,
+         input_tokens, output_tokens, estimated_cost_usd, trace_metadata
+       )
+       VALUES ($1, $2, 'proactive', 'at_risk_week', 'gpt-4.1-mini', 1180, 260, 0.000900, $3::jsonb)
+       ON CONFLICT DO NOTHING`,
+      [
+        input.runId,
+        workspaceId,
+        JSON.stringify({
+          findingId: input.findingId,
+          branchPath: 'output',
+          traceUrl: input.traceUrl,
+        }),
+      ]
+    );
   }
 
   async function createActionCandidate(findingId: string, targetDocumentId: string): Promise<string> {

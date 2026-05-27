@@ -3,6 +3,7 @@ import { cn } from '@/lib/cn';
 import type {
   FleetGraphActionCandidate,
   FleetGraphFinding,
+  FleetGraphFindingTrace,
   FleetGraphLifecycleState,
   FleetGraphRecommendedAction,
   FleetGraphSeverity,
@@ -186,6 +187,8 @@ export function FindingCard({ finding, actions, pendingAction }: FindingCardProp
         <ActionCandidateSummary actionCandidate={primaryActionCandidate} />
       )}
 
+      <FindingDecisionProof finding={finding} />
+
       <div className="mt-4 flex flex-wrap gap-2">
         {canReview && (
           <>
@@ -298,6 +301,71 @@ export function FindingCard({ finding, actions, pendingAction }: FindingCardProp
   );
 }
 
+function FindingDecisionProof({ finding }: { finding: FleetGraphFinding }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const trace = finding.trace;
+  const tokenCount = trace ? trace.input_tokens + trace.output_tokens : null;
+
+  return (
+    <section className="mt-4 rounded-md border border-border/70 bg-border/10 px-3 py-2" aria-label="Finding explanation">
+      <button
+        type="button"
+        aria-label="Why this?"
+        aria-expanded={isOpen}
+        onClick={() => setIsOpen(!isOpen)}
+        className="flex w-full items-center justify-between gap-3 text-left text-sm font-medium text-foreground"
+      >
+        <span>Why this?</span>
+        <span className="text-xs font-normal text-muted">
+          {trace?.trace_url ? 'Trace linked' : trace ? 'Run metadata' : 'Decision inputs'}
+        </span>
+      </button>
+      {isOpen && (
+        <div className="mt-3 space-y-3 border-t border-border/70 pt-3">
+          <dl className="grid gap-x-4 gap-y-2 text-xs text-muted sm:grid-cols-2">
+            <ProofStat label="Detector" value={formatLabel(finding.detector_type)} />
+            <ProofStat label="State" value={formatLabel(finding.lifecycle_state)} />
+            <ProofStat label="Material key" value={finding.material_change_key} />
+            <ProofStat label="Scoped document" value={finding.scoped_document.title} />
+          </dl>
+
+          {trace ? (
+            <section aria-label="Agent run" className="rounded-md border border-border/60 bg-background/70 px-3 py-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-semibold uppercase text-muted">Agent run</p>
+                {trace.trace_url && (
+                  <a
+                    href={trace.trace_url}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-medium text-accent hover:underline"
+                  >
+                    Open trace
+                  </a>
+                )}
+              </div>
+              <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted">
+                <TraceChip label="Run" value={trace.run_id} />
+                <TraceChip label="Branch" value={formatTraceBranch(trace.branch_path)} />
+                <TraceChip label="Trigger" value={formatLabel(trace.trigger)} />
+                <TraceChip label="Model" value={trace.model_name} />
+                {tokenCount !== null && (
+                  <TraceChip label="Tokens" value={tokenCount.toLocaleString()} />
+                )}
+                <TraceChip label="Cost" value={`$${trace.estimated_cost_usd}`} />
+              </div>
+            </section>
+          ) : (
+            <p className="rounded-md border border-border/60 bg-background/70 px-3 py-2 text-xs text-muted">
+              No trace run is attached to this finding yet. Evidence and material key are still shown for audit.
+            </p>
+          )}
+        </div>
+      )}
+    </section>
+  );
+}
+
 function ActionCandidateSummary({ actionCandidate }: { actionCandidate: FleetGraphActionCandidate }) {
   return (
     <section className="mt-4 rounded-md border border-border/70 bg-border/10 px-3 py-3" aria-label="Recommended action">
@@ -323,6 +391,23 @@ function ActionCandidateSummary({ actionCandidate }: { actionCandidate: FleetGra
   );
 }
 
+function ProofStat({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="min-w-0">
+      <dt className="text-[11px] uppercase text-muted">{label}</dt>
+      <dd className="truncate text-xs text-foreground" title={value}>{value}</dd>
+    </div>
+  );
+}
+
+function TraceChip({ label, value }: { label: string; value: string }) {
+  return (
+    <span className="rounded border border-border/70 bg-border/20 px-2 py-1">
+      {label} {value}
+    </span>
+  );
+}
+
 function Badge({ children, className }: { children: React.ReactNode; className: string }) {
   return (
     <span className={cn('rounded border px-2 py-0.5 text-xs font-medium', className)}>
@@ -336,6 +421,14 @@ function formatLabel(value: string): string {
     .split('_')
     .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
     .join(' ');
+}
+
+function formatTraceBranch(branchPath: FleetGraphFindingTrace['branch_path']): string {
+  if (!branchPath) {
+    return 'Unknown';
+  }
+
+  return formatLabel(branchPath.replace(/-/g, '_'));
 }
 
 function formatDate(value: string): string {

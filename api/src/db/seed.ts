@@ -1643,7 +1643,7 @@ async function seed() {
           traceMetadata: {
             scenario: 'quiet_prefilter',
             scoped_document_id: currentFleetGraphSprint.id,
-            branch: 'prefilter_exit',
+            branchPath: 'prefilter_exit',
           },
         },
         {
@@ -1657,7 +1657,8 @@ async function seed() {
           traceMetadata: {
             scenario: 'finding_pending_action',
             scoped_document_id: currentFleetGraphSprint.id,
-            branch: 'pending_review',
+            findingId: pendingFindingId,
+            branchPath: 'output',
           },
         },
       ];
@@ -1688,6 +1689,18 @@ async function seed() {
             ]
           );
           fleetGraphUsageRowsCreated++;
+        } else {
+          await pool.query(
+            `UPDATE fleetgraph_usage
+             SET trace_metadata = $3::jsonb
+             WHERE workspace_id = $1
+               AND run_id = $2`,
+            [
+              workspaceId,
+              usageSeed.runId,
+              JSON.stringify(usageSeed.traceMetadata),
+            ]
+          );
         }
       }
 

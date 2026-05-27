@@ -76,6 +76,19 @@ export interface FleetGraphActionCandidate {
   reversibility: FleetGraphReversibility;
 }
 
+export interface FleetGraphFindingTrace {
+  run_id: string;
+  trigger: string;
+  detector: FleetGraphDetectorType;
+  model_name: string;
+  input_tokens: number;
+  output_tokens: number;
+  estimated_cost_usd: string;
+  branch_path: string | null;
+  trace_url: string | null;
+  created_at: string;
+}
+
 export interface FleetGraphFinding {
   id: string;
   workspace_id: string;
@@ -89,6 +102,7 @@ export interface FleetGraphFinding {
   created_at: string;
   updated_at: string;
   expires_at: string | null;
+  trace: FleetGraphFindingTrace | null;
   action_candidates: FleetGraphActionCandidate[];
 }
 
