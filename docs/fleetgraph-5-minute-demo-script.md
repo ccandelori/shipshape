@@ -186,7 +186,7 @@ Langfuse is the observability proof: do not search for traces during the recordi
 **What you need**
 
 - Issue: **Capture Langfuse trace URLs for shared review**  
-  http://143.198.163.184/documents/27e15c1b-3f6c-4e1d-8880-15a5c5705459
+  https://143.198.163.184.nip.io/documents/27e15c1b-3f6c-4e1d-8880-15a5c5705459
 - After approve + resume: a **comment card** at the **bottom of the issue document** (gray box, author **Dev User**, text about Langfuse trace URLs).  
   There is no separate “Comments” tab — scroll the **main editor area** to the end.
 
@@ -396,7 +396,7 @@ What is blocking this week, who owns recovery, and what should we do next?
 |---------|----------------------|
 | Inbox empty | “I cleared open findings; the live proof is the approved comment on the issue.” → Tab 2 |
 | Chat will not open | Widen window; collapse left doc sidebar; or skip to Tab 4 |
-| **Send does nothing** on `http://143.198.163.184` | Fixed in repo — **redeploy web** or record on `http://localhost:5173`. Hard-refresh after deploy (`Cmd+Shift+R`). |
+| **Send does nothing** | Hard-refresh the deployed page (`Cmd+Shift+R`). If it still fails, use the local URL after confirming the latest web build is running. |
 | Send stuck on **Sending...** | Refresh the page and try again. |
 | Chat slow | Let it stream 10s, then Tab 4 |
 | No issue comment | Stop — complete Part 3C, do not record blind |
