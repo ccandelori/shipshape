@@ -147,7 +147,7 @@ describe('FleetGraph chat route SSE lifecycle', () => {
       'event: token\n' +
       'data: {"token":"answer"}\n\n' +
       'event: final\n' +
-      'data: {"response":"The answer","usage":{"modelName":"test-chat-model","inputTokens":12,"outputTokens":4,"totalTokens":16}}\n\n'
+      `data: {"response":"The answer","usage":{"modelName":"test-chat-model","inputTokens":12,"outputTokens":4,"totalTokens":16},"sources":[{"label":"Chat Week","documentId":"${weekDocumentId}","documentType":"sprint","kind":"scope"},{"label":"Procurement blocker","documentId":"550e8400-e29b-41d4-a716-446655440030","documentType":"issue","kind":"related"}]}\n\n`
     );
     expect(observedModelCalls).toHaveLength(1);
     expect(observedModelCalls[0]!.abortSignal.aborted).toBe(false);
@@ -218,7 +218,7 @@ describe('FleetGraph chat route SSE lifecycle', () => {
       'event: token\n' +
       'data: {"token":"Graph answer"}\n\n' +
       'event: final\n' +
-      'data: {"response":"Graph answer","usage":{"modelName":"graph-test-model","inputTokens":8,"outputTokens":2,"totalTokens":10}}\n\n'
+      `data: {"response":"Graph answer","usage":{"modelName":"graph-test-model","inputTokens":8,"outputTokens":2,"totalTokens":10},"sources":[{"label":"Chat Week","documentId":"${weekDocumentId}","documentType":"sprint","kind":"scope"},{"label":"Procurement blocker","documentId":"550e8400-e29b-41d4-a716-446655440030","documentType":"issue","kind":"related"}]}\n\n`
     );
     expect(graphInputs).toHaveLength(1);
     expect(graphInputs[0]!.mode).toBe('ondemand_chat');

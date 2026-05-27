@@ -273,8 +273,8 @@
       <p class="lede">
         FleetGraph is not just a detector plus a chat panel. It is a Ship-native agent loop:
         Ship domain context feeds an outcome engine, the outcome engine creates findings and action
-        candidates, and the compiled MVP graph executes the proactive at-risk Week path. On-demand
-        chat currently streams directly while reusing the same context and policy concepts.
+        candidates, and the compiled FleetGraph runtime now branches between proactive at-risk Week
+        detection and on-demand chat inside the same graph entry point.
       </p>
       <div class="top-notes" aria-label="Architecture summary">
         <div class="note">
@@ -287,7 +287,7 @@
         </div>
         <div class="note">
           <strong>Execution layer</strong>
-          <span>LangGraph powers proactive detection today; direct SSE chat is the documented MVP deviation to unify later.</span>
+          <span>LangGraph powers proactive detection and on-demand chat; the chat route still owns HTTP auth, validation, rate limits, and SSE framing.</span>
         </div>
       </div>
     </header>

@@ -11,6 +11,13 @@ export interface FleetGraphChatUsage {
   totalTokens: number;
 }
 
+export interface FleetGraphChatSource {
+  label: string;
+  documentId: string;
+  documentType: string;
+  kind: 'scope' | 'related';
+}
+
 export type FleetGraphChatSseEvent =
   | {
       event: 'token';
@@ -23,6 +30,7 @@ export type FleetGraphChatSseEvent =
       data: {
         response: string;
         usage: FleetGraphChatUsage;
+        sources: FleetGraphChatSource[];
       };
     }
   | {
@@ -42,6 +50,7 @@ export interface FleetGraphChatStreamState {
   status: FleetGraphChatStreamStatus;
   response: string;
   usage: FleetGraphChatUsage | null;
+  sources: FleetGraphChatSource[];
   error: string | null;
   lastHeartbeatAt: string | null;
 }
@@ -51,6 +60,7 @@ export function createFleetGraphChatStreamState(): FleetGraphChatStreamState {
     status: 'idle',
     response: '',
     usage: null,
+    sources: [],
     error: null,
     lastHeartbeatAt: null,
   };
@@ -79,6 +89,7 @@ export function reduceFleetGraphChatStreamEvent(
         status: 'completed',
         response: event.data.response,
         usage: event.data.usage,
+        sources: event.data.sources,
         error: null,
       };
     case 'error':

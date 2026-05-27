@@ -342,7 +342,7 @@ Use a **full-width** browser window. Have tabs 1–4 from Part 3D ready.
 
 **Say:**
 
-> So the shape is: hybrid triggers on real Ship data, LangGraph on the proactive path, human approval for visible writes, contextual chat in the document, and traces for observability. It is an agent inside the planning graph — not a bolt-on chatbot.
+> So the shape is: hybrid triggers on real Ship data, one shared FleetGraph LangGraph runtime for proactive detection and on-demand chat, human approval for visible writes, contextual answers in the document, and traces for observability. It is an agent inside the planning graph — not a bolt-on chatbot.
 
 ---
 
@@ -384,10 +384,10 @@ What is blocking this week, who owns recovery, and what should we do next?
 1. Left rail → **Programs** → **FleetGraph MVP**.
 2. Find issue **Capture Langfuse trace URLs for shared review**, or use **Projects** / issue lists under the FleetGraph projects.
 
-### Phrases to avoid
+### Script guardrails
 
 - Do not say the **open inbox card** was created live during the recording.
-- Do not say **chat uses the same LangGraph** as proactive detection (it does not — direct SSE chat).
+- Say **chat enters the same compiled FleetGraph LangGraph runtime** as proactive detection. The HTTP route still owns auth, scope validation, rate limiting, and SSE framing.
 - Do not call pre-staging “hidden”; say **pre-staged so the recording stays smooth**.
 
 ### If something breaks

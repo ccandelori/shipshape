@@ -74,7 +74,7 @@ describe('EmbeddedChat', () => {
           'event: heartbeat\ndata: {"sentAt":"2026-05-26T12:00:00.000Z"}\n\n',
           'event: token\ndata: {"token":"Week 12 "}\n\n',
           'event: token\ndata: {"token":"is at risk."}\n\n',
-          'event: final\ndata: {"response":"Week 12 is at risk.","usage":{"modelName":"gpt-4o-mini","inputTokens":100,"outputTokens":10,"totalTokens":110}}\n\n',
+          'event: final\ndata: {"response":"Week 12 is at risk.","usage":{"modelName":"gpt-4o-mini","inputTokens":100,"outputTokens":10,"totalTokens":110},"sources":[{"label":"Week 12","documentId":"week-1","documentType":"sprint","kind":"scope"},{"label":"Procurement blocker","documentId":"issue-1","documentType":"issue","kind":"related"}]}\n\n',
         ]);
       }
 
@@ -90,6 +90,9 @@ describe('EmbeddedChat', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Send message' }));
 
     expect(await screen.findByText('Week 12 is at risk.')).toBeInTheDocument();
+    expect(screen.getByText('Sources')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Week 12' })).toHaveAttribute('href', '/documents/week-1');
+    expect(screen.getByText('Procurement blocker')).toBeInTheDocument();
     await waitFor(() => {
       expect(screen.getByText('What is risky?')).toBeInTheDocument();
     });

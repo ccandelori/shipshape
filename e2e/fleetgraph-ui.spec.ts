@@ -159,11 +159,14 @@ test.describe('FleetGraph UI', () => {
 
     await expect(page.getByText('Drafting from FleetGraph context...')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Week 12 is at risk because the partner API is still blocked.')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByText('Sources')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('link', { name: 'Current issue' })).toHaveAttribute('href', /\/documents\/[a-f0-9-]+/);
     await page.getByRole('button', { name: 'Ask FleetGraph' }).click();
     await expect(page.getByRole('region', { name: 'FleetGraph chat' })).toBeHidden({ timeout: 10000 });
     await page.getByRole('button', { name: 'Ask FleetGraph' }).click();
     await expect(page.getByText('What changed this week?')).toBeVisible({ timeout: 10000 });
     await expect(page.getByText('Week 12 is at risk because the partner API is still blocked.')).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('link', { name: 'Current issue' })).toBeVisible({ timeout: 10000 });
 
     const chatRequests = await page.evaluate(() => window.__shipFleetGraphChatRequests);
     expect(chatRequests[0]).toMatchObject({
@@ -361,7 +364,23 @@ async function installFleetGraphChatFetchMock(page: Page): Promise<void> {
         start(controller) {
           controller.enqueue(encoder.encode('event: token\ndata: {"token":"Drafting from FleetGraph context..."}\n\n'));
           window.setTimeout(() => {
-            controller.enqueue(encoder.encode('event: final\ndata: {"response":"Week 12 is at risk because the partner API is still blocked.","usage":{"modelName":"gpt-4o-mini","inputTokens":100,"outputTokens":12,"totalTokens":112}}\n\n'));
+            controller.enqueue(encoder.encode(`event: final\ndata: ${JSON.stringify({
+              response: 'Week 12 is at risk because the partner API is still blocked.',
+              usage: {
+                modelName: 'gpt-4o-mini',
+                inputTokens: 100,
+                outputTokens: 12,
+                totalTokens: 112,
+              },
+              sources: [
+                {
+                  label: 'Current issue',
+                  documentId: requestBody.documentId,
+                  documentType: requestBody.documentType,
+                  kind: 'scope',
+                },
+              ],
+            })}\n\n`));
             controller.close();
           }, 500);
         },

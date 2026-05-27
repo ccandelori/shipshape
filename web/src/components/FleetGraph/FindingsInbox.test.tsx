@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FindingsInbox } from './FindingsInbox';
+import { ToastProvider } from '@/components/ui/Toast';
 import type { FleetGraphFinding, FleetGraphFindingListResponse } from '@/hooks/useFleetGraphQuery';
 
 const realFetch = global.fetch;
@@ -18,7 +19,11 @@ function createQueryClient(): QueryClient {
 
 function createWrapper(queryClient: QueryClient): ({ children }: { children: ReactNode }) => JSX.Element {
   return function QueryWrapper({ children }: { children: ReactNode }): JSX.Element {
-    return <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>;
+    return (
+      <QueryClientProvider client={queryClient}>
+        <ToastProvider>{children}</ToastProvider>
+      </QueryClientProvider>
+    );
   };
 }
 
@@ -251,5 +256,55 @@ describe('FindingsInbox', () => {
     expect(await screen.findByText('No open findings')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: 'Needs Review' }));
     expect(await screen.findByText('No findings need review')).toBeInTheDocument();
+  });
+
+  it('shows a visible payoff after resuming an approved FleetGraph action', async () => {
+    const approvedFinding = createFinding('approved');
+    const executedFinding = createFinding('executed');
+    let resumed = false;
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input);
+      const method = init?.method ?? 'GET';
+
+      if (url === '/api/fleetgraph/findings?lifecycle_state=open&limit=20' && method === 'GET') {
+        return jsonResponse({
+          items: [],
+          limit: 20,
+          hasMore: false,
+          next_cursor: null,
+        }, 200);
+      }
+
+      if (url === '/api/fleetgraph/findings?lifecycle_state=approved&limit=20' && method === 'GET') {
+        return jsonResponse({
+          items: resumed ? [] : [approvedFinding],
+          limit: 20,
+          hasMore: false,
+          next_cursor: null,
+        }, 200);
+      }
+
+      if (url === '/api/csrf-token' && method === 'GET') {
+        return jsonResponse({ token: 'csrf-token' }, 200);
+      }
+
+      if (url === '/api/fleetgraph/actions/action-1/resume' && method === 'POST') {
+        resumed = true;
+        return jsonResponse(executedFinding, 200);
+      }
+
+      throw new Error(`Unexpected request: ${method} ${url}`);
+    });
+    global.fetch = fetchMock as typeof fetch;
+
+    render(<FindingsInbox />, { wrapper: createWrapper(createQueryClient()) });
+
+    expect(await screen.findByText('No open findings')).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('tab', { name: 'Approved' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Resume approved action' }));
+
+    expect(await screen.findByText('Comment posted by FleetGraph')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'View document' })).toBeInTheDocument();
+    expect(await screen.findByText('No approved actions')).toBeInTheDocument();
   });
 });

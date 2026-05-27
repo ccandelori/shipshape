@@ -1,4 +1,5 @@
 import {
+  type FleetGraphChatSource,
   type FleetGraphChatUsage,
   type FleetGraphChatSseEvent,
 } from '@/lib/fleetgraphChatState';
@@ -109,6 +110,7 @@ function parseFleetGraphSseEvent(rawEvent: string): FleetGraphChatSseEvent {
     const data = JSON.parse(dataText) as {
       response: string;
       usage: FleetGraphChatUsageCandidate;
+      sources?: unknown;
     };
     const usage = data.usage;
     if (typeof data.response !== 'string' || !isFleetGraphChatUsage(usage)) {
@@ -119,6 +121,7 @@ function parseFleetGraphSseEvent(rawEvent: string): FleetGraphChatSseEvent {
       data: {
         response: data.response,
         usage,
+        sources: parseFleetGraphChatSources(data.sources),
       },
     };
   }
@@ -140,6 +143,36 @@ function parseFleetGraphSseEvent(rawEvent: string): FleetGraphChatSseEvent {
   }
 
   throw new FleetGraphChatStreamError(`Unknown FleetGraph chat SSE event type: ${eventType}`);
+}
+
+function parseFleetGraphChatSources(value: unknown): FleetGraphChatSource[] {
+  if (value === undefined) {
+    return [];
+  }
+
+  if (!Array.isArray(value)) {
+    throw new FleetGraphChatStreamError(`FleetGraph final event has invalid sources: ${JSON.stringify(value)}`);
+  }
+
+  return value.map((source) => {
+    if (!isFleetGraphChatSource(source)) {
+      throw new FleetGraphChatStreamError(`FleetGraph final event has invalid source: ${JSON.stringify(source)}`);
+    }
+
+    return source;
+  });
+}
+
+function isFleetGraphChatSource(value: unknown): value is FleetGraphChatSource {
+  if (typeof value !== 'object' || value === null) {
+    return false;
+  }
+
+  const candidate = value as Partial<FleetGraphChatSource>;
+  return typeof candidate.label === 'string'
+    && typeof candidate.documentId === 'string'
+    && typeof candidate.documentType === 'string'
+    && (candidate.kind === 'scope' || candidate.kind === 'related');
 }
 
 function isFleetGraphChatUsage(value: FleetGraphChatUsageCandidate): value is FleetGraphChatUsage {

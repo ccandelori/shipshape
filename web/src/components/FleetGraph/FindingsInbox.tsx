@@ -9,6 +9,7 @@ import {
   useResumeFleetGraphActionMutation,
   useSnoozeFleetGraphFindingMutation,
 } from '@/hooks/useFleetGraphQuery';
+import { useToast } from '@/components/ui/Toast';
 import { cn } from '@/lib/cn';
 
 interface FindingsInboxProps {
@@ -65,13 +66,35 @@ export function FindingsInbox({ lifecycleState, limit, className }: FindingsInbo
   const dismissMutation = useDismissFleetGraphFindingMutation();
   const snoozeMutation = useSnoozeFleetGraphFindingMutation();
   const resumeMutation = useResumeFleetGraphActionMutation();
+  const { showToast } = useToast();
 
   const actions: FindingCardActionHandlers = {
     onApprove: (input) => approveMutation.mutate(input),
     onReject: (input) => rejectMutation.mutate(input),
     onDismiss: (input) => dismissMutation.mutate(input),
     onSnooze: (input) => snoozeMutation.mutate(input),
-    onResume: (input) => resumeMutation.mutate(input),
+    onResume: (input) => resumeMutation.mutate(input, {
+      onSuccess: (finding) => {
+        const actionCandidate = finding.action_candidates.find((candidate) => (
+          candidate.id === input.actionCandidateId
+        ));
+        const targetDocument = actionCandidate?.target_document ?? null;
+
+        showToast(
+          formatResumeSuccessMessage(actionCandidate?.recommended_action.kind ?? null),
+          'success',
+          7000,
+          targetDocument
+            ? {
+                label: 'View document',
+                onClick: () => {
+                  window.location.href = `/documents/${targetDocument.id}`;
+                },
+              }
+            : undefined
+        );
+      },
+    }),
   };
 
   const findings = findingsQuery.data?.items ?? [];
@@ -182,6 +205,14 @@ export function FindingsInbox({ lifecycleState, limit, className }: FindingsInbo
       </div>
     </section>
   );
+}
+
+function formatResumeSuccessMessage(actionKind: string | null): string {
+  if (actionKind === 'draft_comment') {
+    return 'Comment posted by FleetGraph';
+  }
+
+  return 'FleetGraph action executed';
 }
 
 function resolvePendingAction(input: {

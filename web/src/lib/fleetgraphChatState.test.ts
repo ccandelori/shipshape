@@ -34,6 +34,12 @@ describe('FleetGraph chat stream state', () => {
       data: {
         response: 'Week 12 is at risk.',
         usage,
+        sources: [{
+          label: 'Week 12',
+          documentId: 'week-12',
+          documentType: 'sprint',
+          kind: 'scope',
+        }],
       },
     });
 
@@ -41,6 +47,12 @@ describe('FleetGraph chat stream state', () => {
       status: 'completed',
       response: 'Week 12 is at risk.',
       usage,
+      sources: [{
+        label: 'Week 12',
+        documentId: 'week-12',
+        documentType: 'sprint',
+        kind: 'scope',
+      }],
       error: null,
       lastHeartbeatAt: '2026-05-26T12:00:00.000Z',
     });
@@ -63,6 +75,7 @@ describe('FleetGraph chat stream state', () => {
       status: 'failed',
       response: 'Partial answer',
       usage: null,
+      sources: [],
       error: 'FleetGraph chat stream failed',
       lastHeartbeatAt: null,
     });

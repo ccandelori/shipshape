@@ -16,6 +16,7 @@ import {
 import {
   createFleetGraphChatStreamState,
   reduceFleetGraphChatStreamEvent,
+  type FleetGraphChatSource,
   type FleetGraphChatSseEvent,
   type FleetGraphChatStreamState,
 } from '@/lib/fleetgraphChatState';
@@ -43,6 +44,7 @@ interface EmbeddedChatMessage {
   role: EmbeddedChatRole;
   content: string;
   status: EmbeddedChatMessageStatus;
+  sources: FleetGraphChatSource[];
 }
 
 interface EmbeddedChatState {
@@ -76,7 +78,7 @@ export function EmbeddedChat({ documentId, documentType, memoryScope, className 
   });
   const [chatState, setChatState] = useState<EmbeddedChatState>(() => ({
     memoryKey,
-    messages: loadFleetGraphChatMemory(getFleetGraphChatMemoryStorage(), memoryKey),
+    messages: toEmbeddedChatMessages(loadFleetGraphChatMemory(getFleetGraphChatMemoryStorage(), memoryKey)),
   }));
   const [question, setQuestion] = useState('');
   const [streamState, setStreamState] = useState<FleetGraphChatStreamState>(
@@ -109,7 +111,7 @@ export function EmbeddedChat({ documentId, documentType, memoryScope, className 
     setStreamState(createFleetGraphChatStreamState());
     setChatState({
       memoryKey,
-      messages: loadFleetGraphChatMemory(getFleetGraphChatMemoryStorage(), memoryKey),
+      messages: toEmbeddedChatMessages(loadFleetGraphChatMemory(getFleetGraphChatMemoryStorage(), memoryKey)),
     });
   }, [chatState.memoryKey, memoryKey]);
 
@@ -136,6 +138,7 @@ export function EmbeddedChat({ documentId, documentType, memoryScope, className 
         role: 'user',
         content: trimmedQuestion,
         status: 'sent',
+        sources: [],
       };
       const assistantMessageId = createId('assistant');
       const assistantMessage: EmbeddedChatMessage = {
@@ -143,6 +146,7 @@ export function EmbeddedChat({ documentId, documentType, memoryScope, className 
         role: 'assistant',
         content: '',
         status: 'streaming',
+        sources: [],
       };
       const conversationHistory = buildConversationHistory(messages);
 
@@ -221,7 +225,12 @@ export function EmbeddedChat({ documentId, documentType, memoryScope, className 
     if (event.event === 'final') {
       setMessages((currentMessages) => currentMessages.map((message) => (
         message.id === assistantMessageId
-          ? { ...message, content: event.data.response, status: 'completed' }
+          ? {
+              ...message,
+              content: event.data.response,
+              status: 'completed',
+              sources: event.data.sources,
+            }
           : message
       )));
     }
@@ -352,8 +361,39 @@ function ChatMessageBubble({ message }: { message: EmbeddedChatMessage }) {
         )}
       >
         <p className="whitespace-pre-wrap">{message.content || (message.status === 'streaming' ? '...' : '')}</p>
+        {!isUser && message.sources.length > 0 && (
+          <SourceChips sources={message.sources} />
+        )}
       </div>
     </div>
+  );
+}
+
+function SourceChips({ sources }: { sources: readonly FleetGraphChatSource[] }) {
+  return (
+    <div className="mt-3 border-t border-border/70 pt-2">
+      <p className="mb-1.5 text-[11px] font-medium uppercase tracking-wide text-muted">Sources</p>
+      <div className="flex flex-wrap gap-1.5">
+        {sources.map((source) => (
+          <SourceChip key={`${source.documentId}-${source.kind}`} source={source} />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function SourceChip({ source }: { source: FleetGraphChatSource }) {
+  const className = cn(
+    'inline-flex max-w-full items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium transition-colors',
+    source.kind === 'scope'
+      ? 'border-accent/40 bg-accent/10 text-accent'
+      : 'border-border bg-background/70 text-muted hover:text-foreground'
+  );
+
+  return (
+    <a className={className} href={`/documents/${source.documentId}`}>
+      <span className="truncate">{source.label}</span>
+    </a>
   );
 }
 
@@ -386,6 +426,16 @@ function toFleetGraphChatMemoryMessages(
     role: message.role,
     content: message.content,
     status: message.status,
+    sources: message.sources,
+  }));
+}
+
+function toEmbeddedChatMessages(
+  messages: readonly FleetGraphChatMemoryMessage[]
+): EmbeddedChatMessage[] {
+  return messages.map((message) => ({
+    ...message,
+    sources: message.sources ?? [],
   }));
 }
 

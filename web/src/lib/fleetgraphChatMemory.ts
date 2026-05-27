@@ -7,6 +7,14 @@ export interface FleetGraphChatMemoryMessage {
   role: FleetGraphChatMemoryRole;
   content: string;
   status: FleetGraphChatMemoryStatus;
+  sources?: FleetGraphChatMemorySource[];
+}
+
+export interface FleetGraphChatMemorySource {
+  label: string;
+  documentId: string;
+  documentType: string;
+  kind: 'scope' | 'related';
 }
 
 interface FleetGraphChatMemoryKeyInput {
@@ -104,7 +112,8 @@ function isFleetGraphChatMemoryMessage(value: unknown): value is FleetGraphChatM
   return typeof value.id === 'string'
     && (value.role === 'user' || value.role === 'assistant')
     && typeof value.content === 'string'
-    && isFleetGraphChatMemoryStatus(value.status);
+    && isFleetGraphChatMemoryStatus(value.status)
+    && (value.sources === undefined || isFleetGraphChatMemorySources(value.sources));
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -114,4 +123,14 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 function isFleetGraphChatMemoryStatus(value: unknown): value is FleetGraphChatMemoryStatus {
   return typeof value === 'string'
     && persistableStatuses.some((status) => status === value);
+}
+
+function isFleetGraphChatMemorySources(value: unknown): value is FleetGraphChatMemorySource[] {
+  return Array.isArray(value) && value.every((source) => (
+    isRecord(source)
+    && typeof source.label === 'string'
+    && typeof source.documentId === 'string'
+    && typeof source.documentType === 'string'
+    && (source.kind === 'scope' || source.kind === 'related')
+  ));
 }

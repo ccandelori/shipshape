@@ -114,6 +114,26 @@ describe('fleetgraphChatMemory', () => {
     ]);
   });
 
+  it('persists assistant source chips with completed messages', () => {
+    const storage = new MemoryStorage();
+    const messages: FleetGraphChatMemoryMessage[] = [{
+      id: 'assistant-1',
+      role: 'assistant',
+      content: 'Week 12 is blocked.',
+      status: 'completed',
+      sources: [{
+        label: 'Week 12',
+        documentId: 'week-12',
+        documentType: 'sprint',
+        kind: 'scope',
+      }],
+    }];
+
+    saveFleetGraphChatMemory(storage, 'week-key', messages);
+
+    expect(loadFleetGraphChatMemory(storage, 'week-key')).toEqual(messages);
+  });
+
   it('keeps only the latest bounded chat messages', () => {
     const storage = new MemoryStorage();
     const messages: FleetGraphChatMemoryMessage[] = Array.from(

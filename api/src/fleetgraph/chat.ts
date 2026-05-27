@@ -1,5 +1,6 @@
 import { AIMessage, HumanMessage, SystemMessage, type BaseMessage } from '@langchain/core/messages';
 import { ChatOpenAI } from '@langchain/openai';
+import type { DocumentType } from '@ship/shared';
 import { z } from 'zod';
 import {
   buildIssueContext,
@@ -124,6 +125,15 @@ export type FleetGraphChatCompletion = {
   usage: FleetGraphChatUsage;
 };
 
+export type FleetGraphChatSourceKind = 'scope' | 'related';
+
+export type FleetGraphChatSource = {
+  label: string;
+  documentId: string;
+  documentType: DocumentType;
+  kind: FleetGraphChatSourceKind;
+};
+
 export type FleetGraphChatRateLimitState = ReadonlyMap<string, readonly number[]>;
 
 export type FleetGraphChatRateLimitDecision = {
@@ -216,6 +226,7 @@ export type FleetGraphChatSseEvent =
       data: {
         response: string;
         usage: FleetGraphChatUsage;
+        sources?: FleetGraphChatSource[];
       };
     }
   | {
@@ -258,6 +269,31 @@ export async function buildFleetGraphChatPrompt(input: {
     messages,
     loadedContext,
   };
+}
+
+export function buildFleetGraphChatSources(
+  loadedContext: FleetGraphChatLoadedContext
+): FleetGraphChatSource[] {
+  if (loadedContext.documentType === 'sprint') {
+    return limitFleetGraphChatSources([
+      toFleetGraphChatSource(loadedContext.context.week, 'scope'),
+      ...loadedContext.context.issues.map((issue) => toFleetGraphChatSource(issue, 'related')),
+      ...loadedContext.context.standups.map((standup) => toFleetGraphChatSource(standup, 'related')),
+    ]);
+  }
+
+  if (loadedContext.documentType === 'project') {
+    return limitFleetGraphChatSources([
+      toFleetGraphChatSource(loadedContext.context.project, 'scope'),
+      ...loadedContext.context.activeIssues.map((issue) => toFleetGraphChatSource(issue, 'related')),
+      ...loadedContext.context.weeks.map((week) => toFleetGraphChatSource(week, 'related')),
+    ]);
+  }
+
+  return limitFleetGraphChatSources([
+    toFleetGraphChatSource(loadedContext.context.issue, 'scope'),
+    ...loadedContext.context.blockerStandups.map((standup) => toFleetGraphChatSource(standup, 'related')),
+  ]);
 }
 
 export async function streamFleetGraphChatModelResponse(input: {
@@ -711,6 +747,47 @@ function toStandupPromptPayload(standup: StandupContext): object {
     ...toDocumentPromptPayload(standup),
     authorUserId: standup.authorUserId,
   };
+}
+
+function toFleetGraphChatSource(
+  document: ShipDocumentContext,
+  kind: FleetGraphChatSourceKind
+): FleetGraphChatSource {
+  return {
+    label: document.title || formatFleetGraphChatSourceType(document.documentType),
+    documentId: document.id,
+    documentType: document.documentType,
+    kind,
+  };
+}
+
+function limitFleetGraphChatSources(
+  sources: readonly FleetGraphChatSource[]
+): FleetGraphChatSource[] {
+  const seenDocumentIds = new Set<string>();
+  const uniqueSources: FleetGraphChatSource[] = [];
+
+  for (const source of sources) {
+    if (seenDocumentIds.has(source.documentId)) {
+      continue;
+    }
+
+    seenDocumentIds.add(source.documentId);
+    uniqueSources.push(source);
+
+    if (uniqueSources.length >= 6) {
+      break;
+    }
+  }
+
+  return uniqueSources;
+}
+
+function formatFleetGraphChatSourceType(documentType: DocumentType): string {
+  return documentType
+    .split('_')
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(' ');
 }
 
 function toDocumentPromptPayload(document: ShipDocumentContext): object {

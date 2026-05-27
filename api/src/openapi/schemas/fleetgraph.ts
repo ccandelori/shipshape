@@ -271,7 +271,7 @@ export const FleetGraphChatSseStreamSchema = z.string().openapi({
     'data: {"token":"answer"}',
     '',
     'event: final',
-    'data: {"response":"The answer","usage":{"modelName":"gpt-4o-mini","inputTokens":12,"outputTokens":4,"totalTokens":16}}',
+    'data: {"response":"The answer","usage":{"modelName":"gpt-4o-mini","inputTokens":12,"outputTokens":4,"totalTokens":16},"sources":[{"label":"Week 14","documentId":"550e8400-e29b-41d4-a716-446655440001","documentType":"sprint","kind":"scope"}]}',
     '',
   ].join('\n'),
 });
@@ -298,7 +298,7 @@ const fleetGraphChatSseEventExamples = {
   },
   final: {
     summary: 'Final answer frame',
-    value: 'event: final\ndata: {"response":"The answer","usage":{"modelName":"gpt-4o-mini","inputTokens":12,"outputTokens":4,"totalTokens":16}}\n\n',
+    value: 'event: final\ndata: {"response":"The answer","usage":{"modelName":"gpt-4o-mini","inputTokens":12,"outputTokens":4,"totalTokens":16},"sources":[{"label":"Week 14","documentId":"550e8400-e29b-41d4-a716-446655440001","documentType":"sprint","kind":"scope"}]}\n\n',
   },
   error: {
     summary: 'Post-stream error frame',

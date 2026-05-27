@@ -195,7 +195,7 @@ Trace paths required for validation:
 
 - Proactive quiet exit: no material state change or suppressed finding.
 - Proactive finding path: changed state, pre-filter passes, reasoning produces a finding, approval is requested.
-- On-demand answer path: user asks a question and receives an SSE streamed answer through the direct MVP chat route.
+- On-demand answer path: user asks a question, enters the shared `fleetgraph.runtime` graph with `mode: 'ondemand_chat'`, and receives an SSE streamed answer from the graph's chat branch.
 - On-demand action path: target architecture; user asks for work, graph produces an action candidate or pending approval.
 
 ## Trace Links And Runtime Evidence
@@ -561,4 +561,4 @@ Runtime model spend for the MVP at-risk Week detector is now persisted in `fleet
 | Architecture Decisions | Defined in this document |
 | Cost Analysis | Design estimate plus deterministic runtime telemetry captured |
 | Timed Latency Proof | Passed locally at 45.113 seconds; see `docs/fleetgraph-latency-proof.md` |
-| On-Demand Graph Parity | Direct SSE chat is documented as an intentional MVP deviation; graph unification is deferred |
+| On-Demand Graph Parity | Implemented: on-demand chat enters the same compiled `fleetgraph.runtime` LangGraph as proactive detection; the route still owns auth, validation, rate limiting, and SSE framing |

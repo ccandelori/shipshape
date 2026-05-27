@@ -2,6 +2,7 @@ import { Router, type Request, type Response } from 'express';
 import { pool } from '../db/client.js';
 import {
   buildFleetGraphChatPrompt,
+  buildFleetGraphChatSources,
   createFleetGraphChatTraceContext,
   createOpenAIFleetGraphChatModel,
   defaultFleetGraphChatContextBuilders,
@@ -101,6 +102,7 @@ export function createFleetGraphChatRouter(dependencies: FleetGraphChatRouterDep
     }
 
     let promptMessages: FleetGraphChatModelMessage[];
+    let promptSources: ReturnType<typeof buildFleetGraphChatSources>;
     let traceContext: ReturnType<typeof createFleetGraphChatTraceContext>;
     try {
       const scope = await resolveFleetGraphChatScope(
@@ -115,6 +117,7 @@ export function createFleetGraphChatRouter(dependencies: FleetGraphChatRouterDep
         contextBuilders: dependencies.contextBuilders,
       });
       promptMessages = prompt.messages;
+      promptSources = buildFleetGraphChatSources(prompt.loadedContext);
       traceContext = createFleetGraphChatTraceContext({
         userId: actorContext.data.userId,
         workspaceId: actorContext.data.workspaceId,
@@ -193,7 +196,10 @@ export function createFleetGraphChatRouter(dependencies: FleetGraphChatRouterDep
           abortSignal: abortController.signal,
           event: {
             event: 'final',
-            data: completion,
+            data: {
+              ...completion,
+              sources: promptSources,
+            },
           },
         });
       }
