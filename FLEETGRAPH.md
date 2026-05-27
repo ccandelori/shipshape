@@ -19,7 +19,7 @@ Use this block for the final walkthrough and submission review.
 
 Trace links belong in the Test Cases table below. Current status: Langfuse instrumentation is implemented and the runtime keys have been configured for local exercise; shared Langfuse Cloud links still need to be captured from live quiet, finding, and chat runs and pasted here before final submission.
 
-Deployed smoke status, 2026-05-27 1:24 PM CDT: release `20260527-132344` is live on the public droplet. `/health` returns HTTP 200, `dev@ship.local` login works, FleetGraph inbox tabs render, and the Week chat streamed a production response from the public URL. Langfuse Cloud share links still need to be copied from the generated traces and pasted into the Test Cases table.
+Deployed smoke status, 2026-05-27 2:35 PM CDT: release `20260527-143158` is live on the public droplet. `/health` returns HTTP 200, `dev@ship.local` login works, FleetGraph inbox tabs render, the Needs Review finding exposes its "Why this?" run metadata panel, and the Week chat opens with source-linked context. Langfuse Cloud share links still need to be copied from generated traces and pasted into the Test Cases table.
 
 ## Agent Responsibility
 
