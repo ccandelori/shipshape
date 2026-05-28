@@ -287,6 +287,9 @@ describe('FleetGraph chat runner', () => {
         enabled: true,
         langfuseBaseUrl: 'https://us.cloud.langfuse.com',
         langfuseProjectId: 'project-123',
+        langfusePublicKey: 'pk-lf-test',
+        langfuseSecretKey: 'sk-lf-test',
+        publishTrace: vi.fn().mockResolvedValue(undefined),
       },
     });
     const observation = {

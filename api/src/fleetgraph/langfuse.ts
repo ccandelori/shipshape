@@ -9,6 +9,7 @@ import {
   type PropagateAttributesParams,
 } from '@langfuse/tracing';
 import { NodeSDK } from '@opentelemetry/sdk-node';
+import { randomUUID } from 'node:crypto';
 import { FleetGraphConfigError, loadFleetGraphConfig, type FleetGraphConfig } from './config.js';
 
 export type FleetGraphLangfuseRuntime = {
@@ -43,6 +44,27 @@ export type FleetGraphPublicTracePolicy = {
   enabled: boolean;
   langfuseBaseUrl: string;
   langfuseProjectId: string | null;
+  langfusePublicKey: string;
+  langfuseSecretKey: string;
+  publishTrace: FleetGraphPublicTracePublisher;
+};
+
+export type FleetGraphPublicTracePublishInput = {
+  langfuseBaseUrl: string;
+  langfusePublicKey: string;
+  langfuseSecretKey: string;
+  traceId: string;
+  traceName: string;
+};
+
+export type FleetGraphPublicTracePublisher = (
+  input: FleetGraphPublicTracePublishInput
+) => Promise<void>;
+
+export type FleetGraphPublicTraceIngestionInput = FleetGraphPublicTracePublishInput & {
+  eventId: string;
+  timestamp: string;
+  fetchClient: typeof fetch;
 };
 
 export type FleetGraphTracePublicationMetadata = {
@@ -59,6 +81,18 @@ export type FleetGraphTracePublicationResult = {
 export type FleetGraphTracePublicationLogger = {
   info: (message: string, fields: Record<string, string | boolean | null>) => void;
 };
+
+type LangfuseIngestionResponse = {
+  successes?: Array<{ id?: string; status?: number }>;
+  errors?: Array<{ id?: string; status?: number; message?: string; error?: string }>;
+};
+
+export class FleetGraphPublicTracePublicationError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'FleetGraphPublicTracePublicationError';
+  }
+}
 
 export const fleetGraphLangfuseRuntime: FleetGraphLangfuseRuntime = {
   startActiveObservation,
@@ -178,6 +212,14 @@ export function createFleetGraphPublicTracePolicy(config: FleetGraphConfig): Fle
     enabled: config.publicTraceExportEnabled,
     langfuseBaseUrl: config.langfuseBaseUrl,
     langfuseProjectId: config.langfuseProjectId,
+    langfusePublicKey: config.langfusePublicKey,
+    langfuseSecretKey: config.langfuseSecretKey,
+    publishTrace: async (input) => publishFleetGraphTraceViaLangfuseIngestion({
+      ...input,
+      eventId: `fleetgraph-public-trace-${input.traceId}-${randomUUID()}`,
+      timestamp: new Date().toISOString(),
+      fetchClient: fetch,
+    }),
   };
 }
 
@@ -186,16 +228,19 @@ export function createDisabledFleetGraphPublicTracePolicy(): FleetGraphPublicTra
     enabled: false,
     langfuseBaseUrl: '',
     langfuseProjectId: null,
+    langfusePublicKey: '',
+    langfuseSecretKey: '',
+    publishTrace: async () => {},
   };
 }
 
-export function publishFleetGraphTraceIfEnabled(input: {
+export async function publishFleetGraphTraceIfEnabled(input: {
   observation: LangfuseObservation;
   policy: FleetGraphPublicTracePolicy;
   traceName: string;
   tags: readonly string[];
   logger: FleetGraphTracePublicationLogger;
-}): FleetGraphTracePublicationResult {
+}): Promise<FleetGraphTracePublicationResult> {
   const traceId = typeof input.observation.traceId === 'string' ? input.observation.traceId : null;
   const traceUrl = createFleetGraphLangfuseTraceUrl({
     baseUrl: input.policy.langfuseBaseUrl,
@@ -216,6 +261,20 @@ export function publishFleetGraphTraceIfEnabled(input: {
   }
 
   input.observation.setTraceAsPublic();
+  if (traceId === null) {
+    throw new FleetGraphPublicTracePublicationError(
+      `FleetGraph public trace export requires a trace id: traceName=${input.traceName}`
+    );
+  }
+
+  await input.policy.publishTrace({
+    langfuseBaseUrl: input.policy.langfuseBaseUrl,
+    langfusePublicKey: input.policy.langfusePublicKey,
+    langfuseSecretKey: input.policy.langfuseSecretKey,
+    traceId,
+    traceName: input.traceName,
+  });
+
   input.logger.info('fleetgraph.langfuse.trace_public', {
     traceName: input.traceName,
     traceId,
@@ -229,6 +288,58 @@ export function publishFleetGraphTraceIfEnabled(input: {
       tracePublic: true,
     },
   };
+}
+
+export async function publishFleetGraphTraceViaLangfuseIngestion(
+  input: FleetGraphPublicTraceIngestionInput
+): Promise<void> {
+  const url = `${input.langfuseBaseUrl.replace(/\/+$/u, '')}/api/public/ingestion`;
+  const auth = Buffer.from(`${input.langfusePublicKey}:${input.langfuseSecretKey}`).toString('base64');
+  const response = await input.fetchClient(url, {
+    method: 'POST',
+    headers: {
+      authorization: `Basic ${auth}`,
+      'content-type': 'application/json',
+    },
+    body: JSON.stringify({
+      batch: [{
+        id: input.eventId,
+        timestamp: input.timestamp,
+        type: 'trace-create',
+        body: {
+          id: input.traceId,
+          timestamp: input.timestamp,
+          name: input.traceName,
+          public: true,
+        },
+      }],
+    }),
+  });
+
+  const responseBody = await readLangfuseIngestionResponse(response);
+  const matchingSuccess = responseBody.successes?.find((success) => success.id === input.eventId);
+  const matchingError = responseBody.errors?.find((error) => error.id === input.eventId);
+
+  if (!response.ok || matchingError || !matchingSuccess) {
+    throw new FleetGraphPublicTracePublicationError(
+      `Langfuse public trace export failed: traceId=${input.traceId}, traceName=${input.traceName}, status=${response.status}, body=${JSON.stringify(responseBody)}`
+    );
+  }
+}
+
+async function readLangfuseIngestionResponse(response: Response): Promise<LangfuseIngestionResponse> {
+  const rawBody = await response.text();
+
+  try {
+    return JSON.parse(rawBody) as LangfuseIngestionResponse;
+  } catch {
+    return {
+      errors: [{
+        status: response.status,
+        message: rawBody,
+      }],
+    };
+  }
 }
 
 export function createFleetGraphLangfuseTraceUrl(input: {

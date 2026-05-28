@@ -766,7 +766,7 @@ async function runImmediateAtRiskWeekLangfuseTrace(
       });
 
       try {
-        const publication = publishAtRiskWeekTraceIfEnabled(publicTracePolicy, definition, observation);
+        const publication = await publishAtRiskWeekTraceIfEnabled(publicTracePolicy, definition, observation);
         const outputState = await operation(applyAtRiskWeekTracePublication(state, definition, publication.metadata));
         const outputMetadata = createAtRiskWeekTraceMetadata(outputState, definition.inputMetadata.traceNode);
 
@@ -829,7 +829,7 @@ async function emitCompletedAtRiskWeekLangfuseTrace(
         input: createAtRiskWeekLangfuseInput(definition.inputMetadata),
         metadata: definition.inputMetadata,
       });
-      const publication = publishAtRiskWeekTraceIfEnabled(publicTracePolicy, definition, observation);
+      const publication = await publishAtRiskWeekTraceIfEnabled(publicTracePolicy, definition, observation);
       observation.update({
         output: createAtRiskWeekLangfuseOutput(outputState, outputMetadata),
         metadata: createAtRiskWeekObservationMetadata(definition, outputMetadata, publication.metadata),
@@ -863,11 +863,11 @@ async function emitFailedAtRiskWeekLangfuseTrace(
   ), { asType: definition.runType });
 }
 
-function publishAtRiskWeekTraceIfEnabled(
+async function publishAtRiskWeekTraceIfEnabled(
   policy: FleetGraphPublicTracePolicy,
   definition: AtRiskWeekTraceDefinition,
   observation: Parameters<typeof publishFleetGraphTraceIfEnabled>[0]['observation']
-): FleetGraphTracePublicationResult {
+): Promise<FleetGraphTracePublicationResult> {
   if (definition.inputMetadata.traceNode !== 'run') {
     return {
       published: false,

@@ -417,7 +417,7 @@ export async function traceFleetGraphChatCompletionWithRuntime(input: {
 
       try {
         const completion = await input.operation();
-        const publication = publishFleetGraphTraceIfEnabled({
+        const publication = await publishFleetGraphTraceIfEnabled({
           observation,
           policy: input.traceContext.publicTracePolicy,
           traceName: input.traceContext.traceName,
