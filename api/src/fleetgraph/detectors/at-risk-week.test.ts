@@ -371,6 +371,42 @@ describe('FleetGraph at-risk Week detector contracts', () => {
     }));
   });
 
+  it('marks top-level at-risk Week traces public when public export is enabled', async () => {
+    const langfuse = createCapturingLangfuseRuntime();
+    const traceRunner = createLangfuseAtRiskWeekTraceRunnerWithRuntime(langfuse.runtime, {
+      enabled: true,
+      langfuseBaseUrl: 'https://us.cloud.langfuse.com',
+      langfuseProjectId: 'project-123',
+    });
+    const completedState = await traceAtRiskWeekRun(
+      createAtRiskWeekInitialState({
+        ...graphInput,
+        triggerSource: 'mutation',
+      }),
+      traceRunner,
+      async (currentState) => ({
+        ...currentState,
+        status: 'completed',
+        activeNode: null,
+        completedAt: '2026-05-26T05:03:00.000Z',
+      })
+    );
+
+    expect(langfuse.observation.setTraceAsPublic).toHaveBeenCalledTimes(1);
+    expect(completedState.trace).toMatchObject({
+      langfuseTraceId: 'trace-123',
+      langfuseTraceUrl: 'https://us.cloud.langfuse.com/project/project-123/traces/trace-123',
+      langfuseTracePublic: true,
+    });
+    expect(langfuse.observation.update).toHaveBeenLastCalledWith(expect.objectContaining({
+      metadata: expect.objectContaining({
+        tracePublic: true,
+        traceId: 'trace-123',
+        traceUrl: 'https://us.cloud.langfuse.com/project/project-123/traces/trace-123',
+      }),
+    }));
+  });
+
   it('keeps propagated Langfuse metadata short, string-only, and non-sensitive', () => {
     const metadata = createAtRiskWeekTraceMetadata(createAtRiskWeekInitialState(graphInput), 'run');
 
@@ -1496,6 +1532,8 @@ type CapturedLangfuseRuntime = {
   runtime: FleetGraphLangfuseRuntime;
   observation: {
     update: ReturnType<typeof vi.fn>;
+    setTraceAsPublic: ReturnType<typeof vi.fn>;
+    traceId: string;
   };
   startActiveObservationSpy: ReturnType<typeof vi.fn>;
   propagateAttributesSpy: ReturnType<typeof vi.fn>;
@@ -1619,7 +1657,9 @@ function createCapturingTraceRunner(capturedTraces: CapturedTrace[]): AtRiskWeek
 
 function createCapturingLangfuseRuntime(): CapturedLangfuseRuntime {
   const observation = {
+    traceId: 'trace-123',
     update: vi.fn(),
+    setTraceAsPublic: vi.fn(),
   };
   const startActiveObservationSpy = vi.fn();
   const propagateAttributesSpy = vi.fn();

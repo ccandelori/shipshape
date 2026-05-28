@@ -196,7 +196,16 @@ The reset is scoped: it restores the two seeded FleetGraph findings, clears thei
 | Quiet path | https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/3c825a35e75db07fec976a6e7c779cef |
 | Week chat | https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/4651d55b03a3cb8c937455ade6b2aeec |
 
-These links require Langfuse project access unless you explicitly make each trace public in Langfuse Cloud.
+These links require Langfuse project access unless they are manually published in Langfuse Cloud or recaptured with FleetGraph public trace export enabled.
+
+For a final submission recapture, set these on the API process before generating the demo traces:
+
+```bash
+FLEETGRAPH_PUBLIC_TRACE_EXPORT=true
+LANGFUSE_PROJECT_ID=<your-langfuse-project-id>
+```
+
+When this is enabled, FleetGraph calls the Langfuse SDK `setTraceAsPublic()` for exported top-level proactive run traces and on-demand chat traces. The trace metadata includes `tracePublic`, `traceId`, and, when `LANGFUSE_PROJECT_ID` is configured, `traceUrl`. Turn it back off after the capture window.
 
 **When traces are generated**
 
@@ -206,7 +215,7 @@ These links require Langfuse project access unless you explicitly make each trac
 | Proactive Week detector reasons about a risky Week | `fleetgraph.at_risk_week.reason` or a trace tagged `detector:at_risk_week` |
 | Quiet detector path exits before model reasoning | A selected demo trace only; routine quiet poll exits are suppressed to protect Langfuse volume |
 
-Langfuse is the observability proof: do not search for traces during the recording. Generate them in pre-flight, open the useful trace, then show the already-loaded tab. If public links are required, make only the selected traces public after reviewing their prompt/context content.
+Langfuse is the observability proof: do not search for traces during the recording. Generate them in pre-flight, open the useful trace, then show the already-loaded tab. If public links are required, make only the selected traces public after reviewing their prompt/context content, or use the SDK-driven public export switch for a short recapture window.
 
 **Interview note: observability volume edge case**
 

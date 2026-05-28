@@ -288,8 +288,9 @@ Local seed verification:
 These do not block the Week 5 MVP if documented honestly, but they are the next product hardening items.
 
 1. Public trace sharing must be finalized before sending the submission packet.
-   - Current links are authenticated Langfuse Cloud URLs.
-   - If graders are not Langfuse project members, make the selected traces public from the Langfuse UI after reviewing prompt/context contents.
+   - Current links were captured as authenticated Langfuse Cloud URLs.
+   - FleetGraph now has an opt-in SDK path for public trace publication: set `FLEETGRAPH_PUBLIC_TRACE_EXPORT=true` and `LANGFUSE_PROJECT_ID`, then recapture the selected finding, quiet, and chat traces.
+   - Public trace export calls Langfuse `setTraceAsPublic()` and records `tracePublic`, `traceId`, and `traceUrl` metadata when a project id is configured. Keep it off outside submission windows.
 
 2. `PostgresSaver` checkpoint durability is deferred.
    - Durable FleetGraph outcomes are in Postgres today.
@@ -307,4 +308,4 @@ These do not block the Week 5 MVP if documented honestly, but they are the next 
 
 FleetGraph is substantially submission-ready from a code, documentation, deployment, and demo standpoint: proactive detection, guarded execution, durable findings, human review, embedded graph-routed chat, UI access, seed data, latency proof, trace evidence, and cost tracking are all present.
 
-The only submission packaging risk is trace access. Langfuse trace URLs must either be public share links or reviewers must have Langfuse project access before final submission.
+The only remaining submission packaging risk is trace access. Langfuse trace URLs must either be recaptured with `FLEETGRAPH_PUBLIC_TRACE_EXPORT=true`, manually made public after review, or shared with reviewers who have Langfuse project access before final submission.

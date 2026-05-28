@@ -12,8 +12,10 @@ describe('FleetGraph config', () => {
       LANGFUSE_PUBLIC_KEY: 'pk-lf-test',
       LANGFUSE_SECRET_KEY: 'sk-lf-test',
       LANGFUSE_BASE_URL: 'https://cloud.langfuse.com',
+      LANGFUSE_PROJECT_ID: 'project-test',
       LANGFUSE_TRACING_ENVIRONMENT: 'test',
       LANGFUSE_RELEASE: 'fleetgraph-test',
+      FLEETGRAPH_PUBLIC_TRACE_EXPORT: 'true',
     });
 
     expect(config).toEqual({
@@ -21,8 +23,10 @@ describe('FleetGraph config', () => {
       langfusePublicKey: 'pk-lf-test',
       langfuseSecretKey: 'sk-lf-test',
       langfuseBaseUrl: 'https://cloud.langfuse.com',
+      langfuseProjectId: 'project-test',
       langfuseTracingEnvironment: 'test',
       langfuseRelease: 'fleetgraph-test',
+      publicTraceExportEnabled: true,
     });
   });
 
@@ -39,9 +43,23 @@ describe('FleetGraph config', () => {
       LANGFUSE_SECRET_KEY: 'sk-lf-test',
       LANGFUSE_BASE_URL: 'https://cloud.langfuse.com',
     })).toMatchObject({
+      langfuseProjectId: null,
       langfuseTracingEnvironment: null,
       langfuseRelease: null,
+      publicTraceExportEnabled: false,
     });
+  });
+
+  it('rejects misspelled public trace export values', () => {
+    expect(() => parseFleetGraphConfig({
+      OPENAI_API_KEY: 'sk-test-openai',
+      LANGFUSE_PUBLIC_KEY: 'pk-lf-test',
+      LANGFUSE_SECRET_KEY: 'sk-lf-test',
+      LANGFUSE_BASE_URL: 'https://cloud.langfuse.com',
+      FLEETGRAPH_PUBLIC_TRACE_EXPORT: 'yes',
+    })).toThrow(
+      'FleetGraph configuration environment variable must be "true" or "false": FLEETGRAPH_PUBLIC_TRACE_EXPORT'
+    );
   });
 
   it('loads FleetGraph config from process environment', () => {
@@ -49,16 +67,20 @@ describe('FleetGraph config', () => {
     vi.stubEnv('LANGFUSE_PUBLIC_KEY', 'pk-lf-test');
     vi.stubEnv('LANGFUSE_SECRET_KEY', 'sk-lf-test');
     vi.stubEnv('LANGFUSE_BASE_URL', 'https://cloud.langfuse.com');
+    vi.stubEnv('LANGFUSE_PROJECT_ID', 'project-dev');
     vi.stubEnv('LANGFUSE_TRACING_ENVIRONMENT', 'local');
     vi.stubEnv('LANGFUSE_RELEASE', 'dev-build');
+    vi.stubEnv('FLEETGRAPH_PUBLIC_TRACE_EXPORT', 'true');
 
     expect(loadFleetGraphConfig()).toEqual({
       openaiApiKey: 'sk-test-openai',
       langfusePublicKey: 'pk-lf-test',
       langfuseSecretKey: 'sk-lf-test',
       langfuseBaseUrl: 'https://cloud.langfuse.com',
+      langfuseProjectId: 'project-dev',
       langfuseTracingEnvironment: 'local',
       langfuseRelease: 'dev-build',
+      publicTraceExportEnabled: true,
     });
   });
 

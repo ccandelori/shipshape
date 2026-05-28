@@ -22,6 +22,11 @@ import {
 import { FleetGraphConfigError, loadFleetGraphConfig } from '../fleetgraph/config.js';
 import type { FleetGraphQueryClient } from '../fleetgraph/context.js';
 import {
+  createDisabledFleetGraphPublicTracePolicy,
+  createFleetGraphPublicTracePolicy,
+  type FleetGraphPublicTracePolicy,
+} from '../fleetgraph/langfuse.js';
+import {
   runFleetGraphGraph,
   type FleetGraphGraphDependencies,
   type FleetGraphGraphInput,
@@ -33,6 +38,7 @@ type FleetGraphChatRouterDependencies = {
   client: FleetGraphQueryClient;
   contextBuilders: FleetGraphChatContextBuilders;
   createModel: () => FleetGraphChatModel;
+  getPublicTracePolicy?: () => FleetGraphPublicTracePolicy;
   runGraph?: (
     input: FleetGraphGraphInput,
     dependencies: FleetGraphGraphDependencies
@@ -123,6 +129,7 @@ export function createFleetGraphChatRouter(dependencies: FleetGraphChatRouterDep
         workspaceId: actorContext.data.workspaceId,
         scope,
         request: requestResult.data,
+        publicTracePolicy: dependencies.getPublicTracePolicy?.() ?? createDisabledFleetGraphPublicTracePolicy(),
       });
     } catch (error) {
       respondFleetGraphChatPreStreamError(res, error);
@@ -384,6 +391,7 @@ const fleetGraphChatRoutes = createFleetGraphChatRouter({
   client: pool,
   contextBuilders: defaultFleetGraphChatContextBuilders,
   createModel: () => createOpenAIFleetGraphChatModel(loadFleetGraphConfig()),
+  getPublicTracePolicy: () => createFleetGraphPublicTracePolicy(loadFleetGraphConfig()),
   now: () => new Date(),
   heartbeatIntervalMs: defaultFleetGraphChatHeartbeatIntervalMs,
 });

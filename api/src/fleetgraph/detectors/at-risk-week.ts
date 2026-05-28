@@ -10,8 +10,14 @@ import type { DetectorRunDecision } from '../guards.js';
 import {
   createFleetGraphLangfusePropagatedAttributes,
   createFleetGraphLangfuseRunnableConfig,
+  createFleetGraphPublicTracePolicy,
+  createDisabledFleetGraphPublicTracePolicy,
   fleetGraphLangfuseRuntime,
+  publishFleetGraphTraceIfEnabled,
   type FleetGraphLangfuseRuntime,
+  type FleetGraphPublicTracePolicy,
+  type FleetGraphTracePublicationMetadata,
+  type FleetGraphTracePublicationResult,
 } from '../langfuse.js';
 import {
   autoExecuteIfAllowedInTransaction,
@@ -261,6 +267,9 @@ export type AtRiskWeekStateTrace = {
   scopedDocId: string;
   runId: string;
   materialChangeKey: string | null;
+  langfuseTraceId: string | null;
+  langfuseTraceUrl: string | null;
+  langfuseTracePublic: boolean;
   branchDecisions: AtRiskWeekBranchDecision[];
   modelUsage: AtRiskWeekModelUsage | null;
   timings: AtRiskWeekTraceTiming[];
@@ -308,6 +317,9 @@ export type AtRiskWeekTraceMetadata = {
   findingId: string | null;
   actionCandidateId: string | null;
   broadcastEvent: AtRiskWeekPersistenceArtifacts['broadcastEvent'];
+  tracePublic: boolean;
+  traceId: string | null;
+  traceUrl: string | null;
   traceDurationMs: number | null;
   graphLatencyMs: number | null;
   latencyTargetMs: typeof atRiskWeekLatencyTargetMs;
@@ -584,6 +596,9 @@ export function createAtRiskWeekInitialState(input: AtRiskWeekGraphInput): AtRis
       scopedDocId: parsedInput.scopedDocId,
       runId: parsedInput.runId,
       materialChangeKey: null,
+      langfuseTraceId: null,
+      langfuseTraceUrl: null,
+      langfuseTracePublic: false,
       branchDecisions: [],
       modelUsage: null,
       timings: [],
@@ -716,24 +731,29 @@ export async function traceAtRiskWeekNode(
   return runner(createAtRiskWeekTraceDefinition(state, node), state, operation);
 }
 
-export function createLangfuseAtRiskWeekTraceRunner(_config: FleetGraphConfig): AtRiskWeekTraceRunner {
-  return createLangfuseAtRiskWeekTraceRunnerWithRuntime(fleetGraphLangfuseRuntime);
+export function createLangfuseAtRiskWeekTraceRunner(config: FleetGraphConfig): AtRiskWeekTraceRunner {
+  return createLangfuseAtRiskWeekTraceRunnerWithRuntime(
+    fleetGraphLangfuseRuntime,
+    createFleetGraphPublicTracePolicy(config)
+  );
 }
 
 export function createLangfuseAtRiskWeekTraceRunnerWithRuntime(
-  runtime: FleetGraphLangfuseRuntime
+  runtime: FleetGraphLangfuseRuntime,
+  publicTracePolicy: FleetGraphPublicTracePolicy = createDisabledFleetGraphPublicTracePolicy()
 ): AtRiskWeekTraceRunner {
   return async (definition, state, operation) => {
     if (shouldDeferAtRiskWeekLangfuseTrace(definition.inputMetadata)) {
-      return runDeferredAtRiskWeekLangfuseTrace(runtime, definition, state, operation);
+      return runDeferredAtRiskWeekLangfuseTrace(runtime, publicTracePolicy, definition, state, operation);
     }
 
-    return runImmediateAtRiskWeekLangfuseTrace(runtime, definition, state, operation);
+    return runImmediateAtRiskWeekLangfuseTrace(runtime, publicTracePolicy, definition, state, operation);
   };
 }
 
 async function runImmediateAtRiskWeekLangfuseTrace(
   runtime: FleetGraphLangfuseRuntime,
+  publicTracePolicy: FleetGraphPublicTracePolicy,
   definition: AtRiskWeekTraceDefinition,
   state: AtRiskWeekGraphState,
   operation: AtRiskWeekTraceOperation
@@ -746,12 +766,13 @@ async function runImmediateAtRiskWeekLangfuseTrace(
       });
 
       try {
-        const outputState = await operation(state);
+        const publication = publishAtRiskWeekTraceIfEnabled(publicTracePolicy, definition, observation);
+        const outputState = await operation(applyAtRiskWeekTracePublication(state, definition, publication.metadata));
         const outputMetadata = createAtRiskWeekTraceMetadata(outputState, definition.inputMetadata.traceNode);
 
         observation.update({
           output: createAtRiskWeekLangfuseOutput(outputState, outputMetadata),
-          metadata: outputMetadata,
+          metadata: createAtRiskWeekObservationMetadata(definition, outputMetadata, publication.metadata),
           level: 'DEFAULT',
         });
 
@@ -773,6 +794,7 @@ async function runImmediateAtRiskWeekLangfuseTrace(
 
 async function runDeferredAtRiskWeekLangfuseTrace(
   runtime: FleetGraphLangfuseRuntime,
+  publicTracePolicy: FleetGraphPublicTracePolicy,
   definition: AtRiskWeekTraceDefinition,
   state: AtRiskWeekGraphState,
   operation: AtRiskWeekTraceOperation
@@ -785,7 +807,7 @@ async function runDeferredAtRiskWeekLangfuseTrace(
       return outputState;
     }
 
-    await emitCompletedAtRiskWeekLangfuseTrace(runtime, definition, state, outputState, outputMetadata);
+    await emitCompletedAtRiskWeekLangfuseTrace(runtime, publicTracePolicy, definition, state, outputState, outputMetadata);
     return outputState;
   } catch (error) {
     await emitFailedAtRiskWeekLangfuseTrace(runtime, definition, state, error);
@@ -795,6 +817,7 @@ async function runDeferredAtRiskWeekLangfuseTrace(
 
 async function emitCompletedAtRiskWeekLangfuseTrace(
   runtime: FleetGraphLangfuseRuntime,
+  publicTracePolicy: FleetGraphPublicTracePolicy,
   definition: AtRiskWeekTraceDefinition,
   state: AtRiskWeekGraphState,
   outputState: AtRiskWeekGraphState,
@@ -806,9 +829,10 @@ async function emitCompletedAtRiskWeekLangfuseTrace(
         input: createAtRiskWeekLangfuseInput(definition.inputMetadata),
         metadata: definition.inputMetadata,
       });
+      const publication = publishAtRiskWeekTraceIfEnabled(publicTracePolicy, definition, observation);
       observation.update({
         output: createAtRiskWeekLangfuseOutput(outputState, outputMetadata),
-        metadata: outputMetadata,
+        metadata: createAtRiskWeekObservationMetadata(definition, outputMetadata, publication.metadata),
         level: 'DEFAULT',
       });
     })
@@ -837,6 +861,66 @@ async function emitFailedAtRiskWeekLangfuseTrace(
       });
     })
   ), { asType: definition.runType });
+}
+
+function publishAtRiskWeekTraceIfEnabled(
+  policy: FleetGraphPublicTracePolicy,
+  definition: AtRiskWeekTraceDefinition,
+  observation: Parameters<typeof publishFleetGraphTraceIfEnabled>[0]['observation']
+): FleetGraphTracePublicationResult {
+  if (definition.inputMetadata.traceNode !== 'run') {
+    return {
+      published: false,
+      metadata: {
+        tracePublic: false,
+        traceId: null,
+        traceUrl: null,
+      },
+    };
+  }
+
+  return publishFleetGraphTraceIfEnabled({
+    observation,
+    policy,
+    traceName: definition.name,
+    tags: definition.tags,
+    logger: console,
+  });
+}
+
+function applyAtRiskWeekTracePublication(
+  state: AtRiskWeekGraphState,
+  definition: AtRiskWeekTraceDefinition,
+  metadata: FleetGraphTracePublicationMetadata
+): AtRiskWeekGraphState {
+  if (definition.inputMetadata.traceNode !== 'run') {
+    return state;
+  }
+
+  return {
+    ...state,
+    trace: {
+      ...state.trace,
+      langfuseTraceId: metadata.traceId,
+      langfuseTraceUrl: metadata.traceUrl,
+      langfuseTracePublic: metadata.tracePublic,
+    },
+  };
+}
+
+function createAtRiskWeekObservationMetadata(
+  definition: AtRiskWeekTraceDefinition,
+  outputMetadata: AtRiskWeekTraceMetadata,
+  publicationMetadata: FleetGraphTracePublicationMetadata
+): AtRiskWeekTraceMetadata | (AtRiskWeekTraceMetadata & FleetGraphTracePublicationMetadata) {
+  if (definition.inputMetadata.traceNode !== 'run') {
+    return outputMetadata;
+  }
+
+  return {
+    ...outputMetadata,
+    ...publicationMetadata,
+  };
 }
 
 function createAtRiskWeekLangfuseAttributes(
@@ -951,6 +1035,9 @@ export function createAtRiskWeekTraceMetadata(
     findingId: state.persistence?.findingId ?? null,
     actionCandidateId: state.persistence?.actionCandidateId ?? null,
     broadcastEvent: state.persistence?.broadcastEvent ?? null,
+    tracePublic: state.trace.langfuseTracePublic,
+    traceId: state.trace.langfuseTraceId,
+    traceUrl: state.trace.langfuseTraceUrl,
     traceDurationMs: traceTiming?.durationMs ?? null,
     graphLatencyMs: graphTiming?.durationMs ?? null,
     latencyTargetMs: atRiskWeekLatencyTargetMs,

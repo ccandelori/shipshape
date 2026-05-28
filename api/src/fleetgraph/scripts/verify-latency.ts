@@ -78,8 +78,10 @@ const proofConfig = {
   langfusePublicKey: 'unused-latency-proof-langfuse-public-key',
   langfuseSecretKey: 'unused-latency-proof-langfuse-secret-key',
   langfuseBaseUrl: 'https://cloud.langfuse.com',
+  langfuseProjectId: null,
   langfuseTracingEnvironment: 'test',
   langfuseRelease: 'latency-proof',
+  publicTraceExportEnabled: false,
 } as const;
 
 async function main(): Promise<void> {

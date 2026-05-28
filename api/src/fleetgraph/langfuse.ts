@@ -4,6 +4,7 @@ import { LangfuseSpanProcessor, type MaskFunction } from '@langfuse/otel';
 import {
   propagateAttributes,
   startActiveObservation,
+  type LangfuseObservation,
   type LangfuseSpanAttributes,
   type PropagateAttributesParams,
 } from '@langfuse/tracing';
@@ -36,6 +37,27 @@ export type FleetGraphLangfuseCallbackInput = {
   metadata: Record<string, unknown>;
   userId: string | null;
   sessionId: string | null;
+};
+
+export type FleetGraphPublicTracePolicy = {
+  enabled: boolean;
+  langfuseBaseUrl: string;
+  langfuseProjectId: string | null;
+};
+
+export type FleetGraphTracePublicationMetadata = {
+  tracePublic: boolean;
+  traceId: string | null;
+  traceUrl: string | null;
+};
+
+export type FleetGraphTracePublicationResult = {
+  published: boolean;
+  metadata: FleetGraphTracePublicationMetadata;
+};
+
+export type FleetGraphTracePublicationLogger = {
+  info: (message: string, fields: Record<string, string | boolean | null>) => void;
 };
 
 export const fleetGraphLangfuseRuntime: FleetGraphLangfuseRuntime = {
@@ -84,6 +106,7 @@ export function startFleetGraphLangfuseTracing(config: FleetGraphConfig): void {
 
   console.log('fleetgraph.langfuse.tracing_started', {
     baseUrl: config.langfuseBaseUrl,
+    publicTraceExportEnabled: config.publicTraceExportEnabled,
     environment: config.langfuseTracingEnvironment ?? null,
     release: config.langfuseRelease ?? null,
   });
@@ -148,6 +171,88 @@ export function createFleetGraphLangfusePropagatedAttributes(
   }
 
   return params;
+}
+
+export function createFleetGraphPublicTracePolicy(config: FleetGraphConfig): FleetGraphPublicTracePolicy {
+  return {
+    enabled: config.publicTraceExportEnabled,
+    langfuseBaseUrl: config.langfuseBaseUrl,
+    langfuseProjectId: config.langfuseProjectId,
+  };
+}
+
+export function createDisabledFleetGraphPublicTracePolicy(): FleetGraphPublicTracePolicy {
+  return {
+    enabled: false,
+    langfuseBaseUrl: '',
+    langfuseProjectId: null,
+  };
+}
+
+export function publishFleetGraphTraceIfEnabled(input: {
+  observation: LangfuseObservation;
+  policy: FleetGraphPublicTracePolicy;
+  traceName: string;
+  tags: readonly string[];
+  logger: FleetGraphTracePublicationLogger;
+}): FleetGraphTracePublicationResult {
+  const traceId = typeof input.observation.traceId === 'string' ? input.observation.traceId : null;
+  const traceUrl = createFleetGraphLangfuseTraceUrl({
+    baseUrl: input.policy.langfuseBaseUrl,
+    projectId: input.policy.langfuseProjectId,
+    traceId,
+  });
+  const metadata: FleetGraphTracePublicationMetadata = {
+    tracePublic: false,
+    traceId,
+    traceUrl,
+  };
+
+  if (!input.policy.enabled || !input.tags.includes('fleetgraph')) {
+    return {
+      published: false,
+      metadata,
+    };
+  }
+
+  input.observation.setTraceAsPublic();
+  input.logger.info('fleetgraph.langfuse.trace_public', {
+    traceName: input.traceName,
+    traceId,
+    traceUrl,
+  });
+
+  return {
+    published: true,
+    metadata: {
+      ...metadata,
+      tracePublic: true,
+    },
+  };
+}
+
+export function createFleetGraphLangfuseTraceUrl(input: {
+  baseUrl: string;
+  projectId: string | null;
+  traceId: string | null;
+}): string | null {
+  if (input.projectId === null || input.traceId === null) {
+    return null;
+  }
+
+  const normalizedBaseUrl = input.baseUrl.replace(/\/+$/u, '');
+
+  if (normalizedBaseUrl.length === 0) {
+    return null;
+  }
+
+  return [
+    normalizedBaseUrl,
+    'project',
+    encodeURIComponent(input.projectId),
+    'traces',
+    encodeURIComponent(input.traceId),
+  ].join('/');
 }
 
 export function sanitizeLangfuseMetadata(metadata: Record<string, string>): Record<string, string> {

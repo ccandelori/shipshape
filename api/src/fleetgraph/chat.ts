@@ -18,9 +18,12 @@ import type { FleetGraphConfig } from './config.js';
 import {
   createFleetGraphLangfusePropagatedAttributes,
   createFleetGraphLangfuseRunnableConfig,
+  createDisabledFleetGraphPublicTracePolicy,
   fleetGraphLangfuseRuntime,
+  publishFleetGraphTraceIfEnabled,
   type FleetGraphLangfuseRuntime,
   type FleetGraphLangfuseRunnableConfig,
+  type FleetGraphPublicTracePolicy,
 } from './langfuse.js';
 import { extractText } from '../utils/document-content.js';
 
@@ -154,6 +157,7 @@ export type FleetGraphChatTraceContext = {
   metadata: Record<string, string>;
   input: object;
   streamConfig: FleetGraphLangfuseRunnableConfig;
+  publicTracePolicy: FleetGraphPublicTracePolicy;
 };
 
 export type FleetGraphChatContextBuilders = {
@@ -336,6 +340,7 @@ export function createFleetGraphChatTraceContext(input: {
   workspaceId: string;
   scope: FleetGraphChatScope;
   request: FleetGraphChatRequest;
+  publicTracePolicy?: FleetGraphPublicTracePolicy;
 }): FleetGraphChatTraceContext {
   const tags = [
     'fleetgraph',
@@ -375,6 +380,7 @@ export function createFleetGraphChatTraceContext(input: {
       userId: input.userId,
       sessionId,
     }),
+    publicTracePolicy: input.publicTracePolicy ?? createDisabledFleetGraphPublicTracePolicy(),
   };
 }
 
@@ -411,6 +417,13 @@ export async function traceFleetGraphChatCompletionWithRuntime(input: {
 
       try {
         const completion = await input.operation();
+        const publication = publishFleetGraphTraceIfEnabled({
+          observation,
+          policy: input.traceContext.publicTracePolicy,
+          traceName: input.traceContext.traceName,
+          tags: input.traceContext.tags,
+          logger: console,
+        });
         observation.update({
           output: {
             response: completion.response,
@@ -422,6 +435,7 @@ export async function traceFleetGraphChatCompletionWithRuntime(input: {
             inputTokens: completion.usage.inputTokens,
             outputTokens: completion.usage.outputTokens,
             totalTokens: completion.usage.totalTokens,
+            ...publication.metadata,
           },
           level: 'DEFAULT',
         });

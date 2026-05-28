@@ -27,8 +27,10 @@ describe('FleetGraph proactive at-risk Week runner', () => {
       langfusePublicKey: 'pk-lf-test',
       langfuseSecretKey: 'sk-lf-test',
       langfuseBaseUrl: 'https://cloud.langfuse.com',
+      langfuseProjectId: 'project-test',
       langfuseTracingEnvironment: 'test',
       langfuseRelease: 'fleetgraph-test',
+      publicTraceExportEnabled: false,
     };
     const client = createQueryClient();
     const reasoner: AtRiskWeekStructuredReasoner = {

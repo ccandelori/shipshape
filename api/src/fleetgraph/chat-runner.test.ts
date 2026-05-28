@@ -210,7 +210,9 @@ describe('FleetGraph chat runner', () => {
       },
     });
     const observation = {
+      traceId: 'trace-chat-123',
       update: vi.fn(),
+      setTraceAsPublic: vi.fn(),
     };
     const startActiveObservationSpy = vi.fn();
     const propagateAttributesSpy = vi.fn();
@@ -266,6 +268,60 @@ describe('FleetGraph chat runner', () => {
         },
       },
       level: 'DEFAULT',
+    }));
+  });
+
+  it('marks chat traces public when the trace context enables public export', async () => {
+    const scope = createChatScope();
+    const traceContext = createFleetGraphChatTraceContext({
+      userId: 'user-123',
+      workspaceId: 'workspace-123',
+      scope,
+      request: {
+        documentId: scope.documentId,
+        documentType: scope.documentType,
+        question: 'What is blocked?',
+        conversationHistory: [],
+      },
+      publicTracePolicy: {
+        enabled: true,
+        langfuseBaseUrl: 'https://us.cloud.langfuse.com',
+        langfuseProjectId: 'project-123',
+      },
+    });
+    const observation = {
+      traceId: 'trace-chat-123',
+      update: vi.fn(),
+      setTraceAsPublic: vi.fn(),
+    };
+    const runtime: FleetGraphLangfuseRuntime = {
+      startActiveObservation: ((_name: string, fn: (span: typeof observation) => Promise<unknown>) => (
+        fn(observation)
+      )) as unknown as FleetGraphLangfuseRuntime['startActiveObservation'],
+      propagateAttributes: ((_params: object, fn: () => Promise<unknown>) => fn()) as unknown as FleetGraphLangfuseRuntime['propagateAttributes'],
+    };
+
+    await traceFleetGraphChatCompletionWithRuntime({
+      runtime,
+      traceContext,
+      operation: async () => ({
+        response: 'Vendor approval is blocked.',
+        usage: {
+          modelName: 'gpt-4o-mini',
+          inputTokens: 20,
+          outputTokens: 6,
+          totalTokens: 26,
+        },
+      }),
+    });
+
+    expect(observation.setTraceAsPublic).toHaveBeenCalledTimes(1);
+    expect(observation.update).toHaveBeenLastCalledWith(expect.objectContaining({
+      metadata: expect.objectContaining({
+        tracePublic: true,
+        traceId: 'trace-chat-123',
+        traceUrl: 'https://us.cloud.langfuse.com/project/project-123/traces/trace-chat-123',
+      }),
     }));
   });
 

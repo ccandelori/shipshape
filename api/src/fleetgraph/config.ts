@@ -3,8 +3,10 @@ export interface FleetGraphEnv {
   LANGFUSE_PUBLIC_KEY?: string;
   LANGFUSE_SECRET_KEY?: string;
   LANGFUSE_BASE_URL?: string;
+  LANGFUSE_PROJECT_ID?: string;
   LANGFUSE_TRACING_ENVIRONMENT?: string;
   LANGFUSE_RELEASE?: string;
+  FLEETGRAPH_PUBLIC_TRACE_EXPORT?: string;
 }
 
 export interface FleetGraphConfig {
@@ -12,8 +14,10 @@ export interface FleetGraphConfig {
   langfusePublicKey: string;
   langfuseSecretKey: string;
   langfuseBaseUrl: string;
+  langfuseProjectId: string | null;
   langfuseTracingEnvironment: string | null;
   langfuseRelease: string | null;
+  publicTraceExportEnabled: boolean;
 }
 
 export class FleetGraphConfigError extends Error {
@@ -68,8 +72,13 @@ export function parseFleetGraphConfig(env: FleetGraphEnv): FleetGraphConfig {
     langfusePublicKey,
     langfuseSecretKey,
     langfuseBaseUrl,
+    langfuseProjectId: optionalEnvValue(env.LANGFUSE_PROJECT_ID),
     langfuseTracingEnvironment: optionalEnvValue(env.LANGFUSE_TRACING_ENVIRONMENT),
     langfuseRelease: optionalEnvValue(env.LANGFUSE_RELEASE),
+    publicTraceExportEnabled: parseOptionalBooleanEnvValue(
+      env.FLEETGRAPH_PUBLIC_TRACE_EXPORT,
+      'FLEETGRAPH_PUBLIC_TRACE_EXPORT'
+    ),
   };
 }
 
@@ -79,8 +88,10 @@ export function loadFleetGraphConfig(): FleetGraphConfig {
     LANGFUSE_PUBLIC_KEY: process.env.LANGFUSE_PUBLIC_KEY,
     LANGFUSE_SECRET_KEY: process.env.LANGFUSE_SECRET_KEY,
     LANGFUSE_BASE_URL: process.env.LANGFUSE_BASE_URL,
+    LANGFUSE_PROJECT_ID: process.env.LANGFUSE_PROJECT_ID,
     LANGFUSE_TRACING_ENVIRONMENT: process.env.LANGFUSE_TRACING_ENVIRONMENT,
     LANGFUSE_RELEASE: process.env.LANGFUSE_RELEASE,
+    FLEETGRAPH_PUBLIC_TRACE_EXPORT: process.env.FLEETGRAPH_PUBLIC_TRACE_EXPORT,
   });
 }
 
@@ -103,4 +114,24 @@ function optionalEnvValue(value: string | undefined): string | null {
   }
 
   return value;
+}
+
+function parseOptionalBooleanEnvValue(value: string | undefined, key: string): boolean {
+  if (!value || value.trim().length === 0) {
+    return false;
+  }
+
+  const normalizedValue = value.trim().toLowerCase();
+
+  if (normalizedValue === 'true') {
+    return true;
+  }
+
+  if (normalizedValue === 'false') {
+    return false;
+  }
+
+  throw new FleetGraphConfigError(
+    `FleetGraph configuration environment variable must be "true" or "false": ${key}`
+  );
 }

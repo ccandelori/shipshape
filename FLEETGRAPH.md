@@ -22,7 +22,7 @@ Use this block for the final walkthrough and submission review.
 | Latency proof | `docs/fleetgraph-latency-proof.md` |
 | PRD readiness audit | `docs/fleetgraph-submission-readiness-audit.md` |
 
-The Langfuse links above are captured from the public droplet and open for authenticated Langfuse project members. Before sending the final packet to reviewers outside the Langfuse project, make the selected traces public in Langfuse Cloud or invite the reviewers to the project. Public trace sharing is a data-exposure decision because traces contain prompt, context, and run metadata.
+The Langfuse links above were captured before automatic public sharing landed, so treat them as authenticated links until they are recaptured or manually published. FleetGraph now supports SDK-driven public trace publication for the final packet: set `FLEETGRAPH_PUBLIC_TRACE_EXPORT=true` and `LANGFUSE_PROJECT_ID=<project id>`, review the run payloads, then recapture the finding, quiet, and chat traces. The runtime calls Langfuse `setTraceAsPublic()` for exported top-level FleetGraph run/chat traces and adds `tracePublic`, `traceId`, and `traceUrl` metadata. Keep this disabled outside submission/demo windows because public trace links expose prompt, context, and run metadata to anyone with the URL.
 
 Deployed smoke status, 2026-05-27 3:10 PM CDT: release `20260527-151052` is live on the public droplet. `/health` returns HTTP 200, `dev@ship.local` and `henry.patel@ship.local` logins work, FleetGraph inbox tabs render, the live Needs Review finding exposes its "Why this?" run metadata panel with a Langfuse trace URL, and the Week chat streams source-linked context through the shared FleetGraph graph.
 
@@ -205,14 +205,15 @@ Trace paths required for validation:
 
 ## Trace Links And Runtime Evidence
 
-FleetGraph emits Langfuse traces from both proactive and on-demand graph branches. As of 2026-05-27, the public droplet has captured authenticated Langfuse Cloud traces for the MVP finding path, quiet path, and on-demand chat path. Public sharing is a separate approval step because traces include prompt/context metadata.
+FleetGraph emits Langfuse traces from both proactive and on-demand graph branches. As of 2026-05-27, the public droplet has captured authenticated Langfuse Cloud traces for the MVP finding path, quiet path, and on-demand chat path. The current runtime can also make selected traces public through the Langfuse SDK when `FLEETGRAPH_PUBLIC_TRACE_EXPORT=true`. Public sharing remains an explicit approval step because traces include prompt/context metadata.
 
 Configured runtime sources:
 
 - Local development: `api/.env.local` or `api/.env` loaded by `api/src/db/client.ts` and FleetGraph config.
-- Local template: `api/.env.example` documents `OPENAI_API_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL`, `LANGFUSE_TRACING_ENVIRONMENT`, and `LANGFUSE_RELEASE`.
+- Local template: `api/.env.example` documents `OPENAI_API_KEY`, `LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, `LANGFUSE_BASE_URL`, optional `LANGFUSE_PROJECT_ID`, `LANGFUSE_TRACING_ENVIRONMENT`, `LANGFUSE_RELEASE`, and opt-in `FLEETGRAPH_PUBLIC_TRACE_EXPORT`.
 - Production SSM: `api/src/config/ssm.ts` loads `/ship/{env}/OPENAI_API_KEY`, `/ship/{env}/LANGFUSE_PUBLIC_KEY`, `/ship/{env}/LANGFUSE_SECRET_KEY`, and `/ship/{env}/LANGFUSE_BASE_URL`; `LANGFUSE_TRACING_ENVIRONMENT` and `LANGFUSE_RELEASE` are optional deployment env vars.
 - FleetGraph config validation: `api/src/fleetgraph/config.ts` requires OpenAI and Langfuse connection settings before FleetGraph model paths run.
+- Public trace export: `api/src/fleetgraph/langfuse.ts` publishes only selected FleetGraph traces when `FLEETGRAPH_PUBLIC_TRACE_EXPORT=true`. `LANGFUSE_PROJECT_ID` is optional but required for FleetGraph to construct a clickable `traceUrl`; without it the trace is still made public and the trace id is recorded in Langfuse metadata/logs.
 
 Live droplet evidence:
 
@@ -571,7 +572,7 @@ Runtime model spend for the MVP at-risk Week detector is now persisted in `fleet
 | Graph Diagram | Defined in this document |
 | Use Cases | Defined in this document |
 | Trigger Model | Defined in this document |
-| Test Cases | MVP proactive paths verified locally; authenticated live Langfuse trace links captured from public droplet; make links public or grant reviewer project access before final packet |
+| Test Cases | MVP proactive paths verified locally; authenticated live Langfuse trace links captured from public droplet; recapture with SDK public export, make links public manually, or grant reviewer project access before final packet |
 | Architecture Decisions | Defined in this document |
 | Cost Analysis | Design estimate plus deterministic runtime telemetry captured |
 | Timed Latency Proof | Passed locally at 45.113 seconds; see `docs/fleetgraph-latency-proof.md` |
