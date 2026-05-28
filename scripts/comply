@@ -1,0 +1,143 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+COMPLY_TEMP_DIR=""
+
+cleanup() {
+  if [[ -n "${COMPLY_TEMP_DIR:-}" ]]; then
+    rm -rf "$COMPLY_TEMP_DIR"
+  fi
+}
+
+trap cleanup EXIT
+
+usage() {
+  cat <<'EOF'
+Usage:
+  comply opensource [--hook] [--staged] [--exclude PATH] [--skip-trivy]
+
+Local compatibility shim for the Treasury comply opensource pre-commit check.
+This public fallback runs the gitleaks secret scan. The Treasury-internal AI
+analysis is not available outside the internal compliance toolkit.
+EOF
+}
+
+require_gitleaks() {
+  if ! command -v gitleaks >/dev/null 2>&1; then
+    echo "error: gitleaks is required for local comply opensource scanning." >&2
+    echo "install: brew install gitleaks" >&2
+    exit 127
+  fi
+}
+
+is_excluded_path() {
+  local file_path="$1"
+  local excluded_path
+
+  for excluded_path in "${EXCLUDED_PATHS[@]}"; do
+    if [[ "$file_path" == "$excluded_path" || "$file_path" == "$excluded_path/"* ]]; then
+      return 0
+    fi
+  done
+
+  return 1
+}
+
+copy_staged_files() {
+  local target_dir="$1"
+  local copied_count=0
+  local file_path
+  local parent_dir
+
+  while IFS= read -r -d '' file_path; do
+    if is_excluded_path "$file_path"; then
+      continue
+    fi
+
+    parent_dir="$(dirname "$file_path")"
+    mkdir -p "$target_dir/$parent_dir"
+    git show ":$file_path" > "$target_dir/$file_path"
+    copied_count=$((copied_count + 1))
+  done < <(git diff --cached --name-only --diff-filter=ACMRT -z)
+
+  echo "$copied_count"
+}
+
+run_opensource() {
+  local scan_staged=false
+  local copied_count
+
+  EXCLUDED_PATHS=()
+
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      --hook)
+        shift
+        ;;
+      --staged)
+        scan_staged=true
+        shift
+        ;;
+      --exclude)
+        if [[ $# -lt 2 ]]; then
+          echo "error: --exclude requires a path." >&2
+          exit 2
+        fi
+        EXCLUDED_PATHS+=("${2%/}")
+        shift 2
+        ;;
+      --skip-trivy)
+        shift
+        ;;
+      --help|-h)
+        usage
+        exit 0
+        ;;
+      *)
+        echo "error: unsupported comply opensource option: $1" >&2
+        usage >&2
+        exit 2
+        ;;
+    esac
+  done
+
+  require_gitleaks
+
+  echo "Running local comply opensource scan via gitleaks..."
+
+  if [[ "$scan_staged" == true ]]; then
+    COMPLY_TEMP_DIR="$(mktemp -d)"
+
+    copied_count="$(copy_staged_files "$COMPLY_TEMP_DIR")"
+    if [[ "$copied_count" == "0" ]]; then
+      echo "No staged files to scan after exclusions."
+      return 0
+    fi
+
+    gitleaks dir "$COMPLY_TEMP_DIR" --no-banner
+    return 0
+  fi
+
+  gitleaks dir . --no-banner
+}
+
+if [[ $# -eq 0 ]]; then
+  usage
+  exit 2
+fi
+
+case "$1" in
+  opensource)
+    shift
+    run_opensource "$@"
+    ;;
+  --help|-h)
+    usage
+    ;;
+  *)
+    echo "error: unsupported comply command: $1" >&2
+    usage >&2
+    exit 2
+    ;;
+esac

@@ -41,7 +41,7 @@
     "dashboard:preview": "pnpm --filter @ship/dashboard preview",
     "dashboard:deploy": "bash scripts/deploy-dashboard.sh",
     "prepare": "husky",
-    "postinstall": "git config merge.ours.driver true && (command -v comply >/dev/null 2>&1 || echo '\\n⚠️  comply CLI not installed - pre-commit hooks require it\\n   Install with: pip install comply-cli\\n')"
+    "postinstall": "git config merge.ours.driver true && (command -v comply >/dev/null 2>&1 || [ -x ./scripts/comply ] || echo '\\n⚠️  comply CLI not installed - pre-commit hooks require it\\n   Install gitleaks with: brew install gitleaks\\n')"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.0",

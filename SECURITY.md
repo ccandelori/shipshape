@@ -65,6 +65,10 @@ This repository uses `comply opensource` as a pre-commit hook that scans for:
 - **Sensitive Information**: AI-powered analysis for PII, internal URLs
 - **Vulnerabilities**: Container and dependency scanning (via trivy)
 
+If the Treasury-internal `comply` toolkit is not installed, the hook falls back to
+`scripts/comply`, which runs the public gitleaks secret scan. Install gitleaks
+locally with `brew install gitleaks`.
+
 ### NEVER Bypass Security Checks
 
 **`git commit --no-verify` is prohibited.** This flag bypasses all pre-commit hooks and defeats the security scanning.
