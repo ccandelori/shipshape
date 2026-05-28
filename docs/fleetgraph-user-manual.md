@@ -1,5 +1,12 @@
 # FleetGraph User Manual
 
+Last updated: 2026-05-28
+
+FleetGraph is the Ship-native project intelligence agent. It has two user-facing surfaces:
+
+- **FleetGraph Inbox**: proactive findings, review, approval, dismiss, snooze, and resume.
+- **Ask FleetGraph**: context-scoped chat inside project, issue, and Week documents.
+
 ## Sign In
 
 Use the seeded demo account:
@@ -8,60 +15,100 @@ Use the seeded demo account:
 - Password: `admin123`
 - Workspace: `Ship Workspace`
 
-Do not use `e@mail.com` for the demo data unless that user has been switched into `Ship Workspace`.
+The live finding recipient account is also available:
 
-## Open The Agent Inbox
+- Email: `henry.patel@ship.local`
+- Password: `admin123`
 
-The FleetGraph agent inbox is in the left sidebar.
+Do not use `e@mail.com` for the FleetGraph demo unless that user has been switched into `Ship Workspace`.
 
-Look near the bottom of the left rail and click the connected-nodes icon above the gear icon.
+## Open The FleetGraph Inbox
 
-That opens **FleetGraph Inbox**, which shows proactive findings from the agent.
+The FleetGraph inbox is in the left sidebar.
+
+1. Look near the bottom of the left rail.
+2. Click the connected-nodes **FleetGraph** icon above the gear icon.
+3. The centered **FleetGraph Inbox** modal opens.
+
+The inbox has three primary tabs:
+
+- **Open**: findings that need triage.
+- **Needs Review**: pending agent actions that require approval or rejection.
+- **Approved**: actions approved by a human and waiting to be resumed/executed.
+
+Tabs can show circular unread count badges. A card that has not been viewed by the current user shows a compact **New** badge. Opening a tab marks those findings read for that user, while the badge remains visible for the current inbox session so the UI does not flicker during a demo.
 
 ## Understand A Finding
 
 A finding is an agent-generated signal about project risk, missing ownership, blockers, stale updates, or unclear next steps.
 
-Each card shows:
+Each card can show:
 
-- Severity: `Low`, `Medium`, `High`, or `Critical`
-- State: `Open`, `Pending Review`, and other lifecycle states
-- Scope: the project, issue, or week the finding is about
-- Evidence: why the agent created the finding
-- Actions: what you can do with it
+- Severity: `Low`, `Medium`, `High`, or `Critical`.
+- State: `Open`, `Pending Review`, `Approved`, or another lifecycle state.
+- Scope: the project, issue, or Week the finding is about.
+- Evidence: why the agent created the finding.
+- Recommended action: what the agent thinks should happen next.
+- Trace proof: the **Why this?** panel with run id, branch path, latency, token usage, and Langfuse trace URL when available.
 
 ## What The Buttons Mean
 
-- **Dismiss**: Clear the finding because it is not useful or only demo data.
-- **Snooze**: Hide it until later.
-- **Reject**: Say the recommended action is wrong.
-- **Approve**: Approve an agent-proposed action.
+- **Dismiss**: Clear the finding because it is not useful or has already been handled.
+- **Snooze**: Hide it until a later date.
+- **Reject**: Decline a pending recommended action with a reason.
+- **Approve**: Approve a pending recommended action.
+- **Resume**: Execute an approved action, such as posting the agent's draft comment to an issue.
 
-Current caveat: `Approve` is only meaningful for `Pending Review` findings that have an action candidate. The visible seeded `Open` finding is best handled with **Dismiss** or **Snooze**.
+`Approve` and `Reject` apply to `Needs Review` findings. `Resume` appears on the `Approved` tab. Open findings are usually handled with `Dismiss` or `Snooze`.
 
-## Recommended Demo Flow
+## Run The HITL Comment Flow
 
-For the seeded finding:
+Use this flow to prove the human-in-the-loop write path from the browser.
 
-1. Read the evidence.
-2. Click **Dismiss**.
-3. Use a reason like `Seed demo acknowledged`.
-4. Submit.
+1. Open the FleetGraph inbox.
+2. Click **Needs Review**.
+3. Find the pending review card with a `draft_comment` action.
+4. Click **Approve**.
+5. Click **Approved**.
+6. Click **Resume**.
+7. Open the target issue document.
+8. Scroll to the bottom of the main editor area.
 
-That verifies the inbox flow is working.
+Expected result: a normal Ship comment appears on the issue. It is authored by the approving user, not auto-posted without review.
 
-## Open Agent Chat
+## Open Ask FleetGraph
 
-Agent chat is separate from the inbox.
+Ask FleetGraph is separate from the inbox. It only appears on document pages, not on `/my-week`.
 
-To find it:
+To open chat:
 
-1. Close the FleetGraph Inbox modal.
-2. Open a FleetGraph project, issue, or week document.
-3. Look near the upper-right of the document canvas for the **Ask FleetGraph** pill.
-4. Click **Ask FleetGraph** to open embedded FleetGraph chat.
+1. Close the FleetGraph Inbox modal if it is open.
+2. Open a project, issue, or Week document. The URL should look like `/documents/<document-id>`.
+3. Look near the upper-right of the document canvas, just left of the properties panel.
+4. Click the **Ask FleetGraph** pill.
+5. The **FleetGraph Chat** panel opens on the right.
 
-Chat is scoped to the document you are viewing. For example, if you open a FleetGraph issue, chat should answer based on that issue and related project or week context.
+Good demo target:
+
+```text
+https://143.198.163.184.nip.io/documents/ae794fb3-2b32-449b-819f-34348d317295
+```
+
+Good demo question:
+
+```text
+What is blocking this week, who owns recovery, and what should we do next?
+```
+
+Chat is scoped to the document you are viewing. A Week chat sees that Week, linked issues, standups, findings, and related project context.
+
+## Chat Sources And Memory
+
+FleetGraph chat streams responses over SSE from the shared `fleetgraph.runtime` LangGraph branch. The HTTP route still handles auth, scope validation, rate limiting, and stream framing.
+
+The chat panel shows source chips when the API returns scoped sources. These point to the current document and related Ship context used to answer.
+
+Chat memory is client-side and scoped by workspace, user, document type, and document id. Closing and reopening the same document chat should retain recent local messages in the browser. Server-side durable chat memory is future hardening.
 
 ## If You See "No Projects Yet"
 
@@ -69,13 +116,30 @@ You are probably in the wrong workspace.
 
 Use `dev@ship.local` with password `admin123`, or switch to `Ship Workspace`.
 
+## Reset The Demo Locally
+
+For local rehearsals, use the health/reset script from the API package:
+
+```bash
+cd /Users/sheep/Desktop/Gauntlet/ship/api
+DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev \
+  ./node_modules/.bin/tsx src/fleetgraph/scripts/demo-health.ts
+```
+
+Reset only FleetGraph demo artifacts:
+
+```bash
+cd /Users/sheep/Desktop/Gauntlet/ship/api
+DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev \
+  ./node_modules/.bin/tsx src/fleetgraph/scripts/demo-health.ts --reset
+```
+
+The reset restores the two seeded findings, clears demo read receipts, clears demo approvals/executions/suppressions, and removes the exact seeded FleetGraph comment body from the trace issue. It does not wipe the workspace.
+
 ## Quick Mental Model
 
-FleetGraph has two agent surfaces:
-
-- **Inbox**: proactive agent findings and human review.
-- **Chat**: ask questions inside a project, issue, or week document.
-
-The inbox tells you something may need attention.
-
-The chat lets you ask what is going on in the current document and its related work.
+- The inbox tells you what FleetGraph noticed.
+- Needs Review proves the agent asks before visible writes.
+- Resume proves an approved action lands in normal Ship surfaces.
+- Ask FleetGraph answers from the current document's work graph.
+- Langfuse traces prove which graph branch ran, what it saw, and what it spent.

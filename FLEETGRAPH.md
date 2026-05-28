@@ -20,8 +20,9 @@ Use this block for the final walkthrough and submission review.
 | Chat trace | [Langfuse trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/4651d55b03a3cb8c937455ade6b2aeec) |
 | Demo script | `docs/fleetgraph-5-minute-demo-script.md` |
 | Latency proof | `docs/fleetgraph-latency-proof.md` |
+| PRD readiness audit | `docs/fleetgraph-submission-readiness-audit.md` |
 
-The Langfuse links above are captured from the public droplet and open for authenticated Langfuse project members. Making them public share links requires an explicit data-exposure decision because traces contain prompt, context, and run metadata.
+The Langfuse links above are captured from the public droplet and open for authenticated Langfuse project members. Before sending the final packet to reviewers outside the Langfuse project, make the selected traces public in Langfuse Cloud or invite the reviewers to the project. Public trace sharing is a data-exposure decision because traces contain prompt, context, and run metadata.
 
 Deployed smoke status, 2026-05-27 3:10 PM CDT: release `20260527-151052` is live on the public droplet. `/health` returns HTTP 200, `dev@ship.local` and `henry.patel@ship.local` logins work, FleetGraph inbox tabs render, the live Needs Review finding exposes its "Why this?" run metadata panel with a Langfuse trace URL, and the Week chat streams source-linked context through the shared FleetGraph graph.
 
@@ -183,7 +184,7 @@ flowchart TD
     reason --> candidate["ActionCandidate:<br/>owner / urgency / evidence / target / approval level"]
     candidate --> policy{approval policy?}
     policy -->|auto answer / notify| output
-    policy -->|approval required| pending["persist pending_review<br/>+ checkpoint thread_id"]
+    policy -->|approval required| pending["persist pending_review<br/>+ action metadata"]
     pending --> approval["FleetGraph inbox:<br/>approve / edit / reject / dismiss / snooze"]
     approval --> resume["authorized resume:<br/>recipient or workspace admin"]
     resume --> execute["execute via Ship tools"]
@@ -303,7 +304,7 @@ Headless authentication:
 
 ## Test Cases
 
-The live trace links below are authenticated Langfuse Cloud links from the public droplet. They can be made public after approving trace disclosure. The deterministic local evidence above remains useful because it verifies the two MVP proactive graph paths and usage metadata without depending on model availability. The timed latency proof in `docs/fleetgraph-latency-proof.md` verifies the mutation-triggered path against the five-minute target using the real trigger controller, advisory lock, context builder, guard, graph, policy, and persistence path with a deterministic local reasoner.
+The live trace links below are authenticated Langfuse Cloud links from the public droplet. They must be made public or shared with reviewer project access before final submission if the grader will not be logged into this Langfuse project. The deterministic local evidence above remains useful because it verifies the two MVP proactive graph paths and usage metadata without depending on model availability. The timed latency proof in `docs/fleetgraph-latency-proof.md` verifies the mutation-triggered path against the five-minute target using the real trigger controller, advisory lock, context builder, guard, graph, policy, and persistence path with a deterministic local reasoner.
 
 | # | Ship state | Expected output | Required trace path | Trace link status |
 |---|------------|-----------------|---------------------|------------------|
@@ -347,9 +348,9 @@ This avoids the anti-pattern of building a detector service and bolting on a cha
 
 ### Node Design
 
-- `trigger`: normalizes proactive ticks and mutation events in the current graph; on-demand chat turn normalization is a target graph node.
+- `trigger`: normalizes proactive ticks and mutation events; the chat route normalizes on-demand request/auth/scope before invoking the graph.
 - `scope`: authorizes workspace access and resolves the relevant Ship document graph.
-- `intent`: target node that separates proactive runs from on-demand question or action requests.
+- `intent`: separates proactive runs from on-demand question or action requests through the top-level `fleetgraph.runtime` branch.
 - `detector`: selects the proactive use-case family.
 - `context`: builds a bounded Ship-native context bundle.
 - `fetch`: pulls documents, issues, standups, accountability status, activity, and metrics in parallel.
@@ -357,7 +358,7 @@ This avoids the anti-pattern of building a detector service and bolting on a cha
 - `preFilter`: uses a cheap model to decide whether unsolicited proactive analysis is worth deeper reasoning.
 - `reason`: produces structured findings, evidence, recommendations, and action candidates.
 - `policy`: classifies approval requirements from stakes and reversibility.
-- `pending`: persists human-in-the-loop checkpoint state.
+- `pending`: persists human-in-the-loop finding state and action candidate metadata.
 - `resume`: validates actor authorization and resumes approved, edited, or rejected actions.
 - `execute`: calls Ship tools for approved actions.
 - `output`: persists findings and broadcasts UI updates today; target graph output also streams on-demand chat responses.
@@ -466,7 +467,7 @@ Runtime components:
 - Mutation hooks that enqueue affected project analysis.
 - Existing `/events` channel for live UI invalidation.
 - SSE endpoint for chat streaming.
-- PostgreSQL for checkpoints and finding persistence.
+- PostgreSQL for durable FleetGraph outcomes, read state, and finding persistence. LangGraph checkpoint persistence currently uses `MemorySaver`.
 
 Deployment constraints:
 
@@ -476,7 +477,7 @@ Deployment constraints:
 
 ### Error and Failure Handling
 
-If Bedrock is unavailable:
+If OpenAI is unavailable:
 
 - Proactive runs skip model-dependent reasoning and record no generated finding.
 - On-demand chat returns a clear unavailable response instead of a 500.
@@ -570,7 +571,7 @@ Runtime model spend for the MVP at-risk Week detector is now persisted in `fleet
 | Graph Diagram | Defined in this document |
 | Use Cases | Defined in this document |
 | Trigger Model | Defined in this document |
-| Test Cases | MVP proactive paths verified locally; authenticated live Langfuse trace links captured from public droplet |
+| Test Cases | MVP proactive paths verified locally; authenticated live Langfuse trace links captured from public droplet; make links public or grant reviewer project access before final packet |
 | Architecture Decisions | Defined in this document |
 | Cost Analysis | Design estimate plus deterministic runtime telemetry captured |
 | Timed Latency Proof | Passed locally at 45.113 seconds; see `docs/fleetgraph-latency-proof.md` |

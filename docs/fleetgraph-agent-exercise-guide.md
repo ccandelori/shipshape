@@ -1,6 +1,6 @@
 # FleetGraph Agent Exercise Guide
 
-Last updated: 2026-05-26
+Last updated: 2026-05-28
 
 This guide walks through FleetGraph's local exercise paths in the Ship app. It separates product acceptance from agent acceptance so the evidence is honest: seeded rows can prove the inbox, review, resume, chat shell, and telemetry plumbing, but they do not prove that the proactive LangGraph agent noticed a real Ship event.
 
@@ -15,9 +15,10 @@ Product acceptance exercises:
 - Seeded FleetGraph programs, projects, issues, weeks, findings, action candidates, and usage rows.
 - Inbox rendering for open findings.
 - Finding lifecycle actions: dismiss, snooze, reject, approve, and resume.
+- Unread tab badges, per-card `New` badges, and read marking when a finding is viewed.
 - Authenticated FleetGraph API reads and mutations.
 - Realtime invalidation after a FleetGraph decision.
-- Embedded FleetGraph chat from project, issue, and week documents.
+- Embedded graph-routed FleetGraph chat from project, issue, and Week documents.
 
 Agent acceptance exercises:
 
@@ -129,7 +130,21 @@ Expected seed findings:
 
 ## Reset The Seeded Findings
 
-Use these reset commands when you want to run the lifecycle steps repeatedly.
+Prefer the scoped demo health/reset script when you want to run the lifecycle steps repeatedly:
+
+```bash
+cd /Users/sheep/Desktop/Gauntlet/ship/api
+DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev ./node_modules/.bin/tsx src/fleetgraph/scripts/demo-health.ts
+```
+
+```bash
+cd /Users/sheep/Desktop/Gauntlet/ship/api
+DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev ./node_modules/.bin/tsx src/fleetgraph/scripts/demo-health.ts --reset
+```
+
+The reset restores the two seeded FleetGraph findings, clears their read receipts, removes seeded-demo approvals/executions/suppressions, and deletes the exact seeded FleetGraph comment body from the trace issue. It does not wipe the workspace.
+
+The raw SQL equivalents remain below for debugging.
 
 Reset the open inbox finding:
 
@@ -412,7 +427,7 @@ await fleetGraphPost(`/api/weeks/${liveSprintId}/iterations`, {
   story_title: 'Capture Langfuse trace URLs for shared review',
   status: 'fail',
   what_attempted: 'Ran the FleetGraph agent exercise against the seeded workspace.',
-  blockers_encountered: `Shared quiet and finding-path trace URLs are still blocked at ${new Date().toISOString()}.`,
+  blockers_encountered: `Capturing fresh FleetGraph trace evidence at ${new Date().toISOString()}.`,
 });
 ```
 
@@ -508,7 +523,7 @@ Expected:
 - Non-zero model latency.
 - Token and cost metadata when Langfuse receives the model usage fields.
 
-Create the shared trace URL from the Langfuse UI for submission evidence.
+Create the shared trace URL from the Langfuse UI for submission evidence. If the reviewer is not a Langfuse project member, make the selected trace public after reviewing its prompt/context payload.
 
 ## Exercise Deduplication And Suppression
 
@@ -656,7 +671,7 @@ cd /Users/sheep/Desktop/Gauntlet/ship/api
 set -a; source .env.local; set +a; export LANGFUSE_HOST="$LANGFUSE_BASE_URL"; npx langfuse-cli api traces list --tags trace_node:reason --limit 10 --order-by timestamp.desc --fields core,metrics
 ```
 
-Without Langfuse credentials, this step remains blocked by environment, not by the local product path.
+Without Langfuse credentials, fresh local capture remains blocked by environment, not by the local product path. The public droplet trace URLs already recorded in `FLEETGRAPH.md` can be used for the final packet once they are made public or the reviewer has Langfuse project access.
 
 ## Developer Verification Commands
 

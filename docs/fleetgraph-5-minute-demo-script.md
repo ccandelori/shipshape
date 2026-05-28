@@ -236,7 +236,7 @@ The first Langfuse rollout traced every proactive poll scope, including quiet pr
 **Why you might see nothing**
 
 1. **Approve + resume never run** — the comment is not automatic; seed data only prepares a `pending_review` finding.
-2. **UI gap (fixed in latest web build)** — older builds saved the comment in the database but only showed comments tied to highlighted text. FleetGraph writes unanchored comments; redeploy web or use localhost after pulling the fix.
+2. **Stale deployed build** — if the database has the comment but the issue page does not show it, redeploy the latest web build or use localhost from this branch.
 3. **Wrong tab** — approve lives under **Needs Review**; resume lives under **Approved**. The default **Open** tab only has dismiss/snooze triage.
 
 **What to say on stage:**  

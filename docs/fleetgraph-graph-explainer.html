@@ -318,7 +318,7 @@ flowchart TD
     reason --> candidate["ActionCandidate:<br/>owner / urgency / evidence / target / approval level"]
     candidate --> policy{approval policy?}
     policy -->|auto answer / notify| output
-    policy -->|approval required| pending["persist pending_review<br/>+ checkpoint thread_id"]
+    policy -->|approval required| pending["persist pending_review<br/>+ action metadata"]
     pending --> approval["FleetGraph inbox:<br/>approve / edit / reject / dismiss / snooze"]
     approval --> resume["authorized resume:<br/>recipient or workspace admin"]
     resume --> execute["execute via Ship tools"]
@@ -408,7 +408,7 @@ flowchart TD
           <div class="step">
             <span class="node guard">approval</span>
             <p>
-              Consequential actions persist as <code>pending_review</code> with checkpoint metadata. The inbox
+              Consequential actions persist as <code>pending_review</code> with action metadata. The inbox
               lets authorized recipients approve, edit, reject, dismiss, or snooze; resume requires the
               recipient or a workspace admin.
             </p>
@@ -425,9 +425,9 @@ flowchart TD
         <section class="mode-panel od" data-mode="ondemand" role="tabpanel">
           <h2>On-demand — the user pulls</h2>
           <p class="trigger">
-            Triggered from embedded chat inside the current Ship document. The current MVP route streams
-            directly through <code>/api/fleetgraph/chat</code>; the target graph path receives the user's
-            visible context and classifies the turn as a question or an action request.
+            Triggered from embedded chat inside the current Ship document. The HTTP route remains
+            <code>/api/fleetgraph/chat</code> for auth, validation, rate limiting, and SSE framing; the model
+            stream runs inside the on-demand branch of the shared FleetGraph runtime.
           </p>
 
           <div class="step">
