@@ -64,6 +64,7 @@ describe('FleetGraph Langfuse helpers', () => {
   });
 
   it('publishes selected FleetGraph traces when public export is enabled', async () => {
+    vi.useFakeTimers();
     const observation = {
       traceId: 'trace-123',
       setTraceAsPublic: vi.fn(),
@@ -73,42 +74,50 @@ describe('FleetGraph Langfuse helpers', () => {
     };
     const publishTrace = vi.fn().mockResolvedValue(undefined);
 
-    const publication = await publishFleetGraphTraceIfEnabled({
-      observation: observation as never,
-      policy: {
-        enabled: true,
+    try {
+      const publication = await publishFleetGraphTraceIfEnabled({
+        observation: observation as never,
+        policy: {
+          enabled: true,
+          langfuseBaseUrl: 'https://us.cloud.langfuse.com',
+          langfuseProjectId: 'project-123',
+          langfusePublicKey: 'pk-lf-test',
+          langfuseSecretKey: 'sk-lf-test',
+          publishTrace,
+        },
+        traceName: 'fleetgraph.chat.response',
+        tags: ['fleetgraph', 'mode:ondemand'],
+        logger,
+      });
+
+      expect(observation.setTraceAsPublic).toHaveBeenCalledTimes(1);
+      expect(publishTrace).toHaveBeenCalledTimes(1);
+      expect(publishTrace).toHaveBeenCalledWith({
         langfuseBaseUrl: 'https://us.cloud.langfuse.com',
-        langfuseProjectId: 'project-123',
         langfusePublicKey: 'pk-lf-test',
         langfuseSecretKey: 'sk-lf-test',
-        publishTrace,
-      },
-      traceName: 'fleetgraph.chat.response',
-      tags: ['fleetgraph', 'mode:ondemand'],
-      logger,
-    });
-
-    expect(observation.setTraceAsPublic).toHaveBeenCalledTimes(1);
-    expect(publishTrace).toHaveBeenCalledWith({
-      langfuseBaseUrl: 'https://us.cloud.langfuse.com',
-      langfusePublicKey: 'pk-lf-test',
-      langfuseSecretKey: 'sk-lf-test',
-      traceId: 'trace-123',
-      traceName: 'fleetgraph.chat.response',
-    });
-    expect(publication).toEqual({
-      published: true,
-      metadata: {
-        tracePublic: true,
+        traceId: 'trace-123',
+        traceName: 'fleetgraph.chat.response',
+      });
+      expect(publication).toEqual({
+        published: true,
+        metadata: {
+          tracePublic: true,
+          traceId: 'trace-123',
+          traceUrl: 'https://us.cloud.langfuse.com/project/project-123/traces/trace-123',
+        },
+      });
+      expect(logger.info).toHaveBeenCalledWith('fleetgraph.langfuse.trace_public', {
+        traceName: 'fleetgraph.chat.response',
         traceId: 'trace-123',
         traceUrl: 'https://us.cloud.langfuse.com/project/project-123/traces/trace-123',
-      },
-    });
-    expect(logger.info).toHaveBeenCalledWith('fleetgraph.langfuse.trace_public', {
-      traceName: 'fleetgraph.chat.response',
-      traceId: 'trace-123',
-      traceUrl: 'https://us.cloud.langfuse.com/project/project-123/traces/trace-123',
-    });
+      });
+
+      await vi.advanceTimersByTimeAsync(5_000);
+      expect(publishTrace).toHaveBeenCalledTimes(2);
+    } finally {
+      vi.useRealTimers();
+    }
   });
 
   it('publishes public trace updates through Langfuse ingestion', async () => {

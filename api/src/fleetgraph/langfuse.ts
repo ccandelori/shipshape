@@ -82,6 +82,8 @@ export type FleetGraphTracePublicationLogger = {
   info: (message: string, fields: Record<string, string | boolean | null>) => void;
 };
 
+const fleetGraphPublicTraceRefreshDelayMs = 5_000;
+
 type LangfuseIngestionResponse = {
   successes?: Array<{ id?: string; status?: number }>;
   errors?: Array<{ id?: string; status?: number; message?: string; error?: string }>;
@@ -274,6 +276,7 @@ export async function publishFleetGraphTraceIfEnabled(input: {
     traceId,
     traceName: input.traceName,
   });
+  scheduleFleetGraphTracePublicRefresh(input.policy, traceId, input.traceName);
 
   input.logger.info('fleetgraph.langfuse.trace_public', {
     traceName: input.traceName,
@@ -288,6 +291,37 @@ export async function publishFleetGraphTraceIfEnabled(input: {
       tracePublic: true,
     },
   };
+}
+
+function scheduleFleetGraphTracePublicRefresh(
+  policy: FleetGraphPublicTracePolicy,
+  traceId: string,
+  traceName: string
+): void {
+  const timer = setTimeout(() => {
+    void policy.publishTrace({
+      langfuseBaseUrl: policy.langfuseBaseUrl,
+      langfusePublicKey: policy.langfusePublicKey,
+      langfuseSecretKey: policy.langfuseSecretKey,
+      traceId,
+      traceName,
+    }).catch((error: unknown) => {
+      console.warn('fleetgraph.langfuse.trace_public_refresh_failed', {
+        traceName,
+        traceId,
+        errorMessage: errorMessage(error),
+      });
+    });
+  }, fleetGraphPublicTraceRefreshDelayMs);
+
+  unrefTracePublicationTimer(timer);
+}
+
+function unrefTracePublicationTimer(timer: ReturnType<typeof setTimeout>): void {
+  const candidate = timer as { unref?: unknown };
+  if (typeof candidate.unref === 'function') {
+    candidate.unref();
+  }
 }
 
 export async function publishFleetGraphTraceViaLangfuseIngestion(
@@ -384,4 +418,12 @@ export function sanitizeLangfuseMetadata(metadata: Record<string, string>): Reco
 
 function truncateLangfuseAttributeValue(value: string): string {
   return value.length <= 200 ? value : value.slice(0, 200);
+}
+
+function errorMessage(error: unknown): string {
+  if (error instanceof Error) {
+    return error.message;
+  }
+
+  return String(error);
 }
