@@ -106,8 +106,11 @@ export interface FleetGraphFinding {
   action_candidates: FleetGraphActionCandidate[];
 }
 
+export type FleetGraphLifecycleCounts = Record<FleetGraphLifecycleState, number>;
+
 export interface FleetGraphFindingListResponse {
   items: FleetGraphFinding[];
+  lifecycle_counts: FleetGraphLifecycleCounts;
   limit: number;
   hasMore: boolean;
   next_cursor: string | null;

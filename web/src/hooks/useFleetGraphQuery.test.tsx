@@ -81,6 +81,16 @@ describe('useFleetGraphFindingsQuery', () => {
   it('fetches findings with lifecycle, limit, and cursor filters under one cache namespace', async () => {
     const responseBody: FleetGraphFindingListResponse = {
       items: [createFleetGraphFinding()],
+      lifecycle_counts: {
+        open: 1,
+        pending_review: 0,
+        approved: 0,
+        executed: 0,
+        rejected: 0,
+        dismissed: 0,
+        snoozed: 0,
+        expired: 0,
+      },
       limit: 10,
       hasMore: true,
       next_cursor: 'cursor-2',

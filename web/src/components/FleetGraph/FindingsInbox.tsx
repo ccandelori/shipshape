@@ -98,6 +98,7 @@ export function FindingsInbox({ lifecycleState, limit, className }: FindingsInbo
   };
 
   const findings = findingsQuery.data?.items ?? [];
+  const lifecycleCounts = findingsQuery.data?.lifecycle_counts ?? null;
   const visibleCount = findings.length;
 
   useEffect(() => {
@@ -128,6 +129,7 @@ export function FindingsInbox({ lifecycleState, limit, className }: FindingsInbo
         <div className="mt-4 flex gap-1" role="tablist" aria-label="FleetGraph finding lifecycle">
           {lifecycleTabs.map((tab) => {
             const selected = tab.lifecycleState === selectedLifecycleState;
+            const count = lifecycleCounts?.[tab.lifecycleState] ?? 0;
 
             return (
               <button
@@ -135,6 +137,7 @@ export function FindingsInbox({ lifecycleState, limit, className }: FindingsInbo
                 type="button"
                 role="tab"
                 aria-selected={selected}
+                aria-label={count > 0 ? `${tab.label} ${formatLifecycleCount(count)}` : tab.label}
                 onClick={() => setSelectedLifecycleState(tab.lifecycleState)}
                 className={cn(
                   'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
@@ -143,7 +146,19 @@ export function FindingsInbox({ lifecycleState, limit, className }: FindingsInbo
                     : 'text-muted hover:bg-border/60 hover:text-foreground'
                 )}
               >
-                {tab.label}
+                <span>{tab.label}</span>
+                {count > 0 && (
+                  <span
+                    className={cn(
+                      'ml-2 inline-flex h-5 min-w-5 items-center justify-center rounded-full px-1.5 text-xs font-semibold leading-none',
+                      selected
+                        ? 'bg-white text-accent'
+                        : 'bg-accent text-white'
+                    )}
+                  >
+                    {formatLifecycleCount(count)}
+                  </span>
+                )}
               </button>
             );
           })}
@@ -213,6 +228,14 @@ function formatResumeSuccessMessage(actionKind: string | null): string {
   }
 
   return 'FleetGraph action executed';
+}
+
+function formatLifecycleCount(count: number): string {
+  if (count > 99) {
+    return '99+';
+  }
+
+  return count.toString();
 }
 
 function resolvePendingAction(input: {

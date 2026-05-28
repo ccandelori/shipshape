@@ -74,6 +74,21 @@ type FleetGraphFindingResponse = {
   action_candidates: FleetGraphActionCandidateResponse[];
 };
 
+const fleetGraphLifecycleStates = [
+  'open',
+  'pending_review',
+  'approved',
+  'executed',
+  'rejected',
+  'dismissed',
+  'snoozed',
+  'expired',
+] as const;
+
+type FleetGraphLifecycleState = typeof fleetGraphLifecycleStates[number];
+
+type FleetGraphLifecycleCounts = Record<FleetGraphLifecycleState, number>;
+
 type FleetGraphFindingRow = {
   id: string;
   workspace_id: string;
@@ -91,6 +106,11 @@ type FleetGraphFindingRow = {
   created_at: Date;
   updated_at: Date;
   expires_at: Date | null;
+};
+
+type FleetGraphLifecycleCountRow = {
+  lifecycle_state: FleetGraphLifecycleState;
+  count: string;
 };
 
 type FleetGraphActionCandidateRow = {
@@ -202,16 +222,7 @@ type FleetGraphDecisionResult = {
 
 const router = Router();
 
-const fleetGraphLifecycleStateSchema = z.enum([
-  'open',
-  'pending_review',
-  'approved',
-  'executed',
-  'rejected',
-  'dismissed',
-  'snoozed',
-  'expired',
-]);
+const fleetGraphLifecycleStateSchema = z.enum(fleetGraphLifecycleStates);
 
 const fleetGraphFindingsQuerySchema = z.object({
   lifecycle_state: fleetGraphLifecycleStateSchema.optional(),
@@ -286,7 +297,10 @@ router.get('/findings', authMiddleware, async (req: Request, res: Response) => {
   }
 
   try {
-    const findings = await loadFleetGraphFindings(workspaceId, queryResult.data);
+    const [findings, lifecycleCounts] = await Promise.all([
+      loadFleetGraphFindings(workspaceId, queryResult.data),
+      loadFleetGraphFindingLifecycleCounts(workspaceId),
+    ]);
     const visibleFindings = findings.slice(0, queryResult.data.limit);
     const findingIds = visibleFindings.map((finding) => finding.id);
     const actionCandidates = await loadFleetGraphActionCandidates(workspaceId, findingIds);
@@ -303,6 +317,7 @@ router.get('/findings', authMiddleware, async (req: Request, res: Response) => {
         actionCandidatesByFindingId.get(finding.id) ?? [],
         tracesByFindingId.get(finding.id) ?? null
       )),
+      lifecycle_counts: lifecycleCounts,
       limit: queryResult.data.limit,
       hasMore,
       next_cursor: nextCursor,
@@ -656,6 +671,36 @@ async function loadFleetGraphFindings(
   );
 
   return result.rows;
+}
+
+async function loadFleetGraphFindingLifecycleCounts(workspaceId: string): Promise<FleetGraphLifecycleCounts> {
+  const result = await pool.query<FleetGraphLifecycleCountRow>(
+    `SELECT lifecycle_state, COUNT(*)::text AS count
+     FROM fleetgraph_findings
+     WHERE workspace_id = $1
+     GROUP BY lifecycle_state`,
+    [workspaceId]
+  );
+  const counts = createEmptyFleetGraphLifecycleCounts();
+
+  for (const row of result.rows) {
+    counts[row.lifecycle_state] = Number.parseInt(row.count, 10);
+  }
+
+  return counts;
+}
+
+function createEmptyFleetGraphLifecycleCounts(): FleetGraphLifecycleCounts {
+  return {
+    open: 0,
+    pending_review: 0,
+    approved: 0,
+    executed: 0,
+    rejected: 0,
+    dismissed: 0,
+    snoozed: 0,
+    expired: 0,
+  };
 }
 
 async function loadFleetGraphFindingById(

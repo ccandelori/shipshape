@@ -8,6 +8,10 @@ import type { FleetGraphFinding, FleetGraphFindingListResponse } from '@/hooks/u
 
 const realFetch = global.fetch;
 
+type FleetGraphFindingListTestResponse = Omit<FleetGraphFindingListResponse, 'lifecycle_counts'> & {
+  lifecycle_counts?: FleetGraphFindingListResponse['lifecycle_counts'];
+};
+
 function createQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
@@ -81,11 +85,36 @@ function createFinding(lifecycleState: FleetGraphFinding['lifecycle_state']): Fl
   };
 }
 
-function jsonResponse(data: FleetGraphFindingListResponse | FleetGraphFinding | { token: string }, status: number): Promise<Response> {
-  return Promise.resolve(new Response(JSON.stringify(data), {
+function jsonResponse(
+  data: FleetGraphFindingListTestResponse | FleetGraphFinding | { token: string },
+  status: number
+): Promise<Response> {
+  return Promise.resolve(new Response(JSON.stringify(withDefaultLifecycleCounts(data)), {
     status,
     headers: { 'Content-Type': 'application/json' },
   }));
+}
+
+function withDefaultLifecycleCounts(
+  data: FleetGraphFindingListTestResponse | FleetGraphFinding | { token: string }
+): FleetGraphFindingListResponse | FleetGraphFinding | { token: string } {
+  if (!('items' in data)) {
+    return data;
+  }
+
+  return {
+    ...data,
+    lifecycle_counts: data.lifecycle_counts ?? {
+      open: 0,
+      pending_review: 0,
+      approved: 0,
+      executed: 0,
+      rejected: 0,
+      dismissed: 0,
+      snoozed: 0,
+      expired: 0,
+    },
+  };
 }
 
 function requestUrl(input: RequestInfo | URL): string {
@@ -111,6 +140,16 @@ describe('FindingsInbox', () => {
       if (url === '/api/fleetgraph/findings?lifecycle_state=open&limit=20' && method === 'GET') {
         return jsonResponse({
           items: [openFinding],
+          lifecycle_counts: {
+            open: 1,
+            pending_review: 1,
+            approved: 0,
+            executed: 0,
+            rejected: 0,
+            dismissed: 0,
+            snoozed: 0,
+            expired: 0,
+          },
           limit: 20,
           hasMore: false,
           next_cursor: null,
@@ -120,6 +159,16 @@ describe('FindingsInbox', () => {
       if (url === '/api/fleetgraph/findings?lifecycle_state=pending_review&limit=20' && method === 'GET') {
         return jsonResponse({
           items: [pendingFinding],
+          lifecycle_counts: {
+            open: 1,
+            pending_review: 1,
+            approved: 0,
+            executed: 0,
+            rejected: 0,
+            dismissed: 0,
+            snoozed: 0,
+            expired: 0,
+          },
           limit: 20,
           hasMore: false,
           next_cursor: null,
@@ -146,10 +195,12 @@ describe('FindingsInbox', () => {
     render(<FindingsInbox />, { wrapper: createWrapper(createQueryClient()) });
 
     expect(await screen.findByText('Week 12')).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Open' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: 'Open 1' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: 'Needs Review 1' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Approved' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Approve finding' })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Needs Review' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Needs Review 1' }));
     expect(await screen.findByRole('button', { name: 'Approve finding' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Approve finding' }));
 

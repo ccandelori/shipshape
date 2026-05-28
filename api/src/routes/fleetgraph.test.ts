@@ -248,6 +248,12 @@ describe('FleetGraph inbox API', () => {
       pendingFinding.id,
       openFinding.id,
     ]);
+    expect(response.body.lifecycle_counts).toMatchObject({
+      open: 1,
+      pending_review: 1,
+      approved: 0,
+      executed: 0,
+    });
     expect(response.body.items[0]).toMatchObject({
       id: pendingFinding.id,
       workspace_id: workspaceId,
@@ -296,6 +302,10 @@ describe('FleetGraph inbox API', () => {
 
     expect(response.status).toBe(200);
     expect(response.body.items.map((finding: { id: string }) => finding.id)).toEqual([openFinding.id]);
+    expect(response.body.lifecycle_counts).toMatchObject({
+      open: 1,
+      pending_review: 1,
+    });
   });
 
   it('paginates with a stable cursor over created_at and id', async () => {

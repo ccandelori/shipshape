@@ -164,6 +164,19 @@ export const FleetGraphFindingSchema = z.object({
 
 registry.register('FleetGraphFinding', FleetGraphFindingSchema);
 
+export const FleetGraphLifecycleCountsSchema = z.object({
+  open: z.number().int().min(0),
+  pending_review: z.number().int().min(0),
+  approved: z.number().int().min(0),
+  executed: z.number().int().min(0),
+  rejected: z.number().int().min(0),
+  dismissed: z.number().int().min(0),
+  snoozed: z.number().int().min(0),
+  expired: z.number().int().min(0),
+}).openapi('FleetGraphLifecycleCounts');
+
+registry.register('FleetGraphLifecycleCounts', FleetGraphLifecycleCountsSchema);
+
 export const FleetGraphFindingListQuerySchema = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(20).openapi({
     description: 'Items per page (max 100)',
@@ -185,6 +198,9 @@ registry.register('FleetGraphFindingListQuery', FleetGraphFindingListQuerySchema
 
 export const FleetGraphFindingListResponseSchema = z.object({
   items: z.array(FleetGraphFindingSchema),
+  lifecycle_counts: FleetGraphLifecycleCountsSchema.openapi({
+    description: 'Current workspace finding counts by lifecycle state. Counts are independent of pagination and filters.',
+  }),
   limit: z.number().int().positive(),
   hasMore: z.boolean(),
   next_cursor: z.string().nullable().openapi({
