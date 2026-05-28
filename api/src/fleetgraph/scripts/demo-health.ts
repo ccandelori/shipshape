@@ -4,6 +4,11 @@ import { pool } from '../../db/client.js';
 type DemoHealthStatus = 'pass' | 'warn' | 'fail';
 type DemoHealthMode = 'health' | 'reset';
 
+export interface DemoHealthLink {
+  label: string;
+  url: string;
+}
+
 export interface DemoHealthCheck {
   status: DemoHealthStatus;
   name: string;
@@ -13,11 +18,13 @@ export interface DemoHealthCheck {
 export interface DemoHealthReport {
   mode: DemoHealthMode;
   resetActions: string[];
+  demoLinks: DemoHealthLink[];
   checks: DemoHealthCheck[];
 }
 
 interface DemoHealthArgs {
   reset: boolean;
+  appUrl: string | null;
 }
 
 interface TableAvailabilityRow {
@@ -76,15 +83,47 @@ const requiredDocumentTitles = [
 ] as const;
 
 export function parseDemoHealthArgs(args: string[]): DemoHealthArgs {
-  if (args.length === 0) {
-    return { reset: false };
+  let reset = false;
+  let appUrl: string | null = null;
+  let index = 0;
+
+  while (index < args.length) {
+    const arg = args[index]!;
+
+    if (arg === '--') {
+      index += 1;
+      continue;
+    }
+
+    if (arg === '--reset') {
+      if (reset) {
+        throw new Error('FleetGraph demo health argument --reset was provided more than once');
+      }
+      reset = true;
+      index += 1;
+      continue;
+    }
+
+    if (arg === '--app-url') {
+      const rawUrl = args[index + 1];
+      if (!rawUrl) {
+        throw new Error('FleetGraph demo health argument --app-url requires a URL value');
+      }
+      appUrl = normalizeAppUrl(rawUrl);
+      index += 2;
+      continue;
+    }
+
+    if (arg.startsWith('--app-url=')) {
+      appUrl = normalizeAppUrl(arg.slice('--app-url='.length));
+      index += 1;
+      continue;
+    }
+
+    throw new Error(`Unknown FleetGraph demo health argument: ${arg}`);
   }
 
-  if (args.length === 1 && args[0] === '--reset') {
-    return { reset: true };
-  }
-
-  throw new Error(`Unknown FleetGraph demo health argument: ${args.join(' ')}`);
+  return { reset, appUrl };
 }
 
 export function createDemoHealthExitCode(checks: readonly DemoHealthCheck[]): number {
@@ -98,6 +137,12 @@ export function formatDemoHealthReport(report: DemoHealthReport): string {
     ...report.checks.map((check) => `[${check.status.toUpperCase()}] ${check.name} - ${check.detail}`),
   ];
 
+  lines.push('', 'Demo accounts:', '- Dev User: dev@ship.local / admin123', '- Henry Patel: henry.patel@ship.local / admin123');
+
+  if (report.demoLinks.length > 0) {
+    lines.push('', 'Demo links:', ...report.demoLinks.map((link) => `- ${link.label}: ${link.url}`));
+  }
+
   if (report.resetActions.length > 0) {
     lines.push('', 'Reset actions:', ...report.resetActions.map((action) => `- ${action}`));
   }
@@ -106,9 +151,16 @@ export function formatDemoHealthReport(report: DemoHealthReport): string {
 }
 
 async function createDemoHealthReport(args: DemoHealthArgs): Promise<DemoHealthReport> {
+  const demoLinks: DemoHealthLink[] = [];
   const checks: DemoHealthCheck[] = [
     ...createEnvironmentChecks(process.env),
   ];
+  if (args.appUrl) {
+    checks.push(await checkAppHealth(args.appUrl));
+    checks.push(createAppDatabasePairingCheck(process.env, args.appUrl));
+    demoLinks.push(createDemoLink('App', args.appUrl));
+  }
+
   const tableReport = await checkRequiredTables();
   checks.push(...tableReport.checks);
 
@@ -125,14 +177,31 @@ async function createDemoHealthReport(args: DemoHealthArgs): Promise<DemoHealthR
   }
 
   if (tableReport.ready) {
-    checks.push(...await checkSeededDemoState());
+    const seedReport = await checkSeededDemoState();
+    checks.push(...seedReport.checks);
+
+    if (args.appUrl && seedReport.workspaceId) {
+      demoLinks.push(...await createDemoDocumentLinks(args.appUrl, seedReport.workspaceId));
+    }
   }
 
   return {
     mode: args.reset ? 'reset' : 'health',
     resetActions,
+    demoLinks,
     checks,
   };
+}
+
+function normalizeAppUrl(rawUrl: string): string {
+  const trimmed = rawUrl.trim();
+
+  if (trimmed.length === 0) {
+    throw new Error('FleetGraph demo health argument --app-url cannot be empty');
+  }
+
+  const parsed = new URL(trimmed);
+  return parsed.toString().replace(/\/+$/, '');
 }
 
 function createEnvironmentChecks(env: NodeJS.ProcessEnv): DemoHealthCheck[] {
@@ -165,6 +234,53 @@ function createEnvironmentCheck(
     name,
     detail: `${key} is not set`,
   };
+}
+
+export function createAppDatabasePairingCheck(
+  env: NodeJS.ProcessEnv,
+  appUrl: string
+): DemoHealthCheck {
+  const databaseUrl = env.DATABASE_URL;
+
+  if (!databaseUrl) {
+    return {
+      status: 'fail',
+      name: 'App and database pairing',
+      detail: 'DATABASE_URL is missing; document links cannot be trusted.',
+    };
+  }
+
+  const databaseHost = new URL(databaseUrl).hostname;
+  const appHost = new URL(appUrl).hostname;
+  const databaseIsLocal = isLocalHost(databaseHost);
+  const appIsLocal = isLocalHost(appHost);
+  const productionServerWithLocalDatabase = env.NODE_ENV === 'production' && databaseIsLocal && !appIsLocal;
+
+  if (productionServerWithLocalDatabase) {
+    return {
+      status: 'pass',
+      name: 'App and database pairing',
+      detail: `DATABASE_URL host ${databaseHost} is local to the production app host ${appHost}`,
+    };
+  }
+
+  if (databaseIsLocal !== appIsLocal) {
+    return {
+      status: 'fail',
+      name: 'App and database pairing',
+      detail: `DATABASE_URL host ${databaseHost} and app host ${appHost} appear to be different environments; document links use database IDs and may not exist in that app.`,
+    };
+  }
+
+  return {
+    status: 'pass',
+    name: 'App and database pairing',
+    detail: `DATABASE_URL host ${databaseHost} matches app host class ${appIsLocal ? 'local' : 'remote'}`,
+  };
+}
+
+function isLocalHost(host: string): boolean {
+  return host === 'localhost' || host === '127.0.0.1' || host === '::1';
 }
 
 async function checkRequiredTables(): Promise<{
@@ -206,6 +322,41 @@ async function checkRequiredTables(): Promise<{
       detail: `Missing tables: ${missing.join(', ')}`,
     }],
   };
+}
+
+async function checkAppHealth(appUrl: string): Promise<DemoHealthCheck> {
+  const healthUrl = `${appUrl}/health`;
+  const timeout = AbortSignal.timeout(5_000);
+
+  try {
+    const response = await fetch(healthUrl, {
+      signal: timeout,
+      headers: {
+        accept: 'application/json',
+      },
+    });
+
+    if (response.ok) {
+      return {
+        status: 'pass',
+        name: 'App health',
+        detail: `${healthUrl} returned HTTP ${response.status}`,
+      };
+    }
+
+    return {
+      status: 'fail',
+      name: 'App health',
+      detail: `${healthUrl} returned HTTP ${response.status}`,
+    };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    return {
+      status: 'fail',
+      name: 'App health',
+      detail: `${healthUrl} failed: ${message}`,
+    };
+  }
 }
 
 async function resetFleetGraphDemoState(): Promise<string[]> {
@@ -295,16 +446,22 @@ async function resetFleetGraphDemoState(): Promise<string[]> {
   }
 }
 
-async function checkSeededDemoState(): Promise<DemoHealthCheck[]> {
+async function checkSeededDemoState(): Promise<{
+  checks: DemoHealthCheck[];
+  workspaceId: string | null;
+}> {
   const checks: DemoHealthCheck[] = [];
   const workspace = await loadDemoWorkspace();
 
   if (!workspace) {
-    return [{
-      status: 'fail',
-      name: 'Demo workspace',
-      detail: 'Ship Workspace is missing; run pnpm --filter api db:seed.',
-    }];
+    return {
+      workspaceId: null,
+      checks: [{
+        status: 'fail',
+        name: 'Demo workspace',
+        detail: 'Ship Workspace is missing; run pnpm --filter api db:seed.',
+      }],
+    };
   }
 
   checks.push({
@@ -317,7 +474,51 @@ async function checkSeededDemoState(): Promise<DemoHealthCheck[]> {
   checks.push(...await checkDemoFindings(workspace.id));
   checks.push(await checkUsageEvidence(workspace.id));
 
-  return checks;
+  return {
+    workspaceId: workspace.id,
+    checks,
+  };
+}
+
+async function createDemoDocumentLinks(appUrl: string, workspaceId: string): Promise<DemoHealthLink[]> {
+  const result = await pool.query<DemoFindingRow>(
+    `SELECT
+       finding.id,
+       finding.material_change_key,
+       finding.lifecycle_state,
+       finding.scoped_document_id,
+       action_candidate.id AS action_candidate_id,
+       action_candidate.target_document_id
+     FROM fleetgraph_findings finding
+     LEFT JOIN fleetgraph_action_candidates action_candidate
+       ON action_candidate.finding_id = finding.id
+     WHERE finding.workspace_id = $1
+       AND finding.material_change_key = $2`,
+    [workspaceId, pendingFindingKey]
+  );
+  const finding = result.rows[0];
+
+  if (!finding) {
+    return [];
+  }
+
+  return [
+    createDemoLink('Week chat document', createDocumentUrl(appUrl, finding.scoped_document_id)),
+    ...(finding.target_document_id
+      ? [createDemoLink('Issue with FleetGraph comment', createDocumentUrl(appUrl, finding.target_document_id))]
+      : []),
+  ];
+}
+
+function createDocumentUrl(appUrl: string, documentId: string): string {
+  return `${appUrl}/documents/${documentId}`;
+}
+
+function createDemoLink(label: string, url: string): DemoHealthLink {
+  return {
+    label,
+    url,
+  };
 }
 
 async function loadDemoWorkspace(): Promise<DemoWorkspaceRow | null> {

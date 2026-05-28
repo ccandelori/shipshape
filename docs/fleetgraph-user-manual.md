@@ -118,23 +118,29 @@ Use `dev@ship.local` with password `admin123`, or switch to `Ship Workspace`.
 
 ## Reset The Demo Locally
 
-For local rehearsals, use the health/reset script from the API package:
+For local rehearsals against your local Docker database and local web server, use the health/reset script from the repo root:
 
 ```bash
-cd /Users/sheep/Desktop/Gauntlet/ship/api
+cd /Users/sheep/Desktop/Gauntlet/ship
 DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev \
-  ./node_modules/.bin/tsx src/fleetgraph/scripts/demo-health.ts
+  pnpm fleetgraph:demo-health -- --app-url http://localhost:5173
 ```
 
 Reset only FleetGraph demo artifacts:
 
 ```bash
-cd /Users/sheep/Desktop/Gauntlet/ship/api
+cd /Users/sheep/Desktop/Gauntlet/ship
 DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev \
-  ./node_modules/.bin/tsx src/fleetgraph/scripts/demo-health.ts --reset
+  pnpm fleetgraph:demo-health -- --reset --app-url http://localhost:5173
 ```
 
-The reset restores the two seeded findings, clears demo read receipts, clears demo approvals/executions/suppressions, and removes the exact seeded FleetGraph comment body from the trace issue. It does not wipe the workspace.
+For the public droplet, run the same check on the droplet so the database IDs match the app you are recording:
+
+```bash
+ssh ship@143.198.163.184 "sudo -n bash -lc 'set -a; source /etc/ship/env; set +a; cd /opt/ship/current/api; node dist/fleetgraph/scripts/demo-health.js --app-url https://143.198.163.184.nip.io'"
+```
+
+The reset restores the two seeded findings, clears demo read receipts, clears demo approvals/executions/suppressions, and removes the exact seeded FleetGraph comment body from the trace issue. It does not wipe the workspace. The `--app-url` flag makes the script check `/health` and print the browser tabs to open for the dry run. The script fails if a local rehearsal appears to pair the local database with the deployed app URL.
 
 ## Quick Mental Model
 

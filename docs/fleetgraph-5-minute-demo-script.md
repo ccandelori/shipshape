@@ -133,23 +133,29 @@ Confirm `api/.env.local` has `OPENAI_API_KEY` and Langfuse keys if you want live
 
 ### 3A.1 — Demo health and reset
 
-Before a dry run, check the demo workspace:
+Before a local dry run, check the demo workspace against the local app URL:
 
 ```bash
-cd /Users/sheep/Desktop/Gauntlet/ship/api
+cd /Users/sheep/Desktop/Gauntlet/ship
 DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev \
-  ./node_modules/.bin/tsx src/fleetgraph/scripts/demo-health.ts
+  pnpm fleetgraph:demo-health -- --app-url http://localhost:5173
 ```
 
 If the inbox was dismissed, the HITL item was approved/resumed, or read badges were cleared during rehearsal, reset only the FleetGraph demo artifacts:
 
 ```bash
-cd /Users/sheep/Desktop/Gauntlet/ship/api
+cd /Users/sheep/Desktop/Gauntlet/ship
 DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev \
-  ./node_modules/.bin/tsx src/fleetgraph/scripts/demo-health.ts --reset
+  pnpm fleetgraph:demo-health -- --reset --app-url http://localhost:5173
 ```
 
-The reset is scoped: it restores the two seeded FleetGraph findings, clears their read receipts, removes demo approvals/executions/suppressions, and deletes the exact seeded FleetGraph comment body from the trace issue. It does not wipe the workspace.
+For a public-droplet dry run, run the check on the droplet so the document links come from the same database as the app:
+
+```bash
+ssh ship@143.198.163.184 "sudo -n bash -lc 'set -a; source /etc/ship/env; set +a; cd /opt/ship/current/api; node dist/fleetgraph/scripts/demo-health.js --app-url https://143.198.163.184.nip.io'"
+```
+
+The reset is scoped: it restores the two seeded FleetGraph findings, clears their read receipts, removes demo approvals/executions/suppressions, and deletes the exact seeded FleetGraph comment body from the trace issue. It does not wipe the workspace. With `--app-url`, the script also checks `/health` and prints the app, Week chat, and trace issue links for the recording. It fails if a local rehearsal appears to pair the local database with the deployed app URL, because cross-environment document links are misleading.
 
 ### 3B — Sign in once and confirm FleetGraph works
 

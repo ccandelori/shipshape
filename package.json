@@ -33,6 +33,7 @@
     "db:seed": "pnpm --filter @ship/api db:seed",
     "db:migrate": "pnpm --filter @ship/api db:migrate",
     "db:orphan-check": "pnpm --filter @ship/api db:orphan-check",
+    "fleetgraph:demo-health": "pnpm --filter @ship/api fleetgraph:demo-health",
     "shipshape": "pnpm exec tsx scripts/shipshape/run.ts",
     "shipshape:ci": "pnpm exec tsx scripts/shipshape/run-ci.ts",
     "dashboard:dev": "pnpm --filter @ship/dashboard dev",

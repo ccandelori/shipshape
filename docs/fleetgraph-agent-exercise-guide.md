@@ -133,16 +133,22 @@ Expected seed findings:
 Prefer the scoped demo health/reset script when you want to run the lifecycle steps repeatedly:
 
 ```bash
-cd /Users/sheep/Desktop/Gauntlet/ship/api
-DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev ./node_modules/.bin/tsx src/fleetgraph/scripts/demo-health.ts
+cd /Users/sheep/Desktop/Gauntlet/ship
+DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev pnpm fleetgraph:demo-health -- --app-url http://localhost:5173
 ```
 
 ```bash
-cd /Users/sheep/Desktop/Gauntlet/ship/api
-DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev ./node_modules/.bin/tsx src/fleetgraph/scripts/demo-health.ts --reset
+cd /Users/sheep/Desktop/Gauntlet/ship
+DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev pnpm fleetgraph:demo-health -- --reset --app-url http://localhost:5173
 ```
 
-The reset restores the two seeded FleetGraph findings, clears their read receipts, removes seeded-demo approvals/executions/suppressions, and deletes the exact seeded FleetGraph comment body from the trace issue. It does not wipe the workspace.
+For the public droplet, run the check on the droplet so the document links use the deployed database:
+
+```bash
+ssh ship@143.198.163.184 "sudo -n bash -lc 'set -a; source /etc/ship/env; set +a; cd /opt/ship/current/api; node dist/fleetgraph/scripts/demo-health.js --app-url https://143.198.163.184.nip.io'"
+```
+
+The reset restores the two seeded FleetGraph findings, clears their read receipts, removes seeded-demo approvals/executions/suppressions, and deletes the exact seeded FleetGraph comment body from the trace issue. It does not wipe the workspace. The `--app-url` flag also checks `/health` and prints the browser links for the dry run. The script fails if a local rehearsal appears to pair the local database with the deployed app URL.
 
 The raw SQL equivalents remain below for debugging.
 
