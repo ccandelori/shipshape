@@ -87,8 +87,8 @@ export function AppLayout() {
   const { data: actionItemsData } = useActionItemsQuery();
   const hasActionItems = (actionItemsData?.items?.length ?? 0) > 0;
   const fleetGraphSummaryQuery = useFleetGraphFindingsQuery(
-    { lifecycleState: 'open', limit: 1 },
-    { enabled: currentWorkspace !== null }
+    { limit: 1 },
+    { enabled: user !== null }
   );
   const fleetGraphAttentionCount = getNavigationRailAttentionCount(
     fleetGraphSummaryQuery.data?.lifecycle_counts
