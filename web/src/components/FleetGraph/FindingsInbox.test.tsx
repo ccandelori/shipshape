@@ -500,6 +500,73 @@ describe('FindingsInbox', () => {
     expect(screen.getByRole('tab', { name: 'Approved 1' })).toBeInTheDocument();
   });
 
+  it('marks only the visible lifecycle tab findings read as the user views each tab', async () => {
+    const openFinding = { ...createFinding('open'), id: 'open-finding' };
+    const pendingFinding = { ...createFinding('pending_review'), id: 'pending-finding' };
+    const readBodies: unknown[] = [];
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input);
+      const method = init?.method ?? 'GET';
+
+      if (url === '/api/fleetgraph/findings?lifecycle_state=open&limit=20' && method === 'GET') {
+        return jsonResponse({
+          items: [openFinding],
+          lifecycle_counts: createLifecycleCounts({ open: 1, pending_review: 1 }),
+          unread_lifecycle_counts: createLifecycleCounts({
+            open: readBodies.length > 0 ? 0 : 1,
+            pending_review: 1,
+          }),
+          limit: 20,
+          hasMore: false,
+          next_cursor: null,
+        }, 200);
+      }
+
+      if (url === '/api/fleetgraph/findings?lifecycle_state=pending_review&limit=20' && method === 'GET') {
+        return jsonResponse({
+          items: [pendingFinding],
+          lifecycle_counts: createLifecycleCounts({ open: 1, pending_review: 1 }),
+          unread_lifecycle_counts: createLifecycleCounts({
+            open: 0,
+            pending_review: readBodies.length > 1 ? 0 : 1,
+          }),
+          limit: 20,
+          hasMore: false,
+          next_cursor: null,
+        }, 200);
+      }
+
+      if (url === '/api/csrf-token' && method === 'GET') {
+        return jsonResponse({ token: 'csrf-token' }, 200);
+      }
+
+      if (url === '/api/fleetgraph/findings/read' && method === 'POST') {
+        readBodies.push(JSON.parse(String(init?.body)));
+        return Promise.resolve(new Response(null, { status: 204 }));
+      }
+
+      throw new Error(`Unexpected request: ${method} ${url}`);
+    });
+    global.fetch = fetchMock as typeof fetch;
+
+    render(<FindingsInbox lifecycleState="open" />, { wrapper: createWrapper(createQueryClient()) });
+
+    expect(await screen.findByText('Week 12')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(readBodies).toEqual([{ finding_ids: ['open-finding'] }]);
+    });
+    expect(screen.getByRole('tab', { name: 'Needs Review 1' })).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('tab', { name: 'Needs Review 1' }));
+
+    await waitFor(() => {
+      expect(readBodies).toEqual([
+        { finding_ids: ['open-finding'] },
+        { finding_ids: ['pending-finding'] },
+      ]);
+    });
+  });
+
   it('shows a visible payoff after resuming an approved FleetGraph action', async () => {
     const approvedFinding = createFinding('approved');
     const executedFinding = createFinding('executed');

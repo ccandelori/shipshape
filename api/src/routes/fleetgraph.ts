@@ -113,10 +113,6 @@ type FleetGraphLifecycleCountRow = {
   count: string;
 };
 
-type FleetGraphInboxReadRow = {
-  last_opened_at: Date;
-};
-
 type FleetGraphActionCandidateRow = {
   id: string;
   finding_id: string;
@@ -214,10 +210,22 @@ type FleetGraphWorkspaceMemberRow = {
   user_id: string;
 };
 
+type FleetGraphFindingIdRow = {
+  id: string;
+};
+
 type FleetGraphDecisionResult = {
   success: true;
   finding: FleetGraphFindingResponse;
   mutationApplied: boolean;
+} | {
+  success: false;
+  statusCode: number;
+  error: string;
+};
+
+type FleetGraphReadMarkingResult = {
+  success: true;
 } | {
   success: false;
   statusCode: number;
@@ -277,6 +285,10 @@ const fleetGraphSnoozeBodySchema = z.object({
 
 const fleetGraphResumeBodySchema = z.object({
   idempotency_key: z.string().trim().min(1).max(120).optional(),
+});
+
+const fleetGraphMarkReadBodySchema = z.object({
+  finding_ids: z.array(z.string().uuid()).min(1).max(100),
 });
 
 router.get('/findings', authMiddleware, async (req: Request, res: Response) => {
@@ -358,6 +370,50 @@ router.post('/inbox/opened', authMiddleware, async (req: Request, res: Response)
   } catch (error) {
     console.error('FleetGraph inbox open watermark failed:', error);
     res.status(500).json({ error: 'Failed to mark FleetGraph inbox opened' });
+  }
+});
+
+router.post('/findings/read', authMiddleware, async (req: Request, res: Response) => {
+  const bodyResult = fleetGraphMarkReadBodySchema.safeParse(req.body ?? {});
+  const workspaceId = req.workspaceId;
+  const userId = req.userId;
+
+  if (!bodyResult.success) {
+    res.status(400).json({
+      error: 'Invalid input',
+      details: bodyResult.error.issues.map((issue) => ({
+        path: issue.path,
+        message: issue.message,
+      })),
+    });
+    return;
+  }
+
+  if (!workspaceId) {
+    res.status(401).json({ error: 'No workspace found for authenticated request' });
+    return;
+  }
+  if (!userId) {
+    res.status(401).json({ error: 'No user found for authenticated request' });
+    return;
+  }
+
+  try {
+    const result = await markFleetGraphFindingsRead({
+      workspaceId,
+      userId,
+      findingIds: bodyResult.data.finding_ids,
+    });
+
+    if (!result.success) {
+      res.status(result.statusCode).json({ error: result.error });
+      return;
+    }
+
+    res.status(204).send();
+  } catch (error) {
+    console.error('FleetGraph finding read marking failed:', error);
+    res.status(500).json({ error: 'Failed to mark FleetGraph findings read' });
   }
 });
 
@@ -727,31 +783,20 @@ async function loadFleetGraphUnreadLifecycleCounts(
   workspaceId: string,
   userId: string
 ): Promise<FleetGraphLifecycleCounts> {
-  const readResult = await pool.query<FleetGraphInboxReadRow>(
-    `SELECT last_opened_at
-     FROM fleetgraph_inbox_reads
-     WHERE workspace_id = $1
-       AND user_id = $2`,
-    [workspaceId, userId]
-  );
-  const lastOpenedAt = readResult.rows[0]?.last_opened_at ?? null;
-  const values: Array<string | Date> = [workspaceId];
-  const conditions = [
-    'workspace_id = $1',
-    "lifecycle_state IN ('open', 'pending_review', 'approved')",
-  ];
-
-  if (lastOpenedAt !== null) {
-    values.push(lastOpenedAt);
-    conditions.push(`created_at > $${values.length}`);
-  }
-
   const result = await pool.query<FleetGraphLifecycleCountRow>(
     `SELECT lifecycle_state, COUNT(*)::text AS count
-     FROM fleetgraph_findings
-     WHERE ${conditions.join(' AND ')}
-     GROUP BY lifecycle_state`,
-    values
+     FROM fleetgraph_findings finding
+     WHERE finding.workspace_id = $1
+       AND finding.lifecycle_state IN ('open', 'pending_review', 'approved')
+       AND NOT EXISTS (
+         SELECT 1
+         FROM fleetgraph_finding_reads finding_read
+         WHERE finding_read.finding_id = finding.id
+           AND finding_read.workspace_id = finding.workspace_id
+           AND finding_read.user_id = $2
+       )
+     GROUP BY finding.lifecycle_state`,
+    [workspaceId, userId]
   );
   const counts = createEmptyFleetGraphLifecycleCounts();
 
@@ -770,6 +815,55 @@ async function markFleetGraphInboxOpened(workspaceId: string, userId: string): P
      DO UPDATE SET last_opened_at = EXCLUDED.last_opened_at`,
     [workspaceId, userId]
   );
+}
+
+async function markFleetGraphFindingsRead(input: {
+  workspaceId: string;
+  userId: string;
+  findingIds: string[];
+}): Promise<FleetGraphReadMarkingResult> {
+  const findingIds = Array.from(new Set(input.findingIds));
+  const client = await pool.connect();
+
+  try {
+    await client.query('BEGIN');
+
+    const visibleFindingResult = await client.query<FleetGraphFindingIdRow>(
+      `SELECT id
+       FROM fleetgraph_findings
+       WHERE workspace_id = $1
+         AND id = ANY($2::uuid[])`,
+      [input.workspaceId, findingIds]
+    );
+
+    if (visibleFindingResult.rowCount !== findingIds.length) {
+      await client.query('ROLLBACK');
+      return {
+        success: false,
+        statusCode: 404,
+        error: 'FleetGraph finding not found',
+      };
+    }
+
+    await client.query(
+      `INSERT INTO fleetgraph_finding_reads (finding_id, workspace_id, user_id, read_at)
+       SELECT id, workspace_id, $3, NOW()
+       FROM fleetgraph_findings
+       WHERE workspace_id = $1
+         AND id = ANY($2::uuid[])
+       ON CONFLICT (finding_id, user_id)
+       DO UPDATE SET read_at = EXCLUDED.read_at`,
+      [input.workspaceId, findingIds, input.userId]
+    );
+
+    await client.query('COMMIT');
+    return { success: true };
+  } catch (error) {
+    await client.query('ROLLBACK');
+    throw error;
+  } finally {
+    client.release();
+  }
 }
 
 function createEmptyFleetGraphLifecycleCounts(): FleetGraphLifecycleCounts {

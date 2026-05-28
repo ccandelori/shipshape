@@ -4,6 +4,7 @@ import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   useMarkFleetGraphInboxOpenedMutation,
+  useMarkFleetGraphFindingsReadMutation,
   useFleetGraphFindingsQuery,
   type FleetGraphFinding,
   type FleetGraphFindingListResponse,
@@ -174,7 +175,62 @@ describe('useMarkFleetGraphInboxOpenedMutation', () => {
     await waitFor(() => {
       expect(result.current.isSuccess).toBe(true);
     });
-    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls.some(([input, init]) => (
+      requestUrl(input) === '/api/fleetgraph/inbox/opened'
+      && init?.method === 'POST'
+    ))).toBe(true);
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['fleetgraph', 'findings'] });
+  });
+});
+
+describe('useMarkFleetGraphFindingsReadMutation', () => {
+  afterEach(() => {
+    global.fetch = realFetch;
+    vi.restoreAllMocks();
+  });
+
+  it('posts visible finding ids and invalidates FleetGraph findings', async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input);
+      const method = init?.method ?? 'GET';
+
+      if (url === '/api/csrf-token' && method === 'GET') {
+        return Promise.resolve(new Response(JSON.stringify({ token: 'csrf-token' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }));
+      }
+
+      if (url === '/api/fleetgraph/findings/read' && method === 'POST') {
+        expect(JSON.parse(String(init?.body))).toEqual({
+          finding_ids: ['finding-1', 'finding-2'],
+        });
+        expect(init?.headers).toEqual({
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': 'csrf-token',
+        });
+        return Promise.resolve(new Response(null, { status: 204 }));
+      }
+
+      throw new Error(`Unexpected request: ${method} ${url}`);
+    });
+    global.fetch = fetchMock as typeof fetch;
+    const queryClient = createQueryClient();
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+    const { result } = renderHook(
+      () => useMarkFleetGraphFindingsReadMutation(),
+      { wrapper: createWrapper(queryClient) }
+    );
+
+    result.current.mutate({ findingIds: ['finding-1', 'finding-2'] });
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+    expect(fetchMock.mock.calls.some(([input, init]) => (
+      requestUrl(input) === '/api/fleetgraph/findings/read'
+      && init?.method === 'POST'
+    ))).toBe(true);
     expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['fleetgraph', 'findings'] });
   });
 });

@@ -1,10 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { FindingCard, type FindingCardActionHandlers, type FindingCardPendingAction } from './FindingCard';
 import type { FleetGraphFinding, FleetGraphLifecycleCounts, FleetGraphLifecycleState } from '@/hooks/useFleetGraphQuery';
 import {
   useApproveFleetGraphFindingMutation,
   useDismissFleetGraphFindingMutation,
   useFleetGraphFindingsQuery,
+  useMarkFleetGraphFindingsReadMutation,
   useRejectFleetGraphFindingMutation,
   useResumeFleetGraphActionMutation,
   useSnoozeFleetGraphFindingMutation,
@@ -77,7 +78,9 @@ export function FindingsInbox({
   const dismissMutation = useDismissFleetGraphFindingMutation();
   const snoozeMutation = useSnoozeFleetGraphFindingMutation();
   const resumeMutation = useResumeFleetGraphActionMutation();
+  const markFindingsReadMutation = useMarkFleetGraphFindingsReadMutation();
   const { showToast } = useToast();
+  const markedReadKeysRef = useRef<Set<string>>(new Set());
 
   const actions: FindingCardActionHandlers = {
     onApprove: (input) => approveMutation.mutate(input, {
@@ -154,6 +157,54 @@ export function FindingsInbox({
     setHasManualLifecycleSelection(true);
     setSelectedLifecycleState(nextLifecycleState);
   };
+
+  useEffect(() => {
+    if (!findingsQuery.isSuccess || findings.length === 0) {
+      return;
+    }
+
+    if (
+      lifecycleState === undefined
+      && !hasManualLifecycleSelection
+      && lifecycleCounts !== null
+      && selectPreferredLifecycleState(lifecycleCounts) !== selectedLifecycleState
+    ) {
+      return;
+    }
+
+    if ((unreadLifecycleCounts?.[selectedLifecycleState] ?? 0) <= 0) {
+      return;
+    }
+
+    const findingIds = findings.map((finding) => finding.id);
+    const readKey = `${selectedLifecycleState}:${findingIds.join(',')}`;
+
+    if (markedReadKeysRef.current.has(readKey)) {
+      return;
+    }
+
+    markedReadKeysRef.current.add(readKey);
+    markFindingsReadMutation.mutate(
+      { findingIds },
+      {
+        onSuccess: () => {
+          setUnreadLifecycleCountsSnapshot(null);
+        },
+        onError: () => {
+          markedReadKeysRef.current.delete(readKey);
+        },
+      }
+    );
+  }, [
+    findings,
+    findingsQuery.isSuccess,
+    hasManualLifecycleSelection,
+    lifecycleCounts,
+    lifecycleState,
+    markFindingsReadMutation,
+    selectedLifecycleState,
+    unreadLifecycleCounts,
+  ]);
 
   return (
     <section className={cn('flex h-full min-h-0 flex-col bg-background', className)} aria-label="FleetGraph findings inbox">

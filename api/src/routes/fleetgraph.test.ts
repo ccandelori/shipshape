@@ -308,17 +308,17 @@ describe('FleetGraph inbox API', () => {
     });
   });
 
-  it('returns unread lifecycle counts from the current user inbox watermark', async () => {
+  it('returns unread lifecycle counts from the current user finding reads', async () => {
     await pool.query(
-      `INSERT INTO fleetgraph_inbox_reads (workspace_id, user_id, last_opened_at)
-       VALUES ($1, $2, $3)`,
-      [workspaceId, userId, '2026-05-26T05:30:00.000Z']
+      `INSERT INTO fleetgraph_finding_reads (finding_id, workspace_id, user_id, read_at)
+       VALUES ($1, $2, $3, $4)`,
+      [openFinding.id, workspaceId, userId, '2026-05-26T05:30:00.000Z']
     );
 
     await pool.query(
-      `INSERT INTO fleetgraph_inbox_reads (workspace_id, user_id, last_opened_at)
-       VALUES ($1, $2, $3)`,
-      [workspaceId, otherUserId, '2026-05-26T06:30:00.000Z']
+      `INSERT INTO fleetgraph_finding_reads (finding_id, workspace_id, user_id, read_at)
+       VALUES ($1, $2, $3, $4)`,
+      [pendingFinding.id, workspaceId, otherUserId, '2026-05-26T06:30:00.000Z']
     );
 
     const response = await request(app)
@@ -343,13 +343,13 @@ describe('FleetGraph inbox API', () => {
 
     expect(otherUserResponse.status).toBe(200);
     expect(otherUserResponse.body.unread_lifecycle_counts).toMatchObject({
-      open: 0,
+      open: 1,
       pending_review: 0,
       approved: 0,
     });
   });
 
-  it('marks the FleetGraph inbox opened for the current user without changing lifecycle counts', async () => {
+  it('marks visible findings read for the current user without changing lifecycle counts', async () => {
     const beforeResponse = await request(app)
       .get('/api/fleetgraph/findings')
       .set('Cookie', [`session_id=${adminSessionId}`]);
@@ -360,12 +360,12 @@ describe('FleetGraph inbox API', () => {
       pending_review: 1,
     });
 
-    const openedResponse = await request(app)
-      .post('/api/fleetgraph/inbox/opened')
+    const readResponse = await request(app)
+      .post('/api/fleetgraph/findings/read')
       .set('Cookie', [`session_id=${adminSessionId}`])
-      .send({});
+      .send({ finding_ids: [openFinding.id, pendingFinding.id] });
 
-    expect(openedResponse.status).toBe(204);
+    expect(readResponse.status).toBe(204);
 
     const afterResponse = await request(app)
       .get('/api/fleetgraph/findings')
@@ -401,6 +401,60 @@ describe('FleetGraph inbox API', () => {
     expect(secondPage.body.items.map((finding: { id: string }) => finding.id)).toEqual([openFinding.id]);
     expect(secondPage.body.hasMore).toBe(false);
     expect(secondPage.body.next_cursor).toBeNull();
+  });
+
+  it('rejects cross-workspace finding read marking without partially marking visible findings', async () => {
+    const workspaceFinding = await createFinding({
+      workspaceId,
+      scopedDocumentId,
+      recipientUserId: userId,
+      title: 'Workspace read risk',
+      lifecycleState: 'open',
+      materialChangeKey: `v1:inbox-${testRunId}:read-workspace`,
+      createdAt: '2026-05-26T04:30:00.000Z',
+    });
+    const otherWorkspaceFinding = await createFinding({
+      workspaceId: otherWorkspaceId,
+      scopedDocumentId: otherScopedDocumentId,
+      recipientUserId: userId,
+      title: 'Other workspace read risk',
+      lifecycleState: 'open',
+      materialChangeKey: `v1:inbox-${testRunId}:read-other-workspace`,
+      createdAt: '2026-05-26T04:40:00.000Z',
+    });
+
+    const response = await request(app)
+      .post('/api/fleetgraph/findings/read')
+      .set('Cookie', [`session_id=${sessionId}`])
+      .send({ finding_ids: [workspaceFinding.id, otherWorkspaceFinding.id] });
+
+    expect(response.status).toBe(404);
+    expect(response.body).toEqual({ error: 'FleetGraph finding not found' });
+    await expect(countFindingReadRows(userId, workspaceFinding.id)).resolves.toBe(0);
+  });
+
+  it('marks the FleetGraph inbox opened without clearing per-finding unread counts', async () => {
+    const openedResponse = await request(app)
+      .post('/api/fleetgraph/inbox/opened')
+      .set('Cookie', [`session_id=${adminSessionId}`])
+      .send({});
+
+    expect(openedResponse.status).toBe(204);
+
+    const afterResponse = await request(app)
+      .get('/api/fleetgraph/findings')
+      .set('Cookie', [`session_id=${adminSessionId}`]);
+
+    expect(afterResponse.status).toBe(200);
+    expect(afterResponse.body.lifecycle_counts).toMatchObject({
+      open: 2,
+      pending_review: 1,
+    });
+    expect(afterResponse.body.unread_lifecycle_counts).toMatchObject({
+      open: 1,
+      pending_review: 0,
+      approved: 0,
+    });
   });
 
   it('approves a pending finding action candidate and records an audit row', async () => {
@@ -593,6 +647,9 @@ describe('FleetGraph inbox API', () => {
       await request(app)
         .post(`/api/fleetgraph/findings/${finding.id}/snooze`)
         .send({ reason: 'No session.', expires_at: expiresAt }),
+      await request(app)
+        .post('/api/fleetgraph/findings/read')
+        .send({ finding_ids: [finding.id] }),
       await request(app)
         .post(`/api/fleetgraph/actions/${actionCandidateId}/resume`)
         .send({ idempotency_key: `unauthenticated-${testRunId}` }),
@@ -1351,6 +1408,18 @@ describe('FleetGraph inbox API', () => {
       suppression: `SELECT COUNT(*)::text AS count FROM fleetgraph_suppressions WHERE finding_id = $1`,
     };
     const result = await pool.query<CountRow>(queryByAuditKind[auditKind], [findingId]);
+
+    return Number.parseInt(result.rows[0]!.count, 10);
+  }
+
+  async function countFindingReadRows(userIdInput: string, findingId: string): Promise<number> {
+    const result = await pool.query<CountRow>(
+      `SELECT COUNT(*)::text AS count
+       FROM fleetgraph_finding_reads
+       WHERE user_id = $1
+         AND finding_id = $2`,
+      [userIdInput, findingId]
+    );
 
     return Number.parseInt(result.rows[0]!.count, 10);
   }

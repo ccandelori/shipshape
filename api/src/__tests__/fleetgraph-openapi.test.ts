@@ -11,6 +11,7 @@ describe('FleetGraph OpenAPI contracts', () => {
     expect(document.components?.schemas).toHaveProperty('FleetGraphApproveFindingRequest');
     expect(document.components?.schemas).toHaveProperty('FleetGraphSnoozeFindingRequest');
     expect(document.components?.schemas).toHaveProperty('FleetGraphResumeActionRequest');
+    expect(document.components?.schemas).toHaveProperty('FleetGraphMarkFindingsReadRequest');
   });
 
   it('documents the FleetGraph chat request and SSE stream contract', () => {
@@ -35,6 +36,7 @@ describe('FleetGraph OpenAPI contracts', () => {
       '/fleetgraph/findings/{id}/reject',
       '/fleetgraph/findings/{id}/dismiss',
       '/fleetgraph/findings/{id}/snooze',
+      '/fleetgraph/findings/read',
       '/fleetgraph/actions/{actionId}/resume',
       '/fleetgraph/inbox/opened',
     ];
@@ -47,6 +49,7 @@ describe('FleetGraph OpenAPI contracts', () => {
     expect(requirePostOperation('/fleetgraph/findings/{id}/reject').responses).toHaveProperty('409');
     expect(requirePostOperation('/fleetgraph/findings/{id}/dismiss').responses).toHaveProperty('409');
     expect(requirePostOperation('/fleetgraph/findings/{id}/snooze').responses).toHaveProperty('409');
+    expect(requirePostOperation('/fleetgraph/findings/read').responses).toHaveProperty('404');
     expect(requirePostOperation('/fleetgraph/actions/{actionId}/resume').responses).toHaveProperty('409');
   });
 

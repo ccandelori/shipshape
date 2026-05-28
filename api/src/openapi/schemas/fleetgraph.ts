@@ -202,7 +202,7 @@ export const FleetGraphFindingListResponseSchema = z.object({
     description: 'Current workspace finding counts by lifecycle state. Counts are independent of pagination and filters.',
   }),
   unread_lifecycle_counts: FleetGraphLifecycleCountsSchema.openapi({
-    description: 'Current user unread finding counts by lifecycle state. Unread counts include actionable findings created after the user last opened the FleetGraph inbox.',
+    description: 'Current user unread finding counts by lifecycle state. Unread counts include actionable findings the user has not viewed in the FleetGraph inbox.',
   }),
   limit: z.number().int().positive(),
   hasMore: z.boolean(),
@@ -258,6 +258,14 @@ export const FleetGraphResumeActionRequestSchema = z.object({
 }).openapi('FleetGraphResumeActionRequest');
 
 registry.register('FleetGraphResumeActionRequest', FleetGraphResumeActionRequestSchema);
+
+export const FleetGraphMarkFindingsReadRequestSchema = z.object({
+  finding_ids: z.array(UuidSchema).min(1).max(100).openapi({
+    description: 'Visible FleetGraph finding ids to mark read for the current user.',
+  }),
+}).openapi('FleetGraphMarkFindingsReadRequest');
+
+registry.register('FleetGraphMarkFindingsReadRequest', FleetGraphMarkFindingsReadRequestSchema);
 
 export const FleetGraphChatDocumentTypeSchema = z.enum(['sprint', 'project', 'issue']).openapi({
   description: 'Document types supported by FleetGraph chat context loading',
@@ -379,13 +387,39 @@ registry.registerPath({
   path: '/fleetgraph/inbox/opened',
   tags: ['FleetGraph'],
   summary: 'Mark the FleetGraph inbox opened',
-  description: 'Stores a per-user workspace watermark used to compute unread FleetGraph finding badges.',
+  description: 'Stores a per-user workspace watermark for last-opened audit and inbox UX. Per-finding read rows drive unread badges.',
   responses: {
     204: {
       description: 'FleetGraph inbox read watermark updated',
     },
     401: fleetGraphErrorResponse('Authentication required'),
     403: fleetGraphErrorResponse('Current user cannot access this workspace'),
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/fleetgraph/findings/read',
+  tags: ['FleetGraph'],
+  summary: 'Mark FleetGraph findings read',
+  description: 'Marks the visible findings in the current workspace read for the authenticated user. The request is rejected if any finding id does not belong to the workspace.',
+  request: {
+    body: {
+      content: {
+        'application/json': {
+          schema: FleetGraphMarkFindingsReadRequestSchema,
+        },
+      },
+    },
+  },
+  responses: {
+    204: {
+      description: 'FleetGraph findings marked read',
+    },
+    400: fleetGraphErrorResponse('Invalid request body'),
+    401: fleetGraphErrorResponse('Authentication required'),
+    403: fleetGraphErrorResponse('Current user cannot access this workspace'),
+    404: fleetGraphErrorResponse('One or more FleetGraph findings were not found in the current workspace'),
   },
 });
 

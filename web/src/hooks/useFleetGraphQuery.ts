@@ -164,6 +164,10 @@ export interface ResumeFleetGraphActionInput {
   idempotencyKey?: string;
 }
 
+export interface MarkFleetGraphFindingsReadInput {
+  findingIds: string[];
+}
+
 interface FleetGraphApproveFindingRequest {
   action_candidate_id?: string;
   edited_action?: FleetGraphRecommendedAction | null;
@@ -183,6 +187,10 @@ interface FleetGraphSnoozeFindingRequest {
 
 interface FleetGraphResumeActionRequest {
   idempotency_key?: string;
+}
+
+interface FleetGraphMarkFindingsReadRequest {
+  finding_ids: string[];
 }
 
 const defaultFleetGraphFindingsLimit = 20;
@@ -344,6 +352,17 @@ export function useMarkFleetGraphInboxOpenedMutation() {
   });
 }
 
+export function useMarkFleetGraphFindingsReadMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: markFleetGraphFindingsRead,
+    onSuccess: async () => {
+      await invalidateFleetGraphFindings(queryClient);
+    },
+  });
+}
+
 async function approveFleetGraphFinding(
   input: ApproveFleetGraphFindingInput
 ): Promise<FleetGraphFinding> {
@@ -434,6 +453,19 @@ async function markFleetGraphInboxOpened(): Promise<void> {
 
   if (!res.ok) {
     throw new FleetGraphApiError('mark_inbox_opened', endpoint, res.status, responseBody);
+  }
+}
+
+async function markFleetGraphFindingsRead(input: MarkFleetGraphFindingsReadInput): Promise<void> {
+  const endpoint = '/api/fleetgraph/findings/read';
+  const body: FleetGraphMarkFindingsReadRequest = {
+    finding_ids: input.findingIds,
+  };
+  const res = await apiPost(endpoint, body);
+  const responseBody = await res.text();
+
+  if (!res.ok) {
+    throw new FleetGraphApiError('mark_findings_read', endpoint, res.status, responseBody);
   }
 }
 

@@ -8,6 +8,7 @@ const fleetGraphTables = [
   'fleetgraph_suppressions',
   'fleetgraph_action_executions',
   'fleetgraph_inbox_reads',
+  'fleetgraph_finding_reads',
   'fleetgraph_usage',
 ] as const
 
@@ -74,6 +75,14 @@ const expectedColumns: Record<FleetGraphTable, readonly string[]> = {
     'created_at',
     'updated_at',
   ],
+  fleetgraph_finding_reads: [
+    'finding_id',
+    'workspace_id',
+    'user_id',
+    'read_at',
+    'created_at',
+    'updated_at',
+  ],
   fleetgraph_usage: [
     'id',
     'run_id',
@@ -97,6 +106,7 @@ const expectedIndexes = [
   'idx_fleetgraph_suppressions_expires_at',
   'idx_fleetgraph_action_executions_idempotency_key',
   'idx_fleetgraph_inbox_reads_user_id',
+  'idx_fleetgraph_finding_reads_workspace_user',
   'idx_fleetgraph_usage_workspace_id',
 ] as const
 
@@ -295,6 +305,12 @@ describe('FleetGraph outcome persistence migration', () => {
       `INSERT INTO fleetgraph_inbox_reads (workspace_id, user_id, last_opened_at)
        VALUES ($1, $2, NOW())`,
       [workspaceId, userId]
+    )
+
+    await pool.query(
+      `INSERT INTO fleetgraph_finding_reads (finding_id, workspace_id, user_id)
+       VALUES ($1, $2, $3)`,
+      [findingId, workspaceId, userId]
     )
 
     const queryResult = await pool.query<TimestampRow>(
