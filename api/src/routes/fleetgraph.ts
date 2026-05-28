@@ -70,6 +70,7 @@ type FleetGraphFindingResponse = {
   created_at: string;
   updated_at: string;
   expires_at: string | null;
+  is_unread: boolean;
   trace: FleetGraphFindingTraceResponse | null;
   action_candidates: FleetGraphActionCandidateResponse[];
 };
@@ -106,6 +107,7 @@ type FleetGraphFindingRow = {
   created_at: Date;
   updated_at: Date;
   expires_at: Date | null;
+  is_unread: boolean;
 };
 
 type FleetGraphLifecycleCountRow = {
@@ -319,7 +321,7 @@ router.get('/findings', authMiddleware, async (req: Request, res: Response) => {
 
   try {
     const [findings, lifecycleCounts, unreadLifecycleCounts] = await Promise.all([
-      loadFleetGraphFindings(workspaceId, queryResult.data),
+      loadFleetGraphFindings(workspaceId, userId, queryResult.data),
       loadFleetGraphFindingLifecycleCounts(workspaceId),
       loadFleetGraphUnreadLifecycleCounts(workspaceId, userId),
     ]);
@@ -711,6 +713,7 @@ router.post('/findings/:id/approve', authMiddleware, async (req: Request, res: R
 
 async function loadFleetGraphFindings(
   workspaceId: string,
+  userId: string,
   queryInput: FleetGraphFindingQueryInput
 ): Promise<FleetGraphFindingRow[]> {
   const conditions = ['f.workspace_id = $1'];
@@ -727,6 +730,8 @@ async function loadFleetGraphFindings(
     conditions.push(`(f.created_at, f.id) < ($${values.length - 1}::timestamptz, $${values.length}::uuid)`);
   }
 
+  values.push(userId);
+  const userIdParamIndex = values.length;
   values.push(queryInput.limit + 1);
 
   const result = await pool.query<FleetGraphFindingRow>(
@@ -746,13 +751,18 @@ async function loadFleetGraphFindings(
        f.material_change_key,
        f.created_at,
        f.updated_at,
-       f.expires_at
+       f.expires_at,
+       finding_read.finding_id IS NULL AS is_unread
      FROM fleetgraph_findings f
      INNER JOIN documents scoped_document
        ON scoped_document.id = f.scoped_document_id
       AND scoped_document.workspace_id = f.workspace_id
      LEFT JOIN users recipient_user
        ON recipient_user.id = f.recipient_user_id
+     LEFT JOIN fleetgraph_finding_reads finding_read
+       ON finding_read.finding_id = f.id
+      AND finding_read.workspace_id = f.workspace_id
+      AND finding_read.user_id = $${userIdParamIndex}
      WHERE ${conditions.join(' AND ')}
      ORDER BY f.created_at DESC, f.id DESC
      LIMIT $${values.length}`,
@@ -881,7 +891,8 @@ function createEmptyFleetGraphLifecycleCounts(): FleetGraphLifecycleCounts {
 
 async function loadFleetGraphFindingById(
   workspaceId: string,
-  findingId: string
+  findingId: string,
+  userId: string
 ): Promise<FleetGraphFindingResponse | null> {
   const result = await pool.query<FleetGraphFindingRow>(
     `SELECT
@@ -900,16 +911,21 @@ async function loadFleetGraphFindingById(
        f.material_change_key,
        f.created_at,
        f.updated_at,
-       f.expires_at
+       f.expires_at,
+       finding_read.finding_id IS NULL AS is_unread
      FROM fleetgraph_findings f
      INNER JOIN documents scoped_document
        ON scoped_document.id = f.scoped_document_id
       AND scoped_document.workspace_id = f.workspace_id
      LEFT JOIN users recipient_user
        ON recipient_user.id = f.recipient_user_id
+     LEFT JOIN fleetgraph_finding_reads finding_read
+       ON finding_read.finding_id = f.id
+      AND finding_read.workspace_id = f.workspace_id
+      AND finding_read.user_id = $3
      WHERE f.workspace_id = $1
        AND f.id = $2`,
-    [workspaceId, findingId]
+    [workspaceId, findingId, userId]
   );
 
   const finding = result.rows[0];
@@ -1095,7 +1111,8 @@ async function resumeFleetGraphAction(input: {
       if (replay) {
         const replayedFinding = await loadFleetGraphFindingById(
           input.actorContext.workspaceId,
-          action.finding_id
+          action.finding_id,
+          input.actorContext.userId
         );
 
         if (!replayedFinding) {
@@ -1175,7 +1192,8 @@ async function resumeFleetGraphAction(input: {
 
   const updatedFinding = await loadFleetGraphFindingById(
     input.actorContext.workspaceId,
-    findingId
+    findingId,
+    input.actorContext.userId
   );
 
   if (!updatedFinding) {
@@ -1412,7 +1430,8 @@ async function suppressFleetGraphFinding(input: {
 
   const updatedFinding = await loadFleetGraphFindingById(
     input.actorContext.workspaceId,
-    input.findingId
+    input.findingId,
+    input.actorContext.userId
   );
 
   if (!updatedFinding) {
@@ -1500,7 +1519,8 @@ async function rejectFleetGraphFinding(input: {
 
   const updatedFinding = await loadFleetGraphFindingById(
     input.actorContext.workspaceId,
-    input.findingId
+    input.findingId,
+    input.actorContext.userId
   );
 
   if (!updatedFinding) {
@@ -1598,7 +1618,8 @@ async function approveFleetGraphFinding(input: {
 
   const updatedFinding = await loadFleetGraphFindingById(
     input.actorContext.workspaceId,
-    input.findingId
+    input.findingId,
+    input.actorContext.userId
   );
 
   if (!updatedFinding) {
@@ -1872,6 +1893,7 @@ function mapFindingResponse(
     created_at: finding.created_at.toISOString(),
     updated_at: finding.updated_at.toISOString(),
     expires_at: finding.expires_at?.toISOString() ?? null,
+    is_unread: finding.is_unread,
     trace: trace ? mapFindingTraceResponse(trace) : null,
     action_candidates: actionCandidates.map(mapActionCandidateResponse),
   };

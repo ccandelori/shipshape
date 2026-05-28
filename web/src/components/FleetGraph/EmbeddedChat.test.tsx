@@ -77,6 +77,8 @@ describe('EmbeddedChat', () => {
 
     render(<EmbeddedChat documentId="week-1" documentType="sprint" />);
 
+    expect(screen.getByText('Ask about risks, blockers, ownership, or likely next actions in this week.')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'What should happen next?' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'What is blocking this?' }));
 
     expect(await screen.findByText('The week is blocked by trace evidence.')).toBeInTheDocument();
@@ -327,7 +329,7 @@ describe('EmbeddedChat', () => {
 
     expect(screen.queryByText('What is blocking this week?')).not.toBeInTheDocument();
     expect(screen.queryByText('Trace evidence is still missing.')).not.toBeInTheDocument();
-    expect(screen.getByText('Ask about risks, blockers, ownership, or likely next actions.')).toBeInTheDocument();
+    expect(screen.getByText('Ask about risks, blockers, ownership, or likely next actions in this week.')).toBeInTheDocument();
 
     firstRender.unmount();
     render(<EmbeddedChat documentId="week-1" documentType="sprint" />);

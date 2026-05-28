@@ -158,6 +158,9 @@ export const FleetGraphFindingSchema = z.object({
   created_at: DateTimeSchema,
   updated_at: DateTimeSchema,
   expires_at: DateTimeSchema.nullable(),
+  is_unread: z.boolean().openapi({
+    description: 'Whether the current user has not yet viewed this finding in the FleetGraph inbox.',
+  }),
   trace: FleetGraphFindingTraceSchema.nullable(),
   action_candidates: z.array(FleetGraphActionCandidateSchema),
 }).openapi('FleetGraphFinding');

@@ -67,6 +67,9 @@ export function FindingsInbox({
   const [hasManualLifecycleSelection, setHasManualLifecycleSelection] = useState(false);
   const [unreadLifecycleCountsSnapshot, setUnreadLifecycleCountsSnapshot] =
     useState<FleetGraphLifecycleCounts | null>(initialUnreadLifecycleCounts ?? null);
+  const [sessionUnreadFindingIds, setSessionUnreadFindingIds] = useState<ReadonlySet<string>>(
+    () => new Set()
+  );
   const effectiveLimit = limit ?? 20;
   const activeTab = lifecycleTabs.find((tab) => tab.lifecycleState === selectedLifecycleState) ?? lifecycleTabs[0];
   const findingsQuery = useFleetGraphFindingsQuery({
@@ -143,6 +146,30 @@ export function FindingsInbox({
   }, [lifecycleState]);
 
   useEffect(() => {
+    const unreadFindingIds = findings
+      .filter((finding) => finding.is_unread)
+      .map((finding) => finding.id);
+
+    if (unreadFindingIds.length === 0) {
+      return;
+    }
+
+    setSessionUnreadFindingIds((currentFindingIds) => {
+      let changed = false;
+      const nextFindingIds = new Set(currentFindingIds);
+
+      for (const findingId of unreadFindingIds) {
+        if (!nextFindingIds.has(findingId)) {
+          nextFindingIds.add(findingId);
+          changed = true;
+        }
+      }
+
+      return changed ? nextFindingIds : currentFindingIds;
+    });
+  }, [findings]);
+
+  useEffect(() => {
     if (lifecycleState !== undefined || hasManualLifecycleSelection || lifecycleCounts === null) {
       return;
     }
@@ -184,17 +211,28 @@ export function FindingsInbox({
     }
 
     markedReadKeysRef.current.add(readKey);
-    markFindingsReadMutation.mutate(
-      { findingIds },
-      {
-        onSuccess: () => {
-          setUnreadLifecycleCountsSnapshot(null);
-        },
-        onError: () => {
-          markedReadKeysRef.current.delete(readKey);
-        },
+    let didStartMarkingRead = false;
+    const timeoutId = window.setTimeout(() => {
+      didStartMarkingRead = true;
+      markFindingsReadMutation.mutate(
+        { findingIds },
+        {
+          onSuccess: () => {
+            setUnreadLifecycleCountsSnapshot(null);
+          },
+          onError: () => {
+            markedReadKeysRef.current.delete(readKey);
+          },
+        }
+      );
+    }, 250);
+
+    return () => {
+      window.clearTimeout(timeoutId);
+      if (!didStartMarkingRead) {
+        markedReadKeysRef.current.delete(readKey);
       }
-    );
+    };
   }, [
     findings,
     findingsQuery.isSuccess,
@@ -293,21 +331,27 @@ export function FindingsInbox({
 
         {findings.length > 0 && (
           <div className="space-y-3">
-            {findings.map((finding) => (
-              <FindingCard
-                key={finding.id}
-                finding={finding}
-                actions={actions}
-                pendingAction={resolvePendingAction({
-                  finding,
-                  approveMutation,
-                  rejectMutation,
-                  dismissMutation,
-                  snoozeMutation,
-                  resumeMutation,
-                })}
-              />
-            ))}
+            {findings.map((finding) => {
+              const displayFinding = sessionUnreadFindingIds.has(finding.id)
+                ? { ...finding, is_unread: true }
+                : finding;
+
+              return (
+                <FindingCard
+                  key={finding.id}
+                  finding={displayFinding}
+                  actions={actions}
+                  pendingAction={resolvePendingAction({
+                    finding,
+                    approveMutation,
+                    rejectMutation,
+                    dismissMutation,
+                    snoozeMutation,
+                    resumeMutation,
+                  })}
+                />
+              );
+            })}
           </div>
         )}
 

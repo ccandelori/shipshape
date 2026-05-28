@@ -336,6 +336,16 @@ describe('FleetGraph inbox API', () => {
       approved: 0,
       executed: 0,
     });
+    expect(response.body.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: openFinding.id,
+        is_unread: false,
+      }),
+      expect.objectContaining({
+        id: pendingFinding.id,
+        is_unread: true,
+      }),
+    ]));
 
     const otherUserResponse = await request(app)
       .get('/api/fleetgraph/findings')
@@ -347,6 +357,16 @@ describe('FleetGraph inbox API', () => {
       pending_review: 0,
       approved: 0,
     });
+    expect(otherUserResponse.body.items).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        id: openFinding.id,
+        is_unread: true,
+      }),
+      expect.objectContaining({
+        id: pendingFinding.id,
+        is_unread: false,
+      }),
+    ]));
   });
 
   it('marks visible findings read for the current user without changing lifecycle counts', async () => {

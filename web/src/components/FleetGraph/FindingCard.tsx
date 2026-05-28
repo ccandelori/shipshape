@@ -143,10 +143,22 @@ export function FindingCard({ finding, actions, pendingAction }: FindingCardProp
   const snoozeIsValid = decisionFormKind !== 'snooze' || snoozeExpiresAt.length > 0;
 
   return (
-    <article className="rounded-lg border border-border bg-background p-4 shadow-sm">
+    <article
+      className={cn(
+        'rounded-lg border bg-background p-4 shadow-sm transition-colors',
+        finding.is_unread
+          ? 'border-accent/50 bg-accent/5'
+          : 'border-border'
+      )}
+    >
       <header className="flex items-start justify-between gap-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
+            {finding.is_unread && (
+              <Badge className="border-accent/40 bg-accent text-white">
+                New
+              </Badge>
+            )}
             <Badge className={severityClasses[finding.severity]}>
               {formatLabel(finding.severity)}
             </Badge>

@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { FindingsInbox } from './FindingsInbox';
 import { ToastProvider } from '@/components/ui/Toast';
@@ -61,6 +61,7 @@ function createFinding(lifecycleState: FleetGraphFinding['lifecycle_state']): Fl
     created_at: '2026-05-26T12:00:00.000Z',
     updated_at: '2026-05-26T12:00:00.000Z',
     expires_at: null,
+    is_unread: true,
     trace: null,
     action_candidates: [
       {
@@ -139,6 +140,7 @@ function requestUrl(input: RequestInfo | URL): string {
 
 describe('FindingsInbox', () => {
   afterEach(() => {
+    cleanup();
     global.fetch = realFetch;
     vi.restoreAllMocks();
   });
@@ -155,7 +157,7 @@ describe('FindingsInbox', () => {
         return jsonResponse({
           items: [openFinding],
           lifecycle_counts: createLifecycleCounts({ open: 1, pending_review: 1 }),
-          unread_lifecycle_counts: createLifecycleCounts({ open: 1, pending_review: 1 }),
+          unread_lifecycle_counts: createLifecycleCounts(),
           limit: 20,
           hasMore: false,
           next_cursor: null,
@@ -166,7 +168,7 @@ describe('FindingsInbox', () => {
         return jsonResponse({
           items: [pendingFinding],
           lifecycle_counts: createLifecycleCounts({ open: 1, pending_review: 1 }),
-          unread_lifecycle_counts: createLifecycleCounts({ open: 1, pending_review: 1 }),
+          unread_lifecycle_counts: createLifecycleCounts(),
           limit: 20,
           hasMore: false,
           next_cursor: null,
@@ -193,12 +195,12 @@ describe('FindingsInbox', () => {
     render(<FindingsInbox lifecycleState="open" />, { wrapper: createWrapper(createQueryClient()) });
 
     expect(await screen.findByText('Week 12')).toBeInTheDocument();
-    expect(screen.getByRole('tab', { name: 'Open 1' })).toHaveAttribute('aria-selected', 'true');
-    expect(screen.getByRole('tab', { name: 'Needs Review 1' })).toBeInTheDocument();
+    expect(screen.getByRole('tab', { name: 'Open' })).toHaveAttribute('aria-selected', 'true');
+    expect(screen.getByRole('tab', { name: 'Needs Review' })).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Approved' })).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Approve finding' })).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole('tab', { name: 'Needs Review 1' }));
+    fireEvent.click(screen.getByRole('tab', { name: 'Needs Review' }));
     expect(await screen.findByRole('button', { name: 'Approve finding' })).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: 'Approve finding' }));
 
@@ -209,6 +211,50 @@ describe('FindingsInbox', () => {
       ))).toBe(true);
     });
     expect(await screen.findByText('Action approved. Ready to resume.')).toBeInTheDocument();
+  });
+
+  it('keeps a visible new badge for findings that were unread when the inbox opened', async () => {
+    const openFinding = createFinding('open');
+    let markedRead = false;
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input);
+      const method = init?.method ?? 'GET';
+
+      if (url === '/api/fleetgraph/findings?lifecycle_state=open&limit=20' && method === 'GET') {
+        return jsonResponse({
+          items: [{ ...openFinding, is_unread: !markedRead }],
+          lifecycle_counts: createLifecycleCounts({ open: 1 }),
+          unread_lifecycle_counts: createLifecycleCounts({ open: markedRead ? 0 : 1 }),
+          limit: 20,
+          hasMore: false,
+          next_cursor: null,
+        }, 200);
+      }
+
+      if (url === '/api/csrf-token' && method === 'GET') {
+        return jsonResponse({ token: 'csrf-token' }, 200);
+      }
+
+      if (url === '/api/fleetgraph/findings/read' && method === 'POST') {
+        markedRead = true;
+        expect(JSON.parse(String(init?.body))).toEqual({ finding_ids: ['finding-1'] });
+        return Promise.resolve(new Response(null, { status: 204 }));
+      }
+
+      throw new Error(`Unexpected request: ${method} ${url}`);
+    });
+    global.fetch = fetchMock as typeof fetch;
+
+    render(<FindingsInbox lifecycleState="open" />, { wrapper: createWrapper(createQueryClient()) });
+
+    expect(await screen.findByText('New')).toBeInTheDocument();
+    await waitFor(() => {
+      expect(fetchMock.mock.calls.some(([input, init]) => (
+        requestUrl(input) === '/api/fleetgraph/findings/read'
+        && init?.method === 'POST'
+      ))).toBe(true);
+    });
+    expect(await screen.findByText('New')).toBeInTheDocument();
   });
 
   it('rejects a pending-review finding through the FleetGraph API mutation', async () => {

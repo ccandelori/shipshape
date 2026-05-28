@@ -73,6 +73,7 @@ const suggestedPrompts = [
   'What is blocking this?',
   'Who owns the next step?',
   'What changed this week?',
+  'What should happen next?',
 ] as const;
 
 export function EmbeddedChat({ documentId, documentType, memoryScope, className }: EmbeddedChatProps) {
@@ -332,7 +333,7 @@ export function EmbeddedChat({ documentId, documentType, memoryScope, className 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {messages.length === 0 && (
           <div className="rounded-lg border border-border bg-border/10 px-3 py-4 text-sm text-muted">
-            <p>Ask about risks, blockers, ownership, or likely next actions.</p>
+            <p>Ask about risks, blockers, ownership, or likely next actions in this {formatDocumentType(documentType).toLowerCase()}.</p>
             <div className="mt-3 flex flex-wrap gap-2" aria-label="Suggested FleetGraph prompts">
               {suggestedPrompts.map((prompt) => (
                 <button

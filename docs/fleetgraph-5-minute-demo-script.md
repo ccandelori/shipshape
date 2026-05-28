@@ -1,7 +1,7 @@
 # FleetGraph 5-Minute Demo Script (Beginner-Friendly)
 
 Created: 2026-05-26  
-Updated: 2026-05-27
+Updated: 2026-05-28
 
 This guide assumes you have **never used Ship before**. Every on-stage step says **where to click**, **what you should see**, and **what to say**.
 
@@ -131,6 +131,26 @@ DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev \
 
 Confirm `api/.env.local` has `OPENAI_API_KEY` and Langfuse keys if you want live chat and traces locally.
 
+### 3A.1 — Demo health and reset
+
+Before a dry run, check the demo workspace:
+
+```bash
+cd /Users/sheep/Desktop/Gauntlet/ship/api
+DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev \
+  ./node_modules/.bin/tsx src/fleetgraph/scripts/demo-health.ts
+```
+
+If the inbox was dismissed, the HITL item was approved/resumed, or read badges were cleared during rehearsal, reset only the FleetGraph demo artifacts:
+
+```bash
+cd /Users/sheep/Desktop/Gauntlet/ship/api
+DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev \
+  ./node_modules/.bin/tsx src/fleetgraph/scripts/demo-health.ts --reset
+```
+
+The reset is scoped: it restores the two seeded FleetGraph findings, clears their read receipts, removes demo approvals/executions/suppressions, and deletes the exact seeded FleetGraph comment body from the trace issue. It does not wipe the workspace.
+
 ### 3B — Sign in once and confirm FleetGraph works
 
 1. Open your **App URL** (Part 2).
@@ -143,7 +163,7 @@ Confirm `api/.env.local` has `OPENAI_API_KEY` and Langfuse keys if you want live
 1. On the **left rail**, click the **FleetGraph** icon (above **Settings**).
 2. A large centered panel opens: **FleetGraph Inbox**.
 3. You should see **“1 finding”** and a card titled **FleetGraph - HITL Findings Inbox** (medium severity, **open**).
-4. If it says **“No open findings”**, someone dismissed the demo card; ask for a DB reset or re-run seed (local) — on deploy, re-seed or restore the `seed:fleetgraph:open:inbox-visible:v1` row.
+4. If it says **“No open findings”**, someone dismissed the demo card; run `src/fleetgraph/scripts/demo-health.ts --reset` in the target environment, or re-run seed if the health script reports missing demo rows.
 
 **Test chat (optional but recommended)**
 

@@ -32,6 +32,7 @@ function createFinding(lifecycleState: FleetGraphFinding['lifecycle_state']): Fl
     created_at: '2026-05-26T12:00:00.000Z',
     updated_at: '2026-05-26T12:00:00.000Z',
     expires_at: null,
+    is_unread: false,
     trace: null,
     action_candidates: [
       {
@@ -104,6 +105,18 @@ describe('FindingCard', () => {
       findingId: 'finding-1',
       reason: 'Known and tracked elsewhere',
     });
+  });
+
+  it('marks unread findings with a compact new badge', () => {
+    render(
+      <FindingCard
+        finding={{ ...createFinding('open'), is_unread: true }}
+        actions={createActionHandlers()}
+        pendingAction={null}
+      />
+    );
+
+    expect(screen.getByText('New')).toBeInTheDocument();
   });
 
   it('shows why the finding exists and links its trace when run metadata is available', () => {
