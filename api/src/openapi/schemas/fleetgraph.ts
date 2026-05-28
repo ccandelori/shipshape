@@ -201,6 +201,9 @@ export const FleetGraphFindingListResponseSchema = z.object({
   lifecycle_counts: FleetGraphLifecycleCountsSchema.openapi({
     description: 'Current workspace finding counts by lifecycle state. Counts are independent of pagination and filters.',
   }),
+  unread_lifecycle_counts: FleetGraphLifecycleCountsSchema.openapi({
+    description: 'Current user unread finding counts by lifecycle state. Unread counts include actionable findings created after the user last opened the FleetGraph inbox.',
+  }),
   limit: z.number().int().positive(),
   hasMore: z.boolean(),
   next_cursor: z.string().nullable().openapi({
@@ -365,6 +368,21 @@ registry.registerPath({
           schema: FleetGraphFindingListResponseSchema,
         },
       },
+    },
+    401: fleetGraphErrorResponse('Authentication required'),
+    403: fleetGraphErrorResponse('Current user cannot access this workspace'),
+  },
+});
+
+registry.registerPath({
+  method: 'post',
+  path: '/fleetgraph/inbox/opened',
+  tags: ['FleetGraph'],
+  summary: 'Mark the FleetGraph inbox opened',
+  description: 'Stores a per-user workspace watermark used to compute unread FleetGraph finding badges.',
+  responses: {
+    204: {
+      description: 'FleetGraph inbox read watermark updated',
     },
     401: fleetGraphErrorResponse('Authentication required'),
     403: fleetGraphErrorResponse('Current user cannot access this workspace'),

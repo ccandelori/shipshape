@@ -18,7 +18,7 @@ import { programKeys } from '@/hooks/useProgramsQuery';
 import { useStandupStatusQuery } from '@/hooks/useStandupStatusQuery';
 import { useActionItemsQuery, actionItemsKeys } from '@/hooks/useActionItemsQuery';
 import { useTeamMembersQuery } from '@/hooks/useTeamMembersQuery';
-import { useFleetGraphFindingsQuery } from '@/hooks/useFleetGraphQuery';
+import { useFleetGraphFindingsQuery, type FleetGraphLifecycleCounts } from '@/hooks/useFleetGraphQuery';
 import { useFleetGraphRealtimeInvalidation } from '@/hooks/useFleetGraphRealtimeInvalidation';
 import { cn, getContrastTextColor } from '@/lib/cn';
 import { buildDocumentTree, DocumentTreeNode } from '@/lib/documentTree';
@@ -64,6 +64,8 @@ export function AppLayout() {
   const [actionItemsModalOpen, setActionItemsModalOpen] = useState(false);
   const [actionItemsModalShownOnLoad, setActionItemsModalShownOnLoad] = useState(false);
   const [fleetGraphInboxOpen, setFleetGraphInboxOpen] = useState(false);
+  const [fleetGraphUnreadSnapshot, setFleetGraphUnreadSnapshot] =
+    useState<FleetGraphLifecycleCounts | null>(null);
 
   // Session timeout handling
   const handleSessionTimeout = useCallback(() => {
@@ -91,10 +93,15 @@ export function AppLayout() {
     { enabled: user !== null }
   );
   const fleetGraphAttentionCount = getNavigationRailAttentionCount(
-    fleetGraphSummaryQuery.data?.lifecycle_counts
+    fleetGraphSummaryQuery.data?.unread_lifecycle_counts
   );
   const queryClient = useQueryClient();
   useFleetGraphRealtimeInvalidation();
+
+  const openFleetGraphInbox = useCallback(() => {
+    setFleetGraphUnreadSnapshot(fleetGraphSummaryQuery.data?.unread_lifecycle_counts ?? null);
+    setFleetGraphInboxOpen(true);
+  }, [fleetGraphSummaryQuery.data?.unread_lifecycle_counts]);
 
   // Celebration state for when user completes an accountability item
   const [isCelebrating, setIsCelebrating] = useState(false);
@@ -421,7 +428,7 @@ export function AppLayout() {
               icon={<FleetGraphIcon />}
               label="FleetGraph"
               active={fleetGraphInboxOpen}
-              onClick={() => setFleetGraphInboxOpen(true)}
+              onClick={openFleetGraphInbox}
               badgeCount={fleetGraphAttentionCount}
               badgeDescription="items need attention"
             />
@@ -603,6 +610,7 @@ export function AppLayout() {
       <FleetGraphInboxModal
         open={fleetGraphInboxOpen}
         onClose={() => setFleetGraphInboxOpen(false)}
+        unreadLifecycleCountsSnapshot={fleetGraphUnreadSnapshot}
       />
     </div>
     </SelectionPersistenceProvider>

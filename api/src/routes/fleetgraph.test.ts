@@ -308,6 +308,81 @@ describe('FleetGraph inbox API', () => {
     });
   });
 
+  it('returns unread lifecycle counts from the current user inbox watermark', async () => {
+    await pool.query(
+      `INSERT INTO fleetgraph_inbox_reads (workspace_id, user_id, last_opened_at)
+       VALUES ($1, $2, $3)`,
+      [workspaceId, userId, '2026-05-26T05:30:00.000Z']
+    );
+
+    await pool.query(
+      `INSERT INTO fleetgraph_inbox_reads (workspace_id, user_id, last_opened_at)
+       VALUES ($1, $2, $3)`,
+      [workspaceId, otherUserId, '2026-05-26T06:30:00.000Z']
+    );
+
+    const response = await request(app)
+      .get('/api/fleetgraph/findings')
+      .set('Cookie', [`session_id=${sessionId}`]);
+
+    expect(response.status).toBe(200);
+    expect(response.body.lifecycle_counts).toMatchObject({
+      open: 1,
+      pending_review: 1,
+    });
+    expect(response.body.unread_lifecycle_counts).toMatchObject({
+      open: 0,
+      pending_review: 1,
+      approved: 0,
+      executed: 0,
+    });
+
+    const otherUserResponse = await request(app)
+      .get('/api/fleetgraph/findings')
+      .set('Cookie', [`session_id=${otherSessionId}`]);
+
+    expect(otherUserResponse.status).toBe(200);
+    expect(otherUserResponse.body.unread_lifecycle_counts).toMatchObject({
+      open: 0,
+      pending_review: 0,
+      approved: 0,
+    });
+  });
+
+  it('marks the FleetGraph inbox opened for the current user without changing lifecycle counts', async () => {
+    const beforeResponse = await request(app)
+      .get('/api/fleetgraph/findings')
+      .set('Cookie', [`session_id=${adminSessionId}`]);
+
+    expect(beforeResponse.status).toBe(200);
+    expect(beforeResponse.body.unread_lifecycle_counts).toMatchObject({
+      open: 1,
+      pending_review: 1,
+    });
+
+    const openedResponse = await request(app)
+      .post('/api/fleetgraph/inbox/opened')
+      .set('Cookie', [`session_id=${adminSessionId}`])
+      .send({});
+
+    expect(openedResponse.status).toBe(204);
+
+    const afterResponse = await request(app)
+      .get('/api/fleetgraph/findings')
+      .set('Cookie', [`session_id=${adminSessionId}`]);
+
+    expect(afterResponse.status).toBe(200);
+    expect(afterResponse.body.lifecycle_counts).toMatchObject({
+      open: 1,
+      pending_review: 1,
+    });
+    expect(afterResponse.body.unread_lifecycle_counts).toMatchObject({
+      open: 0,
+      pending_review: 0,
+      approved: 0,
+    });
+  });
+
   it('paginates with a stable cursor over created_at and id', async () => {
     const firstPage = await request(app)
       .get('/api/fleetgraph/findings?limit=1')

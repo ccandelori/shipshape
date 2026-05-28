@@ -1,12 +1,38 @@
+import { useEffect, useRef } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { FindingsInbox } from './FindingsInbox';
+import {
+  useMarkFleetGraphInboxOpenedMutation,
+  type FleetGraphLifecycleCounts,
+} from '@/hooks/useFleetGraphQuery';
 
 interface FleetGraphInboxModalProps {
   open: boolean;
   onClose: () => void;
+  unreadLifecycleCountsSnapshot?: FleetGraphLifecycleCounts | null;
 }
 
-export function FleetGraphInboxModal({ open, onClose }: FleetGraphInboxModalProps) {
+export function FleetGraphInboxModal({
+  open,
+  onClose,
+  unreadLifecycleCountsSnapshot,
+}: FleetGraphInboxModalProps) {
+  const markInboxOpenedMutation = useMarkFleetGraphInboxOpenedMutation();
+  const hasMarkedOpenRef = useRef(false);
+
+  useEffect(() => {
+    if (!open) {
+      hasMarkedOpenRef.current = false;
+      return;
+    }
+    if (hasMarkedOpenRef.current) {
+      return;
+    }
+
+    hasMarkedOpenRef.current = true;
+    markInboxOpenedMutation.mutate();
+  }, [markInboxOpenedMutation, open]);
+
   return (
     <Dialog.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <Dialog.Portal>
@@ -31,7 +57,7 @@ export function FleetGraphInboxModal({ open, onClose }: FleetGraphInboxModalProp
             </Dialog.Close>
           </div>
           <div className="min-h-0 flex-1">
-            <FindingsInbox />
+            <FindingsInbox initialUnreadLifecycleCounts={unreadLifecycleCountsSnapshot} />
           </div>
         </Dialog.Content>
       </Dialog.Portal>

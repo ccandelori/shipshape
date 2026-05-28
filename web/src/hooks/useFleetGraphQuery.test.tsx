@@ -3,6 +3,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { renderHook, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  useMarkFleetGraphInboxOpenedMutation,
   useFleetGraphFindingsQuery,
   type FleetGraphFinding,
   type FleetGraphFindingListResponse,
@@ -91,6 +92,16 @@ describe('useFleetGraphFindingsQuery', () => {
         snoozed: 0,
         expired: 0,
       },
+      unread_lifecycle_counts: {
+        open: 1,
+        pending_review: 0,
+        approved: 0,
+        executed: 0,
+        rejected: 0,
+        dismissed: 0,
+        snoozed: 0,
+        expired: 0,
+      },
       limit: 10,
       hasMore: true,
       next_cursor: 'cursor-2',
@@ -118,5 +129,52 @@ describe('useFleetGraphFindingsQuery', () => {
     expect(result.current.data).toEqual(responseBody);
     expect(fetchMock).toHaveBeenCalledTimes(1);
     expect(queryClient.getQueryCache().findAll({ queryKey: ['fleetgraph', 'findings'] })).toHaveLength(1);
+  });
+});
+
+describe('useMarkFleetGraphInboxOpenedMutation', () => {
+  afterEach(() => {
+    global.fetch = realFetch;
+    vi.restoreAllMocks();
+  });
+
+  it('posts the inbox-opened watermark and invalidates FleetGraph findings', async () => {
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input);
+      const method = init?.method ?? 'GET';
+
+      if (url === '/api/csrf-token' && method === 'GET') {
+        return Promise.resolve(new Response(JSON.stringify({ token: 'csrf-token' }), {
+          status: 200,
+          headers: { 'Content-Type': 'application/json' },
+        }));
+      }
+
+      if (url === '/api/fleetgraph/inbox/opened' && method === 'POST') {
+        expect(init?.headers).toEqual({
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': 'csrf-token',
+        });
+        return Promise.resolve(new Response(null, { status: 204 }));
+      }
+
+      throw new Error(`Unexpected request: ${method} ${url}`);
+    });
+    global.fetch = fetchMock as typeof fetch;
+    const queryClient = createQueryClient();
+    queryClient.setQueryData(['fleetgraph', 'findings', 'list'], { stale: true });
+    const invalidateSpy = vi.spyOn(queryClient, 'invalidateQueries');
+    const { result } = renderHook(
+      () => useMarkFleetGraphInboxOpenedMutation(),
+      { wrapper: createWrapper(queryClient) }
+    );
+
+    result.current.mutate();
+
+    await waitFor(() => {
+      expect(result.current.isSuccess).toBe(true);
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(invalidateSpy).toHaveBeenCalledWith({ queryKey: ['fleetgraph', 'findings'] });
   });
 });

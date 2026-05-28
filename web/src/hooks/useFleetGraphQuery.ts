@@ -111,6 +111,7 @@ export type FleetGraphLifecycleCounts = Record<FleetGraphLifecycleState, number>
 export interface FleetGraphFindingListResponse {
   items: FleetGraphFinding[];
   lifecycle_counts: FleetGraphLifecycleCounts;
+  unread_lifecycle_counts: FleetGraphLifecycleCounts;
   limit: number;
   hasMore: boolean;
   next_cursor: string | null;
@@ -332,6 +333,17 @@ export function useResumeFleetGraphActionMutation() {
   });
 }
 
+export function useMarkFleetGraphInboxOpenedMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: markFleetGraphInboxOpened,
+    onSuccess: async () => {
+      await invalidateFleetGraphFindings(queryClient);
+    },
+  });
+}
+
 async function approveFleetGraphFinding(
   input: ApproveFleetGraphFindingInput
 ): Promise<FleetGraphFinding> {
@@ -413,6 +425,16 @@ async function resumeFleetGraphAction(
 
   const res = await apiPost(endpoint, body);
   return parseFleetGraphJsonResponse<FleetGraphFinding>(res, 'resume_action', endpoint);
+}
+
+async function markFleetGraphInboxOpened(): Promise<void> {
+  const endpoint = '/api/fleetgraph/inbox/opened';
+  const res = await apiPost(endpoint, {});
+  const responseBody = await res.text();
+
+  if (!res.ok) {
+    throw new FleetGraphApiError('mark_inbox_opened', endpoint, res.status, responseBody);
+  }
 }
 
 function buildFleetGraphFindingsEndpoint(filters: NormalizedFleetGraphFindingsFilters): string {

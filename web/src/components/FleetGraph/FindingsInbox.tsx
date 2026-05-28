@@ -16,6 +16,7 @@ interface FindingsInboxProps {
   lifecycleState?: FindingsInboxLifecycleState;
   limit?: number;
   className?: string;
+  initialUnreadLifecycleCounts?: FleetGraphLifecycleCounts | null;
 }
 
 type FindingsInboxLifecycleState = Extract<
@@ -53,11 +54,18 @@ const lifecycleTabs = [
 
 const lifecycleAutoSelectPriority: FindingsInboxLifecycleState[] = ['pending_review', 'approved', 'open'];
 
-export function FindingsInbox({ lifecycleState, limit, className }: FindingsInboxProps) {
+export function FindingsInbox({
+  lifecycleState,
+  limit,
+  className,
+  initialUnreadLifecycleCounts,
+}: FindingsInboxProps) {
   const [selectedLifecycleState, setSelectedLifecycleState] = useState<FindingsInboxLifecycleState>(
     lifecycleState ?? 'open'
   );
   const [hasManualLifecycleSelection, setHasManualLifecycleSelection] = useState(false);
+  const [unreadLifecycleCountsSnapshot, setUnreadLifecycleCountsSnapshot] =
+    useState<FleetGraphLifecycleCounts | null>(initialUnreadLifecycleCounts ?? null);
   const effectiveLimit = limit ?? 20;
   const activeTab = lifecycleTabs.find((tab) => tab.lifecycleState === selectedLifecycleState) ?? lifecycleTabs[0];
   const findingsQuery = useFleetGraphFindingsQuery({
@@ -110,7 +118,20 @@ export function FindingsInbox({ lifecycleState, limit, className }: FindingsInbo
 
   const findings = findingsQuery.data?.items ?? [];
   const lifecycleCounts = findingsQuery.data?.lifecycle_counts ?? null;
+  const unreadLifecycleCounts = unreadLifecycleCountsSnapshot ?? findingsQuery.data?.unread_lifecycle_counts ?? null;
   const visibleCount = findings.length;
+
+  useEffect(() => {
+    setUnreadLifecycleCountsSnapshot(initialUnreadLifecycleCounts ?? null);
+  }, [initialUnreadLifecycleCounts]);
+
+  useEffect(() => {
+    if (unreadLifecycleCountsSnapshot !== null || findingsQuery.data === undefined) {
+      return;
+    }
+
+    setUnreadLifecycleCountsSnapshot(findingsQuery.data.unread_lifecycle_counts);
+  }, [findingsQuery.data, unreadLifecycleCountsSnapshot]);
 
   useEffect(() => {
     if (lifecycleState !== undefined) {
@@ -156,7 +177,7 @@ export function FindingsInbox({ lifecycleState, limit, className }: FindingsInbo
         <div className="mt-4 flex gap-1" role="tablist" aria-label="FleetGraph finding lifecycle">
           {lifecycleTabs.map((tab) => {
             const selected = tab.lifecycleState === selectedLifecycleState;
-            const count = lifecycleCounts?.[tab.lifecycleState] ?? 0;
+            const count = unreadLifecycleCounts?.[tab.lifecycleState] ?? 0;
 
             return (
               <button

@@ -113,6 +113,10 @@ type FleetGraphLifecycleCountRow = {
   count: string;
 };
 
+type FleetGraphInboxReadRow = {
+  last_opened_at: Date;
+};
+
 type FleetGraphActionCandidateRow = {
   id: string;
   finding_id: string;
@@ -290,16 +294,22 @@ router.get('/findings', authMiddleware, async (req: Request, res: Response) => {
   }
 
   const workspaceId = req.workspaceId;
+  const userId = req.userId;
 
   if (!workspaceId) {
     res.status(401).json({ error: 'No workspace found for authenticated request' });
     return;
   }
+  if (!userId) {
+    res.status(401).json({ error: 'No user found for authenticated request' });
+    return;
+  }
 
   try {
-    const [findings, lifecycleCounts] = await Promise.all([
+    const [findings, lifecycleCounts, unreadLifecycleCounts] = await Promise.all([
       loadFleetGraphFindings(workspaceId, queryResult.data),
       loadFleetGraphFindingLifecycleCounts(workspaceId),
+      loadFleetGraphUnreadLifecycleCounts(workspaceId, userId),
     ]);
     const visibleFindings = findings.slice(0, queryResult.data.limit);
     const findingIds = visibleFindings.map((finding) => finding.id);
@@ -318,6 +328,7 @@ router.get('/findings', authMiddleware, async (req: Request, res: Response) => {
         tracesByFindingId.get(finding.id) ?? null
       )),
       lifecycle_counts: lifecycleCounts,
+      unread_lifecycle_counts: unreadLifecycleCounts,
       limit: queryResult.data.limit,
       hasMore,
       next_cursor: nextCursor,
@@ -325,6 +336,28 @@ router.get('/findings', authMiddleware, async (req: Request, res: Response) => {
   } catch (error) {
     console.error('FleetGraph findings list failed:', error);
     res.status(500).json({ error: 'Failed to list FleetGraph findings' });
+  }
+});
+
+router.post('/inbox/opened', authMiddleware, async (req: Request, res: Response) => {
+  const workspaceId = req.workspaceId;
+  const userId = req.userId;
+
+  if (!workspaceId) {
+    res.status(401).json({ error: 'No workspace found for authenticated request' });
+    return;
+  }
+  if (!userId) {
+    res.status(401).json({ error: 'No user found for authenticated request' });
+    return;
+  }
+
+  try {
+    await markFleetGraphInboxOpened(workspaceId, userId);
+    res.status(204).send();
+  } catch (error) {
+    console.error('FleetGraph inbox open watermark failed:', error);
+    res.status(500).json({ error: 'Failed to mark FleetGraph inbox opened' });
   }
 });
 
@@ -688,6 +721,55 @@ async function loadFleetGraphFindingLifecycleCounts(workspaceId: string): Promis
   }
 
   return counts;
+}
+
+async function loadFleetGraphUnreadLifecycleCounts(
+  workspaceId: string,
+  userId: string
+): Promise<FleetGraphLifecycleCounts> {
+  const readResult = await pool.query<FleetGraphInboxReadRow>(
+    `SELECT last_opened_at
+     FROM fleetgraph_inbox_reads
+     WHERE workspace_id = $1
+       AND user_id = $2`,
+    [workspaceId, userId]
+  );
+  const lastOpenedAt = readResult.rows[0]?.last_opened_at ?? null;
+  const values: Array<string | Date> = [workspaceId];
+  const conditions = [
+    'workspace_id = $1',
+    "lifecycle_state IN ('open', 'pending_review', 'approved')",
+  ];
+
+  if (lastOpenedAt !== null) {
+    values.push(lastOpenedAt);
+    conditions.push(`created_at > $${values.length}`);
+  }
+
+  const result = await pool.query<FleetGraphLifecycleCountRow>(
+    `SELECT lifecycle_state, COUNT(*)::text AS count
+     FROM fleetgraph_findings
+     WHERE ${conditions.join(' AND ')}
+     GROUP BY lifecycle_state`,
+    values
+  );
+  const counts = createEmptyFleetGraphLifecycleCounts();
+
+  for (const row of result.rows) {
+    counts[row.lifecycle_state] = Number.parseInt(row.count, 10);
+  }
+
+  return counts;
+}
+
+async function markFleetGraphInboxOpened(workspaceId: string, userId: string): Promise<void> {
+  await pool.query(
+    `INSERT INTO fleetgraph_inbox_reads (workspace_id, user_id, last_opened_at)
+     VALUES ($1, $2, NOW())
+     ON CONFLICT (workspace_id, user_id)
+     DO UPDATE SET last_opened_at = EXCLUDED.last_opened_at`,
+    [workspaceId, userId]
+  );
 }
 
 function createEmptyFleetGraphLifecycleCounts(): FleetGraphLifecycleCounts {

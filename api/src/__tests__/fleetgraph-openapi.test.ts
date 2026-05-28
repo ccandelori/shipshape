@@ -36,6 +36,7 @@ describe('FleetGraph OpenAPI contracts', () => {
       '/fleetgraph/findings/{id}/dismiss',
       '/fleetgraph/findings/{id}/snooze',
       '/fleetgraph/actions/{actionId}/resume',
+      '/fleetgraph/inbox/opened',
     ];
 
     for (const routePath of routePaths) {
@@ -56,6 +57,7 @@ describe('FleetGraph OpenAPI contracts', () => {
     expect(JSON.stringify(getFindingsOperation)).toContain('lifecycle_state');
     expect(JSON.stringify(getFindingsOperation)).toContain('pending_review');
     expect(JSON.stringify(getFindingsOperation)).toContain('created_at desc');
+    expect(JSON.stringify(document.components?.schemas?.FleetGraphFindingListResponse)).toContain('unread_lifecycle_counts');
   });
 
   function requirePostOperation(routePath: string) {
