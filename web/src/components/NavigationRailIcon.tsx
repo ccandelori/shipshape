@@ -59,7 +59,7 @@ export function NavigationRailIcon({
 export function getNavigationRailAttentionCount(
   counts: FleetGraphLifecycleCounts | null | undefined
 ): number {
-  return (counts?.open ?? 0) + (counts?.pending_review ?? 0);
+  return (counts?.open ?? 0) + (counts?.pending_review ?? 0) + (counts?.approved ?? 0);
 }
 
 function formatNavigationRailBadgeCount(count: number): string {

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { FindingCard, type FindingCardActionHandlers, type FindingCardPendingAction } from './FindingCard';
-import type { FleetGraphFinding, FleetGraphLifecycleState } from '@/hooks/useFleetGraphQuery';
+import type { FleetGraphFinding, FleetGraphLifecycleCounts, FleetGraphLifecycleState } from '@/hooks/useFleetGraphQuery';
 import {
   useApproveFleetGraphFindingMutation,
   useDismissFleetGraphFindingMutation,
@@ -51,10 +51,13 @@ const lifecycleTabs = [
   },
 ] as const satisfies readonly FindingsInboxLifecycleTab[];
 
+const lifecycleAutoSelectPriority: FindingsInboxLifecycleState[] = ['pending_review', 'approved', 'open'];
+
 export function FindingsInbox({ lifecycleState, limit, className }: FindingsInboxProps) {
   const [selectedLifecycleState, setSelectedLifecycleState] = useState<FindingsInboxLifecycleState>(
     lifecycleState ?? 'open'
   );
+  const [hasManualLifecycleSelection, setHasManualLifecycleSelection] = useState(false);
   const effectiveLimit = limit ?? 20;
   const activeTab = lifecycleTabs.find((tab) => tab.lifecycleState === selectedLifecycleState) ?? lifecycleTabs[0];
   const findingsQuery = useFleetGraphFindingsQuery({
@@ -69,10 +72,18 @@ export function FindingsInbox({ lifecycleState, limit, className }: FindingsInbo
   const { showToast } = useToast();
 
   const actions: FindingCardActionHandlers = {
-    onApprove: (input) => approveMutation.mutate(input),
-    onReject: (input) => rejectMutation.mutate(input),
-    onDismiss: (input) => dismissMutation.mutate(input),
-    onSnooze: (input) => snoozeMutation.mutate(input),
+    onApprove: (input) => approveMutation.mutate(input, {
+      onSuccess: () => showToast('Action approved. Ready to resume.', 'success', 5000),
+    }),
+    onReject: (input) => rejectMutation.mutate(input, {
+      onSuccess: () => showToast('Finding rejected.', 'success', 5000),
+    }),
+    onDismiss: (input) => dismissMutation.mutate(input, {
+      onSuccess: () => showToast('Finding dismissed.', 'success', 5000),
+    }),
+    onSnooze: (input) => snoozeMutation.mutate(input, {
+      onSuccess: () => showToast('Finding snoozed.', 'success', 5000),
+    }),
     onResume: (input) => resumeMutation.mutate(input, {
       onSuccess: (finding) => {
         const actionCandidate = finding.action_candidates.find((candidate) => (
@@ -107,6 +118,22 @@ export function FindingsInbox({ lifecycleState, limit, className }: FindingsInbo
     }
   }, [lifecycleState]);
 
+  useEffect(() => {
+    if (lifecycleState !== undefined || hasManualLifecycleSelection || lifecycleCounts === null) {
+      return;
+    }
+
+    const preferredLifecycleState = selectPreferredLifecycleState(lifecycleCounts);
+    if (preferredLifecycleState !== selectedLifecycleState) {
+      setSelectedLifecycleState(preferredLifecycleState);
+    }
+  }, [hasManualLifecycleSelection, lifecycleCounts, lifecycleState, selectedLifecycleState]);
+
+  const selectLifecycleTab = (nextLifecycleState: FindingsInboxLifecycleState) => {
+    setHasManualLifecycleSelection(true);
+    setSelectedLifecycleState(nextLifecycleState);
+  };
+
   return (
     <section className={cn('flex h-full min-h-0 flex-col bg-background', className)} aria-label="FleetGraph findings inbox">
       <header className="border-b border-border px-5 py-4">
@@ -138,7 +165,7 @@ export function FindingsInbox({ lifecycleState, limit, className }: FindingsInbo
                 role="tab"
                 aria-selected={selected}
                 aria-label={count > 0 ? `${tab.label} ${formatLifecycleCount(count)}` : tab.label}
-                onClick={() => setSelectedLifecycleState(tab.lifecycleState)}
+                onClick={() => selectLifecycleTab(tab.lifecycleState)}
                 className={cn(
                   'rounded-md px-3 py-1.5 text-sm font-medium transition-colors',
                   selected
@@ -220,6 +247,10 @@ export function FindingsInbox({ lifecycleState, limit, className }: FindingsInbo
       </div>
     </section>
   );
+}
+
+function selectPreferredLifecycleState(counts: FleetGraphLifecycleCounts): FindingsInboxLifecycleState {
+  return lifecycleAutoSelectPriority.find((lifecycleState) => counts[lifecycleState] > 0) ?? 'open';
 }
 
 function formatResumeSuccessMessage(actionKind: string | null): string {

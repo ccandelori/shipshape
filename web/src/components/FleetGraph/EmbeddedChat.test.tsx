@@ -302,6 +302,40 @@ describe('EmbeddedChat', () => {
     });
   });
 
+  it('starts a new chat by clearing document-scoped conversation memory', async () => {
+    window.localStorage.setItem('fleetgraph.chat:sprint:week-1', JSON.stringify([
+      {
+        id: 'user-1',
+        role: 'user',
+        content: 'What is blocking this week?',
+        status: 'sent',
+      },
+      {
+        id: 'assistant-1',
+        role: 'assistant',
+        content: 'Trace evidence is still missing.',
+        status: 'completed',
+      },
+    ]));
+
+    const firstRender = render(<EmbeddedChat documentId="week-1" documentType="sprint" />);
+
+    expect(screen.getByText('What is blocking this week?')).toBeInTheDocument();
+    expect(screen.getByText('Trace evidence is still missing.')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Start new FleetGraph chat' }));
+
+    expect(screen.queryByText('What is blocking this week?')).not.toBeInTheDocument();
+    expect(screen.queryByText('Trace evidence is still missing.')).not.toBeInTheDocument();
+    expect(screen.getByText('Ask about risks, blockers, ownership, or likely next actions.')).toBeInTheDocument();
+
+    firstRender.unmount();
+    render(<EmbeddedChat documentId="week-1" documentType="sprint" />);
+
+    expect(screen.queryByText('What is blocking this week?')).not.toBeInTheDocument();
+    expect(screen.queryByText('Trace evidence is still missing.')).not.toBeInTheDocument();
+  });
+
   it('sends only the latest bounded conversation history from persisted messages', async () => {
     const requests: FleetGraphChatTestRequest[] = [];
     const persistedMessages = Array.from(

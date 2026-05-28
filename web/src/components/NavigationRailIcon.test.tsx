@@ -68,7 +68,7 @@ describe('NavigationRailIcon', () => {
 });
 
 describe('getNavigationRailAttentionCount', () => {
-  it('counts only open and pending-review FleetGraph findings', () => {
+  it('counts actionable FleetGraph findings across open, pending-review, and approved states', () => {
     expect(getNavigationRailAttentionCount({
       open: 2,
       pending_review: 3,
@@ -78,6 +78,6 @@ describe('getNavigationRailAttentionCount', () => {
       dismissed: 13,
       snoozed: 17,
       expired: 19,
-    })).toBe(5);
+    })).toBe(10);
   });
 });

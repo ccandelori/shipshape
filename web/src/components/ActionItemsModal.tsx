@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import * as Dialog from '@radix-ui/react-dialog';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/cn';
@@ -125,6 +125,7 @@ export function ActionItemsModal({ open, onClose }: ActionItemsModalProps) {
   const navigate = useNavigate();
   const { data, isLoading } = useActionItemsQuery();
   const [navigatingItemId, setNavigatingItemId] = useState<string | null>(null);
+  const closeButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const handleItemClick = async (item: ActionItem) => {
     const weeklyDocKind = getWeeklyDocumentKindForAccountabilityType(item.accountability_type);
@@ -169,6 +170,10 @@ export function ActionItemsModal({ open, onClose }: ActionItemsModalProps) {
         <Dialog.Content
           className="fixed left-1/2 top-1/2 z-[101] w-full max-w-lg max-h-[80vh] -translate-x-1/2 -translate-y-1/2 rounded-lg border border-border bg-background shadow-xl focus:outline-none flex flex-col"
           onEscapeKeyDown={onClose}
+          onOpenAutoFocus={(event) => {
+            event.preventDefault();
+            closeButtonRef.current?.focus();
+          }}
         >
           {/* Header */}
           <div className="flex items-center justify-between border-b border-border px-6 py-4">
@@ -193,6 +198,7 @@ export function ActionItemsModal({ open, onClose }: ActionItemsModalProps) {
               </Dialog.Description>
             </div>
             <button
+              ref={closeButtonRef}
               onClick={onClose}
               className="rounded-md p-1 text-muted hover:bg-border hover:text-foreground focus:outline-none"
               aria-label="Close"

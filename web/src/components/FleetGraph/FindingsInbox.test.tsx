@@ -12,6 +12,8 @@ type FleetGraphFindingListTestResponse = Omit<FleetGraphFindingListResponse, 'li
   lifecycle_counts?: FleetGraphFindingListResponse['lifecycle_counts'];
 };
 
+type FleetGraphLifecycleCountsTestOverrides = Partial<FleetGraphFindingListResponse['lifecycle_counts']>;
+
 function createQueryClient(): QueryClient {
   return new QueryClient({
     defaultOptions: {
@@ -104,16 +106,23 @@ function withDefaultLifecycleCounts(
 
   return {
     ...data,
-    lifecycle_counts: data.lifecycle_counts ?? {
-      open: 0,
-      pending_review: 0,
-      approved: 0,
-      executed: 0,
-      rejected: 0,
-      dismissed: 0,
-      snoozed: 0,
-      expired: 0,
-    },
+    lifecycle_counts: data.lifecycle_counts ?? createLifecycleCounts(),
+  };
+}
+
+function createLifecycleCounts(
+  overrides?: FleetGraphLifecycleCountsTestOverrides
+): FleetGraphFindingListResponse['lifecycle_counts'] {
+  return {
+    open: 0,
+    pending_review: 0,
+    approved: 0,
+    executed: 0,
+    rejected: 0,
+    dismissed: 0,
+    snoozed: 0,
+    expired: 0,
+    ...overrides,
   };
 }
 
@@ -140,16 +149,7 @@ describe('FindingsInbox', () => {
       if (url === '/api/fleetgraph/findings?lifecycle_state=open&limit=20' && method === 'GET') {
         return jsonResponse({
           items: [openFinding],
-          lifecycle_counts: {
-            open: 1,
-            pending_review: 1,
-            approved: 0,
-            executed: 0,
-            rejected: 0,
-            dismissed: 0,
-            snoozed: 0,
-            expired: 0,
-          },
+          lifecycle_counts: createLifecycleCounts({ open: 1, pending_review: 1 }),
           limit: 20,
           hasMore: false,
           next_cursor: null,
@@ -159,16 +159,7 @@ describe('FindingsInbox', () => {
       if (url === '/api/fleetgraph/findings?lifecycle_state=pending_review&limit=20' && method === 'GET') {
         return jsonResponse({
           items: [pendingFinding],
-          lifecycle_counts: {
-            open: 1,
-            pending_review: 1,
-            approved: 0,
-            executed: 0,
-            rejected: 0,
-            dismissed: 0,
-            snoozed: 0,
-            expired: 0,
-          },
+          lifecycle_counts: createLifecycleCounts({ open: 1, pending_review: 1 }),
           limit: 20,
           hasMore: false,
           next_cursor: null,
@@ -192,7 +183,7 @@ describe('FindingsInbox', () => {
     });
     global.fetch = fetchMock as typeof fetch;
 
-    render(<FindingsInbox />, { wrapper: createWrapper(createQueryClient()) });
+    render(<FindingsInbox lifecycleState="open" />, { wrapper: createWrapper(createQueryClient()) });
 
     expect(await screen.findByText('Week 12')).toBeInTheDocument();
     expect(screen.getByRole('tab', { name: 'Open 1' })).toHaveAttribute('aria-selected', 'true');
@@ -210,6 +201,7 @@ describe('FindingsInbox', () => {
         && init?.method === 'POST'
       ))).toBe(true);
     });
+    expect(await screen.findByText('Action approved. Ready to resume.')).toBeInTheDocument();
   });
 
   it('rejects a pending-review finding through the FleetGraph API mutation', async () => {
@@ -274,6 +266,55 @@ describe('FindingsInbox', () => {
       ))).toBe(true);
     });
     expect(await screen.findByText('No findings need review')).toBeInTheDocument();
+    expect(await screen.findByText('Finding rejected.')).toBeInTheDocument();
+  });
+
+  it('shows a visible confirmation after dismissing an open finding', async () => {
+    const openFinding = createFinding('open');
+    const dismissedFinding = createFinding('dismissed');
+    let dismissed = false;
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input);
+      const method = init?.method ?? 'GET';
+
+      if (url === '/api/fleetgraph/findings?lifecycle_state=open&limit=20' && method === 'GET') {
+        return jsonResponse({
+          items: dismissed ? [] : [openFinding],
+          lifecycle_counts: createLifecycleCounts({
+            open: dismissed ? 0 : 1,
+            dismissed: dismissed ? 1 : 0,
+          }),
+          limit: 20,
+          hasMore: false,
+          next_cursor: null,
+        }, 200);
+      }
+
+      if (url === '/api/csrf-token' && method === 'GET') {
+        return jsonResponse({ token: 'csrf-token' }, 200);
+      }
+
+      if (url === '/api/fleetgraph/findings/finding-1/dismiss' && method === 'POST') {
+        dismissed = true;
+        expect(JSON.parse(String(init?.body))).toEqual({ reason: 'Noise for this demo' });
+        return jsonResponse(dismissedFinding, 200);
+      }
+
+      throw new Error(`Unexpected request: ${method} ${url}`);
+    });
+    global.fetch = fetchMock as typeof fetch;
+
+    render(<FindingsInbox />, { wrapper: createWrapper(createQueryClient()) });
+
+    expect(await screen.findByRole('button', { name: 'Dismiss finding' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: 'Dismiss finding' }));
+    fireEvent.change(screen.getByLabelText('Dismiss reason'), {
+      target: { value: 'Noise for this demo' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm dismiss' }));
+
+    expect(await screen.findByText('Finding dismissed.')).toBeInTheDocument();
+    expect(await screen.findByText('No open findings')).toBeInTheDocument();
   });
 
   it('names the selected lifecycle in the empty state', async () => {
@@ -308,6 +349,90 @@ describe('FindingsInbox', () => {
     expect(await screen.findByText('No open findings')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('tab', { name: 'Needs Review' }));
     expect(await screen.findByText('No findings need review')).toBeInTheDocument();
+  });
+
+  it('lands on needs-review findings when the inbox has multiple actionable tabs', async () => {
+    const pendingFinding = createFinding('pending_review');
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input);
+      const method = init?.method ?? 'GET';
+
+      if (url === '/api/fleetgraph/findings?lifecycle_state=open&limit=20' && method === 'GET') {
+        return jsonResponse({
+          items: [],
+          lifecycle_counts: createLifecycleCounts({
+            open: 1,
+            pending_review: 2,
+            approved: 1,
+          }),
+          limit: 20,
+          hasMore: false,
+          next_cursor: null,
+        }, 200);
+      }
+
+      if (url === '/api/fleetgraph/findings?lifecycle_state=pending_review&limit=20' && method === 'GET') {
+        return jsonResponse({
+          items: [pendingFinding],
+          lifecycle_counts: createLifecycleCounts({
+            open: 1,
+            pending_review: 2,
+            approved: 1,
+          }),
+          limit: 20,
+          hasMore: false,
+          next_cursor: null,
+        }, 200);
+      }
+
+      throw new Error(`Unexpected request: ${method} ${url}`);
+    });
+    global.fetch = fetchMock as typeof fetch;
+
+    render(<FindingsInbox />, { wrapper: createWrapper(createQueryClient()) });
+
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: 'Needs Review 2' })).toHaveAttribute('aria-selected', 'true');
+    });
+    expect(await screen.findByRole('button', { name: 'Approve finding' })).toBeInTheDocument();
+  });
+
+  it('lands on approved actions before open findings when no findings need review', async () => {
+    const approvedFinding = createFinding('approved');
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input);
+      const method = init?.method ?? 'GET';
+
+      if (url === '/api/fleetgraph/findings?lifecycle_state=open&limit=20' && method === 'GET') {
+        return jsonResponse({
+          items: [],
+          lifecycle_counts: createLifecycleCounts({ open: 3, approved: 1 }),
+          limit: 20,
+          hasMore: false,
+          next_cursor: null,
+        }, 200);
+      }
+
+      if (url === '/api/fleetgraph/findings?lifecycle_state=approved&limit=20' && method === 'GET') {
+        return jsonResponse({
+          items: [approvedFinding],
+          lifecycle_counts: createLifecycleCounts({ open: 3, approved: 1 }),
+          limit: 20,
+          hasMore: false,
+          next_cursor: null,
+        }, 200);
+      }
+
+      throw new Error(`Unexpected request: ${method} ${url}`);
+    });
+    global.fetch = fetchMock as typeof fetch;
+
+    render(<FindingsInbox />, { wrapper: createWrapper(createQueryClient()) });
+
+    await waitFor(() => {
+      expect(screen.getByRole('tab', { name: 'Approved 1' })).toHaveAttribute('aria-selected', 'true');
+    });
+    expect(await screen.findByRole('button', { name: 'Resume approved action' })).toBeInTheDocument();
   });
 
   it('shows a visible payoff after resuming an approved FleetGraph action', async () => {

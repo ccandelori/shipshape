@@ -133,6 +133,13 @@ export function EmbeddedChat({ documentId, documentType, memoryScope, className 
     submitQuestionText(question);
   };
 
+  const startNewChat = () => {
+    requestIdRef.current += 1;
+    setQuestion('');
+    setStreamState(createFleetGraphChatStreamState());
+    setMessages([]);
+  };
+
   const submitQuestionText = (rawQuestion: string) => {
     const trimmedQuestion = rawQuestion.trim();
 
@@ -305,9 +312,21 @@ export function EmbeddedChat({ documentId, documentType, memoryScope, className 
       className={cn('flex h-full min-h-0 flex-col border-l border-border bg-background', className)}
       aria-label="FleetGraph chat"
     >
-      <header className="border-b border-border px-4 py-3">
-        <h2 className="text-sm font-semibold text-foreground">FleetGraph Chat</h2>
-        <p className="mt-0.5 text-xs text-muted">{formatDocumentType(documentType)} context</p>
+      <header className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+        <div className="min-w-0">
+          <h2 className="text-sm font-semibold text-foreground">FleetGraph Chat</h2>
+          <p className="mt-0.5 text-xs text-muted">{formatDocumentType(documentType)} context</p>
+        </div>
+        {messages.length > 0 && (
+          <button
+            type="button"
+            aria-label="Start new FleetGraph chat"
+            onClick={startNewChat}
+            className="shrink-0 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:border-accent/40 hover:text-foreground"
+          >
+            New chat
+          </button>
+        )}
       </header>
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
