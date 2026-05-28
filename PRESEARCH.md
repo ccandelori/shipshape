@@ -214,7 +214,7 @@ This is the defensible tradeoff for the PRD:
 The PRD requires problem detection under 5 minutes from event appearing in Ship to agent surfacing it. The implementation has two evidence layers:
 
 - Deterministic orchestration proof: `docs/fleetgraph-latency-proof.md` measured `45.113s` from mutation enqueue to persisted finding against the `300s` target.
-- Live deployed trace evidence: `FLEETGRAPH.md` records a mutation-triggered finding run with `10.456s` graph latency in Langfuse metadata.
+- Live deployed trace evidence: `FLEETGRAPH.md` records a mutation-triggered finding run with `7.382s` graph latency in Langfuse metadata.
 
 Cost controls:
 
@@ -271,7 +271,7 @@ Local seed verification:
 | Requirement | Status |
 |-------------|--------|
 | Graph running with proactive detection E2E | Implemented |
-| Observability with at least two trace links | Captured in Langfuse; final shareability depends on making selected traces public or giving graders project access |
+| Observability with at least two trace links | Captured in Langfuse; public finding, quiet, and chat trace URLs are recorded in `FLEETGRAPH.md` |
 | `FLEETGRAPH.md` with responsibility and use cases | Present and current |
 | Graph outline with nodes, edges, and branches | Present and current |
 | Human-in-the-loop gate | Implemented in API and browser inbox |
@@ -287,10 +287,10 @@ Local seed verification:
 
 These do not block the Week 5 MVP if documented honestly, but they are the next product hardening items.
 
-1. Public trace sharing must be finalized before sending the submission packet.
-   - Current links were captured as authenticated Langfuse Cloud URLs.
-   - FleetGraph now has an opt-in SDK path for public trace publication: set `FLEETGRAPH_PUBLIC_TRACE_EXPORT=true` and `LANGFUSE_PROJECT_ID`, then recapture the selected finding, quiet, and chat traces.
-   - Public trace export calls Langfuse `setTraceAsPublic()` and records `tracePublic`, `traceId`, and `traceUrl` metadata when a project id is configured. Keep it off outside submission windows.
+1. Public trace sharing is finalized for the current submission packet.
+   - `FLEETGRAPH.md` records public Langfuse Cloud links for the finding path, quiet path, and on-demand chat path.
+   - FleetGraph has an opt-in SDK path for future public trace publication: set `FLEETGRAPH_PUBLIC_TRACE_EXPORT=true` and `LANGFUSE_PROJECT_ID`, then recapture the selected traces.
+   - Public trace export calls Langfuse `setTraceAsPublic()`, refreshes the public flag after trace materialization, and records `tracePublic`, `traceId`, and `traceUrl` metadata when a project id is configured. Keep it off outside submission windows.
 
 2. `PostgresSaver` checkpoint durability is deferred.
    - Durable FleetGraph outcomes are in Postgres today.
@@ -308,4 +308,4 @@ These do not block the Week 5 MVP if documented honestly, but they are the next 
 
 FleetGraph is substantially submission-ready from a code, documentation, deployment, and demo standpoint: proactive detection, guarded execution, durable findings, human review, embedded graph-routed chat, UI access, seed data, latency proof, trace evidence, and cost tracking are all present.
 
-The only remaining submission packaging risk is trace access. Langfuse trace URLs must either be recaptured with `FLEETGRAPH_PUBLIC_TRACE_EXPORT=true`, manually made public after review, or shared with reviewers who have Langfuse project access before final submission.
+FleetGraph is ready for final submission packaging. The remaining pre-submit work is operational: re-smoke the public app, confirm the public Langfuse URLs still open, and submit the correct branch/artifacts.

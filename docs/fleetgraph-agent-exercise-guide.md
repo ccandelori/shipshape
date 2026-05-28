@@ -523,7 +523,7 @@ Expected:
 - Non-zero model latency.
 - Token and cost metadata when Langfuse receives the model usage fields.
 
-Create the shared trace URL from the Langfuse UI for submission evidence. If the reviewer is not a Langfuse project member, either make the selected trace public after reviewing its prompt/context payload or recapture the run with `FLEETGRAPH_PUBLIC_TRACE_EXPORT=true` and `LANGFUSE_PROJECT_ID` configured so FleetGraph publishes it through the Langfuse SDK.
+Create the shared trace URL from the Langfuse UI for submission evidence. If the reviewer is not a Langfuse project member, make the selected trace public after reviewing its prompt/context payload or recapture the run with `FLEETGRAPH_PUBLIC_TRACE_EXPORT=true` and `LANGFUSE_PROJECT_ID` configured so FleetGraph publishes it through the Langfuse SDK.
 
 ## Exercise Deduplication And Suppression
 
@@ -671,7 +671,7 @@ cd /Users/sheep/Desktop/Gauntlet/ship/api
 set -a; source .env.local; set +a; export LANGFUSE_HOST="$LANGFUSE_BASE_URL"; npx langfuse-cli api traces list --tags trace_node:reason --limit 10 --order-by timestamp.desc --fields core,metrics
 ```
 
-Without Langfuse credentials, fresh local capture remains blocked by environment, not by the local product path. The public droplet trace URLs already recorded in `FLEETGRAPH.md` can be used for the final packet once they are recaptured with public export enabled, made public manually, or opened by reviewers with Langfuse project access.
+Without Langfuse credentials, fresh local capture remains blocked by environment, not by the local product path. The public droplet trace URLs recorded in `FLEETGRAPH.md` are the current final packet evidence. If you recapture later, enable `FLEETGRAPH_PUBLIC_TRACE_EXPORT=true` and `LANGFUSE_PROJECT_ID` only for the capture window, then turn public export back off.
 
 ## Developer Verification Commands
 

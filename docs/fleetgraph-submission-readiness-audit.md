@@ -8,9 +8,10 @@ This audit compares the current FleetGraph implementation and documentation agai
 
 ## Verdict
 
-FleetGraph is submission-ready from an engineering and documentation standpoint with one packaging caveat:
+FleetGraph is submission-ready from an engineering, documentation, deployment, and observability standpoint:
 
-- The Langfuse trace URLs in `FLEETGRAPH.md` are real deployed traces, but currently documented as authenticated project links. If graders are not Langfuse project members, make the selected traces public in Langfuse Cloud or recapture them with `FLEETGRAPH_PUBLIC_TRACE_EXPORT=true` before final submission.
+- The Langfuse trace URLs in `FLEETGRAPH.md` are deployed traces verified through the Langfuse API with `public: true`.
+- Langfuse is the observability provider for this submission. It fulfills the PRD's shared trace requirement by exposing public run trees with branch metadata, model usage, token counts, and trace URLs.
 
 No architectural rebuild is needed. The original grading issue - on-demand chat bypassing the compiled graph - is fixed in `api/src/fleetgraph/graph.ts` and `api/src/routes/fleetgraph-chat.ts`.
 
@@ -19,7 +20,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | PRD requirement | Current status | Evidence | Submission action |
 |---|---|---|---|
 | Graph running with at least one proactive detection wired end-to-end | Pass | `api/src/fleetgraph/detectors/at-risk-week.ts`, `api/src/fleetgraph/proactive-runner.ts`, `api/src/fleetgraph/triggers.ts`, `api/src/routes/fleetgraph.ts` | None |
-| Observability tracing enabled with at least two shared trace links showing different paths | Conditional pass | `FLEETGRAPH.md` lists finding, quiet, and chat Langfuse traces | Recapture with SDK public export, make traces public manually, or grant reviewer Langfuse project access |
+| Observability tracing enabled with at least two shared trace links showing different paths | Pass | `FLEETGRAPH.md` lists public finding, quiet, and chat Langfuse traces | None |
 | `FLEETGRAPH.md` with Agent Responsibility and at least 5 use cases | Pass | `FLEETGRAPH.md` defines responsibilities and 7 use cases | None |
 | Graph outline with node types, edges, branching conditions | Pass | `FLEETGRAPH.md` Mermaid diagram; `docs/fleetgraph-graph-explainer.html` | None |
 | At least one human-in-the-loop gate | Pass | `api/src/fleetgraph/policy.ts`, `api/src/routes/fleetgraph.ts`, inbox `Needs Review` and `Approved` tabs | None |
@@ -32,7 +33,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 
 | PRD metric | Current status | Evidence | Submission action |
 |---|---|---|---|
-| Problem detection latency under 5 minutes | Pass | `docs/fleetgraph-latency-proof.md` records `45.113s`; live finding trace metadata records `10.456s` graph latency | None |
+| Problem detection latency under 5 minutes | Pass | `docs/fleetgraph-latency-proof.md` records `45.113s`; live finding trace metadata records `7.382s` graph latency | None |
 | Cost per graph run documented and defended | Pass | `FLEETGRAPH.md` Cost Analysis and `fleetgraph_usage` rows | None |
 | Estimated runs per day documented and defended | Pass | `FLEETGRAPH.md` Production Projection Assumptions | None |
 
@@ -46,7 +47,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | Graph Diagram | Pass | `FLEETGRAPH.md` Mermaid |
 | Use Cases | Pass | 7 use cases |
 | Trigger Model | Pass | Hybrid poll plus mutation debounce |
-| Test Cases | Conditional pass | Test table includes trace URLs; trace access must be public or reviewer-authenticated |
+| Test Cases | Pass | Test table includes public trace URLs |
 | Architecture Decisions | Pass | `FLEETGRAPH.md` Architecture Decisions |
 | Cost Analysis | Pass | `FLEETGRAPH.md` Cost Analysis |
 
@@ -79,15 +80,14 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 
 Do these immediately before submitting:
 
-1. Open the three Langfuse traces from `FLEETGRAPH.md`.
-2. Review prompt/context content for sensitive data.
-3. If graders will not have Langfuse project access, either make the selected traces public in Langfuse Cloud or recapture them with `FLEETGRAPH_PUBLIC_TRACE_EXPORT=true` and `LANGFUSE_PROJECT_ID` configured so FleetGraph publishes them through the Langfuse SDK.
-4. Reopen `https://143.198.163.184.nip.io/health` and confirm HTTP 200.
-5. Log in as `dev@ship.local` and smoke:
+1. Open the three public Langfuse traces from `FLEETGRAPH.md`.
+2. Review prompt/context content one last time for sensitive data.
+3. Reopen `https://143.198.163.184.nip.io/health` and confirm HTTP 200.
+4. Log in as `dev@ship.local` and smoke:
    - FleetGraph inbox opens.
    - `Needs Review` and `Approved` tabs render.
    - Week `Ask FleetGraph` streams an answer.
-6. Submit `FLEETGRAPH.md`, `PRESEARCH.md`, the public app URL, the demo video, and the trace URLs.
+5. Submit `FLEETGRAPH.md`, `PRESEARCH.md`, the public app URL, the demo video, and the trace URLs.
 
 ## Do Not Rebuild Tonight
 
