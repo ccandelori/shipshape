@@ -10,6 +10,7 @@ This file provides guidance to Codex (Codex.ai/code) when working with code in t
 - `docs/application-architecture.md` - Tech stack decisions, deployment, testing strategy
 - `docs/document-model-conventions.md` - Terminology, what becomes a document vs config
 - `docs/week-documentation-philosophy.md` - Week workflow and required documentation
+- `docs/solutions/` - Documented solutions to past implementation and debugging problems, organized by category with YAML frontmatter (`module`, `problem_type`, `tags`)
 
 When in doubt about implementation approach, check these docs first.
 
