@@ -69,6 +69,12 @@ interface FleetGraphChatErrorResponse {
   retry_after_seconds?: number;
 }
 
+const suggestedPrompts = [
+  'What is blocking this?',
+  'Who owns the next step?',
+  'What changed this week?',
+] as const;
+
 export function EmbeddedChat({ documentId, documentType, memoryScope, className }: EmbeddedChatProps) {
   const memoryKey = buildFleetGraphChatMemoryKey({
     documentId,
@@ -124,7 +130,11 @@ export function EmbeddedChat({ documentId, documentType, memoryScope, className 
   }, [chatState]);
 
   const submitQuestion = () => {
-    const trimmedQuestion = question.trim();
+    submitQuestionText(question);
+  };
+
+  const submitQuestionText = (rawQuestion: string) => {
+    const trimmedQuestion = rawQuestion.trim();
 
     if (trimmedQuestion.length === 0 || isStreaming) {
       return;
@@ -303,7 +313,20 @@ export function EmbeddedChat({ documentId, documentType, memoryScope, className 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
         {messages.length === 0 && (
           <div className="rounded-lg border border-border bg-border/10 px-3 py-4 text-sm text-muted">
-            Ask about risks, blockers, ownership, or likely next actions.
+            <p>Ask about risks, blockers, ownership, or likely next actions.</p>
+            <div className="mt-3 flex flex-wrap gap-2" aria-label="Suggested FleetGraph prompts">
+              {suggestedPrompts.map((prompt) => (
+                <button
+                  key={prompt}
+                  type="button"
+                  onClick={() => submitQuestionText(prompt)}
+                  disabled={isStreaming}
+                  className="rounded-md border border-border bg-background/80 px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:border-accent/40 hover:text-accent disabled:opacity-50"
+                >
+                  {prompt}
+                </button>
+              ))}
+            </div>
           </div>
         )}
 

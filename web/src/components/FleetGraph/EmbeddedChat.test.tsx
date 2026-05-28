@@ -54,6 +54,40 @@ describe('EmbeddedChat', () => {
     vi.restoreAllMocks();
   });
 
+  it('sends a suggested prompt from the empty state', async () => {
+    const requests: FleetGraphChatTestRequest[] = [];
+    const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
+      const url = requestUrl(input);
+      const method = init?.method ?? 'GET';
+
+      if (url === '/api/csrf-token' && method === 'GET') {
+        return jsonResponse({ token: 'csrf-token' }, 200);
+      }
+
+      if (url === '/api/fleetgraph/chat' && method === 'POST') {
+        requests.push(JSON.parse(String(init?.body)) as FleetGraphChatTestRequest);
+        return sseResponse([
+          'event: final\ndata: {"response":"The week is blocked by trace evidence.","usage":{"modelName":"gpt-4o-mini","inputTokens":100,"outputTokens":10,"totalTokens":110}}\n\n',
+        ]);
+      }
+
+      throw new Error(`Unexpected request: ${method} ${url}`);
+    });
+    global.fetch = fetchMock as typeof fetch;
+
+    render(<EmbeddedChat documentId="week-1" documentType="sprint" />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'What is blocking this?' }));
+
+    expect(await screen.findByText('The week is blocked by trace evidence.')).toBeInTheDocument();
+    expect(requests[0]).toMatchObject({
+      documentId: 'week-1',
+      documentType: 'sprint',
+      question: 'What is blocking this?',
+      conversationHistory: [],
+    });
+  });
+
   it('streams assistant tokens into the active response', async () => {
     const fetchMock = vi.fn((input: RequestInfo | URL, init?: RequestInit) => {
       const url = requestUrl(input);

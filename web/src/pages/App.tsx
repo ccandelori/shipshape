@@ -18,6 +18,7 @@ import { programKeys } from '@/hooks/useProgramsQuery';
 import { useStandupStatusQuery } from '@/hooks/useStandupStatusQuery';
 import { useActionItemsQuery, actionItemsKeys } from '@/hooks/useActionItemsQuery';
 import { useTeamMembersQuery } from '@/hooks/useTeamMembersQuery';
+import { useFleetGraphFindingsQuery } from '@/hooks/useFleetGraphQuery';
 import { useFleetGraphRealtimeInvalidation } from '@/hooks/useFleetGraphRealtimeInvalidation';
 import { cn, getContrastTextColor } from '@/lib/cn';
 import { buildDocumentTree, DocumentTreeNode } from '@/lib/documentTree';
@@ -38,6 +39,10 @@ import { ActionItemsModal } from '@/components/ActionItemsModal';
 import { AccountabilityBanner } from '@/components/AccountabilityBanner';
 import { ProjectContextSidebar } from '@/components/sidebars/ProjectContextSidebar';
 import { FleetGraphInboxModal } from '@/components/FleetGraph/FleetGraphInboxModal';
+import {
+  NavigationRailIcon as RailIcon,
+  getNavigationRailAttentionCount,
+} from '@/components/NavigationRailIcon';
 
 type Mode = 'docs' | 'issues' | 'projects' | 'programs' | 'sprints' | 'team' | 'settings' | 'dashboard' | 'project-context';
 
@@ -81,6 +86,13 @@ export function AppLayout() {
   // Check if user has pending action items (accountability tasks)
   const { data: actionItemsData } = useActionItemsQuery();
   const hasActionItems = (actionItemsData?.items?.length ?? 0) > 0;
+  const fleetGraphSummaryQuery = useFleetGraphFindingsQuery(
+    { lifecycleState: 'open', limit: 1 },
+    { enabled: currentWorkspace !== null }
+  );
+  const fleetGraphAttentionCount = getNavigationRailAttentionCount(
+    fleetGraphSummaryQuery.data?.lifecycle_counts
+  );
   const queryClient = useQueryClient();
   useFleetGraphRealtimeInvalidation();
 
@@ -410,6 +422,8 @@ export function AppLayout() {
               label="FleetGraph"
               active={fleetGraphInboxOpen}
               onClick={() => setFleetGraphInboxOpen(true)}
+              badgeCount={fleetGraphAttentionCount}
+              badgeDescription="items need attention"
             />
             <RailIcon
               icon={<SettingsIcon />}
@@ -593,26 +607,6 @@ export function AppLayout() {
     </div>
     </SelectionPersistenceProvider>
     </TooltipProvider>
-  );
-}
-
-function RailIcon({ icon, label, active, onClick, showBadge }: { icon: React.ReactNode; label: string; active: boolean; onClick: () => void; showBadge?: boolean }) {
-  return (
-    <Tooltip content={label} side="right">
-      <button
-        onClick={onClick}
-        className={cn(
-          'relative flex h-9 w-9 items-center justify-center rounded-lg transition-colors',
-          active ? 'bg-border text-foreground' : 'text-muted hover:bg-border/50 hover:text-foreground'
-        )}
-        aria-label={label}
-      >
-        {icon}
-        {showBadge && (
-          <span className="absolute right-1 top-1 h-2 w-2 rounded-full bg-orange-500" />
-        )}
-      </button>
-    </Tooltip>
   );
 }
 
