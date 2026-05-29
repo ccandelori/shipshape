@@ -343,6 +343,21 @@ Headless authentication:
 
 Full live trace report: `docs/evals/fleetgraph-detection-quality-eval.md` contains all 14 golden detection-quality cases (14/14 passed on 2026-05-29). Every trace URL was verified through the Langfuse API with `public: true`.
 
+## V1 Acceptance Eval Evidence Mapping
+
+This table maps the original V1 eval identifiers to their current public runtime evidence. When a case intentionally fails before graph/model execution, the expected result is no Langfuse graph trace; those cases are backed by the deterministic V1 report and called out explicitly rather than presented as model-observed traces.
+
+| V1 case | Behavior | Evidence |
+|---|---|---|
+| `FG-EVAL-001` | Healthy Week exits quietly before model reasoning. | [DQ-Q01 public trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/395191121a1a47b757c1e4e9f3b3917c), branch `prefilter-exit`, 0 input / 0 output tokens. |
+| `FG-EVAL-002` | Blocked Week produces a finding and pending action. | [DQ-R01 public trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/eedcf0102dddb9def28bb663ea1d066a), branch `output`. |
+| `FG-EVAL-003` | On-demand chat uses the compiled FleetGraph graph branch. | [Deployed chat public trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b2624ad3010625d9f91ce4945404e758), branch `ondemand_chat`. |
+| `FG-EVAL-004` | Week chat prompt stays grounded in scoped Ship sources. | [Deployed chat public trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b2624ad3010625d9f91ce4945404e758) plus `docs/evals/fleetgraph-v1-eval-report.md` source-label assertions. |
+| `FG-EVAL-005` | Notify-only recommendations do not create pending actions. | [Public finding trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b0fb54c7f46e28c96d1eaa531fc89d0d) showing `notify_only` policy, plus `docs/evals/fleetgraph-v1-eval-report.md` policy assertions. |
+| `FG-EVAL-006` | Visible writes require explicit HITL approval. | [DQ-R01 public trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/eedcf0102dddb9def28bb663ea1d066a), pending action candidate path. |
+| `FG-EVAL-007` | Proactive detector enters the compiled FleetGraph graph branch. | [DQ-R02 public trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/3912dc4e3ecf5a17aa88af5afc5e40d0), proactive at-risk Week branch. |
+| `FG-EVAL-008` | Unsupported chat scopes fail closed before model execution. | `docs/evals/fleetgraph-v1-eval-report.md`; no Langfuse graph trace is emitted by design because the request is rejected before graph entry. |
+
 Chat-initiated action requests are documented as target architecture rather than a current MVP use case. They should not be counted as implemented until the chat branch can produce a pending review action from a user request and the UI can approve or reject that action without console steps.
 
 ## Capture & Verification Checklist
