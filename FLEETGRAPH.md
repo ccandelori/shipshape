@@ -19,6 +19,7 @@ Use this block for the final walkthrough and submission review.
 | Quiet path trace | [Public Langfuse trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/144ea791af91486a3a83f102f52856c0) |
 | Chat trace | [Public Langfuse trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b2624ad3010625d9f91ce4945404e758) |
 | Demo script | `docs/fleetgraph-5-minute-demo-script.md` |
+| Final recording cue card | `docs/fleetgraph-final-recording-script.md` |
 | Latency proof | `docs/fleetgraph-latency-proof.md` |
 | Deterministic eval reports | `docs/evals/fleetgraph-v1-eval-report.md`, `docs/evals/fleetgraph-v2-eval-report.md` |
 | PRD readiness audit | `docs/fleetgraph-submission-readiness-audit.md` |
