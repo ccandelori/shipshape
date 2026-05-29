@@ -308,6 +308,12 @@ Default timing:
 - Target latency: well under 5 minutes for mutation-triggered risk; under one poll interval plus processing time for time-based risk.
 - Local timed proof: `docs/fleetgraph-latency-proof.md` measured mutation commit to persisted finding at `45.113s` against the `300s` target.
 
+Timed evidence boundary:
+
+- The `45.113s` proof is an orchestration latency proof over real local Ship Postgres data, production trigger debounce, production guards, production persistence, and a deterministic local reasoner. It intentionally does not measure OpenAI or Langfuse provider latency.
+- The deployed finding trace in the Grader Quick Start is a public droplet run with a real model call and `7.382s` graph latency metadata.
+- The submission does not claim that every documented use case was reproduced as a separate browser stopwatch run on the public droplet; rows 1-14 in the trace matrix are controlled live-model graph runs, while the droplet traces prove the public deployment path.
+
 Multi-instance behavior:
 
 - Each API instance in a multi-instance deployment may run the poll tick.
@@ -326,6 +332,8 @@ Headless authentication:
 **How we closed the observability gap.** The early submission had trace holes. The final submission does not use test-only coverage as a substitute for required observability evidence. The table below is the grader-facing trace matrix: every row has a public Langfuse trace URL, and the 14-case detection-quality report has one public trace per case.
 
 Rows 1-14 are live OpenAI + Langfuse graph runs against Ship-shaped golden contexts from `api/src/fleetgraph/evals/detection-quality-cases.ts`. They prove branch behavior, model reasoning, token/cost metadata, and use-case coverage under controlled acceptance states. Row 15 is a current-code on-demand chat run against seeded Ship data that proves the chat branch resolves user ids to human names. The Grader Quick Start deployed traces at the top of this file are droplet runs against real Ship document ids. Production FleetGraph paths use Postgres context builders; the golden eval harness isolates edge states so the same graph can be exercised repeatably without mutating the demo workspace.
+
+Strictness boundary: the detection-quality live eval status gates the pre-filter decision and final finding/no-finding decision for each case. It records severity, branch path, trace URL, and model output for review, but exact lifecycle/policy contracts are enforced by the deterministic policy and route tests unless a matrix row explicitly names lifecycle behavior.
 
 ## Per-Use-Case Trace Map
 
@@ -359,6 +367,8 @@ Rows 1-14 are live OpenAI + Langfuse graph runs against Ship-shaped golden conte
 | 15 | UC6: context-scoped on-demand chat | Chat person-name trace | User asks who is assigned to the visible issue. | Chat answer uses Alice Chen from Ship identity data instead of returning the UUID. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b71ea0bc51bf7e600d2443d7586de209) |
 
 Full live trace report: `docs/evals/fleetgraph-detection-quality-eval.md` contains all 14 golden detection-quality cases (14/14 passed on 2026-05-29). Every trace URL was verified through the Langfuse API with `public: true`; see `docs/evals/fleetgraph-public-trace-verification.json`.
+
+The public submission matrix has 15 rows: 14 detection-quality graph traces plus one on-demand chat person-resolution trace.
 
 Concrete node telemetry: `docs/evals/fleetgraph-node-telemetry.md` is generated from Langfuse's Observations API. It lists each public trace URL plus concrete observation IDs for the graph nodes and model observations inside that trace, including `scope`, `context`, `guard`, `preFilter`, `reason`, `policy`, `output`, and `fleetgraph.chat.response` where present. Langfuse public sharing is trace-level, so child node rows use the shared public trace URL plus observation IDs rather than separate child-observation public URLs.
 
@@ -658,6 +668,7 @@ Runtime model spend for the MVP at-risk Week detector is persisted in `fleetgrap
 | Total deterministic graph spend captured | `$0.000231` |
 | Live finding trace spend | 1135 input / 157 output tokens, `$0.000264` |
 | Live chat trace spend | 2043 input / 120 output tokens, captured in Langfuse trace metadata |
+| Live chat person-resolution trace spend | 570 input / 8 output tokens, captured in Langfuse trace metadata |
 
 ## Submission Status
 
@@ -667,7 +678,7 @@ Runtime model spend for the MVP at-risk Week detector is persisted in `fleetgrap
 | Graph Diagram | Defined in this document |
 | Use Cases | Six trace-backed use cases defined in this document |
 | Trigger Model | Defined in this document |
-| Test Cases | V1 and V2 deterministic eval suites passed; public droplet traces plus 14-case detection-quality trace matrix captured |
+| Test Cases | V1 and V2 deterministic eval suites passed; public droplet traces plus 15-row public trace matrix captured |
 | Architecture Decisions | Defined in this document |
 | Cost Analysis | Design estimate plus deterministic runtime telemetry captured |
 | Timed Latency Proof | Passed locally at 45.113 seconds; see `docs/fleetgraph-latency-proof.md` |

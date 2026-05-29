@@ -218,6 +218,8 @@ The PRD requires problem detection under 5 minutes from event appearing in Ship 
 - Live deployed trace evidence: `FLEETGRAPH.md` records a mutation-triggered finding run with `7.382s` graph latency in Langfuse metadata.
 - Node-level telemetry evidence: `docs/evals/fleetgraph-node-telemetry.md` records Langfuse observation IDs, node names, branch metadata, token/cost fields, and latencies for every verified public FleetGraph trace.
 
+Evidence boundary: the latency proof uses a deterministic local reasoner to isolate trigger/orchestration latency; the public droplet finding trace proves real-model graph execution latency. The submission does not claim a separate public-browser timed mutation for every use case.
+
 Cost controls:
 
 - Deterministic material-change guard.
@@ -278,7 +280,7 @@ Local seed verification:
 | Requirement | Status |
 |-------------|--------|
 | Graph running with proactive detection E2E | Implemented |
-| Observability with at least two trace links | Captured in Langfuse; public finding, quiet, deployed chat, chat person-resolution, and 14-case detection-quality trace URLs are recorded in `FLEETGRAPH.md` |
+| Observability with at least two trace links | Captured in Langfuse; public finding, quiet, deployed chat, chat person-resolution, and the 15-row public trace matrix are recorded in `FLEETGRAPH.md` |
 | `FLEETGRAPH.md` with responsibility and use cases | Present and current |
 | Graph outline with nodes, edges, and branches | Present and current |
 | Human-in-the-loop gate | Implemented in API and browser inbox |

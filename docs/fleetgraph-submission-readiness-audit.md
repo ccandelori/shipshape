@@ -10,7 +10,7 @@ This audit compares the current FleetGraph implementation and documentation agai
 
 FleetGraph is submission-ready from an engineering, documentation, deployment, and observability standpoint:
 
-- The Langfuse trace URLs in `FLEETGRAPH.md` include deployed smoke traces, a 14-case detection-quality matrix, and a current-code chat person-resolution trace. The three deployed-smoke traces, all 14 detection-quality traces, and the chat person-resolution trace were verified through the Langfuse API with `public: true`.
+- The Langfuse trace URLs in `FLEETGRAPH.md` include deployed smoke traces and a 15-row public trace matrix: 14 detection-quality traces plus a current-code chat person-resolution trace. The three deployed-smoke traces, all 14 detection-quality traces, and the chat person-resolution trace were verified through the Langfuse API with `public: true`.
 - `docs/evals/fleetgraph-node-telemetry.md` exports concrete Langfuse observation IDs, trace-node metadata, latency, token, and cost fields for every verified public FleetGraph trace.
 - Langfuse is the observability provider for this submission. It fulfills the PRD's shared trace requirement by exposing public run trees with branch metadata, model usage, token counts, and trace URLs.
 - The V1 and V2 deterministic eval suites pass 16 cases and 50 assertions; the detection-quality live graph eval passes 14 / 14 cases with one public trace per case.
@@ -35,7 +35,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 
 | PRD metric | Current status | Evidence | Submission action |
 |---|---|---|---|
-| Problem detection latency under 5 minutes | Pass | `docs/fleetgraph-latency-proof.md` records `45.113s`; live finding trace metadata records `7.382s` graph latency | None |
+| Problem detection latency under 5 minutes | Pass | `docs/fleetgraph-latency-proof.md` records `45.113s` for trigger/orchestration latency with deterministic local reasoner; live finding trace metadata records `7.382s` graph latency with real model call | Do not describe the local proof as a live provider latency benchmark |
 | Cost per graph run documented and defended | Pass | `FLEETGRAPH.md` Cost Analysis and `fleetgraph_usage` rows | None |
 | Estimated runs per day documented and defended | Pass | `FLEETGRAPH.md` Production Projection Assumptions | None |
 
@@ -85,7 +85,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 
 Do these immediately before submitting:
 
-1. Open the three deployed-smoke Langfuse traces, the chat person-name trace, and the 14-case trace matrix from `FLEETGRAPH.md`.
+1. Open the three deployed-smoke Langfuse traces, the chat person-name trace, and the 15-row public trace matrix from `FLEETGRAPH.md`.
 2. Review prompt/context content one last time for sensitive data.
 3. Reopen `https://143.198.163.184.nip.io/health` and confirm HTTP 200.
 4. Log in as `dev@ship.local` and smoke:
