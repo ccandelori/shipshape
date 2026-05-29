@@ -238,6 +238,7 @@ Deterministic eval suites:
 |---------|--------|--------|
 | `DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev pnpm fleetgraph:eval` | V1: 8 cases / 24 assertions passed; V2: 8 cases / 26 assertions passed | `docs/evals/fleetgraph-v1-eval-report.md`, `docs/evals/fleetgraph-v2-eval-report.md`, and matching JSON files |
 | `DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev LANGFUSE_PROJECT_ID=cmpmytg8s012vad0g8q19n2xv FLEETGRAPH_PUBLIC_TRACE_EXPORT=true pnpm fleetgraph:quality-eval -- --live --trace --strict` | Detection quality: 14 cases / 14 passed, one public Langfuse trace per case | `docs/evals/fleetgraph-detection-quality-eval.md`, `docs/evals/fleetgraph-detection-quality-eval.json` |
+| `pnpm fleetgraph:node-telemetry` | Node-level telemetry exported from Langfuse Observations API for every verified public trace | `docs/evals/fleetgraph-node-telemetry.md`, `docs/evals/fleetgraph-node-telemetry.json` |
 
 The V1 and V2 eval suites are deterministic pre-submit gates, not replacements for public Langfuse traces. V1 verifies the same high-risk behaviors graders probe: quiet proactive exit, finding/action creation, on-demand chat entering the compiled `fleetgraph.runtime` graph, prompt/source grounding, HITL policy, proactive graph branch parity, and fail-closed unsupported chat scope. V2 hardens the proof layer with material-change stability, duplicate suppression, advisory lock serialization, opt-in trace export, Langfuse redaction, chat history bounding, chat rate limiting, and safe trace URL construction.
 
@@ -341,6 +342,8 @@ Rows 1-14 are live OpenAI + Langfuse graph runs against Ship-shaped golden conte
 
 Full live trace report: `docs/evals/fleetgraph-detection-quality-eval.md` contains all 14 golden detection-quality cases (14/14 passed on 2026-05-29). Every trace URL was verified through the Langfuse API with `public: true`; see `docs/evals/fleetgraph-public-trace-verification.json`.
 
+Concrete node telemetry: `docs/evals/fleetgraph-node-telemetry.md` is generated from Langfuse's Observations API. It lists each public trace URL plus concrete observation IDs for the graph nodes and model observations inside that trace, including `scope`, `context`, `guard`, `preFilter`, `reason`, `policy`, `output`, and `fleetgraph.chat.response` where present. Langfuse public sharing is trace-level, so child node rows use the shared public trace URL plus observation IDs rather than separate child-observation public URLs.
+
 V1 and V2 deterministic eval reports are regression gates, not the PRD trace matrix. They verify guard, policy, source-grounding, history-window, rate-limit, and redaction behavior that should fail before model execution or does not require model reasoning.
 
 ## Capture & Verification Checklist
@@ -368,6 +371,10 @@ DATABASE_URL=... \
 LANGFUSE_PROJECT_ID=... \
 FLEETGRAPH_PUBLIC_TRACE_EXPORT=true \
 pnpm --filter @ship/api exec tsx src/fleetgraph/scripts/run-detection-quality-eval.ts --live --trace --strict
+
+# Concrete graph-node telemetry from the public trace matrix
+# Requires LANGFUSE_BASE_URL, LANGFUSE_PUBLIC_KEY, and LANGFUSE_SECRET_KEY.
+pnpm fleetgraph:node-telemetry
 
 # Targeted chat trace that demonstrates person name resolution
 # (open a Week or Issue document and ask in Ask FleetGraph)

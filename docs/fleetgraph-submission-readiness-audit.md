@@ -11,6 +11,7 @@ This audit compares the current FleetGraph implementation and documentation agai
 FleetGraph is submission-ready from an engineering, documentation, deployment, and observability standpoint:
 
 - The Langfuse trace URLs in `FLEETGRAPH.md` include deployed smoke traces plus a 14-case detection-quality matrix. The three deployed-smoke traces and all 14 detection-quality traces were verified through the Langfuse API with `public: true`.
+- `docs/evals/fleetgraph-node-telemetry.md` exports concrete Langfuse observation IDs, trace-node metadata, latency, token, and cost fields for every verified public FleetGraph trace.
 - Langfuse is the observability provider for this submission. It fulfills the PRD's shared trace requirement by exposing public run trees with branch metadata, model usage, token counts, and trace URLs.
 - The V1 and V2 deterministic eval suites pass 16 cases and 50 assertions; the detection-quality live graph eval passes 14 / 14 cases with one public trace per case.
 
@@ -21,7 +22,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | PRD requirement | Current status | Evidence | Submission action |
 |---|---|---|---|
 | Graph running with at least one proactive detection wired end-to-end | Pass | `api/src/fleetgraph/detectors/at-risk-week.ts`, `api/src/fleetgraph/proactive-runner.ts`, `api/src/fleetgraph/triggers.ts`, `api/src/routes/fleetgraph.ts` | None |
-| Observability tracing enabled with shared trace links showing different paths | Pass | `FLEETGRAPH.md` lists public finding, quiet, chat, and 14-case detection-quality Langfuse traces | None |
+| Observability tracing enabled with shared trace links showing different paths | Pass | `FLEETGRAPH.md` lists public finding, quiet, chat, and 14-case detection-quality Langfuse traces; `docs/evals/fleetgraph-node-telemetry.md` lists node-level observation IDs and telemetry for each verified public trace | None |
 | `FLEETGRAPH.md` with Agent Responsibility and at least 5 use cases | Pass | `FLEETGRAPH.md` defines responsibilities and 6 trace-backed use cases | None |
 | Graph outline with node types, edges, branching conditions | Pass | `FLEETGRAPH.md` Mermaid diagram; `docs/fleetgraph-graph-explainer.html` | None |
 | At least one human-in-the-loop gate | Pass | `api/src/fleetgraph/policy.ts`, `api/src/routes/fleetgraph.ts`, inbox `Needs Review` and `Approved` tabs | None |
@@ -48,7 +49,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | Graph Diagram | Pass | `FLEETGRAPH.md` Mermaid |
 | Use Cases | Pass | 6 trace-backed use cases |
 | Trigger Model | Pass | Hybrid poll plus mutation debounce |
-| Test Cases | Pass | Test table includes public trace URLs |
+| Test Cases | Pass | Test table includes public trace URLs and node-level telemetry artifact |
 | Formal eval reports | Pass | V1, V2, and detection-quality markdown plus JSON reports under `docs/evals/` |
 | Architecture Decisions | Pass | `FLEETGRAPH.md` Architecture Decisions |
 | Cost Analysis | Pass | `FLEETGRAPH.md` Cost Analysis |

@@ -201,6 +201,7 @@ FleetGraph uses a hybrid trigger model:
 - Advisory locks prevent duplicate multi-instance work.
 - Material-change keys and suppressions prevent duplicate findings and unnecessary model calls.
 - Langfuse trace gating avoids exporting routine quiet poll exits while preserving local `fleetgraph_usage` rows for every run.
+- The node telemetry exporter uses Langfuse's Observations API after trace capture, so the submission can point to concrete graph-node evidence rather than only run-level URLs.
 
 This is the defensible tradeoff for the PRD:
 
@@ -215,6 +216,7 @@ The PRD requires problem detection under 5 minutes from event appearing in Ship 
 
 - Deterministic orchestration proof: `docs/fleetgraph-latency-proof.md` measured `45.113s` from mutation enqueue to persisted finding against the `300s` target.
 - Live deployed trace evidence: `FLEETGRAPH.md` records a mutation-triggered finding run with `7.382s` graph latency in Langfuse metadata.
+- Node-level telemetry evidence: `docs/evals/fleetgraph-node-telemetry.md` records Langfuse observation IDs, node names, branch metadata, token/cost fields, and latencies for every verified public FleetGraph trace.
 
 Cost controls:
 
@@ -263,6 +265,7 @@ Live trace evidence in `FLEETGRAPH.md`:
 - Quiet path trace.
 - On-demand Week chat trace.
 - Rubric trace matrix with one public Langfuse trace per detection-quality case, including use cases 3, 4, and 5.
+- Node telemetry report with observation IDs for traceable graph nodes and model calls.
 
 Local seed verification:
 

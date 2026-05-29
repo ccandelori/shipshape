@@ -35,6 +35,7 @@
     "db:orphan-check": "pnpm --filter @ship/api db:orphan-check",
     "fleetgraph:demo-health": "pnpm --filter @ship/api fleetgraph:demo-health",
     "fleetgraph:eval": "pnpm --filter @ship/api fleetgraph:eval",
+    "fleetgraph:node-telemetry": "pnpm --filter @ship/api fleetgraph:node-telemetry",
     "fleetgraph:quality-eval": "pnpm --filter @ship/api fleetgraph:quality-eval",
     "shipshape": "pnpm exec tsx scripts/shipshape/run.ts",
     "shipshape:ci": "pnpm exec tsx scripts/shipshape/run-ci.ts",
