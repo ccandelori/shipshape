@@ -237,6 +237,7 @@ Deterministic eval suites:
 | Command | Result | Report |
 |---------|--------|--------|
 | `DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev pnpm fleetgraph:eval` | V1: 8 cases / 24 assertions passed; V2: 8 cases / 26 assertions passed | `docs/evals/fleetgraph-v1-eval-report.md`, `docs/evals/fleetgraph-v2-eval-report.md`, and matching JSON files |
+| `DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev LANGFUSE_PROJECT_ID=cmpmytg8s012vad0g8q19n2xv FLEETGRAPH_PUBLIC_TRACE_EXPORT=true pnpm fleetgraph:quality-eval -- --live --trace --strict` | Detection quality: 14 cases / 14 passed, one public Langfuse trace per case | `docs/evals/fleetgraph-detection-quality-eval.md`, `docs/evals/fleetgraph-detection-quality-eval.json` |
 
 The V1 and V2 eval suites are deterministic pre-submit gates, not replacements for public Langfuse traces. V1 verifies the same high-risk behaviors graders probe: quiet proactive exit, finding/action creation, on-demand chat entering the compiled `fleetgraph.runtime` graph, prompt/source grounding, HITL policy, proactive graph branch parity, and fail-closed unsupported chat scope. V2 hardens the proof layer with material-change stability, duplicate suppression, advisory lock serialization, opt-in trace export, Langfuse redaction, chat history bounding, chat rate limiting, and safe trace URL construction.
 
@@ -262,8 +263,7 @@ Verification run:
 MVP implementation scope:
 
 - Use case 1 is the flagship end-to-end proactive detector.
-- Use case 2 is adjacent to the flagship and should share the same data path.
-- Use cases 3 to 5 are extension detectors.
+- Use cases 2 to 5 are implemented as risk patterns in the at-risk Week graph's context and pre-filter path, then validated by live model traces in the detection quality eval suite. They share the flagship graph, policy, output, usage, and trace path rather than separate detector modules.
 - Use case 6 is MVP chat.
 - Use case 7 is architected now; full execution can be staged after the answer path is stable.
 
@@ -315,18 +315,23 @@ Headless authentication:
 
 ## Test Cases
 
-The live trace links below are public Langfuse Cloud links from the public droplet. The deterministic local evidence above remains useful because it verifies the MVP proactive graph paths, on-demand graph parity, HITL policy, scope guarding, source grounding, observability controls, and usage metadata without depending on model availability. The timed latency proof in `docs/fleetgraph-latency-proof.md` verifies the mutation-triggered path against the five-minute target using the real trigger controller, advisory lock, context builder, guard, graph, policy, and persistence path with a deterministic local reasoner. The formal eval command is `pnpm fleetgraph:eval`.
+The table below is the grader-facing trace matrix: every row has a public Langfuse trace link. The live quality eval traces are generated from golden Ship-shaped Week contexts through the compiled `fleetgraph.runtime` / at-risk Week LangGraph path with the live OpenAI reasoner. The public droplet traces above remain deployed smoke evidence; this matrix is the explicit one-trace-per-case rubric evidence. The timed latency proof in `docs/fleetgraph-latency-proof.md` still verifies mutation-triggered orchestration against the five-minute target.
 
-| # | Ship state | Expected output | Required trace path | Trace link status |
-|---|------------|-----------------|---------------------|------------------|
-| 1 | Active Week has stalled high-priority issues and an unresolved blocker. | Open finding with severity, evidence, owner, and action candidate. | Proactive changed -> pre-filter yes -> reason -> output. | [Public Langfuse trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b0fb54c7f46e28c96d1eaa531fc89d0d); local deterministic run passed. |
-| 2 | Active Week has no blockers or high-priority blocked issues. | Quiet exit; no duplicate notification and no model reasoning call. | Proactive changed -> pre-filter no -> quiet end. | [Public Langfuse trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/144ea791af91486a3a83f102f52856c0); local deterministic run passed. |
-| 3 | Same active Week is scanned again with a suppressing pending finding. | Quiet exit; no duplicate notification and no expensive reasoning call. | Proactive guard -> quiet end. | Guard suppression covered by detector tests; not part of the required live trace pair. |
-| 4 | Blocker crosses elapsed-time threshold without a row edit. | Finding resurfaces because elapsed-time signal changed. | Proactive changed -> pre-filter yes -> reason. | Extension case; not part of the two MVP traces. |
-| 5 | User opens a Week document and asks, "What is blocking this?" | SSE streamed answer grounded in that Week's issues, standups, and findings. | On-demand chat branch -> model stream -> final response. | [Public Langfuse trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b2624ad3010625d9f91ce4945404e758); embedded chat implemented and E2E-covered. |
-| 6 | User asks chat to create a follow-up item for a blocker. | Draft or pending action candidate scoped to the blocker and Week. | On-demand action request -> reason -> approval policy. | Architecture path documented; full execution staged after MVP. |
-| 7 | Unauthorized user attempts to resume a pending action. | Resume denied; no action executed. | Resume auth guard rejects. | API route coverage implemented. |
-| 8 | Two API instances tick the same project concurrently. | One instance acquires the advisory lock; exactly one graph run proceeds. | Proactive trigger -> advisory lock winner only. | Advisory lock controller covered by trigger tests. |
+| # | Use case / acceptance area | Eval case | Ship state | Expected output | Trace path | Public trace |
+|---|----------------------------|-----------|------------|-----------------|------------|--------------|
+| 1 | UC1: at-risk Week | DQ-R01 | High-priority blocker plus explicit blocker standup. | Finding with evidence, severity, owner, and action candidate. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/51e85bc2707c1cb4abf21314ea1c1663) |
+| 2 | UC2: stale blocker | DQ-R04 | Aging technical blocker near week end. | Finding resurfaces with high-risk reasoning. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/d38d76118abe5f42ff5dab4c572e1c45) |
+| 3 | UC3: no recent progress signal | DQ-R06 | Critical path items are unchanged while polish work continues. | Finding calls out missing progress signal. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/002e003a7e8504ecae0d3da12cb091f8) |
+| 4 | UC4: missing plan / accountability | DQ-R05 | No weekly plan exists while high-priority work is stalling. | Finding ties risk to accountability gap. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/1ce1a9a8a37e4984e40c20b7c1b43b0d) |
+| 5 | UC5: overload / scope pressure | DQ-R03 | One owner carries five high-priority items and reports falling behind. | Finding recommends a human-gated recovery action. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/59cdb555274e91236166ee3f4a088e18) |
+| 6 | UC6: context-scoped chat | Deployed chat trace | Week chat asks what is blocking the visible Week. | SSE answer grounded in Week issues, standups, and findings. | on-demand chat branch -> model stream | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b2624ad3010625d9f91ce4945404e758) |
+| 7 | Quiet path / cost control | DQ-Q01 | Healthy Week with no blockers or high-priority blocked issues. | Quiet pre-filter exit with zero model tokens. | pre-filter no -> quiet end | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/e8b1e0386b5c1daeb645666b875a68b4) |
+| 8 | Negation handling | DQ-Q04 | Standup says work was blocked yesterday but unblocked this morning. | Quiet pre-filter exit; no false positive. | pre-filter no -> quiet end | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/bcbec30ef1d7d336383f6eea792c6761) |
+| 9 | Iteration blocker coverage | DQ-R07 | Sprint iteration records a blocker without standup coverage. | Finding uses iteration evidence. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/819b5d77be5b6c7d43b1bcf86a31b52f) |
+
+Full live trace report: `docs/evals/fleetgraph-detection-quality-eval.md` includes all 14 golden detection-quality cases and passed with `14 / 14` cases on 2026-05-29.
+
+Deterministic non-trace gates still cover suppression, unauthorized resume, route workspace isolation, and advisory-lock serialization. Those behaviors do not need model calls to prove correctness, but they remain part of the regression suite.
 
 ## Architecture Decisions
 

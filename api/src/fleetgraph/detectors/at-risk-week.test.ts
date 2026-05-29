@@ -935,6 +935,116 @@ describe('FleetGraph at-risk Week detector contracts', () => {
     expect(preFilteredState.earlyExit).toBe(null);
   });
 
+  it('passes through preFilter when high-priority owner work has no progress signal', async () => {
+    const ownerUserId = '33333333-3333-4333-8333-333333333333';
+    const preFilteredState = await createReasoningReadyState(createWeekContext({
+      ownerUserId,
+      issues: [{
+        id: '44444444-4444-4444-8444-444444444444',
+        title: 'Finalize rollout checklist',
+        state: 'in_progress',
+        priority: 'high',
+        assigneeUserId: ownerUserId,
+      }],
+    }));
+
+    expect(preFilteredState.status).toBe('running');
+    expect(preFilteredState.activeNode).toBe('reason');
+    expect(preFilteredState.preFilter).toEqual({
+      shouldReason: true,
+      reason: 'candidate_risk',
+      evidenceSummary: [
+        'Missing progress signal for high-priority assigned work: Finalize rollout checklist',
+      ],
+    });
+  });
+
+  it('passes through preFilter when a Week has no plan and high-priority active work', async () => {
+    const ownerUserId = '33333333-3333-4333-8333-333333333333';
+    const preFilteredState = await createReasoningReadyState(createWeekContext({
+      ownerUserId,
+      issues: [{
+        id: '44444444-4444-4444-8444-444444444444',
+        title: 'Recover onboarding flow',
+        state: 'in_progress',
+        priority: 'high',
+        assigneeUserId: ownerUserId,
+      }],
+      standupTexts: ['Made progress on support cleanup.'],
+      accountability: {
+        weeklyPlan: {
+          exists: false,
+          documentIds: [],
+        },
+        weeklyRetro: {
+          exists: false,
+          documentIds: [],
+        },
+      },
+    }));
+
+    expect(preFilteredState.status).toBe('running');
+    expect(preFilteredState.activeNode).toBe('reason');
+    expect(preFilteredState.preFilter).toEqual({
+      shouldReason: true,
+      reason: 'candidate_risk',
+      evidenceSummary: [
+        'Missing weekly plan with high-priority active work: Recover onboarding flow',
+      ],
+    });
+  });
+
+  it('passes through preFilter when owner load and standup text show overload risk', async () => {
+    const ownerUserId = '33333333-3333-4333-8333-333333333333';
+    const issues: IssueFixture[] = Array.from({ length: 5 }, (_, index) => ({
+      id: `44444444-4444-4444-8444-44444444444${index}`,
+      title: `Critical path item ${index + 1}`,
+      state: 'in_progress',
+      priority: 'high',
+      assigneeUserId: ownerUserId,
+    }));
+    const preFilteredState = await createReasoningReadyState(createWeekContext({
+      ownerUserId,
+      issues,
+      standupTexts: ['Trying to keep up but falling behind on the critical path items.'],
+    }));
+
+    expect(preFilteredState.status).toBe('running');
+    expect(preFilteredState.activeNode).toBe('reason');
+    expect(preFilteredState.preFilter).toEqual({
+      shouldReason: true,
+      reason: 'candidate_risk',
+      evidenceSummary: [
+        'Progress concern: Trying to keep up but falling behind on the critical path items.',
+        'Owner load risk: 5 high-priority active issues assigned to the Week owner',
+        'Load concern: Trying to keep up but falling behind on the critical path items.',
+      ],
+    });
+  });
+
+  it('keeps high-volume owner work quiet when recent standups show healthy progress', async () => {
+    const ownerUserId = '33333333-3333-4333-8333-333333333333';
+    const issues: IssueFixture[] = Array.from({ length: 6 }, (_, index) => ({
+      id: `55555555-5555-4555-8555-55555555555${index}`,
+      title: `Moving high-priority item ${index + 1}`,
+      state: 'in_progress',
+      priority: 'high',
+      assigneeUserId: ownerUserId,
+    }));
+    const preFilteredState = await createReasoningReadyState(createWeekContext({
+      ownerUserId,
+      issues,
+      standupTexts: ['Making steady progress across the board. All critical items have movement this week.'],
+    }));
+
+    expect(preFilteredState.status).toBe('exited');
+    expect(preFilteredState.preFilter).toEqual({
+      shouldReason: false,
+      reason: 'no_blockers_or_blocked_high_priority_issues',
+      evidenceSummary: [],
+    });
+  });
+
   it('renders a reasoning prompt with explicit untrusted-content boundaries', async () => {
     const state = await createReasoningReadyState(createWeekContext({
       issues: [{
@@ -1603,12 +1713,16 @@ type IssueFixture = {
   title: string;
   state: string | null;
   priority: string | null;
+  assigneeUserId?: string | null;
 };
 
 type WeekContextFixture = {
   issues: IssueFixture[];
   ownerUserId?: string | null;
   blockerText?: string;
+  standupTexts?: string[];
+  sprintIterations?: WeekContext['sprintIterations'];
+  accountability?: WeekContext['accountability'];
 };
 
 type NodeDependencyFixture = {
@@ -1870,6 +1984,8 @@ async function createReasonedAtRiskState(weekContext: WeekContext) {
 }
 
 function createWeekContext(fixture: WeekContextFixture): WeekContext {
+  const standupTexts = fixture.standupTexts ?? (fixture.blockerText ? [fixture.blockerText] : []);
+
   return {
     week: {
       id: scopedDocId,
@@ -1902,17 +2018,16 @@ function createWeekContext(fixture: WeekContextFixture): WeekContext {
       updatedAt: new Date('2026-05-26T05:00:00.000Z'),
       state: issue.state,
       priority: issue.priority,
-      assigneeUserId: null,
+      assigneeUserId: issue.assigneeUserId ?? null,
     })),
-    standups: fixture.blockerText
-      ? [{
-        id: '55555555-5555-4555-8555-555555555555',
+    standups: standupTexts.map((text, index) => ({
+        id: `55555555-5555-4555-8555-55555555555${index}`,
         workspaceId,
         documentType: 'standup',
         title: 'Daily Standup',
         content: {
           type: 'doc',
-          content: [{ type: 'paragraph', content: [{ type: 'text', text: fixture.blockerText }] }],
+          content: [{ type: 'paragraph', content: [{ type: 'text', text }] }],
         },
         parentId: scopedDocId,
         properties: {},
@@ -1920,10 +2035,9 @@ function createWeekContext(fixture: WeekContextFixture): WeekContext {
         createdAt: new Date('2026-05-26T04:00:00.000Z'),
         updatedAt: new Date('2026-05-26T04:00:00.000Z'),
         authorUserId: null,
-      }]
-      : [],
-    sprintIterations: [],
-    accountability: {
+      })),
+    sprintIterations: fixture.sprintIterations ?? [],
+    accountability: fixture.accountability ?? {
       weeklyPlan: {
         exists: true,
         documentIds: ['66666666-6666-4666-8666-666666666666'],

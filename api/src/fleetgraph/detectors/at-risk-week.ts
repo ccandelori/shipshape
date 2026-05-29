@@ -766,17 +766,25 @@ async function runImmediateAtRiskWeekLangfuseTrace(
       });
 
       try {
+        const outputState = await operation(state);
         const publication = await publishAtRiskWeekTraceIfEnabled(publicTracePolicy, definition, observation);
-        const outputState = await operation(applyAtRiskWeekTracePublication(state, definition, publication.metadata));
-        const outputMetadata = createAtRiskWeekTraceMetadata(outputState, definition.inputMetadata.traceNode);
+        const outputStateWithPublication = applyAtRiskWeekTracePublication(
+          outputState,
+          definition,
+          publication.metadata
+        );
+        const outputMetadata = createAtRiskWeekTraceMetadata(
+          outputStateWithPublication,
+          definition.inputMetadata.traceNode
+        );
 
         observation.update({
-          output: createAtRiskWeekLangfuseOutput(outputState, outputMetadata),
+          output: createAtRiskWeekLangfuseOutput(outputStateWithPublication, outputMetadata),
           metadata: createAtRiskWeekObservationMetadata(definition, outputMetadata, publication.metadata),
           level: 'DEFAULT',
         });
 
-        return outputState;
+        return outputStateWithPublication;
       } catch (error) {
         observation.update({
           output: {
@@ -2329,7 +2337,11 @@ function errorMessage(error: unknown): string {
   return String(error);
 }
 
-function evaluateAtRiskWeekPreFilter(context: WeekContext): AtRiskWeekPreFilterDecision {
+export function evaluateAtRiskWeekPreFilter(context: WeekContext): AtRiskWeekPreFilterDecision {
+  const highPriorityActiveIssues = context.issues.filter(isHighPriorityActiveIssue);
+  const ownerHighPriorityActiveIssues = highPriorityActiveIssues.filter((issue) => (
+    isAssignedToWeekOwner(issue, context.ownerUserId)
+  ));
   const evidenceSummary = [
     ...context.issues.filter(isHighPriorityBlockedIssue).map((issue) => (
       `High-priority blocked issue: ${issue.title}`
@@ -2340,6 +2352,9 @@ function evaluateAtRiskWeekPreFilter(context: WeekContext): AtRiskWeekPreFilterD
     ...context.sprintIterations.filter(hasIterationBlockerText).map((iteration) => (
       `Iteration blocker: ${iteration.storyTitle}`
     )),
+    ...createMissingProgressEvidence(context, ownerHighPriorityActiveIssues),
+    ...createPlanlessWeekEvidence(context, highPriorityActiveIssues),
+    ...createOverloadEvidence(context, ownerHighPriorityActiveIssues),
   ];
 
   if (evidenceSummary.length === 0) {
@@ -2361,16 +2376,181 @@ function isHighPriorityBlockedIssue(issue: WeekContext['issues'][number]): boole
   return isHighPriority(issue.priority) && issue.state === 'blocked';
 }
 
+function isHighPriorityActiveIssue(issue: WeekContext['issues'][number]): boolean {
+  return isHighPriority(issue.priority) && issue.state !== 'done' && issue.state !== 'cancelled';
+}
+
+function isAssignedToWeekOwner(issue: WeekContext['issues'][number], ownerUserId: string | null): boolean {
+  if (ownerUserId === null) {
+    return true;
+  }
+
+  return issue.assigneeUserId === ownerUserId;
+}
+
 function isHighPriority(priority: string | null): boolean {
   return priority === 'urgent' || priority === 'high' || priority === 'critical';
 }
 
 function hasStandupBlockerText(standup: WeekContext['standups'][number]): boolean {
-  return extractText(standup.content).toLowerCase().includes('block');
+  const text = extractText(standup.content).toLowerCase();
+
+  const positivePhrases = [
+    'blocked on',
+    'blocked by',
+    'still blocked',
+    'remains blocked',
+    'currently blocked',
+    'blocked again',
+    'cannot proceed',
+    "can't proceed",
+    'waiting on',
+    'stuck on',
+    'hard blocker',
+  ];
+
+  const negationPhrases = [
+    'no blockers',
+    'no blocker',
+    'not blocked',
+    'unblocked',
+    'no longer blocked',
+    'resolved',
+    'cleared',
+    'fixed',
+    'workaround shipping',
+    'workaround shipped',
+    'manual workaround',
+    'workaround in place',
+  ];
+
+  const ongoingRiskPhrases = [
+    'still blocked',
+    'remains blocked',
+    'currently blocked',
+    'blocked again',
+  ];
+
+  const hasPositive = positivePhrases.some((p) => text.includes(p));
+  if (!hasPositive) {
+    return false;
+  }
+
+  const hasNegation = negationPhrases.some((p) => text.includes(p));
+  if (!hasNegation) {
+    return true;
+  }
+
+  const hasOngoingRisk = ongoingRiskPhrases.some((p) => text.includes(p));
+  if (hasOngoingRisk) {
+    return true;
+  }
+
+  return false;
 }
 
 function hasIterationBlockerText(iteration: WeekContext['sprintIterations'][number]): boolean {
   return typeof iteration.blockersEncountered === 'string' && iteration.blockersEncountered.trim().length > 0;
+}
+
+function createMissingProgressEvidence(
+  context: WeekContext,
+  ownerHighPriorityActiveIssues: WeekContext['issues']
+): string[] {
+  if (ownerHighPriorityActiveIssues.length === 0) {
+    return [];
+  }
+
+  if (context.standups.length === 0 && context.sprintIterations.length === 0) {
+    return [`Missing progress signal for high-priority assigned work: ${formatIssueTitles(ownerHighPriorityActiveIssues)}`];
+  }
+
+  const progressConcernStandups = context.standups.filter((standup) => (
+    !hasStandupBlockerText(standup) && hasProgressConcernText(standup)
+  ));
+  if (progressConcernStandups.length === 0) {
+    return [];
+  }
+
+  return progressConcernStandups.map((standup) => (
+    `Progress concern: ${extractText(standup.content).trim()}`
+  ));
+}
+
+function createPlanlessWeekEvidence(
+  context: WeekContext,
+  highPriorityActiveIssues: WeekContext['issues']
+): string[] {
+  if (context.accountability.weeklyPlan.exists || highPriorityActiveIssues.length === 0) {
+    return [];
+  }
+
+  return [`Missing weekly plan with high-priority active work: ${formatIssueTitles(highPriorityActiveIssues)}`];
+}
+
+function createOverloadEvidence(
+  context: WeekContext,
+  ownerHighPriorityActiveIssues: WeekContext['issues']
+): string[] {
+  if (ownerHighPriorityActiveIssues.length < 5) {
+    return [];
+  }
+
+  const loadConcernStandups = context.standups.filter(hasLoadConcernText);
+  if (loadConcernStandups.length === 0) {
+    return [];
+  }
+
+  return [
+    `Owner load risk: ${ownerHighPriorityActiveIssues.length} high-priority active issues assigned to the Week owner`,
+    ...loadConcernStandups.map((standup) => `Load concern: ${extractText(standup.content).trim()}`),
+  ];
+}
+
+function hasProgressConcernText(standup: WeekContext['standups'][number]): boolean {
+  const text = extractText(standup.content).toLowerCase();
+  const progressConcernPhrases = [
+    'no movement',
+    'no progress',
+    'unchanged',
+    'stalled',
+    'slipping',
+    'falling behind',
+    'waiting on',
+  ];
+  const resolvedPhrases = [
+    'steady progress',
+    'good progress',
+    'all critical items have movement',
+    'all flows green',
+    'unblocked',
+    'resolved',
+  ];
+
+  return progressConcernPhrases.some((phrase) => text.includes(phrase))
+    && !resolvedPhrases.some((phrase) => text.includes(phrase));
+}
+
+function hasLoadConcernText(standup: WeekContext['standups'][number]): boolean {
+  const text = extractText(standup.content).toLowerCase();
+  const loadConcernPhrases = [
+    'falling behind',
+    'too much',
+    'overloaded',
+    'over capacity',
+    'scope creep',
+    'scope increased',
+    'cannot keep up',
+    "can't keep up",
+    'spread thin',
+    'at capacity',
+  ];
+
+  return loadConcernPhrases.some((phrase) => text.includes(phrase));
+}
+
+function formatIssueTitles(issues: WeekContext['issues']): string {
+  return issues.map((issue) => issue.title).join(', ');
 }
 
 function stringifyPromptPayload(payload: Record<string, unknown>): string {

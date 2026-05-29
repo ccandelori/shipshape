@@ -1,7 +1,7 @@
 # FleetGraph Submission Readiness Audit
 
-Date: 2026-05-28  
-Source PRD: `/Users/sheep/Desktop/Gauntlet/Week 5 GFA - FleetGraph PRD.pdf`  
+Date: 2026-05-29
+Source PRD: `/Users/sheep/Desktop/Gauntlet/Week 5 GFA - FleetGraph PRD.pdf`
 Assessed source of truth: `codex/fleetgraph-guided-polish` worktree at `/private/tmp/ship-fleetgraph-awesome`
 
 This audit compares the current FleetGraph implementation and documentation against the original Week 5 PRD. It is intentionally blunt: if a row is not green, it needs either a fix or an explicit submission note before tonight.
@@ -10,9 +10,9 @@ This audit compares the current FleetGraph implementation and documentation agai
 
 FleetGraph is submission-ready from an engineering, documentation, deployment, and observability standpoint:
 
-- The Langfuse trace URLs in `FLEETGRAPH.md` are deployed traces verified through the Langfuse API with `public: true`.
+- The Langfuse trace URLs in `FLEETGRAPH.md` include deployed smoke traces plus a 14-case detection-quality matrix. Representative traces were verified through the Langfuse API with `public: true`.
 - Langfuse is the observability provider for this submission. It fulfills the PRD's shared trace requirement by exposing public run trees with branch metadata, model usage, token counts, and trace URLs.
-- The V1 and V2 deterministic eval suites pass 16 cases and 50 assertions; see `docs/evals/fleetgraph-v1-eval-report.md` and `docs/evals/fleetgraph-v2-eval-report.md`.
+- The V1 and V2 deterministic eval suites pass 16 cases and 50 assertions; the detection-quality live graph eval passes 14 / 14 cases with one public trace per case.
 
 No architectural rebuild is needed. The original grading issue - on-demand chat bypassing the compiled graph - is fixed in `api/src/fleetgraph/graph.ts` and `api/src/routes/fleetgraph-chat.ts`.
 
@@ -21,7 +21,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | PRD requirement | Current status | Evidence | Submission action |
 |---|---|---|---|
 | Graph running with at least one proactive detection wired end-to-end | Pass | `api/src/fleetgraph/detectors/at-risk-week.ts`, `api/src/fleetgraph/proactive-runner.ts`, `api/src/fleetgraph/triggers.ts`, `api/src/routes/fleetgraph.ts` | None |
-| Observability tracing enabled with at least two shared trace links showing different paths | Pass | `FLEETGRAPH.md` lists public finding, quiet, and chat Langfuse traces | None |
+| Observability tracing enabled with shared trace links showing different paths | Pass | `FLEETGRAPH.md` lists public finding, quiet, chat, and 14-case detection-quality Langfuse traces | None |
 | `FLEETGRAPH.md` with Agent Responsibility and at least 5 use cases | Pass | `FLEETGRAPH.md` defines responsibilities and 7 use cases | None |
 | Graph outline with node types, edges, branching conditions | Pass | `FLEETGRAPH.md` Mermaid diagram; `docs/fleetgraph-graph-explainer.html` | None |
 | At least one human-in-the-loop gate | Pass | `api/src/fleetgraph/policy.ts`, `api/src/routes/fleetgraph.ts`, inbox `Needs Review` and `Approved` tabs | None |
@@ -49,7 +49,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | Use Cases | Pass | 7 use cases |
 | Trigger Model | Pass | Hybrid poll plus mutation debounce |
 | Test Cases | Pass | Test table includes public trace URLs |
-| Formal eval reports | Pass | V1 and V2 markdown plus JSON reports under `docs/evals/` |
+| Formal eval reports | Pass | V1, V2, and detection-quality markdown plus JSON reports under `docs/evals/` |
 | Architecture Decisions | Pass | `FLEETGRAPH.md` Architecture Decisions |
 | Cost Analysis | Pass | `FLEETGRAPH.md` Cost Analysis |
 

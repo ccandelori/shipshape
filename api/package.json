@@ -19,6 +19,7 @@
     "db:orphan-check": "tsx src/db/scripts/orphan-diagnostic.ts",
     "fleetgraph:demo-health": "tsx src/fleetgraph/scripts/demo-health.ts",
     "fleetgraph:eval": "tsx src/fleetgraph/scripts/run-evals.ts",
+    "fleetgraph:quality-eval": "tsx src/fleetgraph/scripts/run-detection-quality-eval.ts",
     "fleetgraph:latency-proof": "tsx src/fleetgraph/scripts/verify-latency.ts",
     "openapi:generate": "tsx src/scripts/generate-openapi.ts",
     "mcp": "tsx src/mcp/server.ts"

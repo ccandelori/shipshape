@@ -211,7 +211,7 @@ FLEETGRAPH_PUBLIC_TRACE_EXPORT=true
 LANGFUSE_PROJECT_ID=<your-langfuse-project-id>
 ```
 
-When this is enabled, FleetGraph calls the Langfuse SDK `setTraceAsPublic()` for exported top-level proactive run traces and on-demand chat traces, then refreshes the public flag after trace materialization. The trace metadata includes `tracePublic`, `traceId`, and, when `LANGFUSE_PROJECT_ID` is configured, `traceUrl`. Turn it back off after the capture window.
+When this is enabled, FleetGraph calls the Langfuse SDK `setTraceAsPublic()` for exported top-level proactive run traces and on-demand chat traces after trace materialization. The trace metadata includes `tracePublic`, `traceId`, and, when `LANGFUSE_PROJECT_ID` is configured, `traceUrl`. Turn it back off after the capture window.
 
 **When traces are generated**
 

@@ -249,6 +249,7 @@ Implementation evidence:
 Verification already recorded:
 
 - Formal V1 and V2 eval suites passed with 16 cases and 50 assertions; see `docs/evals/fleetgraph-v1-eval-report.md` and `docs/evals/fleetgraph-v2-eval-report.md`.
+- Detection quality eval passed 14 / 14 live graph cases with public Langfuse traces; see `docs/evals/fleetgraph-detection-quality-eval.md`.
 - Deterministic demo scenarios pass for quiet and finding paths.
 - At-risk Week detector tests pass.
 - Persistence tests pass.
@@ -262,6 +263,7 @@ Live trace evidence in `FLEETGRAPH.md`:
 - Finding path trace.
 - Quiet path trace.
 - On-demand Week chat trace.
+- Rubric trace matrix with one public Langfuse trace per detection-quality case, including use cases 3, 4, and 5.
 
 Local seed verification:
 
@@ -273,7 +275,7 @@ Local seed verification:
 | Requirement | Status |
 |-------------|--------|
 | Graph running with proactive detection E2E | Implemented |
-| Observability with at least two trace links | Captured in Langfuse; public finding, quiet, and chat trace URLs are recorded in `FLEETGRAPH.md` |
+| Observability with at least two trace links | Captured in Langfuse; public finding, quiet, chat, and 14-case detection-quality trace URLs are recorded in `FLEETGRAPH.md` |
 | `FLEETGRAPH.md` with responsibility and use cases | Present and current |
 | Graph outline with nodes, edges, and branches | Present and current |
 | Human-in-the-loop gate | Implemented in API and browser inbox |
@@ -284,16 +286,16 @@ Local seed verification:
 | Detection latency under 5 minutes | Passed deterministic proof; live trace latency metadata recorded |
 | Cost per run and production estimates | Present |
 | Same graph architecture for proactive and on-demand | Implemented through `fleetgraph.runtime` |
-| Formal evals | V1 and V2 passed; reports committed under `docs/evals/` |
+| Formal evals | V1, V2, and detection-quality live graph evals passed; reports committed under `docs/evals/` |
 
 ## Known Gaps And Follow-Up Tasks
 
 These do not block the Week 5 MVP if documented honestly, but they are the next product hardening items.
 
 1. Public trace sharing is finalized for the current submission packet.
-   - `FLEETGRAPH.md` records public Langfuse Cloud links for the finding path, quiet path, and on-demand chat path.
+   - `FLEETGRAPH.md` records public Langfuse Cloud links for the finding path, quiet path, on-demand chat path, and 14 detection-quality eval cases.
    - FleetGraph has an opt-in SDK path for future public trace publication: set `FLEETGRAPH_PUBLIC_TRACE_EXPORT=true` and `LANGFUSE_PROJECT_ID`, then recapture the selected traces.
-   - Public trace export calls Langfuse `setTraceAsPublic()`, refreshes the public flag after trace materialization, and records `tracePublic`, `traceId`, and `traceUrl` metadata when a project id is configured. Keep it off outside submission windows.
+   - Public trace export calls Langfuse `setTraceAsPublic()` after trace materialization for immediate traces, records `tracePublic`, `traceId`, and `traceUrl` metadata when a project id is configured, and stays off outside submission windows.
 
 2. `PostgresSaver` checkpoint durability is deferred.
    - Durable FleetGraph outcomes are in Postgres today.
