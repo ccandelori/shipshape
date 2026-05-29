@@ -91,11 +91,11 @@ Rows 1-6 are the trace-backed submission use cases.
 | # | Role | Trigger | Agent output | Human decision |
 |---|------|---------|--------------|----------------|
 | 1 | Director | A Week nears its end with important work blocked or stalled. | At-risk Week finding with evidence, severity, owner, and a proposed next action. | Approve a comment/nudge, reject, dismiss, or snooze. |
-| 2 | PM / Week owner | A blocker remains unresolved across elapsed-time thresholds. | At-risk Week finding with stale-blocker evidence, affected issues, and responsible owner. | Ask for update, follow up manually, accept risk, or suppress. |
+| 2 | PM / Week owner | A technical blocker remains unresolved near the end of the Week. | At-risk Week finding with stale-blocker evidence, affected issue, owner, and escalation context. | Ask for update, follow up manually, accept risk, or suppress. |
 | 3 | Engineer | Assigned work has no recent standup or progress signal. | At-risk Week finding with evidence calling out missing progress on assigned work. | Dismiss, snooze, approve a proposed visible action when one exists, or follow up manually. |
 | 4 | PM | A Week starts without plan or accountability context. | At-risk Week finding with missing-plan/accountability evidence linked to plan, retro, and project context. | Follow up with the owner or mark the risk intentionally accepted. |
 | 5 | Director / PM | Scope, issue count, or assignment load suggests overload. | At-risk Week finding with scope-pressure or overload evidence and a tradeoff recommendation. | Rebalance, accept risk, ask for clarification, or defer. |
-| 6 | Any user | User asks contextual chat what is blocked, risky, or next. | Answer grounded in the visible issue, project, or Week document. | Use the answer or ask a follow-up. |
+| 6 | Any user | User asks contextual chat what is blocked, who owns work, or what is next. | Answer grounded in the visible issue, project, or Week document, using human names for assignees/owners when Ship identity data is available. | Use the answer or ask a follow-up. |
 
 ## Phase 2: Graph Architecture
 
@@ -264,6 +264,7 @@ Live trace evidence in `FLEETGRAPH.md`:
 - Finding path trace.
 - Quiet path trace.
 - On-demand Week chat trace.
+- On-demand issue chat trace proving person-name resolution from Ship identity data.
 - Rubric trace matrix with one public Langfuse trace per detection-quality case, including use cases 3, 4, and 5.
 - Node telemetry report with observation IDs for traceable graph nodes and model calls.
 
@@ -277,7 +278,7 @@ Local seed verification:
 | Requirement | Status |
 |-------------|--------|
 | Graph running with proactive detection E2E | Implemented |
-| Observability with at least two trace links | Captured in Langfuse; public finding, quiet, chat, and 14-case detection-quality trace URLs are recorded in `FLEETGRAPH.md` |
+| Observability with at least two trace links | Captured in Langfuse; public finding, quiet, deployed chat, chat person-resolution, and 14-case detection-quality trace URLs are recorded in `FLEETGRAPH.md` |
 | `FLEETGRAPH.md` with responsibility and use cases | Present and current |
 | Graph outline with nodes, edges, and branches | Present and current |
 | Human-in-the-loop gate | Implemented in API and browser inbox |
@@ -295,7 +296,7 @@ Local seed verification:
 These notes define the submitted evidence boundary.
 
 1. Public trace sharing is finalized for the current submission packet.
-   - `FLEETGRAPH.md` records public Langfuse Cloud links for the finding path, quiet path, on-demand chat path, and 14 detection-quality eval cases.
+   - `FLEETGRAPH.md` records public Langfuse Cloud links for the finding path, quiet path, deployed on-demand Week chat path, current-code on-demand person-resolution chat path, and 14 detection-quality eval cases.
    - FleetGraph has an opt-in SDK path for selected public trace publication: set `FLEETGRAPH_PUBLIC_TRACE_EXPORT=true` and `LANGFUSE_PROJECT_ID`, then recapture the selected traces.
    - Public trace export calls Langfuse `setTraceAsPublic()` after trace materialization for immediate traces, records `tracePublic`, `traceId`, and `traceUrl` metadata when a project id is configured, and stays off outside submission windows.
 
@@ -303,7 +304,8 @@ These notes define the submitted evidence boundary.
    - Findings, action candidates, approvals, suppressions, usage, executions, inbox reads, and finding reads are persisted.
    - Transient graph execution state is not presented as a submitted durable artifact.
 
-3. On-demand chat evidence is scoped answering.
+3. On-demand chat evidence is scoped answering plus person-name resolution.
+   - `docs/evals/fleetgraph-chat-person-resolution.md` records a public chat trace where the graph answers with Alice Chen from Ship identity data instead of returning the assignee UUID.
    - The on-demand branch streams grounded answers through the shared graph.
    - Consequential Ship writes are demonstrated through the proactive finding approval flow.
 

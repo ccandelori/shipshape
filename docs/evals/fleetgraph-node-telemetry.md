@@ -1,6 +1,6 @@
 # FleetGraph Node Telemetry
 
-Generated at: 2026-05-29T21:56:56.592Z
+Generated at: 2026-05-29T22:31:43.116Z
 
 Source report: `docs/evals/fleetgraph-detection-quality-eval.json, docs/evals/fleetgraph-public-trace-verification.json`
 
@@ -323,4 +323,13 @@ Trace: [b2624ad3010625d9f91ce4945404e758](https://us.cloud.langfuse.com/project/
 | fleetgraph.chat.llm | GENERATION | `cbce54cd6e9afde2` | `842406515f8f12c7` | — | — | — | — | — | 2163 | 0.00023445 | 3741 | trace-public |
 | fleetgraph.chat.response | CHAIN | `842406515f8f12c7` | — | — | — | — | — | — | 0 | 0 | 4086 | yes |
 | fleetgraph.chat.response | SPAN | `t-b2624ad3010625d9f91ce4945404e758` | — | — | — | — | — | — | 0 | 0 | — | yes |
+
+## TRACE-b71ea0bc - fleetgraph.chat.response
+
+Trace: [b71ea0bc51bf7e600d2443d7586de209](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b71ea0bc51bf7e600d2443d7586de209)
+
+| Observation | Type | Observation id | Parent id | Trace node | Branch path | Guard | Pre-filter | Lifecycle | Tokens | Cost | Latency | Public |
+|---|---|---|---|---|---|---|---|---|---:|---:|---:|---|
+| fleetgraph.chat.llm | GENERATION | `9b64f39c9b942ab1` | `3f93dd85d6f6c799` | — | — | — | — | — | 578 | 0.0000903 | 1067 | trace-public |
+| fleetgraph.chat.response | CHAIN | `3f93dd85d6f6c799` | — | — | — | — | — | — | 0 | 0 | 1467 | yes |
 

@@ -40,6 +40,8 @@ export type FleetGraphNodeTelemetryReport = {
 const langfuseObservationSchema = z.object({
   id: z.string(),
   traceId: z.string(),
+  startTime: z.string().optional(),
+  sessionId: z.string().optional(),
   parentObservationId: z.string().nullable(),
   type: z.string(),
   name: z.string(),

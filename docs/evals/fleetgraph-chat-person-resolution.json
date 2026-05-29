@@ -1,0 +1,27 @@
+{
+  "generatedAt": "2026-05-29T22:27:41.909Z",
+  "traceUrl": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b71ea0bc51bf7e600d2443d7586de209",
+  "traceId": "b71ea0bc51bf7e600d2443d7586de209",
+  "documentId": "3f2dfdad-cad5-47ad-8aea-0858be19c8b2",
+  "documentType": "issue",
+  "userEmail": "dev@ship.local",
+  "question": "Who is assigned to this issue? Use the person's name, not the UUID.",
+  "expectedName": "Alice Chen",
+  "response": "Alice Chen is assigned to this issue.",
+  "usage": {
+    "modelName": "gpt-4o-mini",
+    "inputTokens": 570,
+    "outputTokens": 8,
+    "totalTokens": 578
+  },
+  "sources": [
+    {
+      "label": "Security audit fixes",
+      "documentId": "3f2dfdad-cad5-47ad-8aea-0858be19c8b2",
+      "documentType": "issue",
+      "kind": "scope"
+    }
+  ],
+  "personNameVerified": true,
+  "tracePublic": true
+}

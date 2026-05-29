@@ -10,7 +10,7 @@ This audit compares the current FleetGraph implementation and documentation agai
 
 FleetGraph is submission-ready from an engineering, documentation, deployment, and observability standpoint:
 
-- The Langfuse trace URLs in `FLEETGRAPH.md` include deployed smoke traces plus a 14-case detection-quality matrix. The three deployed-smoke traces and all 14 detection-quality traces were verified through the Langfuse API with `public: true`.
+- The Langfuse trace URLs in `FLEETGRAPH.md` include deployed smoke traces, a 14-case detection-quality matrix, and a current-code chat person-resolution trace. The three deployed-smoke traces, all 14 detection-quality traces, and the chat person-resolution trace were verified through the Langfuse API with `public: true`.
 - `docs/evals/fleetgraph-node-telemetry.md` exports concrete Langfuse observation IDs, trace-node metadata, latency, token, and cost fields for every verified public FleetGraph trace.
 - Langfuse is the observability provider for this submission. It fulfills the PRD's shared trace requirement by exposing public run trees with branch metadata, model usage, token counts, and trace URLs.
 - The V1 and V2 deterministic eval suites pass 16 cases and 50 assertions; the detection-quality live graph eval passes 14 / 14 cases with one public trace per case.
@@ -22,7 +22,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | PRD requirement | Current status | Evidence | Submission action |
 |---|---|---|---|
 | Graph running with at least one proactive detection wired end-to-end | Pass | `api/src/fleetgraph/detectors/at-risk-week.ts`, `api/src/fleetgraph/proactive-runner.ts`, `api/src/fleetgraph/triggers.ts`, `api/src/routes/fleetgraph.ts` | None |
-| Observability tracing enabled with shared trace links showing different paths | Pass | `FLEETGRAPH.md` lists public finding, quiet, chat, and 14-case detection-quality Langfuse traces; `docs/evals/fleetgraph-node-telemetry.md` lists node-level observation IDs and telemetry for each verified public trace | None |
+| Observability tracing enabled with shared trace links showing different paths | Pass | `FLEETGRAPH.md` lists public finding, quiet, deployed chat, chat person-resolution, and 14-case detection-quality Langfuse traces; `docs/evals/fleetgraph-node-telemetry.md` lists node-level observation IDs and telemetry for each verified public trace | None |
 | `FLEETGRAPH.md` with Agent Responsibility and at least 5 use cases | Pass | `FLEETGRAPH.md` defines responsibilities and 6 trace-backed use cases | None |
 | Graph outline with node types, edges, branching conditions | Pass | `FLEETGRAPH.md` Mermaid diagram; `docs/fleetgraph-graph-explainer.html` | None |
 | At least one human-in-the-loop gate | Pass | `api/src/fleetgraph/policy.ts`, `api/src/routes/fleetgraph.ts`, inbox `Needs Review` and `Approved` tabs | None |
@@ -64,7 +64,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | Visible writes require HITL | `pending_review` actions require approve then resume; resume writes supported `draft_comment` actions | Pass |
 | Durable outcomes exist | Findings, action candidates, approvals, suppressions, usage, action executions, inbox reads, finding reads are stored in Postgres | Pass |
 | Durable submitted outcomes exist in Postgres | Findings, action candidates, approvals, suppressions, usage, action executions, inbox reads, and finding reads are stored in Postgres | Pass |
-| Implementation coverage for the documented use cases | Use case 1 and use case 6 are implemented as primary surfaces; use cases 2-5 are represented as explicit traced acceptance states for stale blockers, missing progress, missing planning/accountability, and overload/scope pressure | Pass |
+| Implementation coverage for the documented use cases | Use case 1 and use case 6 are implemented as primary surfaces; use case 6 includes a trace-backed person-name resolution check; use cases 2-5 are represented as explicit traced acceptance states for stale blockers, missing progress, missing planning/accountability, and overload/scope pressure | Pass |
 
 ## Current Documentation Inventory
 
@@ -85,7 +85,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 
 Do these immediately before submitting:
 
-1. Open the three deployed-smoke Langfuse traces and the 14-case trace matrix from `FLEETGRAPH.md`.
+1. Open the three deployed-smoke Langfuse traces, the chat person-name trace, and the 14-case trace matrix from `FLEETGRAPH.md`.
 2. Review prompt/context content one last time for sensitive data.
 3. Reopen `https://143.198.163.184.nip.io/health` and confirm HTTP 200.
 4. Log in as `dev@ship.local` and smoke:

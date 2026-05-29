@@ -1,10 +1,11 @@
 {
-  "generatedAt": "2026-05-29T21:26:49.898Z",
+  "generatedAt": "2026-05-29T22:27:41.909Z",
   "sourceFiles": [
     "FLEETGRAPH.md",
-    "docs/evals/fleetgraph-detection-quality-eval.md"
+    "docs/evals/fleetgraph-detection-quality-eval.md",
+    "docs/evals/fleetgraph-chat-person-resolution.md"
   ],
-  "traceCount": 17,
+  "traceCount": 18,
   "allPublic": true,
   "traces": [
     {
@@ -72,6 +73,12 @@
       "name": "fleetgraph.chat.response",
       "public": true,
       "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b2624ad3010625d9f91ce4945404e758"
+    },
+    {
+      "traceId": "b71ea0bc51bf7e600d2443d7586de209",
+      "name": "fleetgraph.chat.response",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b71ea0bc51bf7e600d2443d7586de209"
     },
     {
       "traceId": "c9ef7e6b82d2ec366c45b04e42c92758",

@@ -33,6 +33,7 @@
     "db:seed": "pnpm --filter @ship/api db:seed",
     "db:migrate": "pnpm --filter @ship/api db:migrate",
     "db:orphan-check": "pnpm --filter @ship/api db:orphan-check",
+    "fleetgraph:capture-chat-trace": "pnpm --filter @ship/api fleetgraph:capture-chat-trace",
     "fleetgraph:demo-health": "pnpm --filter @ship/api fleetgraph:demo-health",
     "fleetgraph:eval": "pnpm --filter @ship/api fleetgraph:eval",
     "fleetgraph:node-telemetry": "pnpm --filter @ship/api fleetgraph:node-telemetry",

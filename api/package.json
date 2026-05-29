@@ -17,6 +17,7 @@
     "db:seed": "tsx src/db/seed.ts",
     "db:migrate": "tsx src/db/migrate.ts",
     "db:orphan-check": "tsx src/db/scripts/orphan-diagnostic.ts",
+    "fleetgraph:capture-chat-trace": "tsx src/fleetgraph/scripts/capture-chat-trace.ts",
     "fleetgraph:demo-health": "tsx src/fleetgraph/scripts/demo-health.ts",
     "fleetgraph:eval": "tsx src/fleetgraph/scripts/run-evals.ts",
     "fleetgraph:node-telemetry": "tsx src/fleetgraph/scripts/export-node-telemetry.ts",

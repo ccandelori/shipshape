@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-05-29T21:56:56.592Z",
+  "generatedAt": "2026-05-29T22:31:43.116Z",
   "sourceReport": "docs/evals/fleetgraph-detection-quality-eval.json, docs/evals/fleetgraph-public-trace-verification.json",
   "cases": [
     {
@@ -3906,6 +3906,52 @@
           "name": "fleetgraph.chat.response",
           "public": true,
           "latencyMs": null,
+          "inputTokens": 0,
+          "outputTokens": 0,
+          "totalTokens": 0,
+          "totalCost": 0,
+          "traceNode": null,
+          "branchPath": null,
+          "guardDecision": null,
+          "preFilterShouldReason": null,
+          "lifecycleState": null,
+          "modelName": "gpt-4o-mini"
+        }
+      ]
+    },
+    {
+      "id": "TRACE-b71ea0bc",
+      "name": "fleetgraph.chat.response",
+      "traceUrl": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b71ea0bc51bf7e600d2443d7586de209",
+      "traceId": "b71ea0bc51bf7e600d2443d7586de209",
+      "observations": [
+        {
+          "id": "9b64f39c9b942ab1",
+          "traceId": "b71ea0bc51bf7e600d2443d7586de209",
+          "parentObservationId": "3f93dd85d6f6c799",
+          "type": "GENERATION",
+          "name": "fleetgraph.chat.llm",
+          "public": false,
+          "latencyMs": 1067,
+          "inputTokens": 570,
+          "outputTokens": 8,
+          "totalTokens": 578,
+          "totalCost": 0.0000903,
+          "traceNode": null,
+          "branchPath": null,
+          "guardDecision": null,
+          "preFilterShouldReason": null,
+          "lifecycleState": null,
+          "modelName": null
+        },
+        {
+          "id": "3f93dd85d6f6c799",
+          "traceId": "b71ea0bc51bf7e600d2443d7586de209",
+          "parentObservationId": null,
+          "type": "CHAIN",
+          "name": "fleetgraph.chat.response",
+          "public": true,
+          "latencyMs": 1467,
           "inputTokens": 0,
           "outputTokens": 0,
           "totalTokens": 0,
