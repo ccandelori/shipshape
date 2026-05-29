@@ -17,10 +17,10 @@ Do not invent token counts when the runtime does not expose them.
 | 2026-05-28 | `5e814f55-35f6-4fdf-80d3-1533dc0c386e` | proactive (`mutation`) | `at_risk_week` | `output` | `gpt-4o-mini` | 1135 | 157 | $0.000264 | Public Langfuse trace in `FLEETGRAPH.md` | Deployed finding path; persisted finding `8cf63756-2cc0-428c-9488-7c3306130760`. |
 | 2026-05-28 | `b2624ad3010625d9f91ce4945404e758` | on-demand chat | n/a | `ondemand_chat` | captured in trace metadata | 2043 | 120 | see Langfuse trace | Public Langfuse trace in `FLEETGRAPH.md` | Deployed Week chat path through shared `fleetgraph.runtime`. |
 
-## Development Session Spend
+## Development Session Spend Availability
 
-| Date (UTC) | Session | Provider | Input tokens | Output tokens | Cached input tokens | Total tokens | Estimated cost (USD) | Source | Notes |
-|------------|---------|----------|--------------|---------------|---------------------|--------------|----------------------|--------|-------|
-| 2026-05-26T00:10:48Z | Documentation: FleetGraph architecture and canonical FLEETGRAPH.md | OpenAI | Unknown | Unknown | Unknown | Unknown | Unknown | Codex session usage not exposed in workspace | Replace with OpenAI dashboard/export numbers when available. |
-| 2026-05-26T00:58:24Z | PRD writing and Taskmaster parsing for FleetGraph MVP | OpenAI Codex session plus Taskmaster fallback | Unknown | Unknown | Unknown | Unknown | $0.000000 known for Taskmaster parse; OpenAI session cost unknown | Codex session usage not exposed; Taskmaster parse-prd telemetry reported 405,757 input and 6,408 output tokens on claude-code/sonnet | Taskmaster's OpenAI-provider path lacked `OPENAI_API_KEY`; Codex CLI hit a strict JSON schema error. |
-| 2026-05-26T15:26:00Z | FleetGraph Langfuse tracing implementation | OpenAI Codex session | Unknown | Unknown | Unknown | Unknown | Unknown | Codex session usage not exposed in workspace | Runtime graph spend is captured above; final submission trace links are now public in `FLEETGRAPH.md`. |
+The repository contains measured FleetGraph runtime spend, but the Codex desktop sessions used to build FleetGraph did not expose per-session billing or token exports into the workspace. I am not inventing those numbers. The only development-session token telemetry available in local artifacts is the Taskmaster PRD parse fallback below.
+
+| Date (UTC) | Session | Provider / tool path | Input tokens | Output tokens | Estimated cost (USD) | Source | Notes |
+|------------|---------|----------------------|--------------|---------------|----------------------|--------|-------|
+| 2026-05-26T00:58:24Z | Taskmaster PRD parsing fallback | `task-master parse-prd` via claude-code/sonnet telemetry | 405,757 | 6,408 | $0.000000 known for local Taskmaster parse wrapper | Taskmaster parse telemetry emitted during setup | This is tool telemetry, not Codex billing. Codex session spend was not exposed in repo-accessible logs or API response metadata. |

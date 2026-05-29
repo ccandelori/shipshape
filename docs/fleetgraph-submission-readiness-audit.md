@@ -63,7 +63,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | Visible writes require HITL | `pending_review` actions require approve then resume; resume writes supported `draft_comment` actions | Pass |
 | Durable outcomes exist | Findings, action candidates, approvals, suppressions, usage, action executions, inbox reads, finding reads are stored in Postgres | Pass |
 | Durable submitted outcomes exist in Postgres | Findings, action candidates, approvals, suppressions, usage, action executions, inbox reads, and finding reads are stored in Postgres | Pass |
-| Implementation coverage for the documented use cases | Use case 1 and use case 6 are implemented as primary MVP surfaces; use cases 2-5 are implemented as risk patterns inside the at-risk Week graph and backed by detection-quality traces | Pass |
+| Implementation coverage for the documented use cases | Use case 1 and use case 6 are implemented as primary surfaces; use cases 2-5 are represented as explicit traced acceptance states for stale blockers, missing progress, missing planning/accountability, and overload/scope pressure | Pass |
 
 ## Current Documentation Inventory
 

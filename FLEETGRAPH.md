@@ -264,7 +264,7 @@ The six rows below are the submitted, trace-backed use cases.
 MVP implementation scope:
 
 - Use case 1 is the flagship end-to-end proactive detector.
-- Use cases 2 to 5 are implemented as risk patterns in the at-risk Week graph's context and reasoning path, then validated by live model traces in the detection quality eval suite. They share the flagship graph, policy, output, usage, and trace path rather than separate detector modules.
+- Use cases 2 to 5 are represented as explicit acceptance states for stale blockers, missing progress, missing planning/accountability, and overload/scope pressure; each state has a live model trace in the detection-quality eval suite.
 - Use case 6 is context-scoped chat.
 
 ## Trigger Model
@@ -623,7 +623,7 @@ These projections intentionally treat on-demand usage as the main cost driver. I
 
 ### Development and Testing Costs
 
-Runtime model spend for the MVP at-risk Week detector is now persisted in `fleetgraph_usage` by graph run. Session-level development spend remains tracked in `FLEETGRAPH_TOKEN_SPEND.md`; append to that ledger at the end of every FleetGraph work session using OpenAI usage data or API response metadata.
+Runtime model spend for the MVP at-risk Week detector is persisted in `fleetgraph_usage` by graph run and summarized below. Development-session spend is documented separately in `FLEETGRAPH_TOKEN_SPEND.md`; the Codex desktop sessions used for this work did not expose per-session billing or token exports into the repo, so that ledger records only available tool telemetry rather than fabricated totals.
 
 | Item | Amount |
 |------|--------|

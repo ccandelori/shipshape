@@ -61,7 +61,7 @@ FleetGraph can autonomously:
 - Rank risks.
 - Create findings.
 - Stream private context answers.
-- Create draft action candidates.
+- Create action candidates attached to proactive findings.
 - Mark findings read for the current user.
 
 The submitted write path asks a human before:
@@ -116,7 +116,7 @@ Conceptual nodes:
 
 - `trigger`: normalize poll, mutation, or on-demand input.
 - `scope`: authorize workspace and resolve the scoped document.
-- `intent`: route proactive detection versus on-demand question/action request.
+- `intent`: route proactive detection versus on-demand questions.
 - `context`: build bounded Ship context.
 - `fetch`: load documents, issues, standups, accountability status, findings, and ownership in parallel where safe.
 - `guard`: enforce advisory lock, material-change, suppression, dedup, and pending-review checks.
@@ -304,9 +304,8 @@ These notes define the submitted evidence boundary.
    - The on-demand branch streams grounded answers through the shared graph.
    - Consequential Ship writes are demonstrated through the proactive finding approval flow.
 
-4. Use cases 2-5 are represented as traced risk patterns in the flagship detector.
-   - The MVP ships one flagship at-risk Week detector graph.
-   - Stale blocker, missing progress, planless Week, and overload/scope-pressure are implemented as risk patterns in that graph and backed by detection-quality trace cases.
+4. Use cases 2-5 are represented as traced acceptance states in the flagship graph.
+   - Stale blocker, missing progress, planless Week, and overload/scope-pressure each have detection-quality trace cases.
 
 ## Final Readiness Judgment
 

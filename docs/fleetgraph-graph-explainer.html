@@ -301,7 +301,7 @@ flowchart TD
     trigger --> scope["authorize workspace + resolve scope"]
     scope --> intent{mode / intent?}
     intent -->|proactive| detector["select detector / use case"]
-    intent -->|on-demand| userIntent{question or action request?}
+    intent -->|on-demand| userIntent["context question"]
 
     detector --> context
     userIntent --> context
@@ -310,8 +310,7 @@ flowchart TD
 
     guard -->|quiet| ENDQ((quiet end))
     guard -->|changed| preFilter{"deterministic pre-filter:<br/>worth surfacing?"}
-    userIntent -->|answer| reason
-    userIntent -->|action request| reason
+    userIntent --> reason
     preFilter -->|no| ENDQ
     preFilter -->|yes| reason["reason:<br/>finding + evidence + recommendation"]
 
@@ -346,9 +345,8 @@ flowchart TD
         <div class="scope-note">
           <h3>MVP boundary</h3>
           <p>
-            The submitted product implements one at-risk Week detector graph end to end. Stale blocker,
-            missing progress, planless Week, and overload signals are represented as risk patterns
-            inside that graph and validated by detection-quality traces. On-demand chat enters the shared FleetGraph runtime for
+            The submitted product implements the at-risk Week graph end to end. Stale blocker,
+            missing progress, missing-plan, and overload states are validated by detection-quality traces. On-demand chat enters the shared FleetGraph runtime for
             traced SSE streaming. This page is
             a supplemental explainer; <code>FLEETGRAPH.md</code> remains the canonical submission artifact.
           </p>
