@@ -512,7 +512,7 @@ function formatReportMarkdown(report: DetectionQualityReport): string {
     '',
     '**Note:** Default mode runs pre-filter only (cheap + deterministic).',
     'Use `--live` for full graph execution with real model calls (opt-in only).',
-    'See `docs/plans/2026-05-29-003-feat-fleetgraph-detection-quality-eval-plan.md` for scope and roadmap.',
+    'See `FLEETGRAPH.md` for the canonical submission scope and trace matrix.',
   ].join('\n');
 }
 

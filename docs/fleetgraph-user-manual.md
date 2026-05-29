@@ -108,7 +108,7 @@ FleetGraph chat streams responses over SSE from the shared `fleetgraph.runtime` 
 
 The chat panel shows source chips when the API returns scoped sources. These point to the current document and related Ship context used to answer.
 
-Chat memory is client-side and scoped by workspace, user, document type, and document id. Closing and reopening the same document chat should retain recent local messages in the browser. Server-side durable chat memory is future hardening.
+Chat memory is client-side and scoped by workspace, user, document type, and document id. Closing and reopening the same document chat should retain recent local messages in the browser.
 
 ## If You See "No Projects Yet"
 

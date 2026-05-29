@@ -40,6 +40,9 @@ Thumbs.db
 *.tmp
 .cache
 
+# Local OCR assets produced by document parsing tools
+eng.traineddata
+
 # Ralph loop local state
 .claude/ralph-loop.local.md
 

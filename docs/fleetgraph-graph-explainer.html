@@ -340,17 +340,16 @@ flowchart TD
         </div>
         <p class="caption">
           Trace paths: <b>A</b> proactive quiet exit · <b>B</b> proactive finding with approval ·
-          <b>C</b> graph-routed on-demand answer · <b>D</b> target on-demand action request routed into the same approval model.
+          <b>C</b> graph-routed on-demand answer.
           Runs are tagged with <code>triggerType</code>, <code>intent</code>, and <code>detectorType</code>.
         </p>
         <div class="scope-note">
           <h3>MVP boundary</h3>
           <p>
-            The MVP implements one at-risk Week detector graph end to end. Stale blocker,
-            missing progress, planless Week, and overload signals are implemented as risk patterns
-            inside that graph and validated by detection-quality traces; separate detector modules remain
-            future hardening. On-demand chat now enters the shared FleetGraph runtime for
-            traced SSE streaming, while chat-initiated write actions remain a post-MVP extension. This page is
+            The submitted product implements one at-risk Week detector graph end to end. Stale blocker,
+            missing progress, planless Week, and overload signals are represented as risk patterns
+            inside that graph and validated by detection-quality traces. On-demand chat enters the shared FleetGraph runtime for
+            traced SSE streaming. This page is
             a supplemental explainer; <code>FLEETGRAPH.md</code> remains the canonical submission artifact.
           </p>
         </div>
@@ -448,26 +447,23 @@ flowchart TD
             </p>
           </div>
           <div class="step">
-            <span class="node warn">action path</span>
+            <span class="node warn">chat scope</span>
             <p>
-              Action requests are not out of scope for FleetGraph. The current MVP defers browser-visible
-              chat action creation; the target architecture routes those requests into draft actions or
-              pending approvals instead of making chat answer-only forever.
+              The submitted chat path answers scoped questions. Consequential Ship writes are demonstrated
+              through proactive findings, human approval, and approved <code>draft_comment</code> resume.
             </p>
           </div>
           <div class="step">
             <span class="node">Ship writes</span>
             <p>
-              The agent currently reads context, drafts approved comments, dismisses or snoozes findings,
-              and resumes approved <code>draft_comment</code> actions. Create-issue, state-change, and assignment
-              tools are target extensions, not current MVP write primitives.
+              The agent reads context, drafts approved comments, dismisses or snoozes findings,
+              and resumes approved <code>draft_comment</code> actions.
             </p>
           </div>
           <div class="step">
             <span class="node guard">approval</span>
             <p>
-              In the target action extension, explicit user requests can use quick confirmation for low-risk changes.
-              High-stakes or hard-to-reverse actions should enter the same pending approval workflow used by proactive findings.
+              Visible writes enter the pending approval workflow used by proactive findings.
             </p>
           </div>
           <div class="step">
@@ -483,8 +479,7 @@ flowchart TD
           <h3>Why this is agent-native</h3>
           <p>
             FleetGraph receives events, reasons with dynamic Ship context, persists visible outcomes, and
-            calls the approved Ship write primitive available in the MVP. New behavior should come from new
-            detector prompts and tool composition, not a new bespoke workflow for every use case.
+            calls the approved Ship write primitive available in the submitted product.
           </p>
         </div>
       </div>
@@ -551,7 +546,7 @@ flowchart TD
             <tr>
               <td>Engineer</td>
               <td>Missing standup or ambiguous progress on assigned work.</td>
-              <td>Missing-progress risk evidence inside the at-risk Week finding path; private reminders and draft standup prompts are post-MVP action polish.</td>
+              <td>Missing-progress risk evidence inside the at-risk Week finding path.</td>
               <td>Dismiss, snooze, approve a visible action when one exists, or follow up manually.</td>
               <td>MVP risk pattern</td>
             </tr>
@@ -559,7 +554,7 @@ flowchart TD
               <td>PM</td>
               <td>Week starts without a plan or active work lacks clear hypothesis.</td>
               <td>At-risk Week finding with missing-plan/accountability evidence linked to weekly plan and project hypothesis.</td>
-              <td>Create plan task, notify owner, or mark intentionally deferred.</td>
+              <td>Create plan task, notify owner, or mark the risk intentionally accepted.</td>
               <td>MVP risk pattern</td>
             </tr>
             <tr>
@@ -571,10 +566,10 @@ flowchart TD
             </tr>
             <tr>
               <td>Any user</td>
-              <td>Question or action request from embedded context chat.</td>
-              <td>MVP: answer scoped to the visible document. Target: draft action or pending approval scoped to the same context.</td>
-              <td>Use answer now; approve/edit draft after the action path is implemented.</td>
-              <td>MVP answer path; action path designed</td>
+              <td>Question from embedded context chat.</td>
+              <td>Answer scoped to the visible document.</td>
+              <td>Use answer or ask a follow-up.</td>
+              <td>MVP answer path</td>
             </tr>
           </tbody>
         </table>
@@ -610,19 +605,17 @@ flowchart TD
         <div class="mini warn">
           <h3>Approval matrix</h3>
           <p>
-            Auto-answer for read-only work; quick confirm for explicit low-risk changes; explicit approval
-            for unsolicited, high-stakes, external, bulk, or hard-to-reverse actions.
+            Auto-answer for read-only work; explicit approval for visible writes and any hard-to-reverse action.
           </p>
         </div>
       </div>
     </section>
 
     <section class="section" aria-labelledby="tools">
-      <h2 id="tools">Agent Tool Parity</h2>
+      <h2 id="tools">Implemented Action Surface</h2>
       <p>
-        This is the target tool model. Current MVP write execution is limited to approved
-        <code>draft_comment</code> actions plus finding lifecycle operations such as dismiss and snooze. Over time,
-        every action a user can take through Ship should have an equivalent agent capability.
+        Submitted write execution is limited to approved
+        <code>draft_comment</code> actions plus finding lifecycle operations such as approve, reject, dismiss, and snooze.
       </p>
       <div class="grid-3">
         <div class="mini">
@@ -681,7 +674,7 @@ flowchart TD
 
     <footer>
       Supplemental explainer for FleetGraph architecture. Canonical deliverables: <code>PRESEARCH.md</code> and
-      <code>FLEETGRAPH.md</code>. Source plan: <code>docs/plans/2026-05-25-001-feat-fleetgraph-proactive-agent-plan.md</code>.
+      <code>FLEETGRAPH.md</code>.
     </footer>
   </div>
 

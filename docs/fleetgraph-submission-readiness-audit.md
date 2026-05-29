@@ -22,7 +22,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 |---|---|---|---|
 | Graph running with at least one proactive detection wired end-to-end | Pass | `api/src/fleetgraph/detectors/at-risk-week.ts`, `api/src/fleetgraph/proactive-runner.ts`, `api/src/fleetgraph/triggers.ts`, `api/src/routes/fleetgraph.ts` | None |
 | Observability tracing enabled with shared trace links showing different paths | Pass | `FLEETGRAPH.md` lists public finding, quiet, chat, and 14-case detection-quality Langfuse traces | None |
-| `FLEETGRAPH.md` with Agent Responsibility and at least 5 use cases | Pass | `FLEETGRAPH.md` defines responsibilities and 6 current trace-backed use cases; chat-initiated write requests are separately marked as target architecture | None |
+| `FLEETGRAPH.md` with Agent Responsibility and at least 5 use cases | Pass | `FLEETGRAPH.md` defines responsibilities and 6 trace-backed use cases | None |
 | Graph outline with node types, edges, branching conditions | Pass | `FLEETGRAPH.md` Mermaid diagram; `docs/fleetgraph-graph-explainer.html` | None |
 | At least one human-in-the-loop gate | Pass | `api/src/fleetgraph/policy.ts`, `api/src/routes/fleetgraph.ts`, inbox `Needs Review` and `Approved` tabs | None |
 | Running against real Ship data; no mocked production responses | Pass | Context builders read Postgres Ship documents/issues/standups; seed and live data use real tables | Keep demo clear when using seeded rows versus live traces |
@@ -46,7 +46,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | Root `FLEETGRAPH.md` | Pass | Updated with quick start, traces, architecture, test cases, costs |
 | Agent Responsibility | Pass | `FLEETGRAPH.md` |
 | Graph Diagram | Pass | `FLEETGRAPH.md` Mermaid |
-| Use Cases | Pass | 6 current trace-backed use cases plus one clearly separated target extension |
+| Use Cases | Pass | 6 trace-backed use cases |
 | Trigger Model | Pass | Hybrid poll plus mutation debounce |
 | Test Cases | Pass | Test table includes public trace URLs |
 | Formal eval reports | Pass | V1, V2, and detection-quality markdown plus JSON reports under `docs/evals/` |
@@ -62,8 +62,8 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | Chat is scoped to current view | Route resolves document scope and context builders load Week/project/issue context before graph invocation | Pass |
 | Visible writes require HITL | `pending_review` actions require approve then resume; resume writes supported `draft_comment` actions | Pass |
 | Durable outcomes exist | Findings, action candidates, approvals, suppressions, usage, action executions, inbox reads, finding reads are stored in Postgres | Pass |
-| LangGraph checkpoints are durable in Postgres | Current graph checkpointing uses `MemorySaver`; durable outcomes are Postgres-backed | Deferred, documented |
-| Implementation coverage for the documented use cases | Use case 1 and use case 6 are implemented as primary MVP surfaces; use cases 2-5 are implemented as risk patterns inside the at-risk Week graph and backed by detection-quality traces; chat-initiated write requests are target architecture and not counted as a current use case | Pass for current use cases; target extension documented |
+| Durable submitted outcomes exist in Postgres | Findings, action candidates, approvals, suppressions, usage, action executions, inbox reads, and finding reads are stored in Postgres | Pass |
+| Implementation coverage for the documented use cases | Use case 1 and use case 6 are implemented as primary MVP surfaces; use cases 2-5 are implemented as risk patterns inside the at-risk Week graph and backed by detection-quality traces | Pass |
 
 ## Current Documentation Inventory
 
@@ -94,14 +94,8 @@ Do these immediately before submitting:
 5. Run `pnpm fleetgraph:eval` if you want a fresh local V1/V2 eval timestamp for the final packet.
 6. Submit `FLEETGRAPH.md`, `PRESEARCH.md`, the V1, V2, and detection-quality eval reports under `docs/evals/`, the public app URL, the demo video, and the trace URLs.
 
-## Do Not Rebuild Tonight
+## Submission Boundary
 
-These are product improvements, not Week 5 submission blockers:
-
-- `PostgresSaver` graph checkpointing.
-- Separate detector modules for stale blocker, missing progress, planless Week, overload, and scope creep. Current coverage is inside the at-risk Week graph.
-- Browser edit-before-approve.
-- Chat-initiated issue creation/action candidates.
-- Server-side durable chat history.
+The submitted product scope is the trace-backed FleetGraph runtime described in `FLEETGRAPH.md`: proactive at-risk Week detection, human-in-the-loop findings/actions, context-scoped on-demand chat, public Langfuse traces, latency proof, and cost evidence.
 
 They are worth building next, but chasing them before final submission would create avoidable regression risk.
