@@ -684,7 +684,7 @@ function createReasoningOutput(scopedDocId: string, policyKind: OutputPolicyKind
 function createRecommendedAction(policyKind: OutputPolicyKind): AtRiskReasoningOutput['recommendedAction'] {
   if (policyKind === 'finding_only') {
     return {
-      kind: 'notify',
+      kind: 'draft_comment',
       title: 'Review Week risk',
       body: 'Review the blocked launch approval before standup.',
     };

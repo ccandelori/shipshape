@@ -81,7 +81,9 @@ export function FindingCard({ finding, actions, pendingAction }: FindingCardProp
   const primaryActionCandidate = finding.action_candidates[0] ?? null;
   const canReview = finding.lifecycle_state === 'pending_review';
   const canSuppress = suppressibleLifecycleStates.includes(finding.lifecycle_state);
-  const canResume = finding.lifecycle_state === 'approved' && primaryActionCandidate !== null;
+  const approvedActionCandidate = finding.lifecycle_state === 'approved' ? primaryActionCandidate : null;
+  const canResume = approvedActionCandidate !== null && isExecutableResumeAction(approvedActionCandidate);
+  const needsManualFollowUp = approvedActionCandidate !== null && !isExecutableResumeAction(approvedActionCandidate);
   const isBusy = pendingAction !== null;
   const decisionFormTitle = useMemo(() => {
     if (decisionFormKind === 'reject') return 'Reject finding';
@@ -257,6 +259,11 @@ export function FindingCard({ finding, actions, pendingAction }: FindingCardProp
             {pendingAction === 'resume' ? 'Resuming...' : 'Resume'}
           </button>
         )}
+        {needsManualFollowUp && (
+          <span className="rounded-md border border-border bg-border/20 px-3 py-1.5 text-sm font-medium text-muted">
+            Manual follow-up required
+          </span>
+        )}
       </div>
 
       {decisionFormKind && decisionFormTitle && (
@@ -311,6 +318,10 @@ export function FindingCard({ finding, actions, pendingAction }: FindingCardProp
       )}
     </article>
   );
+}
+
+function isExecutableResumeAction(actionCandidate: FleetGraphActionCandidate): boolean {
+  return actionCandidate.recommended_action.kind === 'draft_comment';
 }
 
 function FindingDecisionProof({ finding }: { finding: FleetGraphFinding }) {

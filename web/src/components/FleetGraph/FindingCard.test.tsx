@@ -79,6 +79,28 @@ function createActionHandlers(): FindingCardActionHandlers {
   };
 }
 
+function createFindingWithRecommendedActionKind(
+  lifecycleState: FleetGraphFinding['lifecycle_state'],
+  actionKind: FleetGraphFinding['action_candidates'][number]['recommended_action']['kind']
+): FleetGraphFinding {
+  const finding = createFinding(lifecycleState);
+  const primaryActionCandidate = finding.action_candidates[0]!;
+
+  return {
+    ...finding,
+    action_candidates: [
+      {
+        ...primaryActionCandidate,
+        recommended_action: {
+          ...primaryActionCandidate.recommended_action,
+          kind: actionKind,
+          body: 'Assign an owner to recover the proof path for the shared observability evidence.',
+        },
+      },
+    ],
+  };
+}
+
 describe('FindingCard', () => {
   it('renders evidence and limits open findings to suppressing actions', () => {
     const actions = createActionHandlers();
@@ -200,6 +222,20 @@ describe('FindingCard', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Resume approved action' }));
 
     expect(actions.onResume).toHaveBeenCalledWith({ actionCandidateId: 'action-1' });
+  });
+
+  it('does not offer resume for approved actions that are not executable in Ship yet', () => {
+    const actions = createActionHandlers();
+    render(
+      <FindingCard
+        finding={createFindingWithRecommendedActionKind('approved', 'assign_issue')}
+        actions={actions}
+        pendingAction={null}
+      />
+    );
+
+    expect(screen.queryByRole('button', { name: 'Resume approved action' })).not.toBeInTheDocument();
+    expect(screen.getByText('Manual follow-up required')).toBeInTheDocument();
   });
 
   it('submits dismiss and snooze decisions with audit reasons', () => {

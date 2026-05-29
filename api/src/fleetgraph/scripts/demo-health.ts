@@ -365,10 +365,23 @@ async function resetFleetGraphDemoState(): Promise<string[]> {
   try {
     await client.query('BEGIN');
     const resetResult = await client.query<ResetActionRow>(
-      `WITH demo_findings AS (
+      `WITH demo_workspace AS (
+         SELECT id
+         FROM workspaces
+         WHERE name = 'Ship Workspace'
+         LIMIT 1
+       ),
+       demo_findings AS (
          SELECT id, material_change_key
          FROM fleetgraph_findings
-         WHERE material_change_key = ANY($1::text[])
+         WHERE workspace_id IN (SELECT id FROM demo_workspace)
+           AND material_change_key = ANY($1::text[])
+       ),
+       generated_findings AS (
+         SELECT id
+         FROM fleetgraph_findings
+         WHERE workspace_id IN (SELECT id FROM demo_workspace)
+           AND material_change_key <> ALL($1::text[])
        ),
        pending_finding AS (
          SELECT id
@@ -379,6 +392,11 @@ async function resetFleetGraphDemoState(): Promise<string[]> {
          SELECT target_document_id
          FROM fleetgraph_action_candidates
          WHERE finding_id IN (SELECT id FROM pending_finding)
+       ),
+       deleted_generated_findings AS (
+         DELETE FROM fleetgraph_findings
+         WHERE id IN (SELECT id FROM generated_findings)
+         RETURNING id
        ),
        deleted_executions AS (
          DELETE FROM fleetgraph_action_executions
@@ -423,6 +441,8 @@ async function resetFleetGraphDemoState(): Promise<string[]> {
        SELECT 'approval rows cleared' AS action, COUNT(*)::text AS count FROM deleted_approvals
        UNION ALL
        SELECT 'execution rows cleared' AS action, COUNT(*)::text AS count FROM deleted_executions
+       UNION ALL
+       SELECT 'generated findings cleared' AS action, COUNT(*)::text AS count FROM deleted_generated_findings
        UNION ALL
        SELECT 'suppression rows cleared' AS action, COUNT(*)::text AS count FROM deleted_suppressions
        UNION ALL
