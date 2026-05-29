@@ -283,7 +283,7 @@
         </div>
         <div class="note">
           <strong>Outcome layer</strong>
-          <span>Findings, action candidates, approvals, suppressions, and chat answers are durable agent outputs.</span>
+          <span>Findings, action candidates, approvals, and suppressions are persisted agent outcomes; chat answers remain scoped client-side outputs.</span>
         </div>
         <div class="note">
           <strong>Execution layer</strong>
@@ -372,9 +372,9 @@ flowchart TD
           <div class="step">
             <span class="node">trigger + lock</span>
             <p>
-              The tick can run on every Elastic Beanstalk instance, so each project run first takes a
-              non-blocking Postgres advisory lock. A project with a <code>pending_review</code> action is skipped
-              to avoid racing the approval resume path.
+              The tick can run on every API instance in a multi-instance deployment, so each project run first takes a
+              non-blocking Postgres advisory lock. Existing findings for the same scoped document and
+              material-change key, including <code>pending_review</code> findings, quiet duplicate runs.
             </p>
           </div>
           <div class="step">
@@ -466,15 +466,15 @@ flowchart TD
           <div class="step">
             <span class="node guard">approval</span>
             <p>
-              Explicit user requests can use quick confirmation for low-risk changes. High-stakes or hard-to-reverse
-              actions still enter the same pending approval workflow used by proactive findings.
+              In the target action extension, explicit user requests can use quick confirmation for low-risk changes.
+              High-stakes or hard-to-reverse actions should enter the same pending approval workflow used by proactive findings.
             </p>
           </div>
           <div class="step">
             <span class="node">deployment</span>
             <p>
               Token streaming needs a non-buffered route. <code>/api/fleetgraph/chat</code> should have a
-              CloudFront behavior with compression disabled, or the client should route directly to Elastic Beanstalk.
+              non-buffered proxy behavior with compression disabled, or the client should route directly to the API process.
             </p>
           </div>
         </section>
@@ -544,36 +544,36 @@ flowchart TD
             <tr>
               <td>PM / Week owner</td>
               <td>Blocker remains unresolved across elapsed-time thresholds.</td>
-              <td>Blocker summary, stale duration, accountable owner, proposed next step.</td>
+              <td>At-risk Week finding with stale-blocker evidence, stale duration, accountable owner, and proposed next step.</td>
               <td>Ask for update, draft issue, or suppress as known risk.</td>
-              <td>MVP-adjacent</td>
+              <td>MVP risk pattern</td>
             </tr>
             <tr>
               <td>Engineer</td>
               <td>Missing standup or ambiguous progress on assigned work.</td>
               <td>Missing-progress risk evidence inside the at-risk Week finding path; private reminders and draft standup prompts are post-MVP action polish.</td>
-              <td>Post, edit, dismiss, or snooze.</td>
-              <td>Extension</td>
+              <td>Dismiss, snooze, approve a visible action when one exists, or follow up manually.</td>
+              <td>MVP risk pattern</td>
             </tr>
             <tr>
               <td>PM</td>
               <td>Week starts without a plan or active work lacks clear hypothesis.</td>
-              <td>Accountability finding linked to weekly plan and project hypothesis.</td>
+              <td>At-risk Week finding with missing-plan/accountability evidence linked to weekly plan and project hypothesis.</td>
               <td>Create plan task, notify owner, or mark intentionally deferred.</td>
-              <td>Extension</td>
+              <td>MVP risk pattern</td>
             </tr>
             <tr>
               <td>Director / PM</td>
               <td>Scope creep, overload, or project-work mismatch appears.</td>
-              <td>Portfolio-level risk narrative with evidence and candidate tradeoff.</td>
+              <td>At-risk Week finding with overload/scope-pressure evidence and candidate tradeoff.</td>
               <td>Rebalance work, accept risk, or ask team for clarification.</td>
-              <td>Extension</td>
+              <td>MVP risk pattern</td>
             </tr>
             <tr>
               <td>Any user</td>
               <td>Question or action request from embedded context chat.</td>
-              <td>Answer, draft action, or pending approval scoped to the visible document.</td>
-              <td>Use answer, approve/edit draft, or start a new chat thread.</td>
+              <td>MVP: answer scoped to the visible document. Target: draft action or pending approval scoped to the same context.</td>
+              <td>Use answer now; approve/edit draft after the action path is implemented.</td>
               <td>MVP answer path; action path designed</td>
             </tr>
           </tbody>
@@ -672,8 +672,8 @@ flowchart TD
         <div class="mini">
           <h3>Streaming deployment</h3>
           <p>
-            Chat SSE requires a non-buffered CloudFront behavior for <code>/api/fleetgraph/chat</code> or a direct
-            Elastic Beanstalk route. <code>/events</code> remains the live invalidation path for findings.
+            Chat SSE requires a non-buffered proxy behavior for <code>/api/fleetgraph/chat</code> or a direct
+            API route. <code>/events</code> remains the live invalidation path for findings.
           </p>
         </div>
       </div>

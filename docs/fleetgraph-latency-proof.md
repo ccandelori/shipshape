@@ -58,6 +58,6 @@ The finding appeared in `45.113s`, comfortably under the `300s` target.
 
 ## Implementation Notes
 
-The proof also exposed and fixed a wiring issue: the default proactive trigger runner was still a placeholder. The production trigger now invokes the at-risk Week graph through `createProductionAtRiskWeekScopeRunner`.
+The proof also exposed and fixed a wiring issue: the default proactive trigger runner was still a placeholder. The production trigger now invokes FleetGraph through `createProductionAtRiskWeekScopeRunner`, which enters the shared `fleetgraph.runtime` graph and delegates to the at-risk Week detector branch.
 
 The graph runner now receives the same checked-out Postgres client used for advisory locking. That matters because the output node performs transactional writes, and those writes must not go through `pool.query` while a transaction is expected.

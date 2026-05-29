@@ -34,14 +34,14 @@ Before recording, follow the full **Capture & Verification Checklist** in `FLEET
 
 4. Verify every trace you will show is public, review for PII, then turn the export flag off.
 
-Open these tabs before recording (update Langfuse URLs after regeneration):
+Open these tabs before recording. The Langfuse finding trace below is the current public proof trace; replace it only if you intentionally recapture a newer one and verify it is public.
 
 | Tab | URL |
 |---|---|
 | Ship app | `https://143.198.163.184.nip.io/` |
 | Week chat | `https://143.198.163.184.nip.io/documents/ae794fb3-2b32-449b-819f-34348d317295` |
 | Issue comment | `https://143.198.163.184.nip.io/documents/27e15c1b-3f6c-4e1d-8880-15a5c5705459` |
-| Langfuse finding trace | (update from checklist) |
+| Langfuse finding trace | `https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b0fb54c7f46e28c96d1eaa531fc89d0d` |
 
 Login:
 

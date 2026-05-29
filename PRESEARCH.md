@@ -88,15 +88,17 @@ Default recipients are Week owners for Week findings, project owners for project
 
 ### Use Cases
 
+Rows 1-6 are the current trace-backed submission use cases. Row 7 is product-discovery target architecture and is not counted in the MVP trace matrix until chat can create browser-visible action candidates.
+
 | # | Role | Trigger | Agent output | Human decision |
 |---|------|---------|--------------|----------------|
 | 1 | Director | A Week nears its end with important work blocked or stalled. | At-risk Week finding with evidence, severity, owner, and a proposed next action. | Approve, edit via API, reject, dismiss, or snooze. |
-| 2 | PM / Week owner | A blocker remains unresolved across elapsed-time thresholds. | Stale blocker summary with affected issues and responsible owner. | Ask for update, create follow-up, accept risk, or suppress. |
+| 2 | PM / Week owner | A blocker remains unresolved across elapsed-time thresholds. | At-risk Week finding with stale-blocker evidence, affected issues, and responsible owner. | Ask for update, create follow-up, accept risk, or suppress. |
 | 3 | Engineer | Assigned work has no recent standup or progress signal. | At-risk Week evidence calling out missing progress on assigned work; draft/private reminders are post-MVP action polish. | Dismiss, snooze, approve a visible action when one exists, or follow up manually. |
-| 4 | PM | A Week starts without plan or accountability context. | Accountability finding linked to plan, retro, and project context. | Create plan task, notify owner, or intentionally defer. |
-| 5 | Director / PM | Scope, issue count, or assignment load suggests overload. | Scope-creep or overload finding with tradeoff recommendation. | Rebalance, accept risk, ask for clarification, or defer. |
+| 4 | PM | A Week starts without plan or accountability context. | At-risk Week finding with missing-plan/accountability evidence linked to plan, retro, and project context. | Create plan task, notify owner, or intentionally defer. |
+| 5 | Director / PM | Scope, issue count, or assignment load suggests overload. | At-risk Week finding with scope-pressure or overload evidence and a tradeoff recommendation. | Rebalance, accept risk, ask for clarification, or defer. |
 | 6 | Any user | User asks contextual chat what is blocked, risky, or next. | Answer grounded in the visible issue, project, or Week document. | Use the answer or ask a follow-up. |
-| 7 | Any user | User asks chat to take action. | Draft action or pending approval candidate. | Approve, reject, or leave as draft. Browser edit-before-approve is post-MVP polish; API edited approval exists. |
+| 7 | Any user | User asks chat to take action. | Target architecture: draft action or pending approval candidate. Current MVP chat answers with scoped context and does not yet create browser-visible action candidates. | Post-MVP: approve, reject, or leave as draft. API edited approval exists for approved proactive actions. |
 
 ## Phase 2: Graph Architecture
 
@@ -314,4 +316,4 @@ These do not block the Week 5 MVP if documented honestly, but they are the next 
 
 FleetGraph is substantially submission-ready from a code, documentation, deployment, and demo standpoint: proactive detection, guarded execution, durable findings, human review, embedded graph-routed chat, UI access, seed data, latency proof, trace evidence, and cost tracking are all present.
 
-FleetGraph is ready for final submission packaging. The remaining pre-submit work is operational: re-smoke the public app, confirm the public Langfuse URLs still open, and submit the correct branch/artifacts.
+FleetGraph is ready for final submission packaging. Immediately before submitting, re-smoke the public app, confirm the public Langfuse URLs still open, and submit the correct branch/artifacts.

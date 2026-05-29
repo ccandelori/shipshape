@@ -63,8 +63,8 @@ FleetGraph stays quiet when:
 - Only low-value churn occurred.
 - A human dismissed or snoozed the finding.
 - A previous rejection still applies.
-- Another instance is already processing the same project.
-- A pending review is already open for that project.
+- Another instance is already processing the same project scope.
+- An open, snoozed, dismissed, or pending-review finding already exists for the same scoped document and material-change key.
 
 ### On-Demand Mode
 
@@ -78,11 +78,11 @@ On-demand mode reasons about:
 - The user's question or requested action.
 - The user's workspace permissions and action eligibility.
 
-The prompt context supplied to the model for on-demand chat includes a server-derived `people` map (user ID to `{name, email}`) for every `ownerUserId`, `assigneeUserId`, and `authorUserId` present in the scoped documents and activity. The model is explicitly instructed to use the human name from this map and to emit an explicit "unknown person (id)" form when no record exists. Langfuse traces for on-demand chat include `personResolution: 'applied'` metadata.
+The prompt context supplied to the model for on-demand chat includes a server-derived `people` map (user ID to `{name, email}`) for every `ownerUserId`, `assigneeUserId`, and `authorUserId` present in the scoped documents and activity. The model is explicitly instructed to use the human name from this map and to emit an explicit "unknown person (id)" form when no record exists. Newly captured on-demand chat trace contexts include `personResolution: 'applied'` metadata; the known/unknown mapping behavior is covered by `api/src/fleetgraph/chat-runner.test.ts`.
 
 On-demand is answer-first in the current MVP. The shared runtime and action-candidate types are ready for chat-initiated action requests, but browser-visible chat action creation is still post-MVP work.
 
-Implementation status as of 2026-05-27: on-demand chat is routed through `api/src/fleetgraph/graph.ts` with `mode: 'ondemand_chat'`. The route prepares the authorized prompt context before opening SSE so it can still return normal HTTP errors for invalid scope or missing model configuration. Once streaming starts, the compiled graph branch owns Langfuse tracing and model token streaming through the same FleetGraph runtime entry point used by proactive mode.
+Implementation status as of 2026-05-29: on-demand chat is routed through `api/src/fleetgraph/graph.ts` with `mode: 'ondemand_chat'`. The route prepares the authorized prompt context before opening SSE so it can still return normal HTTP errors for invalid scope or missing model configuration. Once streaming starts, the compiled graph branch owns Langfuse tracing and model token streaming through the same FleetGraph runtime entry point used by proactive mode.
 
 ### Autonomy Rules
 
@@ -181,7 +181,7 @@ flowchart TD
     guard -->|quiet| ENDQ((quiet end))
     guard -->|changed| preFilter{"deterministic pre-filter:<br/>worth surfacing?"}
     userIntent -->|answer| reason
-    userIntent -->|action request| reason
+    userIntent -->|target action request| reason
     preFilter -->|no| ENDQ
     preFilter -->|yes| reason["reason:<br/>finding + evidence + recommendation"]
 
@@ -252,22 +252,24 @@ Verification run:
 
 ## Use Cases
 
+The six rows below are the current, trace-backed submission use cases. Chat-initiated write requests are documented separately as target architecture so they are not mistaken for an implemented MVP use case.
+
 | # | Role | Trigger | Agent detects or produces | Human decides |
 |---|------|---------|---------------------------|---------------|
 | 1 | Director | A Week is near its end with important issues stalled or blocked. | At-risk Week finding with evidence, owner, severity, and suggested nudge or issue. | Approve nudge, edit action, reject, dismiss, or snooze. |
-| 2 | PM / Week owner | A blocker remains unresolved across elapsed-time thresholds. | Stale blocker summary, duration, affected issues, owner, and next action. | Ask for update, create issue, accept risk, or suppress as known. |
+| 2 | PM / Week owner | A blocker remains unresolved across elapsed-time thresholds. | At-risk Week finding with stale-blocker evidence, duration, affected issues, owner, and next action. | Ask for update, create issue, accept risk, or suppress as known. |
 | 3 | Engineer | Assigned work has no recent standup or progress signal. | At-risk Week evidence calling out missing progress on assigned work; draft/private reminders are post-MVP action polish. | Dismiss, snooze, approve a visible action when one exists, or follow up manually. |
-| 4 | PM | A Week starts without a plan or active work lacks hypothesis context. | Accountability finding linked to weekly plan and project hypothesis. | Create plan task, notify owner, or mark intentionally deferred. |
-| 5 | Director / PM | Scope, issue count, or assignment load suggests overload. | Overload or scope-creep finding with evidence and tradeoff recommendation. | Rebalance work, accept risk, ask team for clarification, or defer. |
+| 4 | PM | A Week starts without a plan or active work lacks hypothesis context. | At-risk Week finding with missing-plan/accountability evidence linked to weekly plan and project hypothesis. | Create plan task, notify owner, or mark intentionally deferred. |
+| 5 | Director / PM | Scope, issue count, or assignment load suggests overload. | At-risk Week finding with overload or scope-pressure evidence and tradeoff recommendation. | Rebalance work, accept risk, ask team for clarification, or defer. |
 | 6 | Any user | User asks contextual chat what is blocked, risky, or next. | Answer scoped to the visible issue, project, or Week document. | Use the answer or ask for a follow-up. |
-| 7 | Any user | User asks contextual chat to take action. | Draft action or pending approval using the same action model as proactive mode. | Approve, reject, or leave as draft; API-level edited approval is available for post-MVP UI polish. |
 
 MVP implementation scope:
 
 - Use case 1 is the flagship end-to-end proactive detector.
-- Use cases 2 to 5 are implemented as risk patterns in the at-risk Week graph's context and pre-filter path, then validated by live model traces in the detection quality eval suite. They share the flagship graph, policy, output, usage, and trace path rather than separate detector modules.
+- Use cases 2 to 5 are implemented as risk patterns in the at-risk Week graph's context and reasoning path, then validated by live model traces in the detection quality eval suite. They share the flagship graph, policy, output, usage, and trace path rather than separate detector modules.
 - Use case 6 is MVP chat.
-- Use case 7 is architected now; full execution can be staged after the answer path is stable.
+
+Target extension, not counted as a current submission use case: when a user asks contextual chat to take action, FleetGraph should produce a draft action or pending approval using the same action model as proactive mode. The current graph-routed chat branch answers with scoped context; it does not yet create pending-review actions from chat requests. API-level edited approval exists for approved proactive actions, but browser-visible chat action creation is post-MVP.
 
 ## Trigger Model
 
@@ -304,7 +306,7 @@ Default timing:
 
 Multi-instance behavior:
 
-- Each Elastic Beanstalk instance may run the poll tick.
+- Each API instance in a multi-instance deployment may run the poll tick.
 - A per-project non-blocking Postgres advisory lock is required before invoking the proactive graph.
 - If another instance holds the lock, the current instance skips the project.
 - Dedup protects persisted finding rows; the advisory lock protects model spend and action execution.
@@ -341,7 +343,7 @@ Headless authentication:
 
 Full live trace report: `docs/evals/fleetgraph-detection-quality-eval.md` contains all 14 golden detection-quality cases (14/14 passed on 2026-05-29). Every trace URL was verified through the Langfuse API with `public: true`.
 
-Use case 7, chat-initiated action requests, is documented as target architecture rather than a current MVP claim. It should not be counted as implemented until the chat branch can produce a pending review action from a user request and the UI can approve or reject that action without console steps.
+Chat-initiated action requests are documented as target architecture rather than a current MVP use case. They should not be counted as implemented until the chat branch can produce a pending review action from a user request and the UI can approve or reject that action without console steps.
 
 ## Capture & Verification Checklist
 
@@ -437,7 +439,7 @@ This avoids the anti-pattern of building a detector service and bolting on a cha
 - `pending`: persists human-in-the-loop finding state and action candidate metadata.
 - `resume`: validates actor authorization and resumes approved, edited, or rejected actions.
 - `execute`: calls the currently supported Ship write primitive for approved actions (`draft_comment` today); broader issue/state/assignment tools are target architecture.
-- `output`: persists findings and broadcasts UI updates today; target graph output also streams on-demand chat responses.
+- `output`: persists findings and broadcasts UI updates on proactive paths; the implemented on-demand branch streams chat responses over SSE from inside the shared graph runtime.
 
 ### State Management
 
@@ -534,7 +536,7 @@ Dismiss and snooze are durable suppression choices, not just UI state.
 
 ### Deployment Model
 
-FleetGraph runs inside the existing API process on Elastic Beanstalk.
+FleetGraph runs inside the existing API process. The architecture supports Elastic Beanstalk-style multi-instance deployment, while the current public submission is deployed on the droplet at `https://143.198.163.184.nip.io/`.
 
 Runtime components:
 
@@ -547,8 +549,8 @@ Runtime components:
 
 Deployment constraints:
 
-- EB can run multiple instances, so proactive runs require advisory locks.
-- `/api/fleetgraph/chat` needs a non-buffered CloudFront behavior with compression disabled, or direct routing to EB, otherwise SSE may buffer.
+- Multi-instance deployments can run multiple poll ticks, so proactive runs require advisory locks.
+- `/api/fleetgraph/chat` needs a non-buffered proxy path for SSE. On CloudFront/EB this means compression disabled for that behavior; on the droplet the nginx route must avoid response buffering.
 - `/events` remains the best-effort live notification path; database-backed queries are authoritative.
 
 ### Error and Failure Handling
@@ -573,8 +575,8 @@ If Ship data fetch fails:
 
 If HITL resume fails:
 
-- The pending action remains pending or moves to an explicit failed state.
-- No action executes without confirmed resume state.
+- The action remains non-executed and the API returns an explicit error.
+- No visible write executes without confirmed resume state.
 
 ## Cost Analysis
 
@@ -598,10 +600,10 @@ Primary cost controls:
 | Invocation type | Expected model path | Budget assumption |
 |-----------------|--------------------|------------------|
 | Proactive quiet scan | No model | 0 model tokens |
-| Proactive pre-filter only | Cheap OpenAI model | 2k input / 200 output |
-| Proactive full finding | Cheap OpenAI model + reasoning model | 10k input / 1k output total |
+| Proactive pre-filter exit | No model; deterministic signal filter | 0 model tokens |
+| Proactive full finding | OpenAI reasoning model after deterministic pre-filter passes | 10k input / 1k output total |
 | On-demand answer | OpenAI reasoning model | 8k input / 1k output |
-| On-demand action request | OpenAI reasoning model, with possible approval draft | 10k input / 1.5k output |
+| Target on-demand action request | OpenAI reasoning model, with possible approval draft | 10k input / 1.5k output |
 
 ### Production Projection Assumptions
 
@@ -645,7 +647,7 @@ Runtime model spend for the MVP at-risk Week detector is now persisted in `fleet
 |-------------|--------|
 | Agent Responsibility | Defined in this document |
 | Graph Diagram | Defined in this document |
-| Use Cases | Defined in this document |
+| Use Cases | Six current, trace-backed use cases defined in this document; chat-initiated write requests documented as target architecture |
 | Trigger Model | Defined in this document |
 | Test Cases | V1 and V2 deterministic eval suites passed; public droplet traces plus 14-case detection-quality trace matrix captured |
 | Architecture Decisions | Defined in this document |

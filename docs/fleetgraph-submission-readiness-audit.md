@@ -22,7 +22,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 |---|---|---|---|
 | Graph running with at least one proactive detection wired end-to-end | Pass | `api/src/fleetgraph/detectors/at-risk-week.ts`, `api/src/fleetgraph/proactive-runner.ts`, `api/src/fleetgraph/triggers.ts`, `api/src/routes/fleetgraph.ts` | None |
 | Observability tracing enabled with shared trace links showing different paths | Pass | `FLEETGRAPH.md` lists public finding, quiet, chat, and 14-case detection-quality Langfuse traces | None |
-| `FLEETGRAPH.md` with Agent Responsibility and at least 5 use cases | Pass | `FLEETGRAPH.md` defines responsibilities and 7 use cases | None |
+| `FLEETGRAPH.md` with Agent Responsibility and at least 5 use cases | Pass | `FLEETGRAPH.md` defines responsibilities and 6 current trace-backed use cases; chat-initiated write requests are separately marked as target architecture | None |
 | Graph outline with node types, edges, branching conditions | Pass | `FLEETGRAPH.md` Mermaid diagram; `docs/fleetgraph-graph-explainer.html` | None |
 | At least one human-in-the-loop gate | Pass | `api/src/fleetgraph/policy.ts`, `api/src/routes/fleetgraph.ts`, inbox `Needs Review` and `Approved` tabs | None |
 | Running against real Ship data; no mocked production responses | Pass | Context builders read Postgres Ship documents/issues/standups; seed and live data use real tables | Keep demo clear when using seeded rows versus live traces |
@@ -46,7 +46,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | Root `FLEETGRAPH.md` | Pass | Updated with quick start, traces, architecture, test cases, costs |
 | Agent Responsibility | Pass | `FLEETGRAPH.md` |
 | Graph Diagram | Pass | `FLEETGRAPH.md` Mermaid |
-| Use Cases | Pass | 7 use cases |
+| Use Cases | Pass | 6 current trace-backed use cases plus one clearly separated target extension |
 | Trigger Model | Pass | Hybrid poll plus mutation debounce |
 | Test Cases | Pass | Test table includes public trace URLs |
 | Formal eval reports | Pass | V1, V2, and detection-quality markdown plus JSON reports under `docs/evals/` |
@@ -63,7 +63,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | Visible writes require HITL | `pending_review` actions require approve then resume; resume writes supported `draft_comment` actions | Pass |
 | Durable outcomes exist | Findings, action candidates, approvals, suppressions, usage, action executions, inbox reads, finding reads are stored in Postgres | Pass |
 | LangGraph checkpoints are durable in Postgres | Current graph checkpointing uses `MemorySaver`; durable outcomes are Postgres-backed | Deferred, documented |
-| Implementation coverage for the 7 documented use cases | Use case 1 and use case 6 are implemented as primary MVP surfaces; use cases 2-5 are implemented as risk patterns inside the at-risk Week graph and backed by detection-quality traces; use case 7 is architected but browser-visible chat action creation is post-MVP | Mixed, explicitly documented |
+| Implementation coverage for the documented use cases | Use case 1 and use case 6 are implemented as primary MVP surfaces; use cases 2-5 are implemented as risk patterns inside the at-risk Week graph and backed by detection-quality traces; chat-initiated write requests are target architecture and not counted as a current use case | Pass for current use cases; target extension documented |
 
 ## Current Documentation Inventory
 
