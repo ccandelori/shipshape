@@ -96,20 +96,20 @@ FleetGraph can do these without approval:
 - Create action candidates attached to proactive findings.
 - Mark a finding as seen by the current user.
 
-FleetGraph requires confirmation before:
+The submitted write path requires confirmation before:
 
-- Posting a comment or nudge visible to others.
-- Creating or assigning an issue.
-- Changing issue state.
-- Updating ownership.
-- Sending external notifications.
-- Performing bulk edits.
-- Taking any high-stakes or hard-to-reverse action.
+- Posting a comment or nudge visible to others through an approved `draft_comment` action.
+- Resuming any pending human-in-the-loop action.
 
 FleetGraph must never do these automatically:
 
 - Delete Ship content.
+- Create or assign an issue.
+- Change issue state.
+- Update ownership.
 - Notify external systems such as email or Slack.
+- Perform bulk edits.
+- Take any high-stakes or hard-to-reverse action.
 - Act across workspace boundaries.
 - Resume a human-in-the-loop action for a user who is not an authorized recipient or workspace admin.
 
@@ -254,10 +254,10 @@ The six rows below are the submitted, trace-backed use cases.
 
 | # | Role | Trigger | Agent detects or produces | Human decides |
 |---|------|---------|---------------------------|---------------|
-| 1 | Director | A Week is near its end with important issues stalled or blocked. | At-risk Week finding with evidence, owner, severity, and suggested nudge or issue. | Approve nudge, edit action, reject, dismiss, or snooze. |
-| 2 | PM / Week owner | A blocker remains unresolved across elapsed-time thresholds. | At-risk Week finding with stale-blocker evidence, duration, affected issues, owner, and next action. | Ask for update, create issue, accept risk, or suppress as known. |
+| 1 | Director | A Week is near its end with important issues stalled or blocked. | At-risk Week finding with evidence, owner, severity, and suggested next step. | Approve a comment/nudge, reject, dismiss, or snooze. |
+| 2 | PM / Week owner | A blocker remains unresolved across elapsed-time thresholds. | At-risk Week finding with stale-blocker evidence, duration, affected issues, owner, and next action. | Ask for update, follow up manually, accept risk, or suppress as known. |
 | 3 | Engineer | Assigned work has no recent standup or progress signal. | At-risk Week finding with evidence calling out missing progress on assigned work. | Dismiss, snooze, approve a proposed visible action when one exists, or follow up manually. |
-| 4 | PM | A Week starts without a plan or active work lacks hypothesis context. | At-risk Week finding with missing-plan/accountability evidence linked to weekly plan and project hypothesis. | Create plan task, notify owner, or mark the risk intentionally accepted. |
+| 4 | PM | A Week starts without a plan or active work lacks hypothesis context. | At-risk Week finding with missing-plan/accountability evidence linked to weekly plan and project hypothesis. | Follow up with the owner or mark the risk intentionally accepted. |
 | 5 | Director / PM | Scope, issue count, or assignment load suggests overload. | At-risk Week finding with overload or scope-pressure evidence and tradeoff recommendation. | Rebalance work, accept risk, ask team for clarification, or defer. |
 | 6 | Any user | User asks contextual chat what is blocked, risky, or next. | Answer scoped to the visible issue, project, or Week document. | Use the answer or ask for a follow-up. |
 
@@ -315,11 +315,13 @@ Headless authentication:
 
 ## Test Cases
 
-**How we closed the observability gap.** The early submission had trace holes. The final submission does not use test-only coverage as a substitute for required observability evidence. The table below is the grader-facing trace matrix: every row has a public Langfuse trace URL, and the 14-case detection-quality report has one public trace per case. V1/V2 deterministic evals remain regression gates for guards, policy, history bounding, redaction, and rate limits, but this section only lists trace-backed evidence.
+**How we closed the observability gap.** The early submission had trace holes. The final submission does not use test-only coverage as a substitute for required observability evidence. The table below is the grader-facing trace matrix: every row has a public Langfuse trace URL, and the 14-case detection-quality report has one public trace per case.
+
+Rows 1-14 are live OpenAI + Langfuse graph runs against Ship-shaped golden contexts from `api/src/fleetgraph/evals/detection-quality-cases.ts`. They prove branch behavior, model reasoning, token/cost metadata, and use-case coverage under controlled acceptance states. The Grader Quick Start traces at the top of this file are deployed droplet runs against real Ship document ids. Production FleetGraph paths use Postgres context builders; the golden eval harness isolates edge states so the same graph can be exercised repeatably without mutating the demo workspace.
 
 ## Submission Test Cases - Public Trace Matrix
 
-| # | Acceptance area / use case | Eval case | Ship state | Expected output | Public trace |
+| # | Acceptance area / use case | Eval case | State under test | Expected output | Public trace |
 |---|----------------------------|-----------|------------|-----------------|--------------|
 | 1 | Quiet path / cost control | DQ-Q01 | Healthy Week with no blocker or blocked high-priority issue. | Pre-filter exits quietly with zero model spend. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/395191121a1a47b757c1e4e9f3b3917c) |
 | 2 | Quiet path / active but unblocked work | DQ-Q02 | Active work mentions "no blockers." | No false finding. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/48ac10eb11261f4a8342c9b5fe2bfcd8) |
@@ -337,22 +339,9 @@ Headless authentication:
 | 14 | Critical-path silence | DQ-R08 | Critical-path items are silent across multiple standups. | Finding calls out repeated missing progress signal. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/40a2a18b8cfdc3ffcad3d80dc5414306) |
 | 15 | UC6: context-scoped on-demand chat | Deployed chat trace | User asks what is blocking the visible Week. | SSE answer is grounded in scoped Week issues and sources. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b2624ad3010625d9f91ce4945404e758) |
 
-Full live trace report: `docs/evals/fleetgraph-detection-quality-eval.md` contains all 14 golden detection-quality cases (14/14 passed on 2026-05-29). Every trace URL was verified through the Langfuse API with `public: true`.
+Full live trace report: `docs/evals/fleetgraph-detection-quality-eval.md` contains all 14 golden detection-quality cases (14/14 passed on 2026-05-29). Every trace URL was verified through the Langfuse API with `public: true`; see `docs/evals/fleetgraph-public-trace-verification.json`.
 
-## V1 Acceptance Eval Evidence Mapping
-
-This table maps the original V1 eval identifiers to their current public runtime evidence. When a case intentionally fails before graph/model execution, the expected result is no Langfuse graph trace; those cases are backed by the deterministic V1 report and called out explicitly rather than presented as model-observed traces.
-
-| V1 case | Behavior | Evidence |
-|---|---|---|
-| `FG-EVAL-001` | Healthy Week exits quietly before model reasoning. | [DQ-Q01 public trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/395191121a1a47b757c1e4e9f3b3917c), branch `prefilter-exit`, 0 input / 0 output tokens. |
-| `FG-EVAL-002` | Blocked Week produces a finding and pending action. | [DQ-R01 public trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/eedcf0102dddb9def28bb663ea1d066a), branch `output`. |
-| `FG-EVAL-003` | On-demand chat uses the compiled FleetGraph graph branch. | [Deployed chat public trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b2624ad3010625d9f91ce4945404e758), branch `ondemand_chat`. |
-| `FG-EVAL-004` | Week chat prompt stays grounded in scoped Ship sources. | [Deployed chat public trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b2624ad3010625d9f91ce4945404e758) plus `docs/evals/fleetgraph-v1-eval-report.md` source-label assertions. |
-| `FG-EVAL-005` | Notify-only recommendations do not create pending actions. | [Public finding trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b0fb54c7f46e28c96d1eaa531fc89d0d) showing `notify_only` policy, plus `docs/evals/fleetgraph-v1-eval-report.md` policy assertions. |
-| `FG-EVAL-006` | Visible writes require explicit HITL approval. | [DQ-R01 public trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/eedcf0102dddb9def28bb663ea1d066a), pending action candidate path. |
-| `FG-EVAL-007` | Proactive detector enters the compiled FleetGraph graph branch. | [DQ-R02 public trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/3912dc4e3ecf5a17aa88af5afc5e40d0), proactive at-risk Week branch. |
-| `FG-EVAL-008` | Unsupported chat scopes fail closed before model execution. | `docs/evals/fleetgraph-v1-eval-report.md`; no Langfuse graph trace is emitted by design because the request is rejected before graph entry. |
+V1 and V2 deterministic eval reports are regression gates, not the PRD trace matrix. They verify guard, policy, source-grounding, history-window, rate-limit, and redaction behavior that should fail before model execution or does not require model reasoning.
 
 ## Capture & Verification Checklist
 
@@ -492,15 +481,15 @@ Draft primitives:
 
 Write primitives:
 
-- `post_comment`
-- `create_issue`
-- `update_issue_state`
-- `assign_issue`
+- `resume_approved_draft_comment`
+- `approve_action`
+- `reject_action`
 - `dismiss_finding`
 - `snooze_finding`
-- `resume_approved_action`
+- `mark_finding_read`
+- `mark_finding_unread`
 
-These tools should call the same service layer and persistence paths the UI uses so agent changes are immediately visible through normal Ship queries.
+These primitives call the same service layer and persistence paths the UI uses so FleetGraph changes are immediately visible through normal Ship queries.
 
 ### Human-in-the-Loop Design
 
@@ -510,9 +499,7 @@ Approval policy is based on stakes and reversibility.
 |-------------|-----------------|
 | Private answer or summary | Auto-answer |
 | Risk finding with no write | Auto-notify |
-| Draft comment or draft issue | Auto-draft |
-| User-requested low-risk visible write | Quick confirm |
-| Unsolicited visible write | Explicit approval |
+| Draft comment action candidate | Explicit approval before visible write |
 | External notification | Explicit approval |
 | Delete or bulk destructive action | Not allowed for MVP |
 

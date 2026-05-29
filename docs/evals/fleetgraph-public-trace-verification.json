@@ -1,0 +1,113 @@
+{
+  "generatedAt": "2026-05-29T21:26:49.898Z",
+  "sourceFiles": [
+    "FLEETGRAPH.md",
+    "docs/evals/fleetgraph-detection-quality-eval.md"
+  ],
+  "traceCount": 17,
+  "allPublic": true,
+  "traces": [
+    {
+      "traceId": "0fb30befcc3a0c29aa67e6d3e7827f03",
+      "name": "fleetgraph.at_risk_week.run",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/0fb30befcc3a0c29aa67e6d3e7827f03"
+    },
+    {
+      "traceId": "144ea791af91486a3a83f102f52856c0",
+      "name": "fleetgraph.at_risk_week.run",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/144ea791af91486a3a83f102f52856c0"
+    },
+    {
+      "traceId": "3912dc4e3ecf5a17aa88af5afc5e40d0",
+      "name": "fleetgraph.at_risk_week.run",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/3912dc4e3ecf5a17aa88af5afc5e40d0"
+    },
+    {
+      "traceId": "395191121a1a47b757c1e4e9f3b3917c",
+      "name": "fleetgraph.at_risk_week.run",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/395191121a1a47b757c1e4e9f3b3917c"
+    },
+    {
+      "traceId": "40a2a18b8cfdc3ffcad3d80dc5414306",
+      "name": "fleetgraph.at_risk_week.run",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/40a2a18b8cfdc3ffcad3d80dc5414306"
+    },
+    {
+      "traceId": "48ac10eb11261f4a8342c9b5fe2bfcd8",
+      "name": "fleetgraph.at_risk_week.run",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/48ac10eb11261f4a8342c9b5fe2bfcd8"
+    },
+    {
+      "traceId": "92847024ef62d15c2dc714a0ce759a19",
+      "name": "fleetgraph.at_risk_week.run",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/92847024ef62d15c2dc714a0ce759a19"
+    },
+    {
+      "traceId": "9e459de6a80456442218e628441d4b9c",
+      "name": "fleetgraph.at_risk_week.run",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/9e459de6a80456442218e628441d4b9c"
+    },
+    {
+      "traceId": "afe6fce1844efe9340e4c6d6e8b06058",
+      "name": "fleetgraph.at_risk_week.run",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/afe6fce1844efe9340e4c6d6e8b06058"
+    },
+    {
+      "traceId": "b0fb54c7f46e28c96d1eaa531fc89d0d",
+      "name": "fleetgraph.at_risk_week.output",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b0fb54c7f46e28c96d1eaa531fc89d0d"
+    },
+    {
+      "traceId": "b2624ad3010625d9f91ce4945404e758",
+      "name": "fleetgraph.chat.response",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b2624ad3010625d9f91ce4945404e758"
+    },
+    {
+      "traceId": "c9ef7e6b82d2ec366c45b04e42c92758",
+      "name": "fleetgraph.at_risk_week.run",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/c9ef7e6b82d2ec366c45b04e42c92758"
+    },
+    {
+      "traceId": "de9cab014f1d332186c0b62e06448d9f",
+      "name": "fleetgraph.at_risk_week.run",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/de9cab014f1d332186c0b62e06448d9f"
+    },
+    {
+      "traceId": "eedcf0102dddb9def28bb663ea1d066a",
+      "name": "fleetgraph.at_risk_week.run",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/eedcf0102dddb9def28bb663ea1d066a"
+    },
+    {
+      "traceId": "efad6941fb67264083fb252ee89af120",
+      "name": "fleetgraph.at_risk_week.run",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/efad6941fb67264083fb252ee89af120"
+    },
+    {
+      "traceId": "f18a74a9a5befc21b2d97bcd30c1c64f",
+      "name": "fleetgraph.at_risk_week.run",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/f18a74a9a5befc21b2d97bcd30c1c64f"
+    },
+    {
+      "traceId": "ff8a06791454ec137635c93b52844061",
+      "name": "fleetgraph.at_risk_week.run",
+      "public": true,
+      "url": "https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/ff8a06791454ec137635c93b52844061"
+    }
+  ]
+}

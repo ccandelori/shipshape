@@ -64,14 +64,12 @@ FleetGraph can autonomously:
 - Create draft action candidates.
 - Mark findings read for the current user.
 
-FleetGraph must ask a human before:
+The submitted write path asks a human before:
 
-- Posting a visible comment or nudge.
-- Creating or assigning an issue.
-- Changing issue state.
-- Updating ownership.
-- Sending external notifications.
-- Performing bulk edits or any hard-to-reverse action.
+- Posting a visible comment or nudge through an approved `draft_comment` action.
+- Resuming any pending human-in-the-loop action.
+
+FleetGraph must not perform issue creation, assignment changes, state changes, ownership updates, external notifications, bulk edits, or hard-to-reverse actions automatically.
 
 The human-in-the-loop surface is the FleetGraph Inbox. Reviewers can approve, reject, dismiss, snooze, or resume action candidates through browser UI tabs for `Open`, `Needs Review`, and `Approved` findings.
 
@@ -92,10 +90,10 @@ Rows 1-6 are the trace-backed submission use cases.
 
 | # | Role | Trigger | Agent output | Human decision |
 |---|------|---------|--------------|----------------|
-| 1 | Director | A Week nears its end with important work blocked or stalled. | At-risk Week finding with evidence, severity, owner, and a proposed next action. | Approve, edit via API, reject, dismiss, or snooze. |
-| 2 | PM / Week owner | A blocker remains unresolved across elapsed-time thresholds. | At-risk Week finding with stale-blocker evidence, affected issues, and responsible owner. | Ask for update, create follow-up, accept risk, or suppress. |
+| 1 | Director | A Week nears its end with important work blocked or stalled. | At-risk Week finding with evidence, severity, owner, and a proposed next action. | Approve a comment/nudge, reject, dismiss, or snooze. |
+| 2 | PM / Week owner | A blocker remains unresolved across elapsed-time thresholds. | At-risk Week finding with stale-blocker evidence, affected issues, and responsible owner. | Ask for update, follow up manually, accept risk, or suppress. |
 | 3 | Engineer | Assigned work has no recent standup or progress signal. | At-risk Week finding with evidence calling out missing progress on assigned work. | Dismiss, snooze, approve a proposed visible action when one exists, or follow up manually. |
-| 4 | PM | A Week starts without plan or accountability context. | At-risk Week finding with missing-plan/accountability evidence linked to plan, retro, and project context. | Create plan task, notify owner, or mark the risk intentionally accepted. |
+| 4 | PM | A Week starts without plan or accountability context. | At-risk Week finding with missing-plan/accountability evidence linked to plan, retro, and project context. | Follow up with the owner or mark the risk intentionally accepted. |
 | 5 | Director / PM | Scope, issue count, or assignment load suggests overload. | At-risk Week finding with scope-pressure or overload evidence and a tradeoff recommendation. | Rebalance, accept risk, ask for clarification, or defer. |
 | 6 | Any user | User asks contextual chat what is blocked, risky, or next. | Answer grounded in the visible issue, project, or Week document. | Use the answer or ask a follow-up. |
 
@@ -280,7 +278,7 @@ Local seed verification:
 | `FLEETGRAPH.md` with responsibility and use cases | Present and current |
 | Graph outline with nodes, edges, and branches | Present and current |
 | Human-in-the-loop gate | Implemented in API and browser inbox |
-| Running against real Ship data | Implemented |
+| Running against real Ship data | Production and deployed-smoke paths use real Postgres Ship documents; detection-quality traces use controlled Ship-shaped golden contexts for repeatable edge-case coverage |
 | Agent chat and notifications accessible in UI | Implemented |
 | Deployed and publicly accessible | Public app URL documented and smoke-tested |
 | Trigger model documented and defended | Present |

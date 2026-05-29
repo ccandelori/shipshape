@@ -19,6 +19,12 @@
 
 ---
 
+## FleetGraph — GFA Week 5 Submission
+
+The Week 5 FleetGraph submission is documented in [`FLEETGRAPH.md`](FLEETGRAPH.md), with presearch in [`PRESEARCH.md`](PRESEARCH.md), trace/cost evidence in [`FLEETGRAPH_TOKEN_SPEND.md`](FLEETGRAPH_TOKEN_SPEND.md), and live eval reports under [`docs/evals/`](docs/evals/). The public app is `https://143.198.163.184.nip.io/`.
+
+---
+
 ## ShipShape — GFA Week 4 Submission (Cameron Candelori)
 
 This fork is the deliverable for the **GFA Week 4 — ShipShape** project (Auditing and Improving a Production TypeScript Codebase).

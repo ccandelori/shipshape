@@ -1,5 +1,7 @@
 # GFA Week 4 — ShipShape Final Submission
 
+For the Week 5 FleetGraph submission, use [`FLEETGRAPH.md`](FLEETGRAPH.md) as the canonical entry point. This file is the prior Week 4 ShipShape submission packet.
+
 Forked, audited, and improved across all 7 PRD categories — every target met (the smallest delta is +6.6 percentage points over the floor; the largest is +56 over the floor). The audit + every fix is reproducible from a clean clone: `pnpm shipshape` regenerates the scoreboard against the same methodology Phase 2 measured against. Deployed at **http://143.198.163.184/**.
 
 > 🎛 **Live dashboard:** **[http://143.198.163.184/dashboard/](http://143.198.163.184/dashboard/)** — everything in this document, rendered as an interactive scoreboard with progressive disclosure, animated before/after charts, and a "Run live check" button that re-derives the numbers on demand. Build it locally with `pnpm dashboard:dev`.

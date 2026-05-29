@@ -540,7 +540,7 @@ flowchart TD
               <td>PM / Week owner</td>
               <td>Blocker remains unresolved across elapsed-time thresholds.</td>
               <td>At-risk Week finding with stale-blocker evidence, stale duration, accountable owner, and proposed next step.</td>
-              <td>Ask for update, draft issue, or suppress as known risk.</td>
+              <td>Ask for update, follow up manually, or suppress as known risk.</td>
               <td>MVP risk pattern</td>
             </tr>
             <tr>
@@ -624,11 +624,11 @@ flowchart TD
         </div>
         <div class="mini">
           <h3>Draft primitives</h3>
-          <p><code>create_draft_action</code>, <code>draft_comment</code>, <code>create_draft_issue</code>, <code>rank_action_candidates</code></p>
+          <p><code>create_draft_action</code>, <code>draft_comment</code>, <code>rank_action_candidates</code></p>
         </div>
         <div class="mini">
           <h3>Write primitives</h3>
-          <p><code>post_comment</code>, <code>create_issue</code>, <code>update_issue_state</code>, <code>assign_issue</code>, <code>snooze_finding</code></p>
+          <p><code>resume_approved_draft_comment</code>, <code>approve_action</code>, <code>reject_action</code>, <code>dismiss_finding</code>, <code>snooze_finding</code></p>
         </div>
       </div>
     </section>
