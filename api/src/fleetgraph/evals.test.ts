@@ -2,7 +2,9 @@ import { describe, expect, it } from 'vitest';
 import {
   createFleetGraphEvalExitCode,
   formatFleetGraphEvalReportMarkdown,
+  runFleetGraphAllEvalSuites,
   runFleetGraphDeterministicEvalSuite,
+  runFleetGraphV2EvalSuite,
   scoreFleetGraphEvalObservations,
   type FleetGraphEvalObservation,
 } from './evals.js';
@@ -100,5 +102,54 @@ describe('FleetGraph eval scoring', () => {
       category: 'policy',
       status: 'pass',
     });
+  });
+
+  it('runs the deterministic V2 suite with deeper guard, observability, and chat controls passing', async () => {
+    const report = await runFleetGraphV2EvalSuite({
+      generatedAt: '2026-05-28T22:10:00.000Z',
+    });
+
+    expect(report.suiteName).toBe('FleetGraph V2 deterministic evals');
+    expect(report.status).toBe('pass');
+    expect(report.summary).toMatchObject({
+      totalCases: 8,
+      passedCases: 8,
+      failedCases: 0,
+    });
+    expect(report.cases.map((result) => result.id)).toEqual([
+      'FG-EVAL-009',
+      'FG-EVAL-010',
+      'FG-EVAL-011',
+      'FG-EVAL-012',
+      'FG-EVAL-013',
+      'FG-EVAL-014',
+      'FG-EVAL-015',
+      'FG-EVAL-016',
+    ]);
+    expect(report.cases.find((result) => result.id === 'FG-EVAL-010')).toMatchObject({
+      category: 'proactive',
+      status: 'pass',
+    });
+    expect(report.cases.find((result) => result.id === 'FG-EVAL-012')).toMatchObject({
+      category: 'observability',
+      status: 'pass',
+    });
+    expect(report.cases.find((result) => result.id === 'FG-EVAL-015')).toMatchObject({
+      category: 'chat',
+      status: 'pass',
+    });
+  });
+
+  it('runs all deterministic eval suites in submission order', async () => {
+    const reports = await runFleetGraphAllEvalSuites({
+      generatedAt: '2026-05-28T22:15:00.000Z',
+    });
+
+    expect(reports.map((report) => report.suiteName)).toEqual([
+      'FleetGraph V1 deterministic evals',
+      'FleetGraph V2 deterministic evals',
+    ]);
+    expect(reports.every((report) => report.status === 'pass')).toBe(true);
+    expect(reports.reduce((sum, report) => sum + report.summary.totalCases, 0)).toBe(16);
   });
 });

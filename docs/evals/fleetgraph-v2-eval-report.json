@@ -1,0 +1,262 @@
+{
+  "suiteName": "FleetGraph V2 deterministic evals",
+  "generatedAt": "2026-05-29T01:52:49.506Z",
+  "status": "pass",
+  "summary": {
+    "totalCases": 8,
+    "passedCases": 8,
+    "failedCases": 0,
+    "totalAssertions": 26,
+    "passedAssertions": 26,
+    "failedAssertions": 0,
+    "passRate": 1
+  },
+  "cases": [
+    {
+      "id": "FG-EVAL-009",
+      "name": "Material-change guard ignores cosmetic churn and catches blocker changes",
+      "category": "proactive",
+      "status": "pass",
+      "assertions": [
+        {
+          "metric": "material_change",
+          "name": "Cosmetic text churn",
+          "expected": "same",
+          "observed": "same",
+          "status": "pass"
+        },
+        {
+          "metric": "material_change",
+          "name": "Blocker content change",
+          "expected": "changed",
+          "observed": "changed",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "id": "FG-EVAL-010",
+      "name": "Open finding suppresses duplicate proactive detector work",
+      "category": "proactive",
+      "status": "pass",
+      "assertions": [
+        {
+          "metric": "material_change",
+          "name": "Material key match",
+          "expected": "same",
+          "observed": "same",
+          "status": "pass"
+        },
+        {
+          "metric": "finding_presence",
+          "name": "Existing finding",
+          "expected": "present",
+          "observed": "present",
+          "status": "pass"
+        },
+        {
+          "metric": "action_candidate",
+          "name": "Detector decision",
+          "expected": "skip",
+          "observed": "skip",
+          "status": "pass"
+        },
+        {
+          "metric": "scope_guard",
+          "name": "Suppression reason",
+          "expected": "suppressed_open_finding",
+          "observed": "suppressed_open_finding",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "id": "FG-EVAL-011",
+      "name": "Advisory locks serialize concurrent proactive runs for one scope",
+      "category": "proactive",
+      "status": "pass",
+      "assertions": [
+        {
+          "metric": "concurrency_guard",
+          "name": "Acquire sequence",
+          "expected": "true,false,true",
+          "observed": "true,false,true",
+          "status": "pass"
+        },
+        {
+          "metric": "concurrency_guard",
+          "name": "Release sequence",
+          "expected": "true,true",
+          "observed": "true,true",
+          "status": "pass"
+        },
+        {
+          "metric": "concurrency_guard",
+          "name": "Shared lock key",
+          "expected": "-5152227387797086476",
+          "observed": "-5152227387797086476",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "id": "FG-EVAL-012",
+      "name": "Public trace export is opt-in and FleetGraph-tag gated",
+      "category": "observability",
+      "status": "pass",
+      "assertions": [
+        {
+          "metric": "trace_export",
+          "name": "Disabled export",
+          "expected": "not_published",
+          "observed": "not_published",
+          "status": "pass"
+        },
+        {
+          "metric": "trace_export",
+          "name": "Non-FleetGraph tag",
+          "expected": "not_published",
+          "observed": "not_published",
+          "status": "pass"
+        },
+        {
+          "metric": "trace_export",
+          "name": "FleetGraph tag",
+          "expected": "published",
+          "observed": "published",
+          "status": "pass"
+        },
+        {
+          "metric": "trace_export",
+          "name": "Set public call count",
+          "expected": "1",
+          "observed": "1",
+          "status": "pass"
+        },
+        {
+          "metric": "trace_export",
+          "name": "Publisher call count",
+          "expected": "1",
+          "observed": "1",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "id": "FG-EVAL-013",
+      "name": "Langfuse metadata redacts secrets and normalizes exported fields",
+      "category": "observability",
+      "status": "pass",
+      "assertions": [
+        {
+          "metric": "redaction",
+          "name": "Email redaction",
+          "expected": "redacted",
+          "observed": "redacted",
+          "status": "pass"
+        },
+        {
+          "metric": "redaction",
+          "name": "Secret redaction",
+          "expected": "redacted",
+          "observed": "redacted",
+          "status": "pass"
+        },
+        {
+          "metric": "redaction",
+          "name": "Metadata key normalization",
+          "expected": "bad_key_",
+          "observed": "bad_key_",
+          "status": "pass"
+        },
+        {
+          "metric": "redaction",
+          "name": "Metadata value truncation",
+          "expected": "200",
+          "observed": "200",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "id": "FG-EVAL-014",
+      "name": "On-demand chat sends only the bounded recent history window",
+      "category": "chat",
+      "status": "pass",
+      "assertions": [
+        {
+          "metric": "history_window",
+          "name": "Selected history count",
+          "expected": "10",
+          "observed": "10",
+          "status": "pass"
+        },
+        {
+          "metric": "history_window",
+          "name": "Oldest selected message",
+          "expected": "message-3",
+          "observed": "message-3",
+          "status": "pass"
+        },
+        {
+          "metric": "history_window",
+          "name": "Newest selected message",
+          "expected": "message-12",
+          "observed": "message-12",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "id": "FG-EVAL-015",
+      "name": "Chat rate limit blocks requests after the configured hourly budget",
+      "category": "chat",
+      "status": "pass",
+      "assertions": [
+        {
+          "metric": "rate_limit",
+          "name": "Allowed request count",
+          "expected": "10",
+          "observed": "10",
+          "status": "pass"
+        },
+        {
+          "metric": "rate_limit",
+          "name": "Blocked request count",
+          "expected": "1",
+          "observed": "1",
+          "status": "pass"
+        },
+        {
+          "metric": "rate_limit",
+          "name": "Retry-after seconds",
+          "expected": "3600",
+          "observed": "3600",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "id": "FG-EVAL-016",
+      "name": "Trace URL construction produces safe share targets only with complete IDs",
+      "category": "observability",
+      "status": "pass",
+      "assertions": [
+        {
+          "metric": "trace_metadata",
+          "name": "Encoded trace URL",
+          "expected": "https://us.cloud.langfuse.com/project/project%20123/traces/trace%2Fabc",
+          "observed": "https://us.cloud.langfuse.com/project/project%20123/traces/trace%2Fabc",
+          "status": "pass"
+        },
+        {
+          "metric": "trace_metadata",
+          "name": "Missing project id",
+          "expected": "null",
+          "observed": "null",
+          "status": "pass"
+        }
+      ]
+    }
+  ]
+}
