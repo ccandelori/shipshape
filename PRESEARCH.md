@@ -1,6 +1,6 @@
 # FleetGraph Pre-Search
 
-Date: 2026-05-28
+Date: 2026-05-29
 
 This is the root-level PRESEARCH deliverable for the Week 5 FleetGraph assignment. It records the research, design decisions, and current implementation evidence for FleetGraph as it exists on the submission branch.
 
@@ -92,7 +92,7 @@ Default recipients are Week owners for Week findings, project owners for project
 |---|------|---------|--------------|----------------|
 | 1 | Director | A Week nears its end with important work blocked or stalled. | At-risk Week finding with evidence, severity, owner, and a proposed next action. | Approve, edit via API, reject, dismiss, or snooze. |
 | 2 | PM / Week owner | A blocker remains unresolved across elapsed-time thresholds. | Stale blocker summary with affected issues and responsible owner. | Ask for update, create follow-up, accept risk, or suppress. |
-| 3 | Engineer | Assigned work has no recent standup or progress signal. | Private reminder or draft standup prompt tied to current work. | Post, edit, dismiss, or snooze. |
+| 3 | Engineer | Assigned work has no recent standup or progress signal. | At-risk Week evidence calling out missing progress on assigned work; draft/private reminders are post-MVP action polish. | Dismiss, snooze, approve a visible action when one exists, or follow up manually. |
 | 4 | PM | A Week starts without plan or accountability context. | Accountability finding linked to plan, retro, and project context. | Create plan task, notify owner, or intentionally defer. |
 | 5 | Director / PM | Scope, issue count, or assignment load suggests overload. | Scope-creep or overload finding with tradeoff recommendation. | Rebalance, accept risk, ask for clarification, or defer. |
 | 6 | Any user | User asks contextual chat what is blocked, risky, or next. | Answer grounded in the visible issue, project, or Week document. | Use the answer or ask a follow-up. |
@@ -191,7 +191,7 @@ Runtime components:
 - Server-Sent Events for `/api/fleetgraph/chat`.
 - PostgreSQL for durable findings and action lifecycle state.
 
-Public deployment evidence is recorded in `FLEETGRAPH.md`: release `20260527-151052` was smoke-tested at `https://143.198.163.184.nip.io/` with login, inbox tabs, a trace-backed finding, and graph-routed Week chat.
+Public deployment evidence is recorded in `FLEETGRAPH.md`: release `20260528-144214` was smoke-tested at `https://143.198.163.184.nip.io/` with login, inbox tabs, a trace-backed finding, and graph-routed Week chat.
 
 ### Trigger Model
 
@@ -256,7 +256,7 @@ Verification already recorded:
 - Focused FleetGraph API, OpenAPI, and demo-health tests pass.
 - Focused FleetGraph web component and hook tests pass.
 - API and web type-check/build passed during the latest polish pass.
-- Full API regression passed with 61 test files and 662 tests.
+- Full API regression passed with 61 test files and 669 tests.
 
 Live trace evidence in `FLEETGRAPH.md`:
 
@@ -305,9 +305,10 @@ These do not block the Week 5 MVP if documented honestly, but they are the next 
    - The current on-demand branch streams grounded answers through the shared graph.
    - A later branch should turn "create a follow-up issue" chat requests into action candidates in the same HITL model.
 
-4. Additional detector families remain extension work.
-   - The MVP ships one flagship at-risk Week detector.
-   - Missing standup, planless Week, overload, and scope-creep detectors are defined as use cases but not all implemented as separate production detectors.
+4. Separate detector modules remain extension work.
+   - The MVP ships one flagship at-risk Week detector graph.
+   - Stale blocker, missing progress, planless Week, and overload/scope-pressure are implemented as risk patterns in that graph and backed by detection-quality trace cases.
+   - Separate production detector modules for those families remain future hardening.
 
 ## Final Readiness Judgment
 

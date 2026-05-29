@@ -78,7 +78,9 @@ On-demand mode reasons about:
 - The user's question or requested action.
 - The user's workspace permissions and action eligibility.
 
-On-demand is not answer-only. The MVP can stream answers first, but the architecture supports action requests by producing draft actions or pending approvals rather than pretending chat cannot do work.
+The prompt context supplied to the model for on-demand chat includes a server-derived `people` map (user ID to `{name, email}`) for every `ownerUserId`, `assigneeUserId`, and `authorUserId` present in the scoped documents and activity. The model is explicitly instructed to use the human name from this map and to emit an explicit "unknown person (id)" form when no record exists. Langfuse traces for on-demand chat include `personResolution: 'applied'` metadata.
+
+On-demand is answer-first in the current MVP. The shared runtime and action-candidate types are ready for chat-initiated action requests, but browser-visible chat action creation is still post-MVP work.
 
 Implementation status as of 2026-05-27: on-demand chat is routed through `api/src/fleetgraph/graph.ts` with `mode: 'ondemand_chat'`. The route prepares the authorized prompt context before opening SSE so it can still return normal HTTP errors for invalid scope or missing model configuration. Once streaming starts, the compiled graph branch owns Langfuse tracing and model token streaming through the same FleetGraph runtime entry point used by proactive mode.
 
@@ -117,7 +119,7 @@ FleetGraph separates authorization from responsibility.
 
 - `workspace_memberships` authorizes access and admin capability.
 - `document_associations` locates documents in the program, project, and Week graph.
-- Person documents and document properties identify responsible humans.
+- Person documents and the users table (with server-resolved names supplied to on-demand chat prompts) identify responsible humans.
 - Week owners, project owners, issue assignees, and explicit accountable roles determine recipients.
 
 Default proactive recipients:
@@ -177,7 +179,7 @@ flowchart TD
     fetch --> guard{"proactive guard:<br/>advisory lock + material change + suppression"}
 
     guard -->|quiet| ENDQ((quiet end))
-    guard -->|changed| preFilter{"cheap OpenAI model:<br/>worth surfacing?"}
+    guard -->|changed| preFilter{"deterministic pre-filter:<br/>worth surfacing?"}
     userIntent -->|answer| reason
     userIntent -->|action request| reason
     preFilter -->|no| ENDQ
@@ -189,7 +191,7 @@ flowchart TD
     policy -->|approval required| pending["persist pending_review<br/>+ action metadata"]
     pending --> approval["FleetGraph inbox:<br/>approve / edit / reject / dismiss / snooze"]
     approval --> resume["authorized resume:<br/>recipient or workspace admin"]
-    resume --> execute["execute via Ship tools"]
+    resume --> execute["execute approved write<br/>(draft_comment today)"]
     execute --> output
 
     output -->|proactive| persist["persist finding + reconcile inbox<br/>/events is best-effort"]
@@ -201,7 +203,7 @@ flowchart TD
 Trace paths required for validation:
 
 - Proactive quiet exit: no material state change or suppressed finding.
-- Proactive finding path: changed state, pre-filter passes, reasoning produces a finding, approval is requested.
+- Proactive finding path: changed state, pre-filter passes, reasoning produces a finding; policy decides whether it is notify-only or pending review.
 - On-demand answer path: user asks a question, enters the shared `fleetgraph.runtime` graph with `mode: 'ondemand_chat'`, and receives an SSE streamed answer from the graph's chat branch.
 - On-demand action path: target architecture; user asks for work, graph produces an action candidate or pending approval.
 
@@ -243,10 +245,10 @@ The V1 and V2 eval suites are deterministic pre-submit gates, not replacements f
 
 Verification run:
 
-- `DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev ./node_modules/.bin/vitest run src/fleetgraph/demo-scenarios.test.ts src/fleetgraph/detectors/at-risk-week.test.ts src/fleetgraph/detectors/at-risk-week-persistence.test.ts`
-- Result: 3 test files passed, 35 tests passed.
+- `DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev pnpm --filter @ship/api exec vitest run src/fleetgraph/chat-runner.test.ts src/routes/fleetgraph-chat.test.ts src/fleetgraph/graph.test.ts src/fleetgraph/detectors/at-risk-week.test.ts`
+- Result: 4 test files passed, 56 tests passed.
 - Full API regression: `DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev pnpm --filter @ship/api test`
-- Result: 61 test files passed, 662 tests passed.
+- Result: 61 test files passed, 669 tests passed.
 
 ## Use Cases
 
@@ -254,7 +256,7 @@ Verification run:
 |---|------|---------|---------------------------|---------------|
 | 1 | Director | A Week is near its end with important issues stalled or blocked. | At-risk Week finding with evidence, owner, severity, and suggested nudge or issue. | Approve nudge, edit action, reject, dismiss, or snooze. |
 | 2 | PM / Week owner | A blocker remains unresolved across elapsed-time thresholds. | Stale blocker summary, duration, affected issues, owner, and next action. | Ask for update, create issue, accept risk, or suppress as known. |
-| 3 | Engineer | Assigned work has no recent standup or progress signal. | Private reminder or draft standup prompt tied to the user's current work. | Post, edit, dismiss, or snooze. |
+| 3 | Engineer | Assigned work has no recent standup or progress signal. | At-risk Week evidence calling out missing progress on assigned work; draft/private reminders are post-MVP action polish. | Dismiss, snooze, approve a visible action when one exists, or follow up manually. |
 | 4 | PM | A Week starts without a plan or active work lacks hypothesis context. | Accountability finding linked to weekly plan and project hypothesis. | Create plan task, notify owner, or mark intentionally deferred. |
 | 5 | Director / PM | Scope, issue count, or assignment load suggests overload. | Overload or scope-creep finding with evidence and tradeoff recommendation. | Rebalance work, accept risk, ask team for clarification, or defer. |
 | 6 | Any user | User asks contextual chat what is blocked, risky, or next. | Answer scoped to the visible issue, project, or Week document. | Use the answer or ask for a follow-up. |
@@ -315,21 +317,21 @@ Headless authentication:
 
 ## Test Cases
 
-The table below is the grader-facing trace matrix: every row has a public Langfuse trace link. The live quality eval traces are generated from golden Ship-shaped Week contexts through the compiled `fleetgraph.runtime` / at-risk Week LangGraph path with the live OpenAI reasoner. The public droplet traces above remain deployed smoke evidence; this matrix is the explicit one-trace-per-case rubric evidence. The timed latency proof in `docs/fleetgraph-latency-proof.md` still verifies mutation-triggered orchestration against the five-minute target.
+The table below is the grader-facing trace matrix: every row has a public Langfuse trace link. The live quality eval command invokes the top-level `fleetgraph.runtime` proactive branch, which delegates to the compiled at-risk Week LangGraph path with the live OpenAI reasoner; the Langfuse trace itself is emitted by that delegated at-risk Week graph. The public droplet traces above remain deployed smoke evidence, and V1 eval case `FG-EVAL-007` verifies the top-level proactive branch metadata. This matrix is the explicit one-trace-per-case rubric evidence. The timed latency proof in `docs/fleetgraph-latency-proof.md` still verifies mutation-triggered orchestration against the five-minute target.
 
 | # | Use case / acceptance area | Eval case | Ship state | Expected output | Trace path | Public trace |
 |---|----------------------------|-----------|------------|-----------------|------------|--------------|
-| 1 | UC1: at-risk Week | DQ-R01 | High-priority blocker plus explicit blocker standup. | Finding with evidence, severity, owner, and action candidate. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/51e85bc2707c1cb4abf21314ea1c1663) |
-| 2 | UC2: stale blocker | DQ-R04 | Aging technical blocker near week end. | Finding resurfaces with high-risk reasoning. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/d38d76118abe5f42ff5dab4c572e1c45) |
-| 3 | UC3: no recent progress signal | DQ-R06 | Critical path items are unchanged while polish work continues. | Finding calls out missing progress signal. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/002e003a7e8504ecae0d3da12cb091f8) |
-| 4 | UC4: missing plan / accountability | DQ-R05 | No weekly plan exists while high-priority work is stalling. | Finding ties risk to accountability gap. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/1ce1a9a8a37e4984e40c20b7c1b43b0d) |
-| 5 | UC5: overload / scope pressure | DQ-R03 | One owner carries five high-priority items and reports falling behind. | Finding recommends a human-gated recovery action. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/59cdb555274e91236166ee3f4a088e18) |
+| 1 | UC1: at-risk Week | DQ-R01 | High-priority blocker plus explicit blocker standup. | Finding with evidence, severity, owner, and action candidate. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/eedcf0102dddb9def28bb663ea1d066a) |
+| 2 | UC2: stale blocker | DQ-R04 | Aging technical blocker near week end. | Finding resurfaces with high-risk reasoning. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/9e459de6a80456442218e628441d4b9c) |
+| 3 | UC3: no recent progress signal | DQ-R06 | Critical path items are unchanged while polish work continues. | Finding calls out missing progress signal. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/afe6fce1844efe9340e4c6d6e8b06058) |
+| 4 | UC4: missing plan / accountability | DQ-R05 | No weekly plan exists while high-priority work is stalling. | Finding ties risk to accountability gap. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/c9ef7e6b82d2ec366c45b04e42c92758) |
+| 5 | UC5: overload / scope pressure | DQ-R03 | One owner carries five high-priority items and reports falling behind. | Finding recommends a human-gated recovery action. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/efad6941fb67264083fb252ee89af120) |
 | 6 | UC6: context-scoped chat | Deployed chat trace | Week chat asks what is blocking the visible Week. | SSE answer grounded in Week issues, standups, and findings. | on-demand chat branch -> model stream | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b2624ad3010625d9f91ce4945404e758) |
-| 7 | Quiet path / cost control | DQ-Q01 | Healthy Week with no blockers or high-priority blocked issues. | Quiet pre-filter exit with zero model tokens. | pre-filter no -> quiet end | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/e8b1e0386b5c1daeb645666b875a68b4) |
-| 8 | Negation handling | DQ-Q04 | Standup says work was blocked yesterday but unblocked this morning. | Quiet pre-filter exit; no false positive. | pre-filter no -> quiet end | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/bcbec30ef1d7d336383f6eea792c6761) |
-| 9 | Iteration blocker coverage | DQ-R07 | Sprint iteration records a blocker without standup coverage. | Finding uses iteration evidence. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/819b5d77be5b6c7d43b1bcf86a31b52f) |
+| 7 | Quiet path / cost control | DQ-Q01 | Healthy Week with no blockers or high-priority blocked issues. | Quiet pre-filter exit with zero model tokens. | pre-filter no -> quiet end | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/395191121a1a47b757c1e4e9f3b3917c) |
+| 8 | Negation handling | DQ-Q04 | Standup says work was blocked yesterday but unblocked this morning. | Quiet pre-filter exit; no false positive. | pre-filter no -> quiet end | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/ff8a06791454ec137635c93b52844061) |
+| 9 | Iteration blocker coverage | DQ-R07 | Sprint iteration records a blocker without standup coverage. | Finding uses iteration evidence. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/de9cab014f1d332186c0b62e06448d9f) |
 
-Full live trace report: `docs/evals/fleetgraph-detection-quality-eval.md` includes all 14 golden detection-quality cases and passed with `14 / 14` cases on 2026-05-29.
+Full live trace report: `docs/evals/fleetgraph-detection-quality-eval.md` includes all 14 golden detection-quality cases and passed with `14 / 14` cases on 2026-05-29. All 14 trace URLs from that report were verified through the Langfuse API with `public: true`.
 
 Deterministic non-trace gates still cover suppression, unauthorized resume, route workspace isolation, and advisory-lock serialization. Those behaviors do not need model calls to prove correctness, but they remain part of the regression suite.
 
@@ -360,7 +362,7 @@ FleetGraph is organized around three layers.
    - Current MVP: one top-level compiled LangGraph runtime with branches for proactive at-risk Week detection and on-demand chat streaming.
    - Target architecture: expand that runtime with more detector families, graph-native action-request approval, durable graph checkpoints, and additional Ship write primitives.
 
-This avoids the anti-pattern of building a detector service and bolting on a chatbot. The agent receives events, reasons with dynamic Ship context, calls primitive Ship tools, and persists visible outcomes.
+This avoids the anti-pattern of building a detector service and bolting on a chatbot. The agent receives events, reasons with dynamic Ship context, persists visible outcomes, and calls the approved write primitive available in the MVP. Broader Ship tool composition is target architecture.
 
 ### Node Design
 
@@ -368,15 +370,15 @@ This avoids the anti-pattern of building a detector service and bolting on a cha
 - `scope`: authorizes workspace access and resolves the relevant Ship document graph.
 - `intent`: separates proactive runs from on-demand question or action requests through the top-level `fleetgraph.runtime` branch.
 - `detector`: selects the proactive use-case family.
-- `context`: builds a bounded Ship-native context bundle.
+- `context`: builds a bounded Ship-native context bundle (on-demand chat paths now include a server-resolved people name map with explicit unknown handling).
 - `fetch`: pulls documents, issues, standups, accountability status, activity, and metrics in parallel.
 - `guard`: applies advisory lock, material-change, dedup, pending-review, dismiss, snooze, and rejection checks.
-- `preFilter`: uses a cheap model to decide whether unsolicited proactive analysis is worth deeper reasoning.
+- `preFilter`: uses a cheap deterministic signal filter to decide whether unsolicited proactive analysis is worth deeper model reasoning.
 - `reason`: produces structured findings, evidence, recommendations, and action candidates.
 - `policy`: classifies approval requirements from stakes and reversibility.
 - `pending`: persists human-in-the-loop finding state and action candidate metadata.
 - `resume`: validates actor authorization and resumes approved, edited, or rejected actions.
-- `execute`: calls Ship tools for approved actions.
+- `execute`: calls the currently supported Ship write primitive for approved actions (`draft_comment` today); broader issue/state/assignment tools are target architecture.
 - `output`: persists findings and broadcasts UI updates today; target graph output also streams on-demand chat responses.
 
 ### State Management
@@ -404,7 +406,7 @@ Durable state includes:
 
 ### Agent Tool Parity
 
-Every user-visible Ship action that FleetGraph might perform should have an agent-accessible primitive.
+This is the target tool model, not a claim that every listed write primitive is live today. Current MVP write execution is limited to approved `draft_comment` actions plus finding lifecycle operations such as dismiss and snooze. Every future user-visible Ship action that FleetGraph might perform should have an agent-accessible primitive.
 
 Read primitives:
 
@@ -518,7 +520,7 @@ If HITL resume fails:
 
 ## Cost Analysis
 
-These are design estimates plus current deterministic implementation telemetry. Shared Langfuse traces should replace the local evidence rows once Langfuse Cloud trace links are captured and shared.
+These are design estimates plus current deterministic implementation telemetry. Public Langfuse traces complement the local evidence rows; the local rows remain deterministic baselines that can be regenerated without live model access.
 
 ### Cost Controls
 
@@ -526,7 +528,7 @@ Primary cost controls:
 
 - Stage-1 deterministic change detection.
 - Durable dedup keys and suppression TTL.
-- Cheap-model proactive pre-filter.
+- Deterministic proactive pre-filter.
 - Expensive reasoning only for changed, unsuppressed, worth-surfacing states.
 - Bounded context windows.
 - Sliding chat history.
@@ -587,7 +589,7 @@ Runtime model spend for the MVP at-risk Week detector is now persisted in `fleet
 | Graph Diagram | Defined in this document |
 | Use Cases | Defined in this document |
 | Trigger Model | Defined in this document |
-| Test Cases | V1 and V2 deterministic eval suites passed; public live Langfuse trace links captured from public droplet |
+| Test Cases | V1 and V2 deterministic eval suites passed; public droplet traces plus 14-case detection-quality trace matrix captured |
 | Architecture Decisions | Defined in this document |
 | Cost Analysis | Design estimate plus deterministic runtime telemetry captured |
 | Timed Latency Proof | Passed locally at 45.113 seconds; see `docs/fleetgraph-latency-proof.md` |

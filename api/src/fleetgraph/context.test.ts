@@ -5,6 +5,7 @@ import {
   buildProjectContext,
   buildWeekContext,
   loadPriorFindings,
+  resolvePersonNames,
   resolveOwnership,
 } from './context.js';
 
@@ -251,5 +252,20 @@ describe('FleetGraph context builders', () => {
     expect(await resolveOwnership(pool, workspaceId, 'week', weekId)).toBe(ownerUserId);
     expect(await resolveOwnership(pool, workspaceId, 'project', projectId)).toBe(ownerUserId);
     expect(await resolveOwnership(pool, workspaceId, 'issue', issueId)).toBe(ownerUserId);
+  });
+
+  it('resolves valid user ids and ignores non-UUID ownership values', async () => {
+    const people = await resolvePersonNames(pool, [
+      ownerUserId,
+      'not-a-uuid',
+      '00000000-0000-4000-8000-000000000000',
+    ]);
+
+    expect(people).toEqual({
+      [ownerUserId]: {
+        name: 'FleetGraph Owner',
+        email: `fleetgraph-owner-${testRunId}@test.local`,
+      },
+    });
   });
 });

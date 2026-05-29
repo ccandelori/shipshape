@@ -25,6 +25,7 @@ import {
   shutdownFleetGraphLangfuseTracing,
   startFleetGraphLangfuseTracing,
 } from '../langfuse.js';
+import { runFleetGraphGraph } from '../graph.js';
 
 export type QualityEvalMode = 'prefilter_only' | 'live_model';
 
@@ -340,48 +341,65 @@ async function runLiveDetectionQualityCase(
     scopedDocId: qualityCase.context.week.id,
   });
 
-  return runAtRiskWeekGraph(
+  const atRiskWeekInput = {
+    workspaceId: qualityCase.context.week.workspaceId,
+    scopedDocId: qualityCase.context.week.id,
+    runId,
+    triggerSource: 'mutation' as const,
+    requestedAt,
+  };
+  const graphState = await runFleetGraphGraph(
     {
-      workspaceId: qualityCase.context.week.workspaceId,
-      scopedDocId: qualityCase.context.week.id,
-      runId,
-      triggerSource: 'mutation',
-      requestedAt,
+      mode: 'proactive_at_risk_week',
+      atRiskWeek: {
+        input: atRiskWeekInput,
+      },
     },
     {
-      nodeDependencies: {
-        client,
-        buildWeekContext: async () => qualityCase.context,
-        shouldRunDetector: async () => ({
-          shouldRun: true,
-          reason: `run_material_changed_no_suppression:${materialChangeKey}`,
-          materialChangeKey,
-        }),
-        now: () => new Date().toISOString(),
-      },
-      reasonNodeDependencies: {
-        reasoner: createOpenAIAtRiskWeekReasoner(config),
-        retryPolicy: {
-          maxAttempts: 2,
-          delayMs: 500,
-          sleep: async (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+      proactiveAtRiskWeek: {
+        runGraph: runAtRiskWeekGraph,
+        dependencies: {
+          nodeDependencies: {
+            client,
+            buildWeekContext: async () => qualityCase.context,
+            shouldRunDetector: async () => ({
+              shouldRun: true,
+              reason: `run_material_changed_no_suppression:${materialChangeKey}`,
+              materialChangeKey,
+            }),
+            now: () => new Date().toISOString(),
+          },
+          reasonNodeDependencies: {
+            reasoner: createOpenAIAtRiskWeekReasoner(config),
+            retryPolicy: {
+              maxAttempts: 2,
+              delayMs: 500,
+              sleep: async (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+            },
+            logger: {
+              warn: (message, fields) => console.warn(message, fields),
+            },
+            now: () => new Date().toISOString(),
+          },
+          outputNodeDependencies: {
+            client,
+            broadcastToUser: () => undefined,
+            now: () => new Date().toISOString(),
+          },
+          traceRunner: options.trace
+            ? createLangfuseAtRiskWeekTraceRunner(config)
+            : passthroughAtRiskWeekTraceRunner,
+          checkpointer: createAtRiskWeekCheckpointer(),
         },
-        logger: {
-          warn: (message, fields) => console.warn(message, fields),
-        },
-        now: () => new Date().toISOString(),
       },
-      outputNodeDependencies: {
-        client,
-        broadcastToUser: () => undefined,
-        now: () => new Date().toISOString(),
-      },
-      traceRunner: options.trace
-        ? createLangfuseAtRiskWeekTraceRunner(config)
-        : passthroughAtRiskWeekTraceRunner,
-      checkpointer: createAtRiskWeekCheckpointer(),
     }
   );
+
+  if (graphState.proactiveAtRiskWeek === null) {
+    throw new Error('Detection quality eval expected proactive at-risk Week branch output');
+  }
+
+  return graphState.proactiveAtRiskWeek;
 }
 
 function createDetectionQualityEvalClient(input: {

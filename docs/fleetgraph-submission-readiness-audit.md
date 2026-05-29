@@ -2,7 +2,7 @@
 
 Date: 2026-05-29
 Source PRD: `/Users/sheep/Desktop/Gauntlet/Week 5 GFA - FleetGraph PRD.pdf`
-Assessed source of truth: `codex/fleetgraph-guided-polish` worktree at `/private/tmp/ship-fleetgraph-awesome`
+Assessed source of truth: current `master` checkout at `/Users/sheep/Desktop/Gauntlet/ship`
 
 This audit compares the current FleetGraph implementation and documentation against the original Week 5 PRD. It is intentionally blunt: if a row is not green, it needs either a fix or an explicit submission note before tonight.
 
@@ -10,7 +10,7 @@ This audit compares the current FleetGraph implementation and documentation agai
 
 FleetGraph is submission-ready from an engineering, documentation, deployment, and observability standpoint:
 
-- The Langfuse trace URLs in `FLEETGRAPH.md` include deployed smoke traces plus a 14-case detection-quality matrix. Representative traces were verified through the Langfuse API with `public: true`.
+- The Langfuse trace URLs in `FLEETGRAPH.md` include deployed smoke traces plus a 14-case detection-quality matrix. The three deployed-smoke traces and all 14 detection-quality traces were verified through the Langfuse API with `public: true`.
 - Langfuse is the observability provider for this submission. It fulfills the PRD's shared trace requirement by exposing public run trees with branch metadata, model usage, token counts, and trace URLs.
 - The V1 and V2 deterministic eval suites pass 16 cases and 50 assertions; the detection-quality live graph eval passes 14 / 14 cases with one public trace per case.
 
@@ -27,7 +27,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | At least one human-in-the-loop gate | Pass | `api/src/fleetgraph/policy.ts`, `api/src/routes/fleetgraph.ts`, inbox `Needs Review` and `Approved` tabs | None |
 | Running against real Ship data; no mocked production responses | Pass | Context builders read Postgres Ship documents/issues/standups; seed and live data use real tables | Keep demo clear when using seeded rows versus live traces |
 | Agent chat and notifications accessible in UI | Pass | `web/src/components/FleetGraph/*`, `web/src/components/Editor.tsx`, `web/src/pages/App.tsx` | None |
-| Deployed and publicly accessible | Pass | `https://143.198.163.184.nip.io/` and `/health` returned HTTP 200 on 2026-05-28 | Re-smoke immediately before submitting |
+| Deployed and publicly accessible | Pass, pending final-day re-smoke | `https://143.198.163.184.nip.io/` and `/health` returned HTTP 200 on 2026-05-28 | Re-smoke immediately before submitting |
 | Trigger model documented and defended | Pass | `FLEETGRAPH.md` and `PRESEARCH.md` hybrid trigger section | None |
 
 ## PRD Performance Checklist
@@ -42,7 +42,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 
 | Required file/section | Status | Evidence |
 |---|---|---|
-| Root `PRESEARCH.md` | Pass | Updated on 2026-05-28 |
+| Root `PRESEARCH.md` | Pass | Updated on 2026-05-29 |
 | Root `FLEETGRAPH.md` | Pass | Updated with quick start, traces, architecture, test cases, costs |
 | Agent Responsibility | Pass | `FLEETGRAPH.md` |
 | Graph Diagram | Pass | `FLEETGRAPH.md` Mermaid |
@@ -63,7 +63,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | Visible writes require HITL | `pending_review` actions require approve then resume; resume writes supported `draft_comment` actions | Pass |
 | Durable outcomes exist | Findings, action candidates, approvals, suppressions, usage, action executions, inbox reads, finding reads are stored in Postgres | Pass |
 | LangGraph checkpoints are durable in Postgres | Current graph checkpointing uses `MemorySaver`; durable outcomes are Postgres-backed | Deferred, documented |
-| All 7 use cases are implemented as detectors/actions | Use case 1 and use case 6 are implemented; use case 7 is architected; use cases 2-5 are extension families | Deferred, documented |
+| Implementation coverage for the 7 documented use cases | Use case 1 and use case 6 are implemented as primary MVP surfaces; use cases 2-5 are implemented as risk patterns inside the at-risk Week graph and backed by detection-quality traces; use case 7 is architected but browser-visible chat action creation is post-MVP | Mixed, explicitly documented |
 
 ## Current Documentation Inventory
 
@@ -84,22 +84,22 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 
 Do these immediately before submitting:
 
-1. Open the three public Langfuse traces from `FLEETGRAPH.md`.
+1. Open the three deployed-smoke Langfuse traces and the 14-case trace matrix from `FLEETGRAPH.md`.
 2. Review prompt/context content one last time for sensitive data.
 3. Reopen `https://143.198.163.184.nip.io/health` and confirm HTTP 200.
 4. Log in as `dev@ship.local` and smoke:
    - FleetGraph inbox opens.
    - `Needs Review` and `Approved` tabs render.
    - Week `Ask FleetGraph` streams an answer.
-5. Run `pnpm fleetgraph:eval` if you want a fresh local eval timestamp for the final packet.
-6. Submit `FLEETGRAPH.md`, `PRESEARCH.md`, the V1 and V2 eval reports under `docs/evals/`, the public app URL, the demo video, and the trace URLs.
+5. Run `pnpm fleetgraph:eval` if you want a fresh local V1/V2 eval timestamp for the final packet.
+6. Submit `FLEETGRAPH.md`, `PRESEARCH.md`, the V1, V2, and detection-quality eval reports under `docs/evals/`, the public app URL, the demo video, and the trace URLs.
 
 ## Do Not Rebuild Tonight
 
 These are product improvements, not Week 5 submission blockers:
 
 - `PostgresSaver` graph checkpointing.
-- Additional detector modules for missing standup, planless Week, overload, and scope creep.
+- Separate detector modules for stale blocker, missing progress, planless Week, overload, and scope creep. Current coverage is inside the at-risk Week graph.
 - Browser edit-before-approve.
 - Chat-initiated issue creation/action candidates.
 - Server-side durable chat history.

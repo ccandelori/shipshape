@@ -34,6 +34,7 @@ describe('FleetGraph chat runner', () => {
         builderCalls.push('issue');
         return createIssueContext();
       },
+      resolvePersonNames: async () => ({}),
     };
 
     const prompt = await buildFleetGraphChatPrompt({
@@ -67,6 +68,71 @@ describe('FleetGraph chat runner', () => {
     expect(prompt.messages[3]!.content).toContain('Procurement blocker');
     expect(prompt.messages[3]!.content).toContain('Blocked by vendor approval');
     expect(prompt.messages[3]!.content).toContain('Standup says procurement is still blocked');
+  });
+
+  it('enriches the on-demand chat prompt with human names from the resolver and explicit unknown entries', async () => {
+    const knownOwnerId = '550e8400-e29b-41d4-a716-446655440010';
+    const contextBuilders: FleetGraphChatContextBuilders = {
+      buildWeekContext: async () => createWeekContext(),
+      buildProjectContext: async () => {
+        throw new Error('not used in this test');
+      },
+      buildIssueContext: async () => {
+        throw new Error('not used in this test');
+      },
+      resolvePersonNames: async () => ({
+        [knownOwnerId]: { name: 'Alice Chen', email: 'alice@ship.local' },
+      }),
+    };
+
+    const prompt = await buildFleetGraphChatPrompt({
+      client: createUnusedQueryClient(),
+      workspaceId: '550e8400-e29b-41d4-a716-446655440000',
+      request: {
+        documentId: '550e8400-e29b-41d4-a716-446655440001',
+        documentType: 'sprint',
+        question: 'Who owns the main issue?',
+        conversationHistory: [],
+      },
+      contextBuilders,
+    });
+
+    const userMessageContent = prompt.messages[prompt.messages.length - 1]!.content;
+
+    // Human name must appear for the resolved ID
+    expect(userMessageContent).toContain('Alice Chen');
+    // The people map must be present at the root of the context JSON
+    expect(userMessageContent).toContain('"people"');
+    expect(userMessageContent).toContain(knownOwnerId);
+
+    // Now test the explicit unknown path with a resolver that returns nothing
+    const unknownOnlyBuilders: FleetGraphChatContextBuilders = {
+      buildWeekContext: async () => createWeekContext(),
+      buildProjectContext: async () => {
+        throw new Error('not used');
+      },
+      buildIssueContext: async () => {
+        throw new Error('not used');
+      },
+      resolvePersonNames: async () => ({}),
+    };
+
+    const unknownPrompt = await buildFleetGraphChatPrompt({
+      client: createUnusedQueryClient(),
+      workspaceId: '550e8400-e29b-41d4-a716-446655440000',
+      request: {
+        documentId: '550e8400-e29b-41d4-a716-446655440001',
+        documentType: 'sprint',
+        question: 'Who owns the main issue?',
+        conversationHistory: [],
+      },
+      contextBuilders: unknownOnlyBuilders,
+    });
+
+    const unknownUserMessage = unknownPrompt.messages[unknownPrompt.messages.length - 1]!.content;
+    // The owner ID from the week context must appear with the explicit unknown form
+    expect(unknownUserMessage).toContain('unknown');
+    expect(unknownUserMessage).toContain(knownOwnerId);
   });
 
   it('streams model tokens through callbacks and returns the complete answer with usage', async () => {

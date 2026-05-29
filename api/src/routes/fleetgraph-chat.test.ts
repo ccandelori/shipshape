@@ -365,6 +365,7 @@ function createContextBuilders(): FleetGraphChatContextBuilders {
     buildIssueContext: async () => {
       throw new Error('Unexpected issue context build in FleetGraph chat route test');
     },
+    resolvePersonNames: async () => ({}),
   };
 }
 

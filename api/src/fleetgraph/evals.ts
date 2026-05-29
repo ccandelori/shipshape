@@ -1012,6 +1012,7 @@ function createEvalContextBuilders(): FleetGraphChatContextBuilders {
     buildWeekContext: async () => createEvalWeekContext(),
     buildProjectContext: async () => createEvalProjectContext(),
     buildIssueContext: async () => createEvalIssueContext(),
+    resolvePersonNames: async () => ({}),
   };
 }
 

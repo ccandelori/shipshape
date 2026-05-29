@@ -98,6 +98,11 @@ export type PriorFindingContext = {
   expiresAt: Date | null;
 };
 
+export type FleetGraphPersonInfo = {
+  name: string;
+  email: string | null;
+};
+
 export type OwnershipContextType = 'week' | 'project' | 'issue';
 
 type DocumentRow = {
@@ -629,4 +634,35 @@ function stringProperty(properties: Record<string, unknown>, key: string): strin
   }
 
   return value;
+}
+
+export async function resolvePersonNames(
+  client: FleetGraphQueryClient,
+  userIds: readonly string[]
+): Promise<Record<string, FleetGraphPersonInfo>> {
+  const queryableUserIds = userIds.filter(isUuidString);
+  if (queryableUserIds.length === 0) {
+    return {};
+  }
+
+  const result = await client.query<{ id: string; name: string; email: string | null }>(
+    `SELECT id::text AS id, name, email
+     FROM users
+     WHERE id = ANY($1::uuid[])`,
+    [queryableUserIds]
+  );
+
+  const map: Record<string, FleetGraphPersonInfo> = {};
+  for (const row of result.rows) {
+    map[row.id] = {
+      name: row.name,
+      email: row.email,
+    };
+  }
+
+  return map;
+}
+
+function isUuidString(value: string): boolean {
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 }

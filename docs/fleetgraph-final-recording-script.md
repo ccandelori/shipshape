@@ -146,4 +146,4 @@ Say:
 - Public traces: listed in `FLEETGRAPH.md`
 - Eval reports: `docs/evals/`
 - Main docs: `FLEETGRAPH.md`, `PRESEARCH.md`, `docs/fleetgraph-submission-readiness-audit.md`
-- Full API regression last recorded: 61 files, 662 tests
+- Full API regression last recorded: 61 files, 669 tests

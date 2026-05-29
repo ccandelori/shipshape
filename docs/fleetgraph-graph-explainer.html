@@ -309,7 +309,7 @@ flowchart TD
     fetch --> guard{"proactive guard:<br/>advisory lock + material change + suppression"}
 
     guard -->|quiet| ENDQ((quiet end))
-    guard -->|changed| preFilter{"cheap OpenAI model:<br/>worth surfacing?"}
+    guard -->|changed| preFilter{"deterministic pre-filter:<br/>worth surfacing?"}
     userIntent -->|answer| reason
     userIntent -->|action request| reason
     preFilter -->|no| ENDQ
@@ -321,7 +321,7 @@ flowchart TD
     policy -->|approval required| pending["persist pending_review<br/>+ action metadata"]
     pending --> approval["FleetGraph inbox:<br/>approve / edit / reject / dismiss / snooze"]
     approval --> resume["authorized resume:<br/>recipient or workspace admin"]
-    resume --> execute["execute via Ship tools"]
+    resume --> execute["execute approved write<br/>(draft_comment today)"]
     execute --> output
 
     output -->|proactive| persist["persist finding + reconcile inbox<br/>/events is best-effort"]
@@ -346,9 +346,10 @@ flowchart TD
         <div class="scope-note">
           <h3>MVP boundary</h3>
           <p>
-            The MVP implements the at-risk Week / stale-blocker detector end to end. Missing standup,
-            planless Week, overload, scope creep, and other use cases are detector modules that reuse
-            the same graph once added. On-demand chat now enters the shared FleetGraph runtime for
+            The MVP implements one at-risk Week detector graph end to end. Stale blocker,
+            missing progress, planless Week, and overload signals are implemented as risk patterns
+            inside that graph and validated by detection-quality traces; separate detector modules remain
+            future hardening. On-demand chat now enters the shared FleetGraph runtime for
             traced SSE streaming, while chat-initiated write actions remain a post-MVP extension. This page is
             a supplemental explainer; <code>FLEETGRAPH.md</code> remains the canonical submission artifact.
           </p>
@@ -449,16 +450,17 @@ flowchart TD
           <div class="step">
             <span class="node warn">action path</span>
             <p>
-              Action requests are not out of scope for FleetGraph. The MVP may defer execution, but the
-              architecture still produces draft actions or pending approvals instead of pretending chat is
-              answer-only.
+              Action requests are not out of scope for FleetGraph. The current MVP defers browser-visible
+              chat action creation; the target architecture routes those requests into draft actions or
+              pending approvals instead of making chat answer-only forever.
             </p>
           </div>
           <div class="step">
-            <span class="node">Ship tools</span>
+            <span class="node">Ship writes</span>
             <p>
-              The agent uses the same primitives the UI exposes: read context, draft comments, create issues,
-              update issue state, assign work, dismiss or snooze findings, and resume approved actions.
+              The agent currently reads context, drafts approved comments, dismisses or snoozes findings,
+              and resumes approved <code>draft_comment</code> actions. Create-issue, state-change, and assignment
+              tools are target extensions, not current MVP write primitives.
             </p>
           </div>
           <div class="step">
@@ -480,9 +482,9 @@ flowchart TD
         <div class="closing">
           <h3>Why this is agent-native</h3>
           <p>
-            FleetGraph receives events, reasons with dynamic Ship context, calls atomic Ship tools, and
-            persists visible outcomes. New behavior should come from new detector prompts and tool composition,
-            not a new bespoke workflow for every use case.
+            FleetGraph receives events, reasons with dynamic Ship context, persists visible outcomes, and
+            calls the approved Ship write primitive available in the MVP. New behavior should come from new
+            detector prompts and tool composition, not a new bespoke workflow for every use case.
           </p>
         </div>
       </div>
@@ -549,7 +551,7 @@ flowchart TD
             <tr>
               <td>Engineer</td>
               <td>Missing standup or ambiguous progress on assigned work.</td>
-              <td>Private reminder or draft standup prompt tied to current issues.</td>
+              <td>Missing-progress risk evidence inside the at-risk Week finding path; private reminders and draft standup prompts are post-MVP action polish.</td>
               <td>Post, edit, dismiss, or snooze.</td>
               <td>Extension</td>
             </tr>
@@ -618,8 +620,9 @@ flowchart TD
     <section class="section" aria-labelledby="tools">
       <h2 id="tools">Agent Tool Parity</h2>
       <p>
-        Every action a user can take through Ship should have an equivalent agent capability. Domain tools are
-        shortcuts over primitives, not gates that limit what the agent can attempt.
+        This is the target tool model. Current MVP write execution is limited to approved
+        <code>draft_comment</code> actions plus finding lifecycle operations such as dismiss and snooze. Over time,
+        every action a user can take through Ship should have an equivalent agent capability.
       </p>
       <div class="grid-3">
         <div class="mini">
