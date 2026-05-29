@@ -204,24 +204,35 @@ The reset is scoped: it restores the two seeded FleetGraph findings, clears thei
 
 These links are public. They were captured from the deployed droplet and verified through the Langfuse API with `public: true`.
 
-For a final submission recapture, set these on the API process before generating the demo traces:
+**Full Capture & Verification Checklist**
+
+Before regenerating traces for the final submission, follow the complete Capture & Verification Checklist in `FLEETGRAPH.md` (section “Capture & Verification Checklist”). It covers:
+
+- Pre-flight health reset
+- Enabling `FLEETGRAPH_PUBLIC_TRACE_EXPORT=true` + `LANGFUSE_PROJECT_ID`
+- Regenerating the full 14-case detection quality matrix with live model calls
+- Capturing a fresh on-demand chat trace that demonstrates person name resolution (recommended question: “Who owns the main blocker?” or “Who is responsible for the highest priority issue?”)
+- Verifying each trace is public, reviewing for PII, and turning the export flag off afterward
+- Updating all documentation references
+
+**Minimal export setup (when following the checklist)**
 
 ```bash
 FLEETGRAPH_PUBLIC_TRACE_EXPORT=true
 LANGFUSE_PROJECT_ID=<your-langfuse-project-id>
 ```
 
-When this is enabled, FleetGraph calls the Langfuse SDK `setTraceAsPublic()` for exported top-level proactive run traces and on-demand chat traces after trace materialization. The trace metadata includes `tracePublic`, `traceId`, and, when `LANGFUSE_PROJECT_ID` is configured, `traceUrl`. Turn it back off after the capture window.
+When enabled, FleetGraph calls `setTraceAsPublic()` for exported proactive and on-demand chat traces. The metadata includes `tracePublic`, `traceId`, and `traceUrl`. Turn it back off after the capture window.
 
 **When traces are generated**
 
 | Demo action | Trace you should see in Langfuse |
 |-------------|-----------------------------------|
-| Chat question streams in the Week panel | `fleetgraph.chat.response` |
+| Chat question streams in the Week panel | `fleetgraph.chat.response` (ideally showing resolved person names) |
 | Proactive Week detector reasons about a risky Week | `fleetgraph.at_risk_week.reason` or a trace tagged `detector:at_risk_week` |
 | Quiet detector path exits before model reasoning | A selected demo trace only; routine quiet poll exits are suppressed to protect Langfuse volume |
 
-Langfuse is the observability proof: do not search for traces during the recording. Generate them in pre-flight, open the useful trace, then show the already-loaded tab. If you recapture traces later, make only the selected traces public after reviewing their prompt/context content, or use the SDK-driven public export switch for a short recapture window.
+Langfuse is the observability proof: do not search for traces during the recording. Generate them in pre-flight using the checklist in `FLEETGRAPH.md`, open the useful trace, then show the already-loaded tab.
 
 **Interview note: observability volume edge case**
 

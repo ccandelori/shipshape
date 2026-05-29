@@ -27,7 +27,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | At least one human-in-the-loop gate | Pass | `api/src/fleetgraph/policy.ts`, `api/src/routes/fleetgraph.ts`, inbox `Needs Review` and `Approved` tabs | None |
 | Running against real Ship data; no mocked production responses | Pass | Context builders read Postgres Ship documents/issues/standups; seed and live data use real tables | Keep demo clear when using seeded rows versus live traces |
 | Agent chat and notifications accessible in UI | Pass | `web/src/components/FleetGraph/*`, `web/src/components/Editor.tsx`, `web/src/pages/App.tsx` | None |
-| Deployed and publicly accessible | Pass, pending final-day re-smoke | `https://143.198.163.184.nip.io/` and `/health` returned HTTP 200 on 2026-05-28 | Re-smoke immediately before submitting |
+| Deployed and publicly accessible | Pass | Release `20260529-151518` is live at `https://143.198.163.184.nip.io/`; `/health` returned HTTP 200 and Brave smoke verified login, FleetGraph inbox tabs, and Week chat on 2026-05-29 | Re-smoke immediately before submitting only if another deploy occurs |
 | Trigger model documented and defended | Pass | `FLEETGRAPH.md` and `PRESEARCH.md` hybrid trigger section | None |
 
 ## PRD Performance Checklist

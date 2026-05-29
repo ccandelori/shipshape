@@ -12,14 +12,36 @@ Run this after deploy, before each dry run:
 ssh ship@143.198.163.184 "sudo -n bash -lc 'set -a; source /etc/ship/env; set +a; cd /opt/ship/current/api; node dist/fleetgraph/scripts/demo-health.js --reset --app-url https://143.198.163.184.nip.io'"
 ```
 
-Open these tabs before recording:
+**Trace Regeneration (Critical for Observability Proof)**
+
+Before recording, follow the full **Capture & Verification Checklist** in `FLEETGRAPH.md`. At minimum:
+
+1. Enable public trace export:
+   ```bash
+   export FLEETGRAPH_PUBLIC_TRACE_EXPORT=true
+   export LANGFUSE_PROJECT_ID=<your-langfuse-project-id>
+   ```
+
+2. Regenerate key traces (especially the on-demand chat trace showing person name resolution):
+   ```bash
+   DATABASE_URL=... \
+   LANGFUSE_PROJECT_ID=... \
+   FLEETGRAPH_PUBLIC_TRACE_EXPORT=true \
+   pnpm --filter @ship/api exec tsx src/fleetgraph/scripts/run-detection-quality-eval.ts --live --trace --strict
+   ```
+
+3. If you plan to mention person-name resolution, capture or refresh a chat trace with a question that asks who owns a blocker. Otherwise use the existing Week blocking trace.
+
+4. Verify every trace you will show is public, review for PII, then turn the export flag off.
+
+Open these tabs before recording (update Langfuse URLs after regeneration):
 
 | Tab | URL |
 |---|---|
 | Ship app | `https://143.198.163.184.nip.io/` |
 | Week chat | `https://143.198.163.184.nip.io/documents/ae794fb3-2b32-449b-819f-34348d317295` |
 | Issue comment | `https://143.198.163.184.nip.io/documents/27e15c1b-3f6c-4e1d-8880-15a5c5705459` |
-| Langfuse finding trace | `https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b0fb54c7f46e28c96d1eaa531fc89d0d` |
+| Langfuse finding trace | (update from checklist) |
 
 Login:
 
@@ -35,7 +57,7 @@ Confirm before recording:
 - The **Open** tab has one visible finding.
 - The **Needs Review** tab has the HITL finding.
 - The Week page has the **Ask FleetGraph** pill.
-- The Langfuse trace tab is already loaded.
+- All chosen Langfuse tabs are already loaded (never search live during recording).
 
 ## Five-Minute Storyboard
 

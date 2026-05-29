@@ -191,7 +191,7 @@ Runtime components:
 - Server-Sent Events for `/api/fleetgraph/chat`.
 - PostgreSQL for durable findings and action lifecycle state.
 
-Public deployment evidence is recorded in `FLEETGRAPH.md`: release `20260528-144214` was smoke-tested at `https://143.198.163.184.nip.io/` with login, inbox tabs, a trace-backed finding, and graph-routed Week chat.
+Public deployment evidence is recorded in `FLEETGRAPH.md`: release `20260529-151518` was smoke-tested at `https://143.198.163.184.nip.io/` with login, inbox tabs, a trace-backed finding surface, and graph-routed Week chat.
 
 ### Trigger Model
 

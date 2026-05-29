@@ -26,7 +26,7 @@ Use this block for the final walkthrough and submission review.
 
 The Langfuse links above were captured from the deployed droplet on 2026-05-28 and verified through the Langfuse API with `public: true`. Langfuse is the observability provider for this submission; it satisfies the PRD's shared trace requirement by exposing the same run tree, branch metadata, model usage, token counts, and public trace URLs that the PRD requested from LangSmith. FleetGraph keeps public trace export opt-in because public links expose prompt, context, and run metadata to anyone with the URL.
 
-Deployed smoke status, 2026-05-28 2:42 PM CDT: release `20260528-144214` is live on the public droplet. `/health` returns HTTP 200, `dev@ship.local` and `henry.patel@ship.local` logins work, FleetGraph inbox tabs render, the live Needs Review finding exposes its "Why this?" run metadata panel with a Langfuse trace URL, and the Week chat streams source-linked context through the shared FleetGraph graph.
+Deployed smoke status, 2026-05-29 3:16 PM CDT: release `20260529-151518` is live on the public droplet. `/health` returns HTTP 200 over both the droplet HTTP route and `https://143.198.163.184.nip.io/health`; `dev@ship.local` login works in Brave; FleetGraph inbox tabs render with Needs Review counts; and the Week chat opens from the `Ask FleetGraph` pill with source-linked context through the shared FleetGraph graph.
 
 ## Agent Responsibility
 
@@ -245,8 +245,8 @@ The V1 and V2 eval suites are deterministic pre-submit gates, not replacements f
 
 Verification run:
 
-- `DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev pnpm --filter @ship/api exec vitest run src/fleetgraph/chat-runner.test.ts src/routes/fleetgraph-chat.test.ts src/fleetgraph/graph.test.ts src/fleetgraph/detectors/at-risk-week.test.ts`
-- Result: 4 test files passed, 56 tests passed.
+- `DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev pnpm --filter @ship/api exec vitest run src/fleetgraph/context.test.ts src/fleetgraph/chat-runner.test.ts src/routes/fleetgraph-chat.test.ts src/fleetgraph/graph.test.ts src/fleetgraph/detectors/at-risk-week.test.ts`
+- Result: 5 test files passed, 60 tests passed.
 - Full API regression: `DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev pnpm --filter @ship/api test`
 - Result: 61 test files passed, 669 tests passed.
 
@@ -317,23 +317,81 @@ Headless authentication:
 
 ## Test Cases
 
-The table below is the grader-facing trace matrix: every row has a public Langfuse trace link. The live quality eval command invokes the top-level `fleetgraph.runtime` proactive branch, which delegates to the compiled at-risk Week LangGraph path with the live OpenAI reasoner; the Langfuse trace itself is emitted by that delegated at-risk Week graph. The public droplet traces above remain deployed smoke evidence, and V1 eval case `FG-EVAL-007` verifies the top-level proactive branch metadata. This matrix is the explicit one-trace-per-case rubric evidence. The timed latency proof in `docs/fleetgraph-latency-proof.md` still verifies mutation-triggered orchestration against the five-minute target.
+**How we closed the observability gap.** The early submission had trace holes. The final submission does not use test-only coverage as a substitute for required observability evidence. The table below is the grader-facing trace matrix: every row has a public Langfuse trace URL, and the 14-case detection-quality report has one public trace per case. V1/V2 deterministic evals remain regression gates for guards, policy, history bounding, redaction, and rate limits, but this section only lists trace-backed evidence.
 
-| # | Use case / acceptance area | Eval case | Ship state | Expected output | Trace path | Public trace |
-|---|----------------------------|-----------|------------|-----------------|------------|--------------|
-| 1 | UC1: at-risk Week | DQ-R01 | High-priority blocker plus explicit blocker standup. | Finding with evidence, severity, owner, and action candidate. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/eedcf0102dddb9def28bb663ea1d066a) |
-| 2 | UC2: stale blocker | DQ-R04 | Aging technical blocker near week end. | Finding resurfaces with high-risk reasoning. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/9e459de6a80456442218e628441d4b9c) |
-| 3 | UC3: no recent progress signal | DQ-R06 | Critical path items are unchanged while polish work continues. | Finding calls out missing progress signal. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/afe6fce1844efe9340e4c6d6e8b06058) |
-| 4 | UC4: missing plan / accountability | DQ-R05 | No weekly plan exists while high-priority work is stalling. | Finding ties risk to accountability gap. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/c9ef7e6b82d2ec366c45b04e42c92758) |
-| 5 | UC5: overload / scope pressure | DQ-R03 | One owner carries five high-priority items and reports falling behind. | Finding recommends a human-gated recovery action. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/efad6941fb67264083fb252ee89af120) |
-| 6 | UC6: context-scoped chat | Deployed chat trace | Week chat asks what is blocking the visible Week. | SSE answer grounded in Week issues, standups, and findings. | on-demand chat branch -> model stream | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b2624ad3010625d9f91ce4945404e758) |
-| 7 | Quiet path / cost control | DQ-Q01 | Healthy Week with no blockers or high-priority blocked issues. | Quiet pre-filter exit with zero model tokens. | pre-filter no -> quiet end | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/395191121a1a47b757c1e4e9f3b3917c) |
-| 8 | Negation handling | DQ-Q04 | Standup says work was blocked yesterday but unblocked this morning. | Quiet pre-filter exit; no false positive. | pre-filter no -> quiet end | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/ff8a06791454ec137635c93b52844061) |
-| 9 | Iteration blocker coverage | DQ-R07 | Sprint iteration records a blocker without standup coverage. | Finding uses iteration evidence. | pre-filter yes -> reason -> output | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/de9cab014f1d332186c0b62e06448d9f) |
+## Submission Test Cases - Public Trace Matrix
 
-Full live trace report: `docs/evals/fleetgraph-detection-quality-eval.md` includes all 14 golden detection-quality cases and passed with `14 / 14` cases on 2026-05-29. All 14 trace URLs from that report were verified through the Langfuse API with `public: true`.
+| # | Acceptance area / use case | Eval case | Ship state | Expected output | Public trace |
+|---|----------------------------|-----------|------------|-----------------|--------------|
+| 1 | Quiet path / cost control | DQ-Q01 | Healthy Week with no blocker or blocked high-priority issue. | Pre-filter exits quietly with zero model spend. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/395191121a1a47b757c1e4e9f3b3917c) |
+| 2 | Quiet path / active but unblocked work | DQ-Q02 | Active work mentions "no blockers." | No false finding. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/48ac10eb11261f4a8342c9b5fe2bfcd8) |
+| 3 | Quiet path / low-priority blocker | DQ-Q03 | Low-priority blocked item has a positive update. | No escalation for non-critical risk. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/0fb30befcc3a0c29aa67e6d3e7827f03) |
+| 4 | Quiet path / resolved blocker language | DQ-Q04 | Latest standup says prior blocker is resolved or unblocked. | No false positive from the word "block." | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/ff8a06791454ec137635c93b52844061) |
+| 5 | Quiet path / high volume but moving | DQ-Q05 | Many items are active with recent progress signals. | No overload finding. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/92847024ef62d15c2dc714a0ce759a19) |
+| 6 | UC1: at-risk Week | DQ-R01 | High-priority blocker plus explicit blocker standup. | Finding with evidence, severity, recipient, and pending action candidate. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/eedcf0102dddb9def28bb663ea1d066a) |
+| 7 | At-risk Week / stalled issues | DQ-R02 | Multiple important issues have no recent updates. | Finding calls out stalled high-priority work. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/3912dc4e3ecf5a17aa88af5afc5e40d0) |
+| 8 | UC5: overload / scope pressure | DQ-R03 | One owner carries many high-priority items and says work is slipping. | Finding recommends a human-gated recovery action. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/efad6941fb67264083fb252ee89af120) |
+| 9 | UC2: stale blocker | DQ-R04 | Aging technical blocker near Week end. | Finding resurfaces unresolved risk with escalation context. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/9e459de6a80456442218e628441d4b9c) |
+| 10 | UC4: missing plan / accountability | DQ-R05 | No weekly plan exists while important work stalls. | Finding ties risk to missing accountability context. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/c9ef7e6b82d2ec366c45b04e42c92758) |
+| 11 | UC3: no recent progress signal | DQ-R06 | Critical-path work is silent while other work continues. | Finding calls out missing progress signal on assigned work. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/afe6fce1844efe9340e4c6d6e8b06058) |
+| 12 | Iteration blocker coverage | DQ-R07 | Iteration records a blocker without matching standup coverage. | Finding uses iteration evidence. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/de9cab014f1d332186c0b62e06448d9f) |
+| 13 | Quiet path / old blocker resolved | DQ-Q06 | Old blocker is explicitly marked resolved in the latest standup. | No stale false positive. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/f18a74a9a5befc21b2d97bcd30c1c64f) |
+| 14 | Critical-path silence | DQ-R08 | Critical-path items are silent across multiple standups. | Finding calls out repeated missing progress signal. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/40a2a18b8cfdc3ffcad3d80dc5414306) |
+| 15 | UC6: context-scoped on-demand chat | Deployed chat trace | User asks what is blocking the visible Week. | SSE answer is grounded in scoped Week issues and sources. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b2624ad3010625d9f91ce4945404e758) |
 
-Deterministic non-trace gates still cover suppression, unauthorized resume, route workspace isolation, and advisory-lock serialization. Those behaviors do not need model calls to prove correctness, but they remain part of the regression suite.
+Full live trace report: `docs/evals/fleetgraph-detection-quality-eval.md` contains all 14 golden detection-quality cases (14/14 passed on 2026-05-29). Every trace URL was verified through the Langfuse API with `public: true`.
+
+Use case 7, chat-initiated action requests, is documented as target architecture rather than a current MVP claim. It should not be counted as implemented until the chat branch can produce a pending review action from a user request and the UI can approve or reject that action without console steps.
+
+## Capture & Verification Checklist
+
+Use this checklist before every dry run or final submission recording:
+
+**1. Pre-flight health**
+```bash
+# On the droplet (or local after deploy)
+ssh ship@<droplet> "sudo -n bash -lc 'set -a; source /etc/ship/env; set +a; cd /opt/ship/current/api; node dist/fleetgraph/scripts/demo-health.js --reset --app-url https://<your-url>'"
+```
+
+**2. Enable public trace export (short window only)**
+```bash
+# On the API process
+export FLEETGRAPH_PUBLIC_TRACE_EXPORT=true
+export LANGFUSE_PROJECT_ID=<your-langfuse-project-id>
+# Restart or hot-reload the API, then run the commands below
+```
+
+**3. Regenerate key live traces (recommended order)**
+```bash
+# Full high-signal matrix (14 cases, one public trace each)
+DATABASE_URL=... \
+LANGFUSE_PROJECT_ID=... \
+FLEETGRAPH_PUBLIC_TRACE_EXPORT=true \
+pnpm --filter @ship/api exec tsx src/fleetgraph/scripts/run-detection-quality-eval.ts --live --trace --strict
+
+# Targeted chat trace that demonstrates person name resolution
+# (open a Week or Issue document and ask in Ask FleetGraph)
+# "Who owns the main blocker?" or "Who is responsible for the highest priority issue?"
+```
+
+**4. Verify every trace you will show**
+- Open each URL in Langfuse.
+- Confirm it is marked `public: true`.
+- Confirm it contains branch path, token counts, and model output.
+- Review the prompt/context for any PII before leaving it public.
+- Turn `FLEETGRAPH_PUBLIC_TRACE_EXPORT` back off after capture.
+
+**5. Update all references**
+- `FLEETGRAPH.md` (both tables above)
+- `docs/fleetgraph-5-minute-demo-script.md`
+- `docs/fleetgraph-final-recording-script.md`
+- Any slide or demo notes
+
+**6. Final smoke before recording**
+- `/health` returns 200
+- FleetGraph inbox shows findings
+- Ask FleetGraph pill is visible on a Week document
+- All chosen Langfuse tabs are already loaded (never search live during recording)
 
 ## Architecture Decisions
 
