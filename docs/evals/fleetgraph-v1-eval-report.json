@@ -1,0 +1,248 @@
+{
+  "suiteName": "FleetGraph V1 deterministic evals",
+  "generatedAt": "2026-05-29T01:32:25.322Z",
+  "status": "pass",
+  "summary": {
+    "totalCases": 8,
+    "passedCases": 8,
+    "failedCases": 0,
+    "totalAssertions": 24,
+    "passedAssertions": 24,
+    "failedAssertions": 0,
+    "passRate": 1
+  },
+  "cases": [
+    {
+      "id": "FG-EVAL-001",
+      "name": "Healthy Week exits quietly before model reasoning",
+      "category": "proactive",
+      "status": "pass",
+      "assertions": [
+        {
+          "metric": "branch_path",
+          "name": "Branch path",
+          "expected": "prefilter-exit",
+          "observed": "prefilter-exit",
+          "status": "pass"
+        },
+        {
+          "metric": "finding_presence",
+          "name": "Finding presence",
+          "expected": "none",
+          "observed": "none",
+          "status": "pass"
+        },
+        {
+          "metric": "action_candidate",
+          "name": "Action candidate",
+          "expected": "none",
+          "observed": "none",
+          "status": "pass"
+        },
+        {
+          "metric": "trace_metadata",
+          "name": "Token spend",
+          "expected": "0/0/$0.000000",
+          "observed": "0/0/$0.000000",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "id": "FG-EVAL-002",
+      "name": "Blocked Week produces finding and pending action",
+      "category": "proactive",
+      "status": "pass",
+      "assertions": [
+        {
+          "metric": "branch_path",
+          "name": "Branch path",
+          "expected": "output",
+          "observed": "output",
+          "status": "pass"
+        },
+        {
+          "metric": "finding_presence",
+          "name": "Finding presence",
+          "expected": "present",
+          "observed": "present",
+          "status": "pass"
+        },
+        {
+          "metric": "action_candidate",
+          "name": "Action candidate",
+          "expected": "present",
+          "observed": "present",
+          "status": "pass"
+        },
+        {
+          "metric": "trace_metadata",
+          "name": "Token spend",
+          "expected": "850/172/$0.000231",
+          "observed": "850/172/$0.000231",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "id": "FG-EVAL-003",
+      "name": "On-demand chat uses the compiled FleetGraph graph branch",
+      "category": "chat",
+      "status": "pass",
+      "assertions": [
+        {
+          "metric": "branch_path",
+          "name": "Graph branch",
+          "expected": "ondemand_chat",
+          "observed": "ondemand_chat",
+          "status": "pass"
+        },
+        {
+          "metric": "chat_response",
+          "name": "Streamed response",
+          "expected": "Procurement blocker is still blocked.",
+          "observed": "Procurement blocker is still blocked.",
+          "status": "pass"
+        },
+        {
+          "metric": "trace_metadata",
+          "name": "Usage metadata",
+          "expected": "12/5/17",
+          "observed": "12/5/17",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "id": "FG-EVAL-004",
+      "name": "Week chat prompt stays grounded in scoped Ship sources",
+      "category": "chat",
+      "status": "pass",
+      "assertions": [
+        {
+          "metric": "chat_sources",
+          "name": "Source labels",
+          "expected": "FleetGraph Eval Week|Procurement blocker|Tuesday standup",
+          "observed": "FleetGraph Eval Week|Procurement blocker|Tuesday standup",
+          "status": "pass"
+        },
+        {
+          "metric": "chat_sources",
+          "name": "Source kinds",
+          "expected": "scope|related|related",
+          "observed": "scope|related|related",
+          "status": "pass"
+        },
+        {
+          "metric": "scope_guard",
+          "name": "Untrusted context boundary",
+          "expected": "present",
+          "observed": "present",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "id": "FG-EVAL-005",
+      "name": "Notify-only recommendations do not create pending actions",
+      "category": "policy",
+      "status": "pass",
+      "assertions": [
+        {
+          "metric": "approval_policy",
+          "name": "Lifecycle state",
+          "expected": "open",
+          "observed": "open",
+          "status": "pass"
+        },
+        {
+          "metric": "approval_policy",
+          "name": "Approval level",
+          "expected": "notify_only",
+          "observed": "notify_only",
+          "status": "pass"
+        },
+        {
+          "metric": "action_candidate",
+          "name": "Action candidate",
+          "expected": "none",
+          "observed": "none",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "id": "FG-EVAL-006",
+      "name": "Visible writes require explicit HITL approval",
+      "category": "policy",
+      "status": "pass",
+      "assertions": [
+        {
+          "metric": "approval_policy",
+          "name": "Lifecycle state",
+          "expected": "pending_review",
+          "observed": "pending_review",
+          "status": "pass"
+        },
+        {
+          "metric": "approval_policy",
+          "name": "Approval level",
+          "expected": "approval_required",
+          "observed": "approval_required",
+          "status": "pass"
+        },
+        {
+          "metric": "action_candidate",
+          "name": "Action candidate",
+          "expected": "present",
+          "observed": "present",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "id": "FG-EVAL-007",
+      "name": "Proactive detector enters the compiled FleetGraph graph branch",
+      "category": "proactive",
+      "status": "pass",
+      "assertions": [
+        {
+          "metric": "branch_path",
+          "name": "Graph branch",
+          "expected": "proactive_at_risk_week",
+          "observed": "proactive_at_risk_week",
+          "status": "pass"
+        },
+        {
+          "metric": "trace_metadata",
+          "name": "Completed nodes",
+          "expected": "branch|proactive_at_risk_week",
+          "observed": "branch|proactive_at_risk_week",
+          "status": "pass"
+        },
+        {
+          "metric": "finding_presence",
+          "name": "Nested detector state",
+          "expected": "completed",
+          "observed": "completed",
+          "status": "pass"
+        }
+      ]
+    },
+    {
+      "id": "FG-EVAL-008",
+      "name": "Unsupported chat scopes fail closed before model execution",
+      "category": "scope",
+      "status": "pass",
+      "assertions": [
+        {
+          "metric": "scope_guard",
+          "name": "Unsupported document type",
+          "expected": "rejected",
+          "observed": "rejected",
+          "status": "pass"
+        }
+      ]
+    }
+  ]
+}

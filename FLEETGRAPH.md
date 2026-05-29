@@ -20,6 +20,7 @@ Use this block for the final walkthrough and submission review.
 | Chat trace | [Public Langfuse trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b2624ad3010625d9f91ce4945404e758) |
 | Demo script | `docs/fleetgraph-5-minute-demo-script.md` |
 | Latency proof | `docs/fleetgraph-latency-proof.md` |
+| V1 eval report | `docs/evals/fleetgraph-v1-eval-report.md` |
 | PRD readiness audit | `docs/fleetgraph-submission-readiness-audit.md` |
 
 The Langfuse links above were captured from the deployed droplet on 2026-05-28 and verified through the Langfuse API with `public: true`. Langfuse is the observability provider for this submission; it satisfies the PRD's shared trace requirement by exposing the same run tree, branch metadata, model usage, token counts, and public trace URLs that the PRD requested from LangSmith. FleetGraph keeps public trace export opt-in because public links expose prompt, context, and run metadata to anyone with the URL.
@@ -230,12 +231,20 @@ Local deterministic evidence:
 | Quiet pre-filter exit | `55555555-5555-4555-8555-555555555555` | `prefilter-exit` | No finding, no model call | 0 input / 0 output | `$0.000000` | `api/src/fleetgraph/demo-scenarios.test.ts` |
 | Finding with pending action | `66666666-6666-4666-8666-666666666666` | `output` | Finding plus action candidate | 850 input / 172 output | `$0.000231` | `api/src/fleetgraph/demo-scenarios.test.ts` |
 
+V1 deterministic eval suite:
+
+| Command | Result | Report |
+|---------|--------|--------|
+| `DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev pnpm fleetgraph:eval` | 8 cases passed, 24 assertions passed, 0 failures | `docs/evals/fleetgraph-v1-eval-report.md` and `docs/evals/fleetgraph-v1-eval-report.json` |
+
+The V1 eval suite is a deterministic pre-submit gate, not a replacement for public Langfuse traces. It verifies the same high-risk behaviors graders probe: quiet proactive exit, finding/action creation, on-demand chat entering the compiled `fleetgraph.runtime` graph, prompt/source grounding, HITL policy, proactive graph branch parity, and fail-closed unsupported chat scope.
+
 Verification run:
 
 - `DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev ./node_modules/.bin/vitest run src/fleetgraph/demo-scenarios.test.ts src/fleetgraph/detectors/at-risk-week.test.ts src/fleetgraph/detectors/at-risk-week-persistence.test.ts`
 - Result: 3 test files passed, 35 tests passed.
 - Full API regression: `DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev pnpm --filter @ship/api test`
-- Result: 56 test files passed, 623 tests passed.
+- Result: 61 test files passed, 660 tests passed.
 
 ## Use Cases
 
@@ -305,7 +314,7 @@ Headless authentication:
 
 ## Test Cases
 
-The live trace links below are public Langfuse Cloud links from the public droplet. The deterministic local evidence above remains useful because it verifies the two MVP proactive graph paths and usage metadata without depending on model availability. The timed latency proof in `docs/fleetgraph-latency-proof.md` verifies the mutation-triggered path against the five-minute target using the real trigger controller, advisory lock, context builder, guard, graph, policy, and persistence path with a deterministic local reasoner.
+The live trace links below are public Langfuse Cloud links from the public droplet. The deterministic local evidence above remains useful because it verifies the MVP proactive graph paths, on-demand graph parity, HITL policy, scope guarding, source grounding, and usage metadata without depending on model availability. The timed latency proof in `docs/fleetgraph-latency-proof.md` verifies the mutation-triggered path against the five-minute target using the real trigger controller, advisory lock, context builder, guard, graph, policy, and persistence path with a deterministic local reasoner. The formal V1 eval command is `pnpm fleetgraph:eval`.
 
 | # | Ship state | Expected output | Required trace path | Trace link status |
 |---|------------|-----------------|---------------------|------------------|
@@ -572,7 +581,7 @@ Runtime model spend for the MVP at-risk Week detector is now persisted in `fleet
 | Graph Diagram | Defined in this document |
 | Use Cases | Defined in this document |
 | Trigger Model | Defined in this document |
-| Test Cases | MVP proactive paths verified locally; public live Langfuse trace links captured from public droplet |
+| Test Cases | V1 deterministic eval suite passed; public live Langfuse trace links captured from public droplet |
 | Architecture Decisions | Defined in this document |
 | Cost Analysis | Design estimate plus deterministic runtime telemetry captured |
 | Timed Latency Proof | Passed locally at 45.113 seconds; see `docs/fleetgraph-latency-proof.md` |

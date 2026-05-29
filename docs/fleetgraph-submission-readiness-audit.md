@@ -12,6 +12,7 @@ FleetGraph is submission-ready from an engineering, documentation, deployment, a
 
 - The Langfuse trace URLs in `FLEETGRAPH.md` are deployed traces verified through the Langfuse API with `public: true`.
 - Langfuse is the observability provider for this submission. It fulfills the PRD's shared trace requirement by exposing public run trees with branch metadata, model usage, token counts, and trace URLs.
+- The V1 deterministic eval suite passes 8 cases and 24 assertions; see `docs/evals/fleetgraph-v1-eval-report.md`.
 
 No architectural rebuild is needed. The original grading issue - on-demand chat bypassing the compiled graph - is fixed in `api/src/fleetgraph/graph.ts` and `api/src/routes/fleetgraph-chat.ts`.
 
@@ -48,6 +49,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | Use Cases | Pass | 7 use cases |
 | Trigger Model | Pass | Hybrid poll plus mutation debounce |
 | Test Cases | Pass | Test table includes public trace URLs |
+| Formal V1 eval report | Pass | `docs/evals/fleetgraph-v1-eval-report.md` and `docs/evals/fleetgraph-v1-eval-report.json` |
 | Architecture Decisions | Pass | `FLEETGRAPH.md` Architecture Decisions |
 | Cost Analysis | Pass | `FLEETGRAPH.md` Cost Analysis |
 
@@ -74,6 +76,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | `docs/fleetgraph-agent-exercise-guide.md` | Deep manual exercise guide | Current |
 | `docs/fleetgraph-graph-explainer.html` | Visual architecture explainer | Current |
 | `docs/fleetgraph-latency-proof.md` | Latency evidence | Current |
+| `docs/evals/fleetgraph-v1-eval-report.md` | Formal deterministic eval report | Current |
 | `FLEETGRAPH_TOKEN_SPEND.md` | Cost ledger | Current as supporting ledger |
 
 ## Pre-Submit Actions
@@ -87,7 +90,8 @@ Do these immediately before submitting:
    - FleetGraph inbox opens.
    - `Needs Review` and `Approved` tabs render.
    - Week `Ask FleetGraph` streams an answer.
-5. Submit `FLEETGRAPH.md`, `PRESEARCH.md`, the public app URL, the demo video, and the trace URLs.
+5. Run `pnpm fleetgraph:eval` if you want a fresh local eval timestamp for the final packet.
+6. Submit `FLEETGRAPH.md`, `PRESEARCH.md`, `docs/evals/fleetgraph-v1-eval-report.md`, the public app URL, the demo video, and the trace URLs.
 
 ## Do Not Rebuild Tonight
 

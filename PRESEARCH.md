@@ -20,6 +20,7 @@ This is the root-level PRESEARCH deliverable for the Week 5 FleetGraph assignmen
 - Inbox and resume APIs: `api/src/routes/fleetgraph.ts`
 - Embedded chat APIs: `api/src/fleetgraph/chat.ts`, `api/src/routes/fleetgraph-chat.ts`
 - Demo health/reset tooling: `api/src/fleetgraph/scripts/demo-health.ts`
+- Formal V1 eval tooling: `api/src/fleetgraph/evals.ts`, `api/src/fleetgraph/scripts/run-evals.ts`, `docs/evals/fleetgraph-v1-eval-report.md`
 - FleetGraph tests under `api/src/fleetgraph/*.test.ts`, `api/src/routes/fleetgraph*.test.ts`, `web/src/components/FleetGraph/*.test.tsx`, and `e2e/fleetgraph-ui.spec.ts`
 
 ## Phase 1: Define The Agent
@@ -247,13 +248,14 @@ Implementation evidence:
 
 Verification already recorded:
 
+- Formal V1 eval suite passed with 8 cases and 24 assertions; see `docs/evals/fleetgraph-v1-eval-report.md`.
 - Deterministic demo scenarios pass for quiet and finding paths.
 - At-risk Week detector tests pass.
 - Persistence tests pass.
 - Focused FleetGraph API, OpenAPI, and demo-health tests pass.
 - Focused FleetGraph web component and hook tests pass.
 - API and web type-check/build passed during the latest polish pass.
-- Full API regression previously passed with 623 tests.
+- Full API regression passed with 61 test files and 660 tests.
 
 Live trace evidence in `FLEETGRAPH.md`:
 
@@ -282,6 +284,7 @@ Local seed verification:
 | Detection latency under 5 minutes | Passed deterministic proof; live trace latency metadata recorded |
 | Cost per run and production estimates | Present |
 | Same graph architecture for proactive and on-demand | Implemented through `fleetgraph.runtime` |
+| Formal V1 evals | Passed; report committed under `docs/evals/` |
 
 ## Known Gaps And Follow-Up Tasks
 
