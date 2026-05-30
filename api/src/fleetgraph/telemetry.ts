@@ -37,6 +37,17 @@ export type FleetGraphNodeTelemetryReport = {
   cases: FleetGraphNodeTelemetryCase[];
 };
 
+type FleetGraphObservationMetadata = {
+  traceNode: string | null;
+  branchPath: string | null;
+  guardDecision: string | null;
+  preFilterShouldReason: boolean | null;
+  lifecycleState: string | null;
+  modelName: string | null;
+  detectorType: string | null;
+  personResolution: string | null;
+};
+
 const langfuseObservationSchema = z.object({
   id: z.string(),
   traceId: z.string(),
@@ -88,8 +99,8 @@ export function buildFleetGraphNodeTelemetryCase(input: {
     ...input.traceCase,
     traceId,
     observations: input.observations
-      .filter(isFleetGraphTelemetryObservation)
-      .map(toFleetGraphNodeTelemetryObservation)
+      .map(toFleetGraphNodeTelemetryObservationOrNull)
+      .filter(isFleetGraphNodeTelemetryObservation)
       .sort(compareFleetGraphNodeTelemetryObservation),
   };
 }
@@ -165,15 +176,14 @@ function formatFleetGraphNodeTelemetryObservationRow(
   ].map(escapeMarkdownTableCell).join(' | ').replace(/^/, '| ').replace(/$/, ' |');
 }
 
-function isFleetGraphTelemetryObservation(observation: LangfuseObservationApiRow): boolean {
-  return isFleetGraphObservationName(observation.name)
-    || hasFleetGraphTelemetryMetadata(observation.metadata ?? {});
-}
-
-function toFleetGraphNodeTelemetryObservation(
+function toFleetGraphNodeTelemetryObservationOrNull(
   observation: LangfuseObservationApiRow
-): FleetGraphNodeTelemetryObservation {
-  const metadata = observation.metadata ?? {};
+): FleetGraphNodeTelemetryObservation | null {
+  const metadata = normalizeFleetGraphObservationMetadata(observation.metadata ?? {});
+
+  if (!isFleetGraphTelemetryObservation(observation.name, metadata)) {
+    return null;
+  }
 
   return {
     id: observation.id,
@@ -187,13 +197,19 @@ function toFleetGraphNodeTelemetryObservation(
     outputTokens: nullableNumber(observation.outputUsage ?? null),
     totalTokens: nullableNumber(observation.totalUsage ?? null),
     totalCost: nullableNumber(observation.totalCost ?? null),
-    traceNode: nullableString(metadata.traceNode),
-    branchPath: nullableString(metadata.branchPath),
-    guardDecision: nullableString(metadata.guardDecision),
-    preFilterShouldReason: nullableBoolean(metadata.preFilterShouldReason),
-    lifecycleState: nullableString(metadata.lifecycleState),
-    modelName: nullableString(metadata.modelName),
+    traceNode: metadata.traceNode,
+    branchPath: metadata.branchPath,
+    guardDecision: metadata.guardDecision,
+    preFilterShouldReason: metadata.preFilterShouldReason,
+    lifecycleState: metadata.lifecycleState,
+    modelName: metadata.modelName,
   };
+}
+
+function isFleetGraphNodeTelemetryObservation(
+  observation: FleetGraphNodeTelemetryObservation | null
+): observation is FleetGraphNodeTelemetryObservation {
+  return observation !== null;
 }
 
 function compareFleetGraphNodeTelemetryObservation(
@@ -220,8 +236,30 @@ function isFleetGraphObservationName(name: string): boolean {
   return name.startsWith(fleetGraphObservationNamePrefix);
 }
 
-function hasFleetGraphTelemetryMetadata(metadata: Record<string, unknown>): boolean {
-  return typeof metadata.traceNode === 'string'
+function isFleetGraphTelemetryObservation(
+  name: string,
+  metadata: FleetGraphObservationMetadata
+): boolean {
+  return isFleetGraphObservationName(name) || hasFleetGraphTelemetryMetadata(metadata);
+}
+
+function normalizeFleetGraphObservationMetadata(
+  metadata: Record<string, unknown>
+): FleetGraphObservationMetadata {
+  return {
+    traceNode: nullableString(metadata.traceNode),
+    branchPath: nullableString(metadata.branchPath),
+    guardDecision: nullableString(metadata.guardDecision),
+    preFilterShouldReason: nullableBoolean(metadata.preFilterShouldReason),
+    lifecycleState: nullableString(metadata.lifecycleState),
+    modelName: nullableString(metadata.modelName),
+    detectorType: nullableString(metadata.detectorType),
+    personResolution: nullableString(metadata.personResolution),
+  };
+}
+
+function hasFleetGraphTelemetryMetadata(metadata: FleetGraphObservationMetadata): boolean {
+  return metadata.traceNode !== null
     || metadata.detectorType === 'at_risk_week'
     || metadata.personResolution === 'applied';
 }

@@ -15,6 +15,14 @@ describe('FleetGraph node telemetry export', () => {
     )).toBe('trace-456');
   });
 
+  it('raises a clear error when a Langfuse URL does not include a trace id', () => {
+    expect(() => extractTraceIdFromLangfuseTraceUrl(
+      'https://us.cloud.langfuse.com/project/project-123/sessions/session-456'
+    )).toThrow(
+      'Langfuse trace URL does not contain a trace id: traceUrl=https://us.cloud.langfuse.com/project/project-123/sessions/session-456'
+    );
+  });
+
   it('normalizes FleetGraph observation rows into ordered node telemetry', () => {
     const observations: LangfuseObservationApiRow[] = [
       createObservation({
@@ -52,6 +60,14 @@ describe('FleetGraph node telemetry export', () => {
         name: 'langchain.chat_model',
         traceNode: null,
         personResolution: 'applied',
+        modelName: 'gpt-4o-mini',
+      }),
+      createObservation({
+        id: 'obs-ignored-metadata',
+        name: 'langchain.chat_model',
+        traceNode: null,
+        detectorType: 'other_detector',
+        personResolution: 'skipped',
       }),
       createObservation({
         id: 'obs-pre-filter',
@@ -88,6 +104,9 @@ describe('FleetGraph node telemetry export', () => {
     expect(telemetryCase.observations[2]).toMatchObject({
       latencyMs: 2,
       lifecycleState: 'pending_review',
+    });
+    expect(telemetryCase.observations[3]).toMatchObject({
+      modelName: 'gpt-4o-mini',
     });
   });
 
@@ -141,6 +160,7 @@ function createObservation(input: {
   public?: boolean;
   detectorType?: string;
   personResolution?: string;
+  modelName?: string;
 }): LangfuseObservationApiRow {
   return {
     id: input.id,
@@ -162,6 +182,7 @@ function createObservation(input: {
       lifecycleState: input.lifecycleState ?? null,
       detectorType: input.detectorType ?? null,
       personResolution: input.personResolution ?? null,
+      modelName: input.modelName ?? null,
     },
   };
 }
