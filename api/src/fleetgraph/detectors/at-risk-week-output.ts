@@ -2,6 +2,7 @@ import { isoDateTimeSchema, type FleetGraphLifecycleState, type FleetGraphSeveri
 import { atRiskWeekDetectorType } from './at-risk-week-constants.js';
 import type {
   AtRiskWeekOutputRepository,
+  AtRiskWeekOutputPersistenceInput,
   PersistedAtRiskWeekOutput,
 } from './at-risk-week-output-repository.js';
 import {
@@ -75,6 +76,61 @@ export type AtRiskWeekOutputNodeDependencies = {
   now: () => string;
 };
 
+export type AtRiskWeekOutputEffectInput = {
+  workspaceId: string;
+  scopedDocId: string;
+  runId: string;
+  ownerUserId: string | null;
+  materialChangeKey: string;
+  reasoning: AtRiskWeekReasoningOutput;
+  policy: AtRiskWeekPolicyDecision;
+  lifecycleState: 'open' | 'pending_review';
+};
+
+export type AtRiskWeekBroadcastEffect = {
+  userId: string;
+  eventType: 'fleetgraph:finding_created';
+  payload: Omit<AtRiskWeekBroadcastPayload, 'findingId' | 'actionCandidateId' | 'lifecycleState'>;
+};
+
+export type AtRiskWeekOutputEffect = {
+  persistence: AtRiskWeekOutputPersistenceInput;
+  broadcast: AtRiskWeekBroadcastEffect | null;
+};
+
+export function createAtRiskWeekOutputEffect(input: AtRiskWeekOutputEffectInput): AtRiskWeekOutputEffect {
+  if (!input.reasoning.isAtRisk) {
+    throw new AtRiskWeekNodeContractError('At-risk Week output effect requires at-risk reasoning');
+  }
+
+  return {
+    persistence: {
+      workspaceId: input.workspaceId,
+      scopedDocId: input.scopedDocId,
+      runId: input.runId,
+      detectorType: atRiskWeekDetectorType,
+      severity: input.reasoning.severity,
+      evidence: input.reasoning.evidence,
+      recipientUserId: input.ownerUserId,
+      lifecycleState: input.lifecycleState,
+      materialChangeKey: input.materialChangeKey,
+      actionCandidate: input.policy.actionCandidate,
+    },
+    broadcast: input.ownerUserId === null
+      ? null
+      : {
+          userId: input.ownerUserId,
+          eventType: 'fleetgraph:finding_created',
+          payload: {
+            workspaceId: input.workspaceId,
+            scopedDocumentId: input.scopedDocId,
+            detectorType: atRiskWeekDetectorType,
+            severity: input.reasoning.severity,
+          },
+        },
+  };
+}
+
 export async function outputNode(
   state: AtRiskWeekGraphState,
   dependencies: AtRiskWeekOutputNodeDependencies
@@ -93,14 +149,22 @@ export async function outputNode(
   }
 
   const lifecycleState = requireAtRiskWeekOutputLifecycle(policy.lifecycleState);
-  const persistence = await persistAtRiskWeekOutput(state, reasoning, policy, lifecycleState, dependencies);
+  const outputEffect = createAtRiskWeekOutputEffect({
+    workspaceId: state.scope.workspaceId,
+    scopedDocId: state.scope.scopedDocId,
+    runId: state.scope.runId,
+    ownerUserId: context.ownerUserId,
+    materialChangeKey: guard.materialChangeKey,
+    reasoning,
+    policy,
+    lifecycleState,
+  });
+  const persistence = await dependencies.outputRepository.persistOutput(outputEffect.persistence);
 
-  if (context.ownerUserId !== null) {
+  if (outputEffect.broadcast !== null) {
     broadcastAtRiskWeekFindingCreated(
       state,
-      context.ownerUserId,
-      reasoning.severity,
-      persistence.lifecycleState,
+      outputEffect.broadcast,
       persistence,
       dependencies
     );
@@ -128,21 +192,16 @@ export async function outputNode(
 
 function broadcastAtRiskWeekFindingCreated(
   state: AtRiskWeekGraphState,
-  userId: string,
-  severity: FleetGraphSeverity,
-  lifecycleState: FleetGraphLifecycleState,
+  effect: AtRiskWeekBroadcastEffect,
   persistence: PersistedAtRiskWeekOutput,
   dependencies: AtRiskWeekOutputNodeDependencies
 ): void {
   try {
-    dependencies.broadcastToUser(userId, 'fleetgraph:finding_created', {
-      workspaceId: state.scope.workspaceId,
-      scopedDocumentId: state.scope.scopedDocId,
+    dependencies.broadcastToUser(effect.userId, effect.eventType, {
+      ...effect.payload,
       findingId: persistence.findingId,
       actionCandidateId: persistence.actionCandidateId,
-      detectorType: atRiskWeekDetectorType,
-      severity,
-      lifecycleState,
+      lifecycleState: persistence.lifecycleState,
     });
   } catch (error) {
     throw new AtRiskWeekBroadcastError({
@@ -150,34 +209,10 @@ function broadcastAtRiskWeekFindingCreated(
       scopedDocId: state.scope.scopedDocId,
       runId: state.scope.runId,
       findingId: persistence.findingId,
-      userId,
+      userId: effect.userId,
       message: errorMessage(error),
     });
   }
-}
-
-async function persistAtRiskWeekOutput(
-  state: AtRiskWeekGraphState,
-  reasoning: Extract<AtRiskWeekReasoningOutput, { isAtRisk: true }>,
-  policy: AtRiskWeekPolicyDecision,
-  lifecycleState: 'open' | 'pending_review',
-  dependencies: AtRiskWeekOutputNodeDependencies
-): Promise<PersistedAtRiskWeekOutput> {
-  const context = requireAtRiskWeekContext(state, 'output');
-  const guard = requireAtRiskWeekGuard(state, 'output');
-
-  return dependencies.outputRepository.persistOutput({
-    workspaceId: state.scope.workspaceId,
-    scopedDocId: state.scope.scopedDocId,
-    runId: state.scope.runId,
-    detectorType: atRiskWeekDetectorType,
-    severity: reasoning.severity,
-    evidence: reasoning.evidence,
-    recipientUserId: context.ownerUserId,
-    lifecycleState,
-    materialChangeKey: guard.materialChangeKey,
-    actionCandidate: policy.actionCandidate,
-  });
 }
 
 function errorMessage(error: unknown): string {
