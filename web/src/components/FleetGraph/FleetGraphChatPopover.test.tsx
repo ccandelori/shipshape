@@ -15,15 +15,16 @@ describe('FleetGraphChatPopover', () => {
 
     expect(await screen.findByLabelText('FleetGraph chat')).toBeInTheDocument();
     expect(trigger).toHaveAttribute('aria-expanded', 'true');
-    expect(screen.getByRole('button', { name: 'Close FleetGraph chat' })).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Close FleetGraph chat' })).not.toBeInTheDocument();
   });
 
-  it('collapses back to the pill from the chat close button', async () => {
+  it('collapses back to the pill by toggling the persistent trigger', async () => {
     render(<FleetGraphChatPopoverHarness />);
 
     const trigger = screen.getByRole('button', { name: 'Ask FleetGraph' });
     fireEvent.click(trigger);
-    fireEvent.click(await screen.findByRole('button', { name: 'Close FleetGraph chat' }));
+    expect(await screen.findByLabelText('FleetGraph chat')).toBeInTheDocument();
+    fireEvent.click(trigger);
 
     await waitFor(() => {
       expect(screen.queryByLabelText('FleetGraph chat')).not.toBeInTheDocument();

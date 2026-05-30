@@ -29,7 +29,6 @@ interface EmbeddedChatProps {
   documentType: FleetGraphChatDocumentType;
   memoryScope?: EmbeddedChatMemoryScope | null;
   className?: string;
-  onClose?: () => void;
 }
 
 interface EmbeddedChatMemoryScope {
@@ -77,7 +76,7 @@ const suggestedPrompts = [
   'What should happen next?',
 ] as const;
 
-export function EmbeddedChat({ documentId, documentType, memoryScope, className, onClose }: EmbeddedChatProps) {
+export function EmbeddedChat({ documentId, documentType, memoryScope, className }: EmbeddedChatProps) {
   const memoryKey = buildFleetGraphChatMemoryKey({
     documentId,
     documentType,
@@ -319,28 +318,16 @@ export function EmbeddedChat({ documentId, documentType, memoryScope, className,
           <h2 className="text-sm font-semibold text-foreground">FleetGraph Chat</h2>
           <p className="mt-0.5 text-xs text-muted">{formatDocumentType(documentType)} context</p>
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          {messages.length > 0 && (
-            <button
-              type="button"
-              aria-label="Start new FleetGraph chat"
-              onClick={startNewChat}
-              className="rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:border-accent/40 hover:text-foreground"
-            >
-              New chat
-            </button>
-          )}
-          {onClose && (
-            <button
-              type="button"
-              aria-label="Close FleetGraph chat"
-              onClick={onClose}
-              className="flex h-7 w-7 items-center justify-center rounded-md border border-border text-muted transition-colors hover:border-accent/40 hover:bg-border/40 hover:text-foreground"
-            >
-              <CloseIcon />
-            </button>
-          )}
-        </div>
+        {messages.length > 0 && (
+          <button
+            type="button"
+            aria-label="Start new FleetGraph chat"
+            onClick={startNewChat}
+            className="shrink-0 rounded-md border border-border px-2.5 py-1.5 text-xs font-medium text-muted transition-colors hover:border-accent/40 hover:text-foreground"
+          >
+            New chat
+          </button>
+        )}
       </header>
 
       <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-4">
@@ -399,14 +386,6 @@ export function EmbeddedChat({ documentId, documentType, memoryScope, className,
         </div>
       </form>
     </section>
-  );
-}
-
-function CloseIcon() {
-  return (
-    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M6 6l12 12M18 6L6 18" />
-    </svg>
   );
 }
 

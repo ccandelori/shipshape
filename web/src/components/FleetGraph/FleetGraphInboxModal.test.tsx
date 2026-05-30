@@ -94,7 +94,9 @@ describe('FleetGraphInboxModal', () => {
       { wrapper: createWrapper(createQueryClient()) }
     );
 
-    expect(await screen.findByRole('dialog', { name: 'FleetGraph Inbox' })).toBeInTheDocument();
+    const dialog = await screen.findByRole('dialog', { name: 'FleetGraph Inbox' });
+    expect(dialog).toBeInTheDocument();
+    expect(dialog).toHaveClass('fleetgraph-inbox-modal-content');
     fireEvent.click(screen.getByRole('button', { name: 'Close FleetGraph inbox' }));
 
     expect(handleClose).toHaveBeenCalledTimes(1);

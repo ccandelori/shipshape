@@ -56,7 +56,6 @@ export function FleetGraphChatPopover({
             documentId={documentId}
             documentType={documentType}
             memoryScope={memoryScope}
-            onClose={() => onOpenChange(false)}
             className="h-full w-full border-0"
           />
         </Popover.Content>

@@ -36,9 +36,9 @@ export function FleetGraphInboxModal({
   return (
     <Dialog.Root open={open} onOpenChange={(isOpen) => !isOpen && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-[100] bg-black/60" />
+        <Dialog.Overlay className="fleetgraph-inbox-overlay fixed inset-0 z-[100] bg-black/60" />
         <Dialog.Content
-          className="fixed left-1/2 top-1/2 z-[101] flex h-[80vh] w-[min(960px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border border-border bg-background shadow-xl focus:outline-none"
+          className="fleetgraph-inbox-modal-content fixed left-1/2 top-1/2 z-[101] flex h-[80vh] w-[min(960px,calc(100vw-32px))] -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded-lg border border-border bg-background shadow-xl focus:outline-none"
           onEscapeKeyDown={onClose}
         >
           <Dialog.Title className="sr-only">FleetGraph Inbox</Dialog.Title>
