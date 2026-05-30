@@ -696,6 +696,24 @@ async function seed() {
       { title: 'Build issue assignment flow', state: 'in_progress', sprintOffset: 0, priority: 'high', estimate: 6 },
       { title: 'Add bulk issue operations', state: 'in_progress', sprintOffset: 0, priority: 'medium', estimate: 4 },
       { title: 'Create sprint retrospective view', state: 'in_progress', sprintOffset: 0, priority: 'medium', estimate: 4 },
+      {
+        title: 'Real-time collaboration merge conflicts under load',
+        description: 'We are seeing frequent merge conflicts and document state corruption during high-traffic collaboration sessions with 10+ simultaneous editors. The issue was first reported in standup on Monday when the team noticed several users losing changes during a shared planning session.\n\nBob has been digging into the Yjs sync layer and the custom persistence adapter, but we still do not have a confirmed root cause or mitigation. His last Ship update said he was "trying to reproduce with a larger document." There has been no follow-up standup or issue comment since then.\n\nThis is now blocking FleetGraph demo prep because the editor becomes unreliable during the scripted walkthrough. Priority is high because it affects the core value prop of the product, and two customers have already mentioned it in feedback.',
+        state: 'in_progress',
+        sprintOffset: 0,
+        priority: 'high',
+        estimate: 8,
+        assigneeName: 'Bob Martinez',
+      },
+      {
+        title: 'Week planning flow is confusing for first-time users',
+        description: 'New users are consistently getting stuck on the "Plan this Week" flow. The current design requires them to create a plan document and link issues, but the UI does not make that relationship obvious.\n\nAlice owns this work. In last week\'s retro she noted that three new users in the test workspace abandoned the flow entirely. She started simplifying the onboarding copy and sketching a small inline wizard, but she has also been pulled into the real-time sync fire drill.\n\nThere has been no meaningful progress update in the last two standups. In the most recent one she wrote, "still context-switching, will get back to this after the sync issues settle." This is starting to affect activation metrics for new workspaces.',
+        state: 'in_progress',
+        sprintOffset: 0,
+        priority: 'high',
+        estimate: 5,
+        assigneeName: 'Alice Chen',
+      },
       { title: 'Add sprint velocity metrics', state: 'todo', sprintOffset: 0, priority: 'medium', estimate: 4 },
       { title: 'Implement burndown chart', state: 'todo', sprintOffset: 0, priority: 'medium', estimate: 6 },
       { title: 'Add sprint completion notifications', state: 'todo', sprintOffset: 0, priority: 'low', estimate: 2 },
@@ -906,7 +924,13 @@ async function seed() {
     const shipCoreTeam = programTeams[shipCoreProgram.id]!;
     for (let i = 0; i < shipCoreIssues.length; i++) {
       const issue = shipCoreIssues[i]!;
-      const assignee = allUsers[shipCoreTeam[i % shipCoreTeam.length]!]!;
+      const assignedUserIndex = 'assigneeName' in issue
+        ? allUsers.findIndex((user: { name: string }) => user.name === issue.assigneeName)
+        : shipCoreTeam[i % shipCoreTeam.length]!;
+      if (assignedUserIndex < 0) {
+        throw new Error(`Ship Core seed assignee not found: ${issue.assigneeName}`);
+      }
+      const assignee = allUsers[assignedUserIndex]!;
 
       // Find the sprint based on offset
       let sprintId: string | null = null;
@@ -941,13 +965,35 @@ async function seed() {
         if (issue.estimate !== null) {
           issueProperties.estimate = issue.estimate;
         }
-        // Create issue document without legacy program_id and sprint_id columns
-        const issueResult = await pool.query(
-          `INSERT INTO documents (workspace_id, document_type, title, properties, ticket_number)
-           VALUES ($1, 'issue', $2, $3, $4)
-           RETURNING id`,
-          [workspaceId, issue.title, JSON.stringify(issueProperties), maxTickets[shipCoreProgram.id]]
-        );
+        const issueDescription = 'description' in issue ? issue.description : null;
+        const issueContent = typeof issueDescription === 'string'
+          ? {
+              type: 'doc',
+              content: issueDescription.split('\n\n').map((paragraph: string) => ({
+                type: 'paragraph',
+                content: [{ type: 'text', text: paragraph }],
+              })),
+            }
+          : null;
+        const issueResult = issueContent === null
+          ? await pool.query(
+              `INSERT INTO documents (workspace_id, document_type, title, properties, ticket_number)
+               VALUES ($1, 'issue', $2, $3, $4)
+               RETURNING id`,
+              [workspaceId, issue.title, JSON.stringify(issueProperties), maxTickets[shipCoreProgram.id]]
+            )
+          : await pool.query(
+              `INSERT INTO documents (workspace_id, document_type, title, content, properties, ticket_number)
+               VALUES ($1, 'issue', $2, $3, $4, $5)
+               RETURNING id`,
+              [
+                workspaceId,
+                issue.title,
+                JSON.stringify(issueContent),
+                JSON.stringify(issueProperties),
+                maxTickets[shipCoreProgram.id],
+              ]
+            );
         const issueId = issueResult.rows[0].id;
 
         // Create associations via junction table
