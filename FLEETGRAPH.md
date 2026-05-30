@@ -168,35 +168,33 @@ This diagram shows the submitted shared runtime. The implemented graph-backed pa
 
 ```mermaid
 flowchart TD
-    START((start)) --> trigger["normalize trigger + actor"]
-    trigger --> scope["authorize workspace + resolve scope"]
-    scope --> intent{mode / intent?}
-    intent -->|proactive| detector["select detector / use case"]
-    intent -->|on-demand| userIntent["context question"]
+    START((start)) --> entry{entry point}
+    entry -->|trigger / poll / mutation| proactiveInput["build proactive input:<br/>workspace + Week + run id + trigger"]
+    entry -->|POST /api/fleetgraph/chat| chatPreflight["chat route preflight:<br/>auth + rate limit + scope + context + prompt + SSE headers"]
 
-    detector --> context
-    userIntent --> context
-    context["build Ship context:<br/>program / project / Week doc / issues / standups / people"] --> fetch["parallel fetch:<br/>documents / activity / accountability / metrics"]
-    fetch --> guard{"proactive guard:<br/>advisory lock + material change + suppression"}
+    proactiveInput --> runtime["fleetgraph.runtime<br/>compiled LangGraph"]
+    chatPreflight --> runtime
+    runtime --> branch{mode}
 
+    branch -->|proactive_at_risk_week| atRisk["fleetgraph.at_risk_week<br/>compiled detector graph"]
+    atRisk --> scope["scope:<br/>resolve active Week"]
+    scope --> context["context:<br/>build Week / project / program / issues / standups / accountability"]
+    context --> guard{"guard:<br/>advisory lock + material change + suppression / dedup"}
     guard -->|quiet| ENDQ((quiet end))
-    guard -->|changed| preFilter{"deterministic pre-filter:<br/>worth surfacing?"}
-    userIntent --> reason
+    guard -->|run| preFilter{"preFilter:<br/>cheap risk signal?"}
     preFilter -->|no| ENDQ
-    preFilter -->|yes| reason["reason:<br/>finding + evidence + recommendation"]
-
-    reason --> candidate["ActionCandidate:<br/>owner / urgency / evidence / target / approval level"]
-    candidate --> policy{approval policy?}
-    policy -->|auto answer / notify| output
-    policy -->|approval required| pending["persist pending_review<br/>+ action metadata"]
-    pending --> approval["FleetGraph inbox:<br/>approve / edit / reject / dismiss / snooze"]
-    approval --> resume["authorized resume:<br/>recipient or workspace admin"]
+    preFilter -->|yes| reason["reason:<br/>structured at-risk judgment + evidence + recommendation"]
+    reason -->|not at risk| ENDQ
+    reason -->|at risk| policy["policy:<br/>lifecycle + approval level + action candidate"]
+    policy --> output["output:<br/>persist finding / action / usage<br/>+ best-effort /events invalidation"]
+    output --> inbox["FleetGraph inbox:<br/>open / needs review / approved"]
+    inbox --> resume["authorized approve / reject / dismiss / snooze / resume"]
     resume --> execute["execute approved write<br/>(draft_comment today)"]
-    execute --> output
+    execute --> END((end))
+    output --> END
 
-    output -->|proactive| persist["persist finding + reconcile inbox<br/>/events is best-effort"]
-    output -->|on-demand| stream["SSE stream to embedded chat"]
-    persist --> END((end))
+    branch -->|ondemand_chat| chatNode["ondemand_chat node:<br/>trace + stream model response"]
+    chatNode --> stream["SSE token stream + final answer<br/>with scoped sources"]
     stream --> END
 ```
 
@@ -458,37 +456,55 @@ This avoids the anti-pattern of building a detector service and bolting on a cha
 
 ### Node Design
 
-- `trigger`: normalizes proactive ticks and mutation events; the chat route normalizes on-demand request/auth/scope before invoking the graph.
-- `scope`: authorizes workspace access and resolves the relevant Ship document graph.
-- `intent`: separates proactive runs from on-demand questions through the top-level `fleetgraph.runtime` branch.
-- `detector`: selects the proactive use-case family.
-- `context`: builds a bounded Ship-native context bundle (on-demand chat paths now include a server-resolved people name map with explicit unknown handling).
-- `fetch`: pulls documents, issues, standups, accountability status, activity, and metrics in parallel.
-- `guard`: applies advisory lock, material-change, dedup, pending-review, dismiss, snooze, and rejection checks.
+The top-level `fleetgraph.runtime` graph is intentionally small:
+
+- `branch`: records whether the run is `proactive_at_risk_week` or `ondemand_chat`.
+- `proactive_at_risk_week`: delegates to the compiled at-risk Week detector graph.
+- `ondemand_chat`: wraps the chat model stream in FleetGraph trace publication and returns the streamed completion.
+
+Route and trigger preflight happen before the top-level graph:
+
+- Proactive triggers normalize poll/mutation inputs, acquire scope-level scheduling, and call `fleetgraph.runtime` with an at-risk Week input.
+- The chat route handles auth, request validation, rate limiting, scope resolution, Ship context loading, people-name resolution, prompt construction, SSE headers, heartbeats, and abort cleanup before calling `fleetgraph.runtime` with `mode: 'ondemand_chat'`.
+
+The at-risk Week detector graph has the deeper proactive node chain:
+
+- `scope`: resolves an active Week document.
+- `context`: builds Week, project, program, issue, standup, iteration, accountability, and finding context from Ship data.
+- `guard`: applies material-change, dedup, pending-review, dismiss, snooze, rejection, and advisory-lock protections.
 - `preFilter`: uses a cheap deterministic signal filter to decide whether unsolicited proactive analysis is worth deeper model reasoning.
-- `reason`: produces structured findings, evidence, recommendations, and action candidates.
-- `policy`: classifies approval requirements from stakes and reversibility.
-- `pending`: persists human-in-the-loop finding state and action candidate metadata.
-- `resume`: validates actor authorization and resumes approved, edited, or rejected actions.
-- `execute`: calls the supported Ship write primitive for approved actions (`draft_comment` today).
-- `output`: persists findings and broadcasts UI updates on proactive paths; the implemented on-demand branch streams chat responses over SSE from inside the shared graph runtime.
+- `reason`: produces structured at-risk judgment, evidence, rationale, and a recommended `draft_comment` action when appropriate.
+- `policy`: classifies lifecycle, approval level, reversibility, and action candidate shape.
+- `output`: persists findings, action candidates, usage rows, and best-effort `/events` invalidation for proactive paths.
+
+Human-in-the-loop actions are API lifecycle operations after persistence:
+
+- Inbox actions approve, reject, dismiss, snooze, read, and unread findings.
+- Resume validates actor authorization and executes the supported approved write primitive (`draft_comment` today).
 
 ### State Management
 
-Graph state includes:
+Top-level graph state includes:
 
-- `triggerType`
-- `intent`
-- `workspaceId`
-- `actorUserId`
-- `scope`
+- `graphName`
+- `input`
+- `status`
+- `activeNode`
+- `completedNodes`
+- `branch`
+- nested proactive at-risk Week state, when that branch runs
+- chat completion and usage, when the on-demand branch runs
+
+At-risk Week graph state includes:
+
+- parsed input with `triggerSource`, `workspaceId`, `scopedDocId`, `runId`, and `requestedAt`
+- scope and checkpoint identity
 - fetched Ship context
-- detector type
-- material-change key
-- candidate finding
-- action candidate
-- approval decision
-- messages for on-demand chat
+- guard, pre-filter, reasoning, policy, and persistence artifacts
+- early-exit and error state
+- trace metadata including material-change key, branch decisions, model usage, timings, public trace identifiers, and latency target status
+
+On-demand chat graph input includes the already-built model messages, trace context, abort signal, model instance, and token callback. The route owns chat scope/context preparation; the graph branch owns traced streaming execution.
 
 Durable state includes:
 

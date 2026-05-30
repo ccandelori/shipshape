@@ -297,50 +297,49 @@
         <div class="diagram">
           <pre class="mermaid">
 flowchart TD
-    START((start)) --> trigger["normalize trigger + actor"]
-    trigger --> scope["authorize workspace + resolve scope"]
-    scope --> intent{mode / intent?}
-    intent -->|proactive| detector["select detector / use case"]
-    intent -->|on-demand| userIntent["context question"]
+    START((start)) --> entry{entry point}
+    entry -->|trigger / poll / mutation| proactiveInput["build proactive input:<br/>workspace + Week + run id + trigger"]
+    entry -->|POST /api/fleetgraph/chat| chatPreflight["chat route preflight:<br/>auth + rate limit + scope + context + prompt + SSE headers"]
 
-    detector --> context
-    userIntent --> context
-    context["build Ship context:<br/>program / project / Week doc / issues / standups / people"] --> fetch["parallel fetch:<br/>documents / activity / accountability / metrics"]
-    fetch --> guard{"proactive guard:<br/>advisory lock + material change + suppression"}
+    proactiveInput --> runtime["fleetgraph.runtime<br/>compiled LangGraph"]
+    chatPreflight --> runtime
+    runtime --> branch{mode}
 
+    branch -->|proactive_at_risk_week| atRisk["fleetgraph.at_risk_week<br/>compiled detector graph"]
+    atRisk --> scope["scope:<br/>resolve active Week"]
+    scope --> context["context:<br/>build Week / project / program / issues / standups / accountability"]
+    context --> guard{"guard:<br/>advisory lock + material change + suppression / dedup"}
     guard -->|quiet| ENDQ((quiet end))
-    guard -->|changed| preFilter{"deterministic pre-filter:<br/>worth surfacing?"}
-    userIntent --> reason
+    guard -->|run| preFilter{"preFilter:<br/>cheap risk signal?"}
     preFilter -->|no| ENDQ
-    preFilter -->|yes| reason["reason:<br/>finding + evidence + recommendation"]
-
-    reason --> candidate["ActionCandidate:<br/>owner / urgency / evidence / target / approval level"]
-    candidate --> policy{approval policy?}
-    policy -->|auto answer / notify| output
-    policy -->|approval required| pending["persist pending_review<br/>+ action metadata"]
-    pending --> approval["FleetGraph inbox:<br/>approve / edit / reject / dismiss / snooze"]
-    approval --> resume["authorized resume:<br/>recipient or workspace admin"]
+    preFilter -->|yes| reason["reason:<br/>structured at-risk judgment + evidence + recommendation"]
+    reason -->|not at risk| ENDQ
+    reason -->|at risk| policy["policy:<br/>lifecycle + approval level + action candidate"]
+    policy --> output["output:<br/>persist finding / action / usage<br/>+ best-effort /events invalidation"]
+    output --> inbox["FleetGraph inbox:<br/>open / needs review / approved"]
+    inbox --> resume["authorized approve / reject / dismiss / snooze / resume"]
     resume --> execute["execute approved write<br/>(draft_comment today)"]
-    execute --> output
+    execute --> END((end))
+    output --> END
 
-    output -->|proactive| persist["persist finding + reconcile inbox<br/>/events is best-effort"]
-    output -->|on-demand| stream["SSE stream to embedded chat"]
-    persist --> END((end))
+    branch -->|ondemand_chat| chatNode["ondemand_chat node:<br/>trace + stream model response"]
+    chatNode --> stream["SSE token stream + final answer<br/>with scoped sources"]
     stream --> END
 
     classDef pro stroke:#7aa2f7,stroke-width:2px;
     classDef od stroke:#9ece6a,stroke-width:2px;
     classDef guard fill:#33202b,stroke:#f7768e,color:#ffd7de;
     classDef action fill:#2d281d,stroke:#e0af68,color:#ffedc1;
-    class detector,guard,preFilter pro;
-    class userIntent,stream od;
-    class candidate,pending,approval,resume,execute,policy action;
+    class atRisk,guard,preFilter pro;
+    class chatPreflight,chatNode,stream od;
+    class inbox,resume,execute,policy,output action;
           </pre>
         </div>
         <p class="caption">
           Trace paths: <b>A</b> proactive quiet exit · <b>B</b> proactive finding with approval ·
           <b>C</b> graph-routed on-demand answer.
-          Runs are tagged with <code>triggerType</code>, <code>intent</code>, and <code>detectorType</code>.
+          Runs carry branch and node metadata such as <code>triggerSource</code>, <code>detectorType</code>,
+          <code>traceNode</code>, and <code>branchPath</code>.
         </p>
         <div class="scope-note">
           <h3>MVP boundary</h3>
