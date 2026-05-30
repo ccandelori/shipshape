@@ -2,12 +2,20 @@ import type { FleetGraphTrigger } from '../types.js';
 import {
   atRiskWeekDetectorType,
   atRiskWeekReasoningModelName,
-  AtRiskWeekNodeContractError,
-  createAtRiskWeekTraceMetadata,
-  type AtRiskWeekGraphState,
-  type AtRiskWeekTriggerSource,
+} from './at-risk-week-constants.js';
+import { createAtRiskWeekTraceMetadata } from './at-risk-week-tracing.js';
+import type {
+  AtRiskWeekGraphState,
+  AtRiskWeekTriggerSource,
 } from './at-risk-week.js';
 import type { AtRiskWeekUsageRecord } from './at-risk-week-usage-repository.js';
+
+export class AtRiskWeekUsageRecordError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = 'AtRiskWeekUsageRecordError';
+  }
+}
 
 export function createAtRiskWeekUsageRecord(state: AtRiskWeekGraphState): AtRiskWeekUsageRecord {
   const modelUsage = state.trace.modelUsage ?? {
@@ -43,5 +51,5 @@ function toFleetGraphUsageTrigger(triggerSource: AtRiskWeekTriggerSource): Fleet
     return 'resume';
   }
 
-  throw new AtRiskWeekNodeContractError(`Unsupported at-risk Week trigger source: triggerSource=${triggerSource}`);
+  throw new AtRiskWeekUsageRecordError(`Unsupported at-risk Week trigger source: triggerSource=${triggerSource}`);
 }

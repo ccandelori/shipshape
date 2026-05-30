@@ -12,15 +12,17 @@ import {
 } from '../evals/detection-quality-cases.js';
 import {
   createAtRiskWeekCheckpointer,
-  createAtRiskWeekTraceMetadata,
-  createLangfuseAtRiskWeekTraceRunner,
   createOpenAIAtRiskWeekReasoner,
   evaluateAtRiskWeekPreFilter,
-  passthroughAtRiskWeekTraceRunner,
   runAtRiskWeekGraph,
-  type AtRiskWeekBranchPath,
   type AtRiskWeekGraphState,
 } from '../detectors/at-risk-week.js';
+import {
+  createAtRiskWeekTraceMetadata,
+  createLangfuseAtRiskWeekTraceRunner,
+  passthroughAtRiskWeekTraceRunner,
+  type AtRiskWeekBranchPath,
+} from '../detectors/at-risk-week-tracing.js';
 import { createPostgresAtRiskWeekOutputRepository } from '../detectors/at-risk-week-output-repository.js';
 import { createAtRiskWeekUsageRecord } from '../detectors/at-risk-week-usage.js';
 import { createPostgresAtRiskWeekUsageRepository } from '../detectors/at-risk-week-usage-repository.js';

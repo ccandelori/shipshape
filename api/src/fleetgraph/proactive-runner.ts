@@ -5,8 +5,6 @@ import { loadFleetGraphConfig, type FleetGraphConfig } from './config.js';
 import { buildWeekContext } from './context.js';
 import {
   createAtRiskWeekCheckpointer,
-  createInstrumentedAtRiskWeekTraceRunner,
-  createLangfuseAtRiskWeekTraceRunner,
   createOpenAIAtRiskWeekReasoner,
   runAtRiskWeekGraph,
   type AtRiskWeekGraphDependencies,
@@ -16,9 +14,13 @@ import {
   type AtRiskWeekOutputNodeDependencies,
   type AtRiskWeekReasonNodeDependencies,
   type AtRiskWeekStructuredReasoner,
+} from './detectors/at-risk-week.js';
+import {
+  createInstrumentedAtRiskWeekTraceRunner,
+  createLangfuseAtRiskWeekTraceRunner,
   type AtRiskWeekTraceClock,
   type AtRiskWeekTraceRunner,
-} from './detectors/at-risk-week.js';
+} from './detectors/at-risk-week-tracing.js';
 import {
   createPostgresAtRiskWeekOutputRepository,
   type AtRiskWeekOutputRepository,

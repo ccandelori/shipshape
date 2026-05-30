@@ -6,11 +6,11 @@ import { buildWeekContext, type FleetGraphQueryClient } from '../context.js';
 import {
   atRiskWeekLatencyTargetMs,
   createAtRiskWeekCheckpointer,
-  passthroughAtRiskWeekTraceRunner,
   runAtRiskWeekGraph,
   type AtRiskWeekReasoningOutput,
   type AtRiskWeekStructuredReasoner,
 } from '../detectors/at-risk-week.js';
+import { passthroughAtRiskWeekTraceRunner } from '../detectors/at-risk-week-tracing.js';
 import { createPostgresAtRiskWeekOutputRepository } from '../detectors/at-risk-week-output-repository.js';
 import { createPostgresAtRiskWeekUsageRepository } from '../detectors/at-risk-week-usage-repository.js';
 import { shouldRunDetector } from '../guards.js';

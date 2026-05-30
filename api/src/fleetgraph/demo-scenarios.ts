@@ -1,15 +1,17 @@
 import type { FleetGraphQueryClient, WeekContext } from './context.js';
 import {
   createAtRiskWeekCheckpointer,
-  createAtRiskWeekTraceMetadata,
   runAtRiskWeekGraph,
-  type AtRiskWeekBranchPath,
   type AtRiskWeekGraphInput,
   type AtRiskWeekOutputNodeDependencies,
   type AtRiskWeekReasoningOutput,
   type AtRiskWeekRunStatus,
-  type AtRiskWeekTraceRunner,
 } from './detectors/at-risk-week.js';
+import {
+  createAtRiskWeekTraceMetadata,
+  type AtRiskWeekBranchPath,
+  type AtRiskWeekTraceRunner,
+} from './detectors/at-risk-week-tracing.js';
 import { createPostgresAtRiskWeekOutputRepository } from './detectors/at-risk-week-output-repository.js';
 import { createAtRiskWeekUsageRecord } from './detectors/at-risk-week-usage.js';
 import { createPostgresAtRiskWeekUsageRepository } from './detectors/at-risk-week-usage-repository.js';

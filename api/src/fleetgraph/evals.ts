@@ -27,7 +27,7 @@ import type {
   AtRiskWeekGraphInput,
   AtRiskWeekGraphState,
 } from './detectors/at-risk-week.js';
-import { passthroughAtRiskWeekTraceRunner } from './detectors/at-risk-week.js';
+import { passthroughAtRiskWeekTraceRunner } from './detectors/at-risk-week-tracing.js';
 import {
   runFleetGraphDemoScenario,
   type FleetGraphDemoScenarioResult,
