@@ -38,7 +38,8 @@ import { CommentMark } from './editor/CommentMark';
 import { CommentDisplayExtension } from './editor/CommentDisplay';
 import { AIScoringDisplayExtension } from './editor/AIScoringDisplay';
 import { PlanReferenceBlockExtension } from './editor/PlanReferenceBlock';
-import { EmbeddedChat, type FleetGraphChatDocumentType } from '@/components/FleetGraph/EmbeddedChat';
+import { type FleetGraphChatDocumentType } from '@/components/FleetGraph/EmbeddedChat';
+import { FleetGraphChatPopover } from '@/components/FleetGraph/FleetGraphChatPopover';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommentsQuery, useCreateComment, useUpdateComment } from '@/hooks/useCommentsQuery';
@@ -956,24 +957,17 @@ export function Editor({
         <div className="relative flex flex-1 flex-col overflow-auto cursor-text pb-32">
           {fleetGraphChatDocumentType && (
             <div className="pointer-events-none sticky top-0 z-20 -mb-10 flex justify-end px-6 pt-5">
-              <Tooltip content={fleetGraphChatOpen ? 'Hide FleetGraph chat' : 'Ask FleetGraph about this document'}>
-                <button
-                  type="button"
-                  onClick={() => setFleetGraphChatOpen((open) => !open)}
-                  className={cn(
-                    'pointer-events-auto inline-flex h-9 items-center gap-2 rounded-md border px-3 text-sm font-medium shadow-sm transition-colors',
-                    'focus:outline-none focus:ring-2 focus:ring-accent focus:ring-offset-2 focus:ring-offset-background',
-                    fleetGraphChatOpen
-                      ? 'border-accent/50 bg-accent/20 text-accent shadow-accent/10'
-                      : 'border-border bg-background/95 text-foreground hover:border-accent/40 hover:bg-border/60 hover:text-accent'
-                  )}
-                  aria-expanded={fleetGraphChatOpen}
-                  aria-controls="fleetgraph-chat-panel"
-                >
-                  <FleetGraphChatIcon />
-                  <span>Ask FleetGraph</span>
-                </button>
-              </Tooltip>
+              <FleetGraphChatPopover
+                open={fleetGraphChatOpen}
+                onOpenChange={setFleetGraphChatOpen}
+                documentId={documentId}
+                documentType={fleetGraphChatDocumentType}
+                memoryScope={
+                  user && currentWorkspace
+                    ? { userId: user.id, workspaceId: currentWorkspace.id }
+                    : null
+                }
+              />
             </div>
           )}
           <div className="mx-auto max-w-3xl w-full py-8 pr-8 pl-12">
@@ -1076,19 +1070,6 @@ export function Editor({
             onKeyDown={handleEditorSpacerKeyDown}
           />
         </div>
-        {fleetGraphChatOpen && fleetGraphChatDocumentType && (
-          <EmbeddedChat
-            documentId={documentId}
-            documentType={fleetGraphChatDocumentType}
-            memoryScope={
-              user && currentWorkspace
-                ? { userId: user.id, workspaceId: currentWorkspace.id }
-                : null
-            }
-            className="w-80 shrink-0"
-          />
-        )}
-
       </div>
 
       {/* Properties sidebar content - rendered via portal into the aside landmark in App.tsx */}
@@ -1152,14 +1133,6 @@ function ExpandLeftIcon() {
   return (
     <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 19l-7-7 7-7m8 14V5" />
-    </svg>
-  );
-}
-
-function FleetGraphChatIcon() {
-  return (
-    <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M8 10h8m-8 4h5m8-2a8 8 0 11-14.32-4.91A8 8 0 0121 12z" />
     </svg>
   );
 }
