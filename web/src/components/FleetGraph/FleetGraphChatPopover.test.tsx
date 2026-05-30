@@ -18,6 +18,15 @@ describe('FleetGraphChatPopover', () => {
     expect(screen.queryByRole('button', { name: 'Close FleetGraph chat' })).not.toBeInTheDocument();
   });
 
+  it('renders the chat in the animated popover surface', async () => {
+    render(<FleetGraphChatPopoverHarness />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Ask FleetGraph' }));
+
+    const chat = await screen.findByLabelText('FleetGraph chat');
+    expect(chat.closest('.fleetgraph-chat-popover-content')).toBeInTheDocument();
+  });
+
   it('collapses back to the pill by toggling the persistent trigger', async () => {
     render(<FleetGraphChatPopoverHarness />);
 
@@ -25,6 +34,20 @@ describe('FleetGraphChatPopover', () => {
     fireEvent.click(trigger);
     expect(await screen.findByLabelText('FleetGraph chat')).toBeInTheDocument();
     fireEvent.click(trigger);
+
+    await waitFor(() => {
+      expect(screen.queryByLabelText('FleetGraph chat')).not.toBeInTheDocument();
+    });
+    expect(trigger).toHaveAttribute('aria-expanded', 'false');
+  });
+
+  it('closes with Escape through Radix popover semantics', async () => {
+    render(<FleetGraphChatPopoverHarness />);
+
+    const trigger = screen.getByRole('button', { name: 'Ask FleetGraph' });
+    fireEvent.click(trigger);
+    const chat = await screen.findByLabelText('FleetGraph chat');
+    fireEvent.keyDown(chat, { key: 'Escape' });
 
     await waitFor(() => {
       expect(screen.queryByLabelText('FleetGraph chat')).not.toBeInTheDocument();

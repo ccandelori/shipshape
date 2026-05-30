@@ -2,6 +2,12 @@ import * as Popover from '@radix-ui/react-popover';
 import { EmbeddedChat, type FleetGraphChatDocumentType } from './EmbeddedChat';
 import { cn } from '@/lib/cn';
 
+const popoverSurfaceClassName = [
+  'fleetgraph-chat-popover-content z-50 overflow-hidden rounded-lg border border-border bg-background shadow-2xl shadow-black/50 ring-1 ring-white/10',
+  'h-[min(580px,calc(100vh-7rem))] w-[min(390px,calc(100vw-2rem))]',
+  'focus:outline-none',
+].join(' ');
+
 interface FleetGraphChatPopoverProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -45,12 +51,7 @@ export function FleetGraphChatPopover({
           side="bottom"
           sideOffset={10}
           collisionPadding={16}
-          onOpenAutoFocus={(event) => event.preventDefault()}
-          className={cn(
-            'fleetgraph-chat-popover-content z-50 overflow-hidden rounded-lg border border-border bg-background shadow-2xl shadow-black/50 ring-1 ring-white/10',
-            'h-[min(580px,calc(100vh-7rem))] w-[min(390px,calc(100vw-2rem))]',
-            'focus:outline-none'
-          )}
+          className={popoverSurfaceClassName}
         >
           <EmbeddedChat
             documentId={documentId}
