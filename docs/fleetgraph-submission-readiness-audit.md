@@ -98,5 +98,3 @@ Do these immediately before submitting:
 ## Submission Boundary
 
 The submitted product scope is the trace-backed FleetGraph runtime described in `FLEETGRAPH.md`: proactive at-risk Week detection, human-in-the-loop findings/actions, context-scoped on-demand chat, public Langfuse traces, latency proof, and cost evidence.
-
-They are worth building next, but chasing them before final submission would create avoidable regression risk.

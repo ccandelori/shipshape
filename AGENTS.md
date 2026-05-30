@@ -16,7 +16,19 @@ When in doubt about implementation approach, check these docs first.
 
 ## Commands
 
-**PostgreSQL must be running locally before dev or tests.** The user has local PostgreSQL installed (not Docker).
+**PostgreSQL must be running before dev or tests.** This workspace uses the Docker/OrbStack Postgres container for FleetGraph verification:
+
+```bash
+docker ps   # should show ship-postgres-1
+```
+
+FleetGraph commands and docs use:
+
+```bash
+DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev
+```
+
+Do not use Postgres.app for FleetGraph verification. If a migration or eval command reports a Postgres.app trust/authentication error, it is pointed at the wrong database setup.
 
 ```bash
 # Development (runs api + web in parallel)
