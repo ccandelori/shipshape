@@ -3,14 +3,9 @@ import { z } from 'zod';
 import type { FleetGraphQueryClient, WeekContext } from '../context.js';
 import type { DetectorRunDecision } from '../guards.js';
 import type { AtRiskWeekPreFilterDecision } from './at-risk-week-prefilter.js';
-import { classifyFleetGraphPolicy } from '../policy.js';
 import {
   uuidSchema,
   isoDateTimeSchema,
-  type ActionCandidate,
-  type FleetGraphApprovalLevel,
-  type FleetGraphLifecycleState,
-  type FleetGraphReversibility,
 } from '../types.js';
 import {
   atRiskWeekDetectorType,
@@ -27,15 +22,9 @@ import {
   type AtRiskWeekTraceRunner,
 } from './at-risk-week-tracing.js';
 import {
-  AtRiskWeekNodeContractError,
-} from './at-risk-week-errors.js';
-import {
-  completeAtRiskWeekNode,
   contextNode,
   guardNode,
   preFilterNode,
-  requireAtRiskWeekContext,
-  requireAtRiskWeekReasoning,
   scopeNode,
 } from './at-risk-week-evaluator.js';
 import {
@@ -48,6 +37,10 @@ import {
   type AtRiskWeekReasoningOutput,
   type AtRiskWeekReasonNodeDependencies,
 } from './at-risk-week-reasoner.js';
+import {
+  policyNode,
+  type AtRiskWeekPolicyDecision,
+} from './at-risk-week-policy.js';
 
 export { AtRiskWeekPersistenceError } from './at-risk-week-output-repository.js';
 export { AtRiskWeekNodeContractError } from './at-risk-week-errors.js';
@@ -57,6 +50,11 @@ export {
   type AtRiskWeekBroadcastPayload,
   type AtRiskWeekOutputNodeDependencies,
 } from './at-risk-week-output.js';
+
+export {
+  policyNode,
+  type AtRiskWeekPolicyDecision,
+} from './at-risk-week-policy.js';
 
 export {
   atRiskWeekDetectorType,
@@ -170,13 +168,6 @@ export type AtRiskWeekScopeState = {
   materialChangeKey: string | null;
   checkpointThreadId: string;
   checkpointNamespace: string;
-};
-
-export type AtRiskWeekPolicyDecision = {
-  lifecycleState: FleetGraphLifecycleState;
-  approvalLevel: FleetGraphApprovalLevel;
-  reversibility: FleetGraphReversibility;
-  actionCandidate: ActionCandidate | null;
 };
 
 export type AtRiskWeekPersistenceArtifacts = {
@@ -451,37 +442,6 @@ function routeAtRiskWeekGraph(state: AtRiskWeekLangGraphState): AtRiskWeekNodeNa
   }
 
   return state.graphState.activeNode;
-}
-
-export async function policyNode(state: AtRiskWeekGraphState): Promise<AtRiskWeekGraphState> {
-  if (state.status !== 'running') {
-    return state;
-  }
-
-  const context = requireAtRiskWeekContext(state, 'policy');
-  const reasoning = requireAtRiskWeekReasoning(state, 'policy');
-
-  if (!reasoning.isAtRisk) {
-    throw new AtRiskWeekNodeContractError('At-risk Week policy node requires at-risk reasoning');
-  }
-
-  const policy = classifyFleetGraphPolicy({
-    targetDocumentId: state.scope.scopedDocId,
-    ownerUserId: context.ownerUserId,
-    roleReason: 'Week owner is responsible for resolving at-risk Week blockers.',
-    severity: reasoning.severity,
-    evidence: reasoning.evidence,
-    recommendedAction: reasoning.recommendedAction,
-  });
-
-  return completeAtRiskWeekNode(state, 'policy', 'output', {
-    policy: {
-      lifecycleState: policy.lifecycleState,
-      approvalLevel: policy.approvalLevel,
-      reversibility: policy.reversibility,
-      actionCandidate: policy.actionCandidate,
-    },
-  });
 }
 
 export function createAtRiskWeekCheckpointConfig(state: AtRiskWeekGraphState): AtRiskWeekCheckpointConfig {

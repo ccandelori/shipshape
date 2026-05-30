@@ -16,9 +16,9 @@ import {
 } from './at-risk-week-errors.js';
 import type {
   AtRiskWeekGraphState,
-  AtRiskWeekPolicyDecision,
   AtRiskWeekReasoningOutput,
 } from './at-risk-week.js';
+import type { AtRiskWeekPolicyDecision } from './at-risk-week-policy.js';
 
 type AtRiskWeekBroadcastErrorInput = {
   workspaceId: string;
