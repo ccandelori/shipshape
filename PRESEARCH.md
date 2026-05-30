@@ -112,26 +112,20 @@ Implemented branches:
 
 The HTTP chat route still owns validation, auth, scope resolution, rate limiting, SSE headers, heartbeat, and abort cleanup. Once the response stream opens, the graph branch owns model streaming and tracing. This satisfies the PRD requirement that proactive and on-demand use the same graph architecture while preserving reliable HTTP behavior.
 
-Conceptual nodes:
+Implemented responsibility map:
 
-- `trigger`: normalize poll, mutation, or on-demand input.
-- `scope`: authorize workspace and resolve the scoped document.
-- `intent`: route proactive detection versus on-demand questions.
-- `context`: build bounded Ship context.
-- `fetch`: load documents, issues, standups, accountability status, findings, and ownership in parallel where safe.
-- `guard`: enforce advisory lock, material-change, suppression, dedup, and pending-review checks.
-- `preFilter`: cheaply decide whether unsolicited proactive reasoning is worth surfacing.
-- `reason`: produce structured findings, evidence, recommendations, and action candidates.
-- `policy`: classify whether approval is required.
-- `pending`: persist human-review state and action candidate metadata.
-- `resume`: authorize and resume approved action candidates.
-- `output`: persist findings, stream chat output, and refresh UI surfaces.
+- The top-level `fleetgraph.runtime` graph has `branch`, `proactive_at_risk_week`, and `ondemand_chat` nodes.
+- Proactive triggers normalize poll and mutation inputs before entering the graph.
+- The proactive branch delegates to the at-risk Week detector graph, whose implemented nodes are `scope`, `context`, `guard`, `preFilter`, `reason`, `policy`, and `output`.
+- The chat route performs validation, authorization, scope resolution, context loading, people-name resolution, prompt construction, SSE setup, heartbeat, and abort cleanup before entering the graph.
+- The on-demand branch streams the chat model response and tracing from inside the shared graph runtime.
+- Approval, rejection, dismiss, snooze, and resume are FleetGraph API lifecycle operations. Resume currently executes approved `draft_comment` actions; it is not a separate LangGraph node in the submitted implementation.
 
-Conditional branches include quiet exit, changed-state proactive reasoning, pending-review persistence, approval/resume, and on-demand chat streaming.
+Conditional graph branches include proactive quiet exit, changed-state proactive reasoning, pending-review finding persistence, and on-demand chat streaming. Human approval/resume is a durable API workflow attached to the graph output, not an in-graph interrupt/resume loop.
 
 ### State Management
 
-Runtime graph state carries graph name, mode, workspace id, actor id, scope, fetched context, detector type, material-change key, candidate finding, action candidate, approval decision, and on-demand chat messages.
+Runtime graph state carries the graph name, selected mode, active/completed node metadata, the proactive detector state when the proactive branch runs, and the chat completion when the on-demand branch runs. The proactive detector state carries scope, fetched context, guard and pre-filter decisions, reasoning, policy, output, error state, and trace metadata. Approval decisions and resume executions are persisted through the FleetGraph lifecycle API, not stored as top-level runtime graph state.
 
 Durable FleetGraph state is stored in dedicated Postgres tables:
 

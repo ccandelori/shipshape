@@ -3,6 +3,7 @@ import { useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { useMyWeekQuery, StandupSlot } from '@/hooks/useMyWeekQuery';
 import { apiPost } from '@/lib/api';
 import { cn } from '@/lib/cn';
+import { HttpError } from '@/lib/httpError';
 
 function formatDateRange(startDate: string, endDate: string): string {
   const start = new Date(startDate + 'T00:00:00Z');
@@ -25,13 +26,39 @@ function isDateToday(dateStr: string): boolean {
   return dateStr === todayStr;
 }
 
+interface MyWeekErrorDetails {
+  statusLabel: string | null;
+  description: string;
+}
+
+function getMyWeekErrorDetails(error: unknown): MyWeekErrorDetails {
+  if (error instanceof HttpError) {
+    if (error.status === 404) {
+      return {
+        statusLabel: `HTTP ${error.status}`,
+        description: 'This account is signed in, but it is not linked to a person record for this workspace. Return to login if you meant to use a seeded demo user.',
+      };
+    }
+
+    return {
+      statusLabel: `HTTP ${error.status}`,
+      description: 'The server rejected the week request. Try again, or open Documents to keep working while the week dashboard is unavailable.',
+    };
+  }
+
+  return {
+    statusLabel: null,
+    description: 'The browser could not complete the week request. Try again, or open Documents to keep working while the week dashboard is unavailable.',
+  };
+}
+
 export function MyWeekPage() {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const weekNumberParam = searchParams.get('week_number');
   const weekNumber = weekNumberParam ? parseInt(weekNumberParam, 10) : undefined;
 
-  const { data, isLoading, error } = useMyWeekQuery(weekNumber);
+  const { data, isLoading, error, refetch } = useMyWeekQuery(weekNumber);
   const [creating, setCreating] = useState<string | null>(null);
 
   const navigateToWeek = (wn: number) => {
@@ -98,9 +125,43 @@ export function MyWeekPage() {
   }
 
   if (error || !data) {
+    const errorDetails = getMyWeekErrorDetails(error);
+
     return (
-      <div className="flex-1 flex items-center justify-center">
-        <p className="text-sm text-red-400">Failed to load week data</p>
+      <div className="flex-1 flex items-center justify-center px-6">
+        <section className="max-w-md rounded-lg border border-border bg-surface px-5 py-5 shadow-lg">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-semibold text-foreground">Week data could not be loaded</h2>
+            {errorDetails.statusLabel && (
+              <span className="rounded-full border border-red-500/30 bg-red-500/10 px-2 py-0.5 text-xs font-medium text-red-300">
+                {errorDetails.statusLabel}
+              </span>
+            )}
+          </div>
+          <p className="mt-2 text-sm text-muted">{errorDetails.description}</p>
+          <div className="mt-4 flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => { void refetch(); }}
+              className="rounded-md bg-accent px-3 py-1.5 text-sm font-medium text-white hover:bg-accent/90"
+            >
+              Try again
+            </button>
+            <Link
+              to="/docs"
+              className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-border/50"
+            >
+              Open Documents
+            </Link>
+            <button
+              type="button"
+              onClick={() => navigate('/login', { replace: true })}
+              className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-foreground hover:bg-border/50"
+            >
+              Return to login
+            </button>
+          </div>
+        </section>
       </div>
     );
   }

@@ -509,7 +509,7 @@ On-demand chat graph input includes the already-built model messages, trace cont
 Durable state includes:
 
 - Durable FleetGraph state is persisted in Postgres outcome tables. The graph runtime keeps transient execution checkpoints in process; user-visible findings, approvals, suppressions, usage, action executions, inbox reads, and finding reads are database-backed.
-- FleetGraph finding rows with `workspace_id`, `project_id`, `detector_type`, `content_hash`, status, severity, payload, recipient list, snooze state, and pending action metadata.
+- FleetGraph finding rows with `workspace_id`, `scoped_document_id`, `detector_type`, `severity`, `evidence`, `recipient_user_id`, `lifecycle_state`, `material_change_key`, timestamps, and optional expiry. Action candidates live in `fleetgraph_action_candidates`; approvals, suppressions, executions, usage rows, inbox reads, and finding reads live in their own FleetGraph tables.
 - Chat memory is client-side and scoped by workspace, user, document type, and document id with a bounded sliding message window.
 
 ### Implemented Action Surface

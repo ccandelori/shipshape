@@ -453,14 +453,16 @@ flowchart TD
           <div class="step">
             <span class="node">Ship writes</span>
             <p>
-              The agent reads context, drafts approved comments, dismisses or snoozes findings,
-              and resumes approved <code>draft_comment</code> actions.
+              The agent reads context, proposes draft comments through proactive findings,
+              lets users dismiss or snooze findings, and resumes approved
+              <code>draft_comment</code> actions.
             </p>
           </div>
           <div class="step">
             <span class="node guard">approval</span>
             <p>
-              Visible writes enter the pending approval workflow used by proactive findings.
+              Proactive write candidates enter the pending approval workflow before they can
+              change visible Ship content.
             </p>
           </div>
           <div class="step">
