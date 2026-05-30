@@ -91,11 +91,11 @@ Rows 1-6 are the trace-backed submission use cases.
 | # | Role | Trigger | Agent output | Human decision |
 |---|------|---------|--------------|----------------|
 | 1 | Director | A Week nears its end with important work blocked or stalled. | At-risk Week finding with evidence, severity, owner, and a proposed next action. | Approve a comment/nudge, reject, dismiss, or snooze. |
-| 2 | PM / Week owner | A technical blocker remains unresolved near the end of the Week. | At-risk Week finding with stale-blocker evidence, affected issue, owner, and escalation context. | Ask for update, follow up manually, accept risk, or suppress. |
-| 3 | Engineer | Assigned work has no recent standup or progress signal. | At-risk Week finding with evidence calling out missing progress on assigned work. | Dismiss, snooze, approve a proposed visible action when one exists, or follow up manually. |
-| 4 | PM | A Week starts without plan or accountability context. | At-risk Week finding with missing-plan/accountability evidence linked to plan, retro, and project context. | Follow up with the owner or mark the risk intentionally accepted. |
-| 5 | Director / PM | Scope, issue count, or assignment load suggests overload. | At-risk Week finding with scope-pressure or overload evidence and a tradeoff recommendation. | Rebalance, accept risk, ask for clarification, or defer. |
-| 6 | Any user | User asks contextual chat what is blocked, who owns work, or what is next. | Answer grounded in the visible issue, project, or Week document, using human names for assignees/owners when Ship identity data is available. | Use the answer or ask a follow-up. |
+| 2 | PM / Week owner | A technical blocker remains unresolved as the Week approaches its end. | At-risk Week finding with stale-blocker evidence, affected issue, owner, and escalation context. | Ask for update, follow up manually, accept risk, or suppress. |
+| 3 | Engineer | Assigned high-priority work has no recent standup or progress signal while other work continues. | At-risk Week finding with evidence calling out missing progress on assigned work. | Dismiss, snooze, approve a proposed visible action when one exists, or follow up manually. |
+| 4 | PM | A Week has no weekly plan document while high-priority work has stalled. | At-risk Week finding with missing-plan/accountability evidence linked to plan and project context. | Follow up with the owner or mark the risk intentionally accepted. |
+| 5 | Director / PM | A single owner is assigned a high volume of high-priority items with visible overload signals. | At-risk Week finding with scope-pressure or overload evidence and a tradeoff recommendation. | Rebalance, accept risk, ask for clarification, or defer. |
+| 6 | Any user | User asks contextual chat who owns work, who is assigned, what is blocked, or what is next. | Answer grounded in the visible issue, project, or Week document, using human names for assignees/owners when Ship identity data is available. | Use the answer or ask a follow-up. |
 
 ## Phase 2: Graph Architecture
 

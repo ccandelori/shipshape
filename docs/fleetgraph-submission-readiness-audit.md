@@ -22,7 +22,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | PRD requirement | Current status | Evidence | Submission action |
 |---|---|---|---|
 | Graph running with at least one proactive detection wired end-to-end | Pass | `api/src/fleetgraph/detectors/at-risk-week.ts`, `api/src/fleetgraph/proactive-runner.ts`, `api/src/fleetgraph/triggers.ts`, `api/src/routes/fleetgraph.ts` | None |
-| Observability tracing enabled with shared trace links showing different paths | Pass | `FLEETGRAPH.md` lists public finding, quiet, deployed chat, chat person-resolution, and 14-case detection-quality Langfuse traces; `docs/evals/fleetgraph-node-telemetry.md` lists node-level observation IDs and telemetry for each verified public trace | None |
+| Observability tracing enabled with shared trace links showing different paths | Pass | `FLEETGRAPH.md` lists public finding, quiet, deployed chat, chat person-resolution, and a 15-row public trace matrix; `docs/evals/fleetgraph-node-telemetry.md` lists node-level observation IDs and telemetry for each verified public trace | None |
 | `FLEETGRAPH.md` with Agent Responsibility and at least 5 use cases | Pass | `FLEETGRAPH.md` defines responsibilities and 6 trace-backed use cases | None |
 | Graph outline with node types, edges, branching conditions | Pass | `FLEETGRAPH.md` Mermaid diagram; `docs/fleetgraph-graph-explainer.html` | None |
 | At least one human-in-the-loop gate | Pass | `api/src/fleetgraph/policy.ts`, `api/src/routes/fleetgraph.ts`, inbox `Needs Review` and `Approved` tabs | None |

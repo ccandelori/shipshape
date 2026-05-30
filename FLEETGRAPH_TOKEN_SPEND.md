@@ -15,7 +15,8 @@ Do not invent token counts when the runtime does not expose them.
 | 2026-05-26 | `66666666-6666-4666-8666-666666666666` | proactive (`poll`) | `at_risk_week` | `output` | `gpt-4o-mini` | 850 | 172 | $0.000231 | `api/src/fleetgraph/demo-scenarios.test.ts` / `fleetgraph_usage` assertion | Deterministic finding path; creates pending action candidate. |
 | 2026-05-28 | `1ad1925a-5d18-45e9-abd3-baa46a5a2ccd` | proactive (`mutation`) | `at_risk_week` | `prefilter-exit` | none | 0 | 0 | $0.000000 | Public Langfuse trace in `FLEETGRAPH.md` | Deployed quiet path; pre-filter exited before model reasoning. |
 | 2026-05-28 | `5e814f55-35f6-4fdf-80d3-1533dc0c386e` | proactive (`mutation`) | `at_risk_week` | `output` | `gpt-4o-mini` | 1135 | 157 | $0.000264 | Public Langfuse trace in `FLEETGRAPH.md` | Deployed finding path; persisted finding `8cf63756-2cc0-428c-9488-7c3306130760`. |
-| 2026-05-28 | `b2624ad3010625d9f91ce4945404e758` | on-demand chat | n/a | `ondemand_chat` | captured in trace metadata | 2043 | 120 | see Langfuse trace | Public Langfuse trace in `FLEETGRAPH.md` | Deployed Week chat path through shared `fleetgraph.runtime`. |
+| 2026-05-28 | `b2624ad3010625d9f91ce4945404e758` | on-demand chat | n/a | `ondemand_chat` | `gpt-4o-mini` | 2043 | 120 | $0.000378 | Public Langfuse trace in `FLEETGRAPH.md` | Deployed Week chat path through shared `fleetgraph.runtime`. |
+| 2026-05-29 | `b71ea0bc51bf7e600d2443d7586de209` | on-demand chat | n/a | `ondemand_chat` | `gpt-4o-mini` | 570 | 8 | $0.000090 | `docs/evals/fleetgraph-chat-person-resolution.md` | Current-code issue chat path; trace output is `Alice Chen is assigned to this issue.` |
 
 ## Development Session Spend Availability
 

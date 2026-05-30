@@ -263,11 +263,11 @@ The six rows below are the submitted, trace-backed use cases.
 | # | Role | Trigger | Agent detects or produces | Human decides |
 |---|------|---------|---------------------------|---------------|
 | 1 | Director | A Week is near its end with important issues stalled or blocked. | At-risk Week finding with evidence, owner, severity, and suggested next step. | Approve a comment/nudge, reject, dismiss, or snooze. |
-| 2 | PM / Week owner | A technical blocker remains unresolved near the end of the Week. | At-risk Week finding with stale-blocker evidence, affected issue, owner, and escalation context. | Ask for update, follow up manually, accept risk, or suppress as known. |
-| 3 | Engineer | Assigned work has no recent standup or progress signal. | At-risk Week finding with evidence calling out missing progress on assigned work. | Dismiss, snooze, approve a proposed visible action when one exists, or follow up manually. |
-| 4 | PM | A Week starts without a plan or active work lacks hypothesis context. | At-risk Week finding with missing-plan/accountability evidence linked to weekly plan and project hypothesis. | Follow up with the owner or mark the risk intentionally accepted. |
-| 5 | Director / PM | Scope, issue count, or assignment load suggests overload. | At-risk Week finding with overload or scope-pressure evidence and tradeoff recommendation. | Rebalance work, accept risk, ask team for clarification, or defer. |
-| 6 | Any user | User asks contextual chat what is blocked, who owns work, or what is next. | Answer scoped to the visible issue, project, or Week document, using human names for assignees/owners when Ship identity data is available. | Use the answer or ask for a follow-up. |
+| 2 | PM / Week owner | A technical blocker remains unresolved as the Week approaches its end. | At-risk Week finding with stale-blocker evidence, affected issue, owner, and escalation context. | Ask for update, follow up manually, accept risk, or suppress as known. |
+| 3 | Engineer | Assigned high-priority work has no recent standup or progress signal while other work continues. | At-risk Week finding with evidence calling out missing progress on assigned work. | Dismiss, snooze, approve a proposed visible action when one exists, or follow up manually. |
+| 4 | PM | A Week has no weekly plan document while high-priority work has stalled. | At-risk Week finding with missing-plan/accountability evidence linked to weekly plan and project context. | Follow up with the owner or mark the risk intentionally accepted. |
+| 5 | Director / PM | A single owner is assigned a high volume of high-priority items with visible overload signals. | At-risk Week finding with overload or scope-pressure evidence and tradeoff recommendation. | Rebalance work, accept risk, ask team for clarification, or defer. |
+| 6 | Any user | User asks contextual chat who owns work, who is assigned, what is blocked, or what is next. | Answer scoped to the visible issue, project, or Week document, using human names for assignees/owners when Ship identity data is available. | Use the answer or ask for a follow-up. |
 
 MVP implementation scope:
 
@@ -329,9 +329,9 @@ Headless authentication:
 
 ## Test Cases
 
-**How we closed the observability gap.** The early submission had trace holes. The final submission does not use test-only coverage as a substitute for required observability evidence. The table below is the grader-facing trace matrix: every row has a public Langfuse trace URL, and the 14-case detection-quality report has one public trace per case.
+**How we closed the observability gap.** The early submission had trace holes. The final submission does not use test-only coverage as a substitute for required observability evidence. The per-use-case table below is the grader-facing map: each row corresponds to exactly one submitted use case, states the Ship state under test, states what FleetGraph produced, and links the public trace for that state.
 
-Rows 1-14 are live OpenAI + Langfuse graph runs against Ship-shaped golden contexts from `api/src/fleetgraph/evals/detection-quality-cases.ts`. They prove branch behavior, model reasoning, token/cost metadata, and use-case coverage under controlled acceptance states. Row 15 is a current-code on-demand chat run against seeded Ship data that proves the chat branch resolves user ids to human names. The Grader Quick Start deployed traces at the top of this file are droplet runs against real Ship document ids. Production FleetGraph paths use Postgres context builders; the golden eval harness isolates edge states so the same graph can be exercised repeatably without mutating the demo workspace.
+Rows 1-14 in the supporting trace matrix are live OpenAI + Langfuse graph runs against controlled Ship-shaped golden contexts from `api/src/fleetgraph/evals/detection-quality-cases.ts`. They prove deterministic pre-filter behavior and reasoning branch behavior under the acceptance states that implement use cases 1-5. Row 15 is a live on-demand chat execution against seeded Ship data that proves the chat branch injects a server-derived people map and the model emits a human name instead of a UUID. The Grader Quick Start deployed traces at the top of this file provide additional real-document evidence from the public droplet.
 
 Strictness boundary: the detection-quality live eval status gates the pre-filter decision and final finding/no-finding decision for each case. It records severity, branch path, trace URL, and model output for review, but exact lifecycle/policy contracts are enforced by the deterministic policy and route tests unless a matrix row explicitly names lifecycle behavior.
 
@@ -339,12 +339,12 @@ Strictness boundary: the detection-quality live eval status gates the pre-filter
 
 | Use case | Ship state | Agent output | Public trace |
 |----------|------------|--------------|--------------|
-| UC1: at-risk Week | High-priority blocked issue plus blocker standup evidence. | Finding with evidence, severity, recipient, and pending action candidate. | [DQ-R01](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/eedcf0102dddb9def28bb663ea1d066a) |
-| UC2: stale blocker | Aging technical blocker near Week end. | Finding resurfaces unresolved risk with escalation context. | [DQ-R04](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/9e459de6a80456442218e628441d4b9c) |
-| UC3: no recent progress signal | Critical-path assigned work is silent while other work continues. | Finding calls out missing progress signal on assigned work. | [DQ-R06](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/afe6fce1844efe9340e4c6d6e8b06058) |
-| UC4: missing plan/accountability | No weekly plan exists while important work stalls. | Finding ties risk to missing accountability context. | [DQ-R05](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/c9ef7e6b82d2ec366c45b04e42c92758) |
-| UC5: overload/scope pressure | One owner carries many high-priority items and says work is slipping. | Finding recommends a human-gated recovery action. | [DQ-R03](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/efad6941fb67264083fb252ee89af120) |
-| UC6: context-scoped on-demand chat | User asks who is assigned to the visible issue. | Chat answers with Alice Chen from Ship identity data, not the UUID. | [Chat person-name trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b71ea0bc51bf7e600d2443d7586de209) |
+| UC1: at-risk Week | High-priority blocked issue plus blocker standup evidence. | Finding with evidence, severity, Week owner, and pending action candidate. | [DQ-R01](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/eedcf0102dddb9def28bb663ea1d066a) |
+| UC2: stale blocker | Technical blocker that has remained unresolved as the Week approaches its end. | Finding resurfaces unresolved risk with escalation context. | [DQ-R04](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/9e459de6a80456442218e628441d4b9c) |
+| UC3: no recent progress signal | Assigned high-priority work has no recent standup or progress signal while other work continues. | Finding calls out missing progress signal on assigned work. | [DQ-R06](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/afe6fce1844efe9340e4c6d6e8b06058) |
+| UC4: missing plan/accountability | Week has no weekly plan document while high-priority work has stalled. | Finding ties risk to missing accountability context. | [DQ-R05](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/c9ef7e6b82d2ec366c45b04e42c92758) |
+| UC5: overload/scope pressure | Single owner is assigned a high volume of high-priority items with visible overload signals. | Finding recommends a human-gated recovery action. | [DQ-R03](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/efad6941fb67264083fb252ee89af120) |
+| UC6: context-scoped on-demand chat | User asks who owns or is assigned to the visible issue or blocker. | Chat response uses resolved human names from the server-supplied people map, e.g. "Alice Chen," rather than raw user ids or UUIDs. | [Chat person-name trace](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b71ea0bc51bf7e600d2443d7586de209) |
 
 ## Submission Test Cases - Public Trace Matrix
 
@@ -355,16 +355,16 @@ Strictness boundary: the detection-quality live eval status gates the pre-filter
 | 3 | Quiet path / low-priority blocker | DQ-Q03 | Low-priority blocked item has a positive update. | No escalation for non-critical risk. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/0fb30befcc3a0c29aa67e6d3e7827f03) |
 | 4 | Quiet path / resolved blocker language | DQ-Q04 | Latest standup says prior blocker is resolved or unblocked. | No false positive from the word "block." | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/ff8a06791454ec137635c93b52844061) |
 | 5 | Quiet path / high volume but moving | DQ-Q05 | Many items are active with recent progress signals. | No overload finding. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/92847024ef62d15c2dc714a0ce759a19) |
-| 6 | UC1: at-risk Week | DQ-R01 | High-priority blocker plus explicit blocker standup. | Finding with evidence, severity, recipient, and pending action candidate. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/eedcf0102dddb9def28bb663ea1d066a) |
+| 6 | UC1: at-risk Week | DQ-R01 | High-priority blocker plus explicit blocker standup. | Finding with evidence, severity, Week owner, and pending action candidate. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/eedcf0102dddb9def28bb663ea1d066a) |
 | 7 | At-risk Week / stalled issues | DQ-R02 | Multiple important issues have no recent updates. | Finding calls out stalled high-priority work. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/3912dc4e3ecf5a17aa88af5afc5e40d0) |
-| 8 | UC5: overload / scope pressure | DQ-R03 | One owner carries many high-priority items and says work is slipping. | Finding recommends a human-gated recovery action. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/efad6941fb67264083fb252ee89af120) |
-| 9 | UC2: stale blocker | DQ-R04 | Aging technical blocker near Week end. | Finding resurfaces unresolved risk with escalation context. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/9e459de6a80456442218e628441d4b9c) |
-| 10 | UC4: missing plan / accountability | DQ-R05 | No weekly plan exists while important work stalls. | Finding ties risk to missing accountability context. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/c9ef7e6b82d2ec366c45b04e42c92758) |
-| 11 | UC3: no recent progress signal | DQ-R06 | Critical-path work is silent while other work continues. | Finding calls out missing progress signal on assigned work. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/afe6fce1844efe9340e4c6d6e8b06058) |
+| 8 | UC5: overload / scope pressure | DQ-R03 | Single owner is assigned a high volume of high-priority items with visible overload signals. | Finding recommends a human-gated recovery action. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/efad6941fb67264083fb252ee89af120) |
+| 9 | UC2: stale blocker | DQ-R04 | Technical blocker has remained unresolved as the Week approaches its end. | Finding resurfaces unresolved risk with escalation context. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/9e459de6a80456442218e628441d4b9c) |
+| 10 | UC4: missing plan / accountability | DQ-R05 | No weekly plan document exists while high-priority work has stalled. | Finding ties risk to missing accountability context. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/c9ef7e6b82d2ec366c45b04e42c92758) |
+| 11 | UC3: no recent progress signal | DQ-R06 | Assigned high-priority work has no recent standup or progress signal while other work continues. | Finding calls out missing progress signal on assigned work. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/afe6fce1844efe9340e4c6d6e8b06058) |
 | 12 | Iteration blocker coverage | DQ-R07 | Iteration records a blocker without matching standup coverage. | Finding uses iteration evidence. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/de9cab014f1d332186c0b62e06448d9f) |
 | 13 | Quiet path / old blocker resolved | DQ-Q06 | Old blocker is explicitly marked resolved in the latest standup. | No stale false positive. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/f18a74a9a5befc21b2d97bcd30c1c64f) |
 | 14 | Critical-path silence | DQ-R08 | Critical-path items are silent across multiple standups. | Finding calls out repeated missing progress signal. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/40a2a18b8cfdc3ffcad3d80dc5414306) |
-| 15 | UC6: context-scoped on-demand chat | Chat person-name trace | User asks who is assigned to the visible issue. | Chat answer uses Alice Chen from Ship identity data instead of returning the UUID. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b71ea0bc51bf7e600d2443d7586de209) |
+| 15 | UC6: context-scoped on-demand chat | Chat person-name trace | User asks who owns or is assigned to the visible issue. | Chat answer uses Alice Chen from Ship identity data instead of returning the UUID. | [Langfuse](https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b71ea0bc51bf7e600d2443d7586de209) |
 
 Full live trace report: `docs/evals/fleetgraph-detection-quality-eval.md` contains all 14 golden detection-quality cases (14/14 passed on 2026-05-29). Every trace URL was verified through the Langfuse API with `public: true`; see `docs/evals/fleetgraph-public-trace-verification.json`.
 
@@ -667,8 +667,8 @@ Runtime model spend for the MVP at-risk Week detector is persisted in `fleetgrap
 | Total deterministic graph invocations captured | 2 |
 | Total deterministic graph spend captured | `$0.000231` |
 | Live finding trace spend | 1135 input / 157 output tokens, `$0.000264` |
-| Live chat trace spend | 2043 input / 120 output tokens, captured in Langfuse trace metadata |
-| Live chat person-resolution trace spend | 570 input / 8 output tokens, captured in Langfuse trace metadata |
+| Live chat trace spend | 2043 input / 120 output tokens, about `$0.000378` |
+| Live chat person-resolution trace spend | 570 input / 8 output tokens, about `$0.000090` |
 
 ## Submission Status
 
