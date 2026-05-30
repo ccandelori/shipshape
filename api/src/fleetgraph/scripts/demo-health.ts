@@ -80,6 +80,12 @@ const requiredDocumentTitles = [
   'FleetGraph - Embedded Agent Chat',
   'FleetGraph - Trace Evidence Pipeline',
   'Capture Langfuse trace URLs for shared review',
+  'Real-time collaboration merge conflicts under load',
+  'Week planning flow is confusing for first-time users',
+] as const;
+const meatyIssueChatTitles = [
+  'Real-time collaboration merge conflicts under load',
+  'Week planning flow is confusing for first-time users',
 ] as const;
 
 export function parseDemoHealthArgs(args: string[]): DemoHealthArgs {
@@ -522,11 +528,25 @@ async function createDemoDocumentLinks(appUrl: string, workspaceId: string): Pro
     return [];
   }
 
+  const meatyIssues = await pool.query<DemoDocumentRow>(
+    `SELECT id, document_type, title
+     FROM documents
+     WHERE workspace_id = $1
+       AND document_type = 'issue'
+       AND title = ANY($2::text[])
+     ORDER BY array_position($2::text[], title)`,
+    [workspaceId, meatyIssueChatTitles]
+  );
+
   return [
     createDemoLink('Week chat document', createDocumentUrl(appUrl, finding.scoped_document_id)),
     ...(finding.target_document_id
       ? [createDemoLink('Issue with FleetGraph comment', createDocumentUrl(appUrl, finding.target_document_id))]
       : []),
+    ...meatyIssues.rows.map((issue) => createDemoLink(
+      `Meaty issue for chat: ${issue.title}`,
+      createDocumentUrl(appUrl, issue.id)
+    )),
   ];
 }
 
@@ -599,7 +619,7 @@ async function checkDemoDocuments(workspaceId: string): Promise<DemoHealthCheck[
     return [{
       status: 'pass',
       name: 'Demo documents',
-      detail: 'FleetGraph projects and trace issue are present',
+      detail: 'FleetGraph projects, trace issue, and meaty chat issues are present',
     }];
   }
 

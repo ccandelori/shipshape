@@ -71,6 +71,8 @@ Pick **one** environment and use its login + bookmarks for the whole rehearsal a
 | **Live finding recipient** | `henry.patel@ship.local` / `admin123` |
 | **Week 14 (chat)** | https://143.198.163.184.nip.io/documents/ae794fb3-2b32-449b-819f-34348d317295 |
 | **Trace issue (comment)** | https://143.198.163.184.nip.io/documents/27e15c1b-3f6c-4e1d-8880-15a5c5705459 |
+| **Meaty issue chat** | Use the `Meaty issue for chat: Real-time collaboration merge conflicts under load` link printed by the demo health command |
+| **Backup meaty issue chat** | Use the `Meaty issue for chat: Week planning flow is confusing for first-time users` link printed by the demo health command |
 
 No Docker or terminal required for the **on-stage** flow if you complete **Part 3B** (pre-staging) once.
 
@@ -155,7 +157,7 @@ For a public-droplet dry run, run the check on the droplet so the document links
 ssh ship@143.198.163.184 "sudo -n bash -lc 'set -a; source /etc/ship/env; set +a; cd /opt/ship/current/api; node dist/fleetgraph/scripts/demo-health.js --app-url https://143.198.163.184.nip.io'"
 ```
 
-The reset is scoped: it restores the two seeded FleetGraph findings, clears their read receipts, removes demo approvals/executions/suppressions, and deletes the exact seeded FleetGraph comment body from the trace issue. It does not wipe the workspace. With `--app-url`, the script also checks `/health` and prints the app, Week chat, and trace issue links for the recording. It fails if a local rehearsal appears to pair the local database with the deployed app URL, because cross-environment document links are misleading.
+The reset is scoped: it restores the two seeded FleetGraph findings, clears their read receipts, removes demo approvals/executions/suppressions, and deletes the exact seeded FleetGraph comment body from the trace issue. It does not wipe the workspace. With `--app-url`, the script also checks `/health` and prints the app, Week chat, trace issue, and two meaty issue chat links for the recording. It fails if a local rehearsal appears to pair the local database with the deployed app URL, because cross-environment document links are misleading.
 
 ### 3B — Sign in once and confirm FleetGraph works
 
@@ -275,7 +277,7 @@ Do **not** claim the **open inbox card** was created live during the recording.
 |-----|----------------|
 | **1 — Ship (inbox)** | App URL → sign in → click **FleetGraph** so inbox is ready (or open app and you’ll open inbox in step 1 of Part 4) |
 | **2 — Issue with comment** | Trace issue bookmark (Part 2) |
-| **3 — Week 14 + chat** | Week 14 bookmark → open **FleetGraph Chat** panel so the Week is ready |
+| **3 — Chat target** | Week 14 bookmark, or the `Real-time collaboration merge conflicts under load` meaty issue link from demo-health → open **FleetGraph Chat** panel |
 | **4 — Langfuse** | Proactive `reason` trace or `fleetgraph.chat.response` trace already loaded |
 
 ---
@@ -353,18 +355,32 @@ Use a **full-width** browser window. Have tabs 1–4 from Part 3D ready.
 
 ---
 
-### Minute 2:20–3:45 — Embedded chat on a Week (Tab 3)
+### Minute 2:20–3:45 — Embedded chat on a Week or issue (Tab 3)
 
 **Do:**
 
-1. Switch to **Tab 3** (Week 14 document URL — **not** `/my-week`).
-2. Confirm the page heading says **Week 14** and you see tabs **Overview / Issues / Review / Standups**.
+1. Switch to **Tab 3**.
+2. If you chose the Week, confirm the page heading says **Week 14** and you see tabs **Overview / Issues / Review / Standups**. If you chose the richer issue, confirm the heading says **Real-time collaboration merge conflicts under load**.
 3. If the **Action Items** modal appears, click **Got it**.
 4. If **FleetGraph Chat** is not open on the right, click the **Ask FleetGraph** pill near the upper-right of the document canvas.
-5. In the bottom **Ask FleetGraph** box, paste exactly:
+5. In the bottom **Ask FleetGraph** box, paste one of these:
+
+   **Week 14 question**
 
    ```text
    What is blocking this week, who owns recovery, and what should we do next?
+   ```
+
+   **Real-time collaboration issue question**
+
+   ```text
+   Summarize the blocker, who owns it, and what acceptance criteria still need proof.
+   ```
+
+   **Week planning issue question**
+
+   ```text
+   Who owns this issue, why is it at risk, and what is the smallest demoable recovery plan?
    ```
 
 6. Click **Send**.
@@ -373,7 +389,7 @@ Use a **full-width** browser window. Have tabs 1–4 from Part 3D ready.
 
 **Say (after streaming starts):**
 
-> This is pull mode — chat is scoped to **this Week’s** data, not a generic ChatGPT window.
+> This is pull mode — chat is scoped to the Ship document I am viewing, not a generic ChatGPT window.
 
 **If Send fails or times out:** Wait 10 seconds, then say you’ll show observability in Langfuse and switch to Tab 4.
 
@@ -414,8 +430,16 @@ Password: admin123
 
 ### Chat question (copy-paste)
 
+Week chat:
+
 ```text
 What is blocking this week, who owns recovery, and what should we do next?
+```
+
+Issue chat:
+
+```text
+Summarize the blocker, who owns it, and what acceptance criteria still need proof.
 ```
 
 ### Inbox buttons (on each finding card)

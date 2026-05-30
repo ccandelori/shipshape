@@ -41,6 +41,8 @@ Open these tabs before recording. The Langfuse finding trace below is the curren
 | Ship app | `https://143.198.163.184.nip.io/` |
 | Week chat | `https://143.198.163.184.nip.io/documents/ae794fb3-2b32-449b-819f-34348d317295` |
 | Issue comment | `https://143.198.163.184.nip.io/documents/27e15c1b-3f6c-4e1d-8880-15a5c5705459` |
+| Meaty issue chat | Use the `Meaty issue for chat: Real-time collaboration merge conflicts under load` link printed by the pre-flight health command |
+| Backup meaty issue chat | Use the `Meaty issue for chat: Week planning flow is confusing for first-time users` link printed by the pre-flight health command |
 | Langfuse finding trace | `https://us.cloud.langfuse.com/project/cmpmytg8s012vad0g8q19n2xv/traces/b0fb54c7f46e28c96d1eaa531fc89d0d` |
 
 Login:
@@ -56,7 +58,7 @@ Confirm before recording:
 - FleetGraph inbox opens from the left rail icon above Settings.
 - The **Open** tab has one visible finding.
 - The **Needs Review** tab has the HITL finding.
-- The Week page has the **Ask FleetGraph** pill.
+- The Week page and the meaty issue page both have the **Ask FleetGraph** pill.
 - All chosen Langfuse tabs are already loaded (never search live during recording).
 
 ## Five-Minute Storyboard
@@ -105,19 +107,31 @@ If the comment is already present from a prior dry run, say:
 
 Action:
 
-1. Switch to the Week chat tab.
+1. Switch to the Week chat tab, or the meaty issue chat tab if you want a more concrete issue-level answer.
 2. Click **Ask FleetGraph** if the chat panel is closed.
-3. Ask:
+3. Ask one question. For the Week tab:
 
 ```text
 What is blocking this week, who owns recovery, and what should we do next?
+```
+
+For the real-time collaboration issue:
+
+```text
+Summarize the blocker, who owns it, and what acceptance criteria still need proof.
+```
+
+For the Week planning issue:
+
+```text
+Who owns this issue, why is it at risk, and what is the smallest demoable recovery plan?
 ```
 
 4. Wait for streaming to start.
 
 Say:
 
-> This is pull mode. The chat is scoped to this Week, and it now enters the same compiled FleetGraph LangGraph runtime as the proactive path.
+> This is pull mode. The chat is scoped to the document I am viewing, and it now enters the same compiled FleetGraph LangGraph runtime as the proactive path.
 
 Do not stay here too long. Once the answer clearly streams and cites Week context, move on.
 

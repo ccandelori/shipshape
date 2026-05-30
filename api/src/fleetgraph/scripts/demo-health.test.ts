@@ -86,6 +86,10 @@ describe('FleetGraph demo health script helpers', () => {
       demoLinks: [
         { label: 'App', url: 'https://143.198.163.184.nip.io/' },
         { label: 'Week chat', url: 'https://143.198.163.184.nip.io/documents/week-1' },
+        {
+          label: 'Meaty issue for chat: Real-time collaboration merge conflicts under load',
+          url: 'https://143.198.163.184.nip.io/documents/issue-1',
+        },
       ],
       checks: [
         { status: 'pass', name: 'Database', detail: 'Connected' },
@@ -100,5 +104,6 @@ describe('FleetGraph demo health script helpers', () => {
     expect(formatDemoHealthReport(report)).toContain('Demo links:');
     expect(formatDemoHealthReport(report)).toContain('- App: https://143.198.163.184.nip.io/');
     expect(formatDemoHealthReport(report)).toContain('- Week chat: https://143.198.163.184.nip.io/documents/week-1');
+    expect(formatDemoHealthReport(report)).toContain('- Meaty issue for chat: Real-time collaboration merge conflicts under load: https://143.198.163.184.nip.io/documents/issue-1');
   });
 });
