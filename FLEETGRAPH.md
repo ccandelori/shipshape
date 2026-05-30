@@ -439,7 +439,7 @@ Rationale:
 - Ship is a Node/TypeScript monorepo.
 - The API already owns database access, auth, OpenAPI registration, and real-time events.
 - A separate Python service would add deployment, auth, and data-access overhead that does not help the one-week delivery.
-- LangGraph gives conditional execution, checkpointing, streaming, and human-in-the-loop support.
+- LangGraph gives conditional execution and streaming primitives. FleetGraph persists user-visible outcomes in Postgres and keeps transient execution checkpoints in process for this submission.
 
 ### Agent-Native Shape
 

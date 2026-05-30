@@ -39,7 +39,7 @@ import { CommentDisplayExtension } from './editor/CommentDisplay';
 import { AIScoringDisplayExtension } from './editor/AIScoringDisplay';
 import { PlanReferenceBlockExtension } from './editor/PlanReferenceBlock';
 import { type FleetGraphChatDocumentType } from '@/components/FleetGraph/EmbeddedChat';
-import { FleetGraphChatPopover } from '@/components/FleetGraph/FleetGraphChatPopover';
+import { FleetGraphChatControl } from '@/components/FleetGraph/FleetGraphChatControl';
 import { useWorkspace } from '@/contexts/WorkspaceContext';
 import { useAuth } from '@/hooks/useAuth';
 import { useCommentsQuery, useCreateComment, useUpdateComment } from '@/hooks/useCommentsQuery';
@@ -956,19 +956,17 @@ export function Editor({
         {/* Editor area - clickable to focus at end */}
         <div className="relative flex flex-1 flex-col overflow-auto cursor-text pb-32">
           {fleetGraphChatDocumentType && (
-            <div className="pointer-events-none sticky top-0 z-20 -mb-10 flex justify-end px-6 pt-5">
-              <FleetGraphChatPopover
-                open={fleetGraphChatOpen}
-                onOpenChange={setFleetGraphChatOpen}
-                documentId={documentId}
-                documentType={fleetGraphChatDocumentType}
-                memoryScope={
-                  user && currentWorkspace
-                    ? { userId: user.id, workspaceId: currentWorkspace.id }
-                    : null
-                }
-              />
-            </div>
+            <FleetGraphChatControl
+              open={fleetGraphChatOpen}
+              onOpenChange={setFleetGraphChatOpen}
+              documentId={documentId}
+              documentType={fleetGraphChatDocumentType}
+              memoryScope={
+                user && currentWorkspace
+                  ? { userId: user.id, workspaceId: currentWorkspace.id }
+                  : null
+              }
+            />
           )}
           <div className="mx-auto max-w-3xl w-full py-8 pr-8 pl-12">
             {/* Breadcrumbs above title */}
