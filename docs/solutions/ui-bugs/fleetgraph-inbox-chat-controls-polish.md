@@ -157,7 +157,7 @@ Verification performed:
 - `pnpm --filter web type-check`
 - `pnpm --filter web build`
 
-Full workspace `pnpm type-check` was still blocked by an unrelated dashboard import error in `dashboard/src/tabs/EvidenceTab.tsx`.
+During the original fix, full workspace `pnpm type-check` was blocked by an unrelated dashboard import error in `dashboard/src/tabs/EvidenceTab.tsx`; verify current status with the repository's current type-check command before reusing that historical result.
 
 ## Related Issues
 
