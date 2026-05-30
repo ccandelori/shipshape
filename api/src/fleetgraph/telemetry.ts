@@ -59,6 +59,19 @@ const langfuseObservationsResponseSchema = z.object({
   meta: z.record(z.string(), z.unknown()).optional(),
 });
 
+const fleetGraphObservationNamePrefix = 'fleetgraph.';
+const fleetGraphTraceNodeOrder = [
+  'run',
+  'scope',
+  'context',
+  'guard',
+  'preFilter',
+  'reason',
+  'policy',
+  'output',
+  'chat',
+] as const;
+
 export type LangfuseObservationApiRow = z.infer<typeof langfuseObservationSchema>;
 
 export function parseLangfuseObservationsResponse(input: unknown): LangfuseObservationApiRow[] {
@@ -153,14 +166,8 @@ function formatFleetGraphNodeTelemetryObservationRow(
 }
 
 function isFleetGraphTelemetryObservation(observation: LangfuseObservationApiRow): boolean {
-  if (observation.name.startsWith('fleetgraph.')) {
-    return true;
-  }
-
-  const metadata = observation.metadata ?? {};
-  return typeof metadata.traceNode === 'string'
-    || metadata.detectorType === 'at_risk_week'
-    || metadata.personResolution === 'applied';
+  return isFleetGraphObservationName(observation.name)
+    || hasFleetGraphTelemetryMetadata(observation.metadata ?? {});
 }
 
 function toFleetGraphNodeTelemetryObservation(
@@ -200,24 +207,23 @@ function compareFleetGraphNodeTelemetryObservation(
 
 function traceNodeRank(traceNode: string | null, name: string): number {
   const node = traceNode ?? inferTraceNodeFromName(name);
-  const order = [
-    'run',
-    'scope',
-    'context',
-    'guard',
-    'preFilter',
-    'reason',
-    'policy',
-    'output',
-    'chat',
-  ];
-  const index = order.indexOf(node);
-  return index === -1 ? order.length : index;
+  const index = fleetGraphTraceNodeOrder.findIndex((orderedNode) => orderedNode === node);
+  return index === -1 ? fleetGraphTraceNodeOrder.length : index;
 }
 
 function inferTraceNodeFromName(name: string): string {
   const suffix = name.split('.').at(-1);
   return suffix ?? name;
+}
+
+function isFleetGraphObservationName(name: string): boolean {
+  return name.startsWith(fleetGraphObservationNamePrefix);
+}
+
+function hasFleetGraphTelemetryMetadata(metadata: Record<string, unknown>): boolean {
+  return typeof metadata.traceNode === 'string'
+    || metadata.detectorType === 'at_risk_week'
+    || metadata.personResolution === 'applied';
 }
 
 function millisecondsFromSeconds(value: number | null): number | null {

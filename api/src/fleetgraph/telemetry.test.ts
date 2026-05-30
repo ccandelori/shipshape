@@ -42,6 +42,18 @@ describe('FleetGraph node telemetry export', () => {
         traceNode: null,
       }),
       createObservation({
+        id: 'obs-detector-metadata',
+        name: 'langchain.runnable',
+        traceNode: null,
+        detectorType: 'at_risk_week',
+      }),
+      createObservation({
+        id: 'obs-person-resolution',
+        name: 'langchain.chat_model',
+        traceNode: null,
+        personResolution: 'applied',
+      }),
+      createObservation({
         id: 'obs-pre-filter',
         name: 'fleetgraph.at_risk_week.preFilter',
         traceNode: 'preFilter',
@@ -63,6 +75,8 @@ describe('FleetGraph node telemetry export', () => {
       'obs-run',
       'obs-pre-filter',
       'obs-output',
+      'obs-person-resolution',
+      'obs-detector-metadata',
     ]);
     expect(telemetryCase.observations[0]).toMatchObject({
       public: true,
@@ -125,6 +139,8 @@ function createObservation(input: {
   totalCost?: number | string | null;
   latency?: number | null;
   public?: boolean;
+  detectorType?: string;
+  personResolution?: string;
 }): LangfuseObservationApiRow {
   return {
     id: input.id,
@@ -144,6 +160,8 @@ function createObservation(input: {
       guardDecision: input.guardDecision ?? null,
       preFilterShouldReason: input.preFilterShouldReason ?? null,
       lifecycleState: input.lifecycleState ?? null,
+      detectorType: input.detectorType ?? null,
+      personResolution: input.personResolution ?? null,
     },
   };
 }
