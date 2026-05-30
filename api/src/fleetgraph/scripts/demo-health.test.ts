@@ -1,5 +1,6 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  checkAppHealth,
   createAppDatabasePairingCheck,
   createDemoHealthExitCode,
   formatDemoHealthReport,
@@ -8,6 +9,10 @@ import {
 } from './demo-health.js';
 
 describe('FleetGraph demo health script helpers', () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
   it('parses health and reset modes explicitly', () => {
     expect(parseDemoHealthArgs([])).toEqual({ reset: false, appUrl: null });
     expect(parseDemoHealthArgs(['--reset'])).toEqual({ reset: true, appUrl: null });
@@ -76,6 +81,37 @@ describe('FleetGraph demo health script helpers', () => {
     )).toMatchObject({
       status: 'pass',
       name: 'App and database pairing',
+    });
+  });
+
+  it('passes app health when a web root is reachable but /health is not exposed', async () => {
+    const fetchMock = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response('not found', { status: 404 })
+    ).mockResolvedValueOnce(
+      new Response('<html><body>Ship</body></html>', { status: 200 })
+    );
+
+    await expect(checkAppHealth('http://localhost:5173')).resolves.toEqual({
+      status: 'pass',
+      name: 'App health',
+      detail: 'http://localhost:5173 returned HTTP 200; /health is not exposed on this app URL',
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    expect(fetchMock.mock.calls[0]?.[0]).toBe('http://localhost:5173/health');
+    expect(fetchMock.mock.calls[1]?.[0]).toBe('http://localhost:5173');
+  });
+
+  it('fails app health when neither /health nor the web root is reachable', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
+      new Response('not found', { status: 404 })
+    ).mockResolvedValueOnce(
+      new Response('not found', { status: 404 })
+    );
+
+    await expect(checkAppHealth('http://localhost:5173')).resolves.toEqual({
+      status: 'fail',
+      name: 'App health',
+      detail: 'http://localhost:5173/health returned HTTP 404 and http://localhost:5173 returned HTTP 404',
     });
   });
 

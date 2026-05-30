@@ -169,17 +169,52 @@ describe('FindingCard', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Why this?' }));
 
-    expect(screen.getByText('Agent run')).toBeInTheDocument();
+    expect(screen.getByText('Graph observability')).toBeInTheDocument();
+    expect(screen.getByText('Public trace')).toBeInTheDocument();
     expect(screen.getByText('Run fleetgraph-run-123')).toBeInTheDocument();
-    expect(screen.getByText('Branch Output')).toBeInTheDocument();
-    expect(screen.getByText('Tokens 1,440')).toBeInTheDocument();
+    expect(screen.getByText('Path Output')).toBeInTheDocument();
+    expect(screen.getByText('Input 1,180')).toBeInTheDocument();
+    expect(screen.getByText('Output 260')).toBeInTheDocument();
     expect(screen.getByText('Cost $0.000900')).toBeInTheDocument();
     expect(screen.getByText('Material key')).toBeInTheDocument();
     expect(screen.getByText('material-key-1')).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Open trace' })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: 'Open Langfuse trace' })).toHaveAttribute(
       'href',
       'https://cloud.langfuse.com/project/demo/traces/fleetgraph-run-123'
     );
+  });
+
+  it('distinguishes local run metadata from a public trace link', () => {
+    const finding: FleetGraphFinding = {
+      ...createFinding('pending_review'),
+      trace: {
+        run_id: 'fleetgraph-run-local',
+        trigger: 'poll',
+        detector: 'at_risk_week',
+        model_name: 'gpt-4.1-mini',
+        input_tokens: 740,
+        output_tokens: 128,
+        estimated_cost_usd: '0.000512',
+        branch_path: 'prefilter-exit',
+        trace_url: null,
+        created_at: '2026-05-26T12:01:00.000Z',
+      },
+    };
+
+    render(
+      <FindingCard
+        finding={finding}
+        actions={createActionHandlers()}
+        pendingAction={null}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Why this?' }));
+
+    expect(screen.getByText('Local telemetry')).toBeInTheDocument();
+    expect(screen.getByText('Trace status')).toBeInTheDocument();
+    expect(screen.getByText('Not publicly shared')).toBeInTheDocument();
+    expect(screen.queryByRole('link', { name: 'Open Langfuse trace' })).not.toBeInTheDocument();
   });
 
   it('approves and rejects pending-review findings', () => {

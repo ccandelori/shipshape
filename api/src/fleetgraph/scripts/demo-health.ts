@@ -330,23 +330,35 @@ async function checkRequiredTables(): Promise<{
   };
 }
 
-async function checkAppHealth(appUrl: string): Promise<DemoHealthCheck> {
+export async function checkAppHealth(appUrl: string): Promise<DemoHealthCheck> {
   const healthUrl = `${appUrl}/health`;
-  const timeout = AbortSignal.timeout(5_000);
 
   try {
-    const response = await fetch(healthUrl, {
-      signal: timeout,
-      headers: {
-        accept: 'application/json',
-      },
-    });
+    const response = await fetchAppProbe(healthUrl, 'application/json');
 
     if (response.ok) {
       return {
         status: 'pass',
         name: 'App health',
         detail: `${healthUrl} returned HTTP ${response.status}`,
+      };
+    }
+
+    if (response.status === 404) {
+      const rootResponse = await fetchAppProbe(appUrl, 'text/html');
+
+      if (rootResponse.ok) {
+        return {
+          status: 'pass',
+          name: 'App health',
+          detail: `${appUrl} returned HTTP ${rootResponse.status}; /health is not exposed on this app URL`,
+        };
+      }
+
+      return {
+        status: 'fail',
+        name: 'App health',
+        detail: `${healthUrl} returned HTTP ${response.status} and ${appUrl} returned HTTP ${rootResponse.status}`,
       };
     }
 
@@ -363,6 +375,15 @@ async function checkAppHealth(appUrl: string): Promise<DemoHealthCheck> {
       detail: `${healthUrl} failed: ${message}`,
     };
   }
+}
+
+async function fetchAppProbe(url: string, accept: string): Promise<Response> {
+  return fetch(url, {
+    signal: AbortSignal.timeout(5_000),
+    headers: {
+      accept,
+    },
+  });
 }
 
 async function resetFleetGraphDemoState(): Promise<string[]> {

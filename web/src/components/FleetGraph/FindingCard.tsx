@@ -327,10 +327,11 @@ function isExecutableResumeAction(actionCandidate: FleetGraphActionCandidate): b
 function FindingDecisionProof({ finding }: { finding: FleetGraphFinding }) {
   const [isOpen, setIsOpen] = useState(false);
   const trace = finding.trace;
-  const tokenCount = trace ? trace.input_tokens + trace.output_tokens : null;
+  const traceStatus = getTraceStatus(trace);
+  const traceSummary = getTraceSummary(trace);
 
   return (
-    <section className="mt-4 rounded-md border border-border/70 bg-border/10 px-3 py-2" aria-label="Finding explanation">
+    <section className="mt-4 rounded-md border border-border/70 bg-border/10 px-3 py-2 shadow-sm" aria-label="Finding explanation">
       <button
         type="button"
         aria-label="Why this?"
@@ -338,49 +339,70 @@ function FindingDecisionProof({ finding }: { finding: FleetGraphFinding }) {
         onClick={() => setIsOpen(!isOpen)}
         className="flex w-full items-center justify-between gap-3 text-left text-sm font-medium text-foreground"
       >
-        <span>Why this?</span>
-        <span className="text-xs font-normal text-muted">
-          {trace?.trace_url ? 'Trace linked' : trace ? 'Run metadata' : 'Decision inputs'}
+        <span className="min-w-0">
+          <span className="block">Why this?</span>
+          <span className="mt-0.5 block truncate text-xs font-normal text-muted">
+            {traceSummary}
+          </span>
+        </span>
+        <span className={cn(
+          'shrink-0 rounded-full border px-2 py-0.5 text-[11px] font-medium',
+          traceStatus.className
+        )}>
+          {traceStatus.label}
         </span>
       </button>
       {isOpen && (
         <div className="mt-3 space-y-3 border-t border-border/70 pt-3">
-          <dl className="grid gap-x-4 gap-y-2 text-xs text-muted sm:grid-cols-2">
-            <ProofStat label="Detector" value={formatLabel(finding.detector_type)} />
-            <ProofStat label="State" value={formatLabel(finding.lifecycle_state)} />
-            <ProofStat label="Material key" value={finding.material_change_key} />
-            <ProofStat label="Scoped document" value={finding.scoped_document.title} />
-          </dl>
+          <section aria-label="Decision inputs" className="rounded-md border border-border/60 bg-background/60 px-3 py-3">
+            <p className="text-xs font-semibold uppercase text-muted">Decision inputs</p>
+            <dl className="mt-2 grid gap-x-4 gap-y-2 text-xs text-muted sm:grid-cols-2">
+              <ProofStat label="Detector" value={formatLabel(finding.detector_type)} />
+              <ProofStat label="State" value={formatLabel(finding.lifecycle_state)} />
+              <ProofStat label="Material key" value={finding.material_change_key} />
+              <ProofStat label="Scoped document" value={finding.scoped_document.title} />
+            </dl>
+          </section>
 
           {trace ? (
-            <section aria-label="Agent run" className="rounded-md border border-border/60 bg-background/70 px-3 py-3">
+            <section aria-label="Graph observability" className="rounded-md border border-accent/20 bg-accent/5 px-3 py-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <p className="text-xs font-semibold uppercase text-muted">Agent run</p>
+                <div>
+                  <p className="text-xs font-semibold uppercase text-muted">Graph observability</p>
+                  <p className="mt-1 text-xs text-muted">
+                    Runtime metadata from the FleetGraph graph run attached to this finding.
+                  </p>
+                </div>
                 {trace.trace_url && (
                   <a
                     href={trace.trace_url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-xs font-medium text-accent hover:underline"
+                    className="rounded-md border border-accent/30 bg-accent/10 px-2 py-1 text-xs font-medium text-accent transition-colors hover:bg-accent/20"
                   >
-                    Open trace
+                    Open Langfuse trace
                   </a>
                 )}
               </div>
-              <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted">
+              <div className="mt-3 flex flex-wrap gap-2 text-xs text-muted">
                 <TraceChip label="Run" value={trace.run_id} />
-                <TraceChip label="Branch" value={formatTraceBranch(trace.branch_path)} />
+                <TraceChip label="Path" value={formatTraceBranch(trace.branch_path)} />
                 <TraceChip label="Trigger" value={formatLabel(trace.trigger)} />
+                <TraceChip label="Detector" value={formatLabel(trace.detector)} />
                 <TraceChip label="Model" value={trace.model_name} />
-                {tokenCount !== null && (
-                  <TraceChip label="Tokens" value={tokenCount.toLocaleString()} />
-                )}
+                <TraceChip label="Input" value={trace.input_tokens.toLocaleString()} />
+                <TraceChip label="Output" value={trace.output_tokens.toLocaleString()} />
                 <TraceChip label="Cost" value={`$${trace.estimated_cost_usd}`} />
+                <TraceChip label="Recorded" value={formatDate(trace.created_at)} />
               </div>
+              <dl className="mt-3 grid gap-x-4 gap-y-2 border-t border-border/60 pt-3 text-xs text-muted sm:grid-cols-2">
+                <ProofStat label="Trace status" value={trace.trace_url ? 'Public Langfuse link' : 'Not publicly shared'} />
+                <ProofStat label="Token total" value={(trace.input_tokens + trace.output_tokens).toLocaleString()} />
+              </dl>
             </section>
           ) : (
             <p className="rounded-md border border-border/60 bg-background/70 px-3 py-2 text-xs text-muted">
-              No trace run is attached to this finding yet. Evidence and material key are still shown for audit.
+              No graph run telemetry is attached to this finding yet. Evidence and material key are still shown for audit.
             </p>
           )}
         </div>
@@ -425,7 +447,7 @@ function ProofStat({ label, value }: { label: string; value: string }) {
 
 function TraceChip({ label, value }: { label: string; value: string }) {
   return (
-    <span className="rounded border border-border/70 bg-border/20 px-2 py-1">
+    <span className="rounded border border-border/70 bg-background/70 px-2 py-1 text-foreground/90">
       {label} {value}
     </span>
   );
@@ -452,6 +474,35 @@ function formatTraceBranch(branchPath: FleetGraphFindingTrace['branch_path']): s
   }
 
   return formatLabel(branchPath.replace(/-/g, '_'));
+}
+
+function getTraceStatus(trace: FleetGraphFindingTrace | null): { label: string; className: string } {
+  if (!trace) {
+    return {
+      label: 'Evidence only',
+      className: 'border-border bg-border/20 text-muted',
+    };
+  }
+
+  if (trace.trace_url) {
+    return {
+      label: 'Public trace',
+      className: 'border-green-500/30 bg-green-500/10 text-green-300',
+    };
+  }
+
+  return {
+    label: 'Local telemetry',
+    className: 'border-yellow-500/30 bg-yellow-500/10 text-yellow-300',
+  };
+}
+
+function getTraceSummary(trace: FleetGraphFindingTrace | null): string {
+  if (!trace) {
+    return 'Evidence, material key, and scoped document';
+  }
+
+  return `${formatTraceBranch(trace.branch_path)} path · ${trace.input_tokens + trace.output_tokens} tokens · $${trace.estimated_cost_usd}`;
 }
 
 function formatDate(value: string): string {
