@@ -9,10 +9,6 @@ import {
 } from '../types.js';
 import {
   atRiskWeekDetectorType,
-  atRiskWeekDetectorVersion,
-  atRiskWeekLatencyTargetMs,
-  atRiskWeekReasoningModelName,
-  atRiskWeekReasoningModelTemperature,
 } from './at-risk-week-constants.js';
 import {
   traceAtRiskWeekNode,
@@ -33,7 +29,6 @@ import {
 } from './at-risk-week-output.js';
 import {
   reasonNode,
-  type AtRiskWeekModelUsage,
   type AtRiskWeekReasoningOutput,
   type AtRiskWeekReasonNodeDependencies,
 } from './at-risk-week-reasoner.js';

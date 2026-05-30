@@ -578,7 +578,7 @@ function describeAtRiskWeekReasonerError(error: unknown): AtRiskWeekReasonerErro
 
 function toAtRiskWeekReasonerErrorLike(error: unknown): AtRiskWeekReasonerErrorLike {
   if (typeof error === 'object' && error !== null) {
-    return error as AtRiskWeekReasonerErrorLike;
+    return error;
   }
 
   return {
