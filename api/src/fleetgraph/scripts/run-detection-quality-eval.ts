@@ -22,6 +22,7 @@ import {
   type AtRiskWeekGraphState,
 } from '../detectors/at-risk-week.js';
 import { createPostgresAtRiskWeekOutputRepository } from '../detectors/at-risk-week-output-repository.js';
+import { createAtRiskWeekUsageRecord } from '../detectors/at-risk-week-usage.js';
 import { createPostgresAtRiskWeekUsageRepository } from '../detectors/at-risk-week-usage-repository.js';
 import {
   shutdownFleetGraphLangfuseTracing,
@@ -342,6 +343,7 @@ async function runLiveDetectionQualityCase(
     workspaceId: qualityCase.context.week.workspaceId,
     scopedDocId: qualityCase.context.week.id,
   });
+  const usageRepository = createPostgresAtRiskWeekUsageRepository(client);
 
   const atRiskWeekInput = {
     workspaceId: qualityCase.context.week.workspaceId,
@@ -359,7 +361,12 @@ async function runLiveDetectionQualityCase(
     },
     {
       proactiveAtRiskWeek: {
-        runGraph: runAtRiskWeekGraph,
+        runGraph: async (input, dependencies) => {
+          const atRiskWeekState = await runAtRiskWeekGraph(input, dependencies);
+          await usageRepository.persistUsage(createAtRiskWeekUsageRecord(atRiskWeekState));
+
+          return atRiskWeekState;
+        },
         dependencies: {
           nodeDependencies: {
             client,
@@ -388,7 +395,6 @@ async function runLiveDetectionQualityCase(
             broadcastToUser: () => undefined,
             now: () => new Date().toISOString(),
           },
-          usageRepository: createPostgresAtRiskWeekUsageRepository(client),
           traceRunner: options.trace
             ? createLangfuseAtRiskWeekTraceRunner(config)
             : passthroughAtRiskWeekTraceRunner,

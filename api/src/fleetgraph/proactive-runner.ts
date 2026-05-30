@@ -23,6 +23,7 @@ import {
   createPostgresAtRiskWeekOutputRepository,
   type AtRiskWeekOutputRepository,
 } from './detectors/at-risk-week-output-repository.js';
+import { createAtRiskWeekUsageRecord } from './detectors/at-risk-week-usage.js';
 import {
   createPostgresAtRiskWeekUsageRepository,
   type AtRiskWeekUsageRepository,
@@ -99,6 +100,7 @@ export function createAtRiskWeekScopeRunner(options: AtRiskWeekScopeRunnerOption
 
   return async (input) => {
     const shared = getSharedDependencies();
+    const usageRepository = options.createUsageRepository(input.client);
     const atRiskWeekInput: AtRiskWeekGraphInput = {
       workspaceId: input.workspaceId,
       scopedDocId: input.scopedDocId,
@@ -106,6 +108,16 @@ export function createAtRiskWeekScopeRunner(options: AtRiskWeekScopeRunnerOption
       triggerSource: input.triggerSource,
       requestedAt: options.now(),
     };
+    const runAtRiskWeekGraphAndRecordUsage = async (
+      graphInput: AtRiskWeekGraphInput,
+      graphDependencies: AtRiskWeekGraphDependencies
+    ): Promise<AtRiskWeekGraphState> => {
+      const graphState = await options.runAtRiskWeekGraph(graphInput, graphDependencies);
+      await usageRepository.persistUsage(createAtRiskWeekUsageRecord(graphState));
+
+      return graphState;
+    };
+
     await options.runFleetGraph({
       mode: 'proactive_at_risk_week',
       atRiskWeek: {
@@ -113,7 +125,7 @@ export function createAtRiskWeekScopeRunner(options: AtRiskWeekScopeRunnerOption
       },
     }, {
       proactiveAtRiskWeek: {
-        runGraph: options.runAtRiskWeekGraph,
+        runGraph: runAtRiskWeekGraphAndRecordUsage,
         dependencies: {
           nodeDependencies: {
             client: input.client,
@@ -127,7 +139,6 @@ export function createAtRiskWeekScopeRunner(options: AtRiskWeekScopeRunnerOption
             broadcastToUser: options.broadcastToUser,
             now: options.now,
           },
-          usageRepository: options.createUsageRepository(input.client),
           traceRunner: shared.traceRunner,
           checkpointer: shared.checkpointer,
         },

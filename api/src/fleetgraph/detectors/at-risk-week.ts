@@ -37,7 +37,6 @@ import {
   isoDateTimeSchema,
   type ActionCandidate,
   type FleetGraphApprovalLevel,
-  type FleetGraphTrigger,
   type FleetGraphLifecycleState,
   type FleetGraphReversibility,
   type FleetGraphSeverity,
@@ -46,10 +45,6 @@ import {
   type AtRiskWeekOutputRepository,
   type PersistedAtRiskWeekOutput,
 } from './at-risk-week-output-repository.js';
-import {
-  type AtRiskWeekUsageRecord,
-  type AtRiskWeekUsageRepository,
-} from './at-risk-week-usage-repository.js';
 
 export { AtRiskWeekPersistenceError } from './at-risk-week-output-repository.js';
 
@@ -532,7 +527,6 @@ export type AtRiskWeekGraphDependencies = {
   nodeDependencies: AtRiskWeekNodeDependencies;
   reasonNodeDependencies: AtRiskWeekReasonNodeDependencies;
   outputNodeDependencies: AtRiskWeekOutputNodeDependencies;
-  usageRepository: AtRiskWeekUsageRepository;
   traceRunner: AtRiskWeekTraceRunner;
   checkpointer: BaseCheckpointSaver;
 };
@@ -665,8 +659,6 @@ export async function runAtRiskWeekGraph(
         { graphState: state },
         createAtRiskWeekCheckpointConfig(state)
       );
-
-      await dependencies.usageRepository.persistUsage(createAtRiskWeekUsageRecord(output.graphState));
 
       return output.graphState;
     }
@@ -1497,43 +1489,6 @@ async function persistAtRiskWeekOutput(
     materialChangeKey: guard.materialChangeKey,
     actionCandidate: policy.actionCandidate,
   });
-}
-
-function createAtRiskWeekUsageRecord(state: AtRiskWeekGraphState): AtRiskWeekUsageRecord {
-  const modelUsage = state.trace.modelUsage ?? {
-    modelName: atRiskWeekReasoningModelName,
-    inputTokens: 0,
-    outputTokens: 0,
-    estimatedCost: 0,
-  };
-
-  return {
-    runId: state.scope.runId,
-    workspaceId: state.scope.workspaceId,
-    trigger: toFleetGraphUsageTrigger(state.trace.triggerSource),
-    detector: atRiskWeekDetectorType,
-    modelName: modelUsage.modelName,
-    inputTokens: modelUsage.inputTokens,
-    outputTokens: modelUsage.outputTokens,
-    estimatedCost: modelUsage.estimatedCost,
-    traceMetadata: createAtRiskWeekTraceMetadata(state, 'run'),
-  };
-}
-
-function toFleetGraphUsageTrigger(triggerSource: AtRiskWeekTriggerSource): FleetGraphTrigger {
-  if (triggerSource === 'poll' || triggerSource === 'mutation') {
-    return 'proactive';
-  }
-
-  if (triggerSource === 'ondemand') {
-    return 'ondemand';
-  }
-
-  if (triggerSource === 'resume') {
-    return 'resume';
-  }
-
-  throw new AtRiskWeekNodeContractError(`Unsupported at-risk Week trigger source: triggerSource=${triggerSource}`);
 }
 
 export function createOpenAIAtRiskWeekReasoner(config: FleetGraphConfig): AtRiskWeekStructuredReasoner {

@@ -16,6 +16,7 @@ import {
   type AtRiskWeekReasoningOutput,
 } from './at-risk-week.js';
 import { createPostgresAtRiskWeekOutputRepository } from './at-risk-week-output-repository.js';
+import { createAtRiskWeekUsageRecord } from './at-risk-week-usage.js';
 import { createPostgresAtRiskWeekUsageRepository } from './at-risk-week-usage-repository.js';
 
 type IdRow = {
@@ -330,13 +331,15 @@ describe('FleetGraph at-risk Week output persistence', () => {
         broadcastToUser,
         now: () => completedAt,
       },
-      usageRepository: createPostgresAtRiskWeekUsageRepository(client),
       traceRunner: passthroughAtRiskWeekTraceRunner,
       checkpointer: createAtRiskWeekCheckpointer(),
     };
 
     try {
       const graphState = await runAtRiskWeekGraph(graphInput, graphDependencies);
+      await createPostgresAtRiskWeekUsageRepository(client).persistUsage(
+        createAtRiskWeekUsageRecord(graphState)
+      );
 
       expect(graphState.status).toBe('completed');
       expect(graphState.completedNodes).toEqual(['scope', 'context', 'guard', 'preFilter', 'reason', 'policy', 'output']);
@@ -482,13 +485,15 @@ describe('FleetGraph at-risk Week output persistence', () => {
         broadcastToUser,
         now: () => completedAt,
       },
-      usageRepository: createPostgresAtRiskWeekUsageRepository(client),
       traceRunner: passthroughAtRiskWeekTraceRunner,
       checkpointer: createAtRiskWeekCheckpointer(),
     };
 
     try {
       const graphState = await runAtRiskWeekGraph(graphInput, graphDependencies);
+      await createPostgresAtRiskWeekUsageRepository(client).persistUsage(
+        createAtRiskWeekUsageRecord(graphState)
+      );
 
       expect(graphState.status).toBe('exited');
       expect(graphState.earlyExit).toMatchObject({

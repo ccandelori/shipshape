@@ -1791,9 +1791,6 @@ function createGraphDependencies(fixture: GraphDependencyFixture): AtRiskWeekGra
     nodeDependencies: fixture.nodeDependencies,
     reasonNodeDependencies: fixture.reasonNodeDependencies,
     outputNodeDependencies: fixture.outputNodeDependencies,
-    usageRepository: {
-      persistUsage: vi.fn(async () => undefined),
-    },
     traceRunner: fixture.traceRunner ?? passthroughAtRiskWeekTraceRunner,
     checkpointer: createAtRiskWeekCheckpointer(),
   };

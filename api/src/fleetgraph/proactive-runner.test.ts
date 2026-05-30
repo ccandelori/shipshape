@@ -15,6 +15,7 @@ import type {
   AtRiskWeekTraceRunner,
   AtRiskWeekStructuredReasoner,
 } from './detectors/at-risk-week.js';
+import { createAtRiskWeekInitialState } from './detectors/at-risk-week.js';
 import type { AtRiskWeekOutputRepository } from './detectors/at-risk-week-output-repository.js';
 import type { AtRiskWeekUsageRepository } from './detectors/at-risk-week-usage-repository.js';
 import type {
@@ -43,11 +44,33 @@ describe('FleetGraph proactive at-risk Week runner', () => {
     const checkpointer = {} as BaseCheckpointSaver;
     const runFleetGraph = vi.fn<
       (input: FleetGraphGraphInput, dependencies: FleetGraphGraphDependencies) => Promise<void>
-    >()
-      .mockResolvedValue(undefined);
+    >(async (input, dependencies) => {
+      if (input.mode !== 'proactive_at_risk_week') {
+        throw new Error(`Unexpected FleetGraph mode: ${input.mode}`);
+      }
+
+      const proactive = dependencies.proactiveAtRiskWeek;
+
+      if (proactive === undefined) {
+        throw new Error('Expected proactive at-risk Week dependencies');
+      }
+
+      await proactive.runGraph(input.atRiskWeek.input, proactive.dependencies);
+    });
     const runAtRiskWeekGraph = vi.fn<
       (input: AtRiskWeekGraphInput, dependencies: AtRiskWeekGraphDependencies) => Promise<AtRiskWeekGraphState>
-    >();
+    >(async (input) => ({
+      ...createAtRiskWeekInitialState(input),
+      status: 'exited',
+      activeNode: null,
+      completedNodes: ['scope', 'context', 'guard'],
+      earlyExit: {
+        node: 'guard',
+        reason: 'guard_suppressed',
+        message: 'Test guard exit.',
+        materialChangeKey: null,
+      },
+    }));
     const buildWeekContext = vi.fn();
     const shouldRunDetector = vi.fn();
     const broadcastToUser = vi.fn();
@@ -110,7 +133,7 @@ describe('FleetGraph proactive at-risk Week runner', () => {
       },
       {
         proactiveAtRiskWeek: {
-          runGraph: runAtRiskWeekGraph,
+          runGraph: expect.any(Function),
           dependencies: expect.objectContaining({
             checkpointer,
           }),
@@ -136,9 +159,19 @@ describe('FleetGraph proactive at-risk Week runner', () => {
       outputRepository,
       broadcastToUser,
     });
-    expect(dependencies.usageRepository).toBe(usageRepository);
+    expect('usageRepository' in dependencies).toBe(false);
     expect(createOutputRepository).toHaveBeenCalledWith(client);
     expect(createUsageRepository).toHaveBeenCalledWith(client);
+    expect(runAtRiskWeekGraph).toHaveBeenCalledTimes(1);
+    expect(usageRepository.persistUsage).toHaveBeenCalledWith(expect.objectContaining({
+      runId: '33333333-3333-4333-8333-333333333333',
+      workspaceId: '11111111-1111-4111-8111-111111111111',
+      trigger: 'proactive',
+      detector: 'at_risk_week',
+      inputTokens: 0,
+      outputTokens: 0,
+      estimatedCost: 0,
+    }));
     expect(dependencies.traceRunner).toEqual(expect.any(Function));
   });
 });
