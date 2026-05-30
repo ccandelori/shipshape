@@ -739,7 +739,7 @@ async function checkUsageEvidence(workspaceId: string): Promise<DemoHealthCheck>
   return {
     status: 'warn',
     name: 'Seed trace evidence',
-    detail: 'Seed usage rows are incomplete; run pnpm --filter api db:seed if you need seeded trace placeholders.',
+    detail: 'Seed usage rows are incomplete; run pnpm --filter api db:seed if you need the local demo evidence rows.',
   };
 }
 
