@@ -43,12 +43,12 @@ import {
   type FleetGraphSeverity,
 } from '../types.js';
 import {
-  createPostgresAtRiskWeekOutputRepository,
+  type AtRiskWeekOutputRepository,
   type PersistedAtRiskWeekOutput,
 } from './at-risk-week-output-repository.js';
 import {
-  createPostgresAtRiskWeekUsageRepository,
   type AtRiskWeekUsageRecord,
+  type AtRiskWeekUsageRepository,
 } from './at-risk-week-usage-repository.js';
 
 export { AtRiskWeekPersistenceError } from './at-risk-week-output-repository.js';
@@ -507,7 +507,7 @@ export type AtRiskWeekBroadcastPayload = {
 };
 
 export type AtRiskWeekOutputNodeDependencies = {
-  client: FleetGraphQueryClient;
+  outputRepository: AtRiskWeekOutputRepository;
   broadcastToUser: (
     userId: string,
     eventType: 'fleetgraph:finding_created',
@@ -532,6 +532,7 @@ export type AtRiskWeekGraphDependencies = {
   nodeDependencies: AtRiskWeekNodeDependencies;
   reasonNodeDependencies: AtRiskWeekReasonNodeDependencies;
   outputNodeDependencies: AtRiskWeekOutputNodeDependencies;
+  usageRepository: AtRiskWeekUsageRepository;
   traceRunner: AtRiskWeekTraceRunner;
   checkpointer: BaseCheckpointSaver;
 };
@@ -665,7 +666,7 @@ export async function runAtRiskWeekGraph(
         createAtRiskWeekCheckpointConfig(state)
       );
 
-      await persistAtRiskWeekUsage(output.graphState, dependencies.nodeDependencies.client);
+      await dependencies.usageRepository.persistUsage(createAtRiskWeekUsageRecord(output.graphState));
 
       return output.graphState;
     }
@@ -1484,7 +1485,7 @@ async function persistAtRiskWeekOutput(
   const context = requireAtRiskWeekContext(state, 'output');
   const guard = requireAtRiskWeekGuard(state, 'output');
 
-  return createPostgresAtRiskWeekOutputRepository(dependencies.client).persistOutput({
+  return dependencies.outputRepository.persistOutput({
     workspaceId: state.scope.workspaceId,
     scopedDocId: state.scope.scopedDocId,
     runId: state.scope.runId,
@@ -1496,13 +1497,6 @@ async function persistAtRiskWeekOutput(
     materialChangeKey: guard.materialChangeKey,
     actionCandidate: policy.actionCandidate,
   });
-}
-
-async function persistAtRiskWeekUsage(
-  state: AtRiskWeekGraphState,
-  client: FleetGraphQueryClient
-): Promise<void> {
-  await createPostgresAtRiskWeekUsageRepository(client).persistUsage(createAtRiskWeekUsageRecord(state));
 }
 
 function createAtRiskWeekUsageRecord(state: AtRiskWeekGraphState): AtRiskWeekUsageRecord {

@@ -15,6 +15,8 @@ import {
   type AtRiskWeekOutputNodeDependencies,
   type AtRiskWeekReasoningOutput,
 } from './at-risk-week.js';
+import { createPostgresAtRiskWeekOutputRepository } from './at-risk-week-output-repository.js';
+import { createPostgresAtRiskWeekUsageRepository } from './at-risk-week-usage-repository.js';
 
 type IdRow = {
   id: string;
@@ -128,7 +130,7 @@ describe('FleetGraph at-risk Week output persistence', () => {
       policyKind: 'finding_only',
     });
     const dependencies: AtRiskWeekOutputNodeDependencies = {
-      client,
+      outputRepository: createPostgresAtRiskWeekOutputRepository(client),
       broadcastToUser,
       now: () => completedAt,
     };
@@ -202,7 +204,7 @@ describe('FleetGraph at-risk Week output persistence', () => {
       policyKind: 'action_candidate',
     });
     const dependencies: AtRiskWeekOutputNodeDependencies = {
-      client,
+      outputRepository: createPostgresAtRiskWeekOutputRepository(client),
       broadcastToUser,
       now: () => completedAt,
     };
@@ -324,10 +326,11 @@ describe('FleetGraph at-risk Week output persistence', () => {
         now: () => completedAt,
       },
       outputNodeDependencies: {
-        client,
+        outputRepository: createPostgresAtRiskWeekOutputRepository(client),
         broadcastToUser,
         now: () => completedAt,
       },
+      usageRepository: createPostgresAtRiskWeekUsageRepository(client),
       traceRunner: passthroughAtRiskWeekTraceRunner,
       checkpointer: createAtRiskWeekCheckpointer(),
     };
@@ -475,10 +478,11 @@ describe('FleetGraph at-risk Week output persistence', () => {
         now: () => completedAt,
       },
       outputNodeDependencies: {
-        client,
+        outputRepository: createPostgresAtRiskWeekOutputRepository(client),
         broadcastToUser,
         now: () => completedAt,
       },
+      usageRepository: createPostgresAtRiskWeekUsageRepository(client),
       traceRunner: passthroughAtRiskWeekTraceRunner,
       checkpointer: createAtRiskWeekCheckpointer(),
     };
@@ -550,7 +554,7 @@ describe('FleetGraph at-risk Week output persistence', () => {
       },
     };
     const dependencies: AtRiskWeekOutputNodeDependencies = {
-      client,
+      outputRepository: createPostgresAtRiskWeekOutputRepository(client),
       broadcastToUser,
       now: () => completedAt,
     };
@@ -586,7 +590,7 @@ describe('FleetGraph at-risk Week output persistence', () => {
       policyKind: 'finding_only',
     });
     const dependencies: AtRiskWeekOutputNodeDependencies = {
-      client,
+      outputRepository: createPostgresAtRiskWeekOutputRepository(client),
       broadcastToUser: vi.fn(() => {
         throw new Error('events socket unavailable');
       }),

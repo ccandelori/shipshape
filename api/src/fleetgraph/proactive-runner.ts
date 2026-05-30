@@ -20,6 +20,14 @@ import {
   type AtRiskWeekTraceRunner,
 } from './detectors/at-risk-week.js';
 import {
+  createPostgresAtRiskWeekOutputRepository,
+  type AtRiskWeekOutputRepository,
+} from './detectors/at-risk-week-output-repository.js';
+import {
+  createPostgresAtRiskWeekUsageRepository,
+  type AtRiskWeekUsageRepository,
+} from './detectors/at-risk-week-usage-repository.js';
+import {
   runFleetGraphGraph,
   type FleetGraphGraphDependencies,
   type FleetGraphGraphInput,
@@ -45,6 +53,8 @@ export type AtRiskWeekScopeRunnerOptions = {
   createReasoner: (config: FleetGraphConfig) => AtRiskWeekStructuredReasoner;
   createTraceRunner: (config: FleetGraphConfig) => AtRiskWeekTraceRunner;
   createCheckpointer: () => BaseCheckpointSaver;
+  createOutputRepository: (client: AtRiskWeekNodeDependencies['client']) => AtRiskWeekOutputRepository;
+  createUsageRepository: (client: AtRiskWeekNodeDependencies['client']) => AtRiskWeekUsageRepository;
   broadcastToUser: AtRiskWeekOutputNodeDependencies['broadcastToUser'];
   randomUUID: () => string;
   now: () => string;
@@ -113,10 +123,11 @@ export function createAtRiskWeekScopeRunner(options: AtRiskWeekScopeRunnerOption
           },
           reasonNodeDependencies: shared.reasonNodeDependencies,
           outputNodeDependencies: {
-            client: input.client,
+            outputRepository: options.createOutputRepository(input.client),
             broadcastToUser: options.broadcastToUser,
             now: options.now,
           },
+          usageRepository: options.createUsageRepository(input.client),
           traceRunner: shared.traceRunner,
           checkpointer: shared.checkpointer,
         },
@@ -138,6 +149,8 @@ export function createProductionAtRiskWeekScopeRunner(
     createReasoner: createOpenAIAtRiskWeekReasoner,
     createTraceRunner: createLangfuseAtRiskWeekTraceRunner,
     createCheckpointer: createAtRiskWeekCheckpointer,
+    createOutputRepository: createPostgresAtRiskWeekOutputRepository,
+    createUsageRepository: createPostgresAtRiskWeekUsageRepository,
     broadcastToUser: productionBroadcastToUser,
     randomUUID,
     now: createIsoTimestamp,

@@ -12,9 +12,11 @@ import type {
   AtRiskWeekGraphDependencies,
   AtRiskWeekGraphInput,
   AtRiskWeekGraphState,
-  AtRiskWeekStructuredReasoner,
   AtRiskWeekTraceRunner,
+  AtRiskWeekStructuredReasoner,
 } from './detectors/at-risk-week.js';
+import type { AtRiskWeekOutputRepository } from './detectors/at-risk-week-output-repository.js';
+import type { AtRiskWeekUsageRepository } from './detectors/at-risk-week-usage-repository.js';
 import type {
   FleetGraphGraphDependencies,
   FleetGraphGraphInput,
@@ -50,6 +52,14 @@ describe('FleetGraph proactive at-risk Week runner', () => {
     const shouldRunDetector = vi.fn();
     const broadcastToUser = vi.fn();
     const sleep = vi.fn(async () => undefined);
+    const outputRepository: AtRiskWeekOutputRepository = {
+      persistOutput: vi.fn(),
+    };
+    const usageRepository: AtRiskWeekUsageRepository = {
+      persistUsage: vi.fn(),
+    };
+    const createOutputRepository = vi.fn(() => outputRepository);
+    const createUsageRepository = vi.fn(() => usageRepository);
 
     const runner = createAtRiskWeekScopeRunner({
       loadConfig: () => config,
@@ -60,6 +70,8 @@ describe('FleetGraph proactive at-risk Week runner', () => {
       createReasoner: vi.fn(() => reasoner),
       createTraceRunner: vi.fn(() => traceRunner),
       createCheckpointer: vi.fn(() => checkpointer),
+      createOutputRepository,
+      createUsageRepository,
       broadcastToUser,
       randomUUID: () => '33333333-3333-4333-8333-333333333333',
       now: () => '2026-05-26T05:00:00.000Z',
@@ -121,9 +133,12 @@ describe('FleetGraph proactive at-risk Week runner', () => {
       },
     });
     expect(dependencies.outputNodeDependencies).toMatchObject({
-      client,
+      outputRepository,
       broadcastToUser,
     });
+    expect(dependencies.usageRepository).toBe(usageRepository);
+    expect(createOutputRepository).toHaveBeenCalledWith(client);
+    expect(createUsageRepository).toHaveBeenCalledWith(client);
     expect(dependencies.traceRunner).toEqual(expect.any(Function));
   });
 });

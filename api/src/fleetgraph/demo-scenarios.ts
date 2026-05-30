@@ -10,6 +10,8 @@ import {
   type AtRiskWeekRunStatus,
   type AtRiskWeekTraceRunner,
 } from './detectors/at-risk-week.js';
+import { createPostgresAtRiskWeekOutputRepository } from './detectors/at-risk-week-output-repository.js';
+import { createPostgresAtRiskWeekUsageRepository } from './detectors/at-risk-week-usage-repository.js';
 
 export const fleetGraphDemoScenarioNames = ['quiet_prefilter', 'finding_pending_action'] as const;
 export type FleetGraphDemoScenarioName = typeof fleetGraphDemoScenarioNames[number];
@@ -93,10 +95,11 @@ export async function runFleetGraphDemoScenario(
       now: () => input.completedAt,
     },
     outputNodeDependencies: {
-      client: input.client,
+      outputRepository: createPostgresAtRiskWeekOutputRepository(input.client),
       broadcastToUser: input.broadcastToUser,
       now: () => input.completedAt,
     },
+    usageRepository: createPostgresAtRiskWeekUsageRepository(input.client),
     traceRunner: input.traceRunner,
     checkpointer: createAtRiskWeekCheckpointer(),
   });

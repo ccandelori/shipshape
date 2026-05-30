@@ -11,6 +11,8 @@ import {
   type AtRiskWeekReasoningOutput,
   type AtRiskWeekStructuredReasoner,
 } from '../detectors/at-risk-week.js';
+import { createPostgresAtRiskWeekOutputRepository } from '../detectors/at-risk-week-output-repository.js';
+import { createPostgresAtRiskWeekUsageRepository } from '../detectors/at-risk-week-usage-repository.js';
 import { shouldRunDetector } from '../guards.js';
 import { runFleetGraphGraph } from '../graph.js';
 import { createAtRiskWeekScopeRunner } from '../proactive-runner.js';
@@ -264,6 +266,8 @@ async function runMutationTriggerProof(
       createReasoner: () => createProofReasoner(mutation, runId),
       createTraceRunner: () => passthroughAtRiskWeekTraceRunner,
       createCheckpointer: createAtRiskWeekCheckpointer,
+      createOutputRepository: createPostgresAtRiskWeekOutputRepository,
+      createUsageRepository: createPostgresAtRiskWeekUsageRepository,
       broadcastToUser: () => undefined,
       randomUUID: () => runId,
       now: () => new Date().toISOString(),

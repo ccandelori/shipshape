@@ -47,6 +47,7 @@ import {
   type AtRiskWeekReasoningOutput,
   type AtRiskWeekStructuredModelInvoker,
 } from './at-risk-week.js';
+import { createPostgresAtRiskWeekOutputRepository } from './at-risk-week-output-repository.js';
 
 const workspaceId = '11111111-1111-4111-8111-111111111111';
 const scopedDocId = '22222222-2222-4222-8222-222222222222';
@@ -1790,6 +1791,9 @@ function createGraphDependencies(fixture: GraphDependencyFixture): AtRiskWeekGra
     nodeDependencies: fixture.nodeDependencies,
     reasonNodeDependencies: fixture.reasonNodeDependencies,
     outputNodeDependencies: fixture.outputNodeDependencies,
+    usageRepository: {
+      persistUsage: vi.fn(async () => undefined),
+    },
     traceRunner: fixture.traceRunner ?? passthroughAtRiskWeekTraceRunner,
     checkpointer: createAtRiskWeekCheckpointer(),
   };
@@ -1899,11 +1903,12 @@ function createOutputNodeDependencies(): CapturingOutputNodeDependencies {
 
     return createQueryResult([]);
   };
+  const client = {
+    query,
+  };
 
   return {
-    client: {
-      query,
-    },
+    outputRepository: createPostgresAtRiskWeekOutputRepository(client),
     broadcastToUser: vi.fn(),
     now: () => '2026-05-26T05:03:00.000Z',
     queryTexts,

@@ -21,6 +21,8 @@ import {
   type AtRiskWeekBranchPath,
   type AtRiskWeekGraphState,
 } from '../detectors/at-risk-week.js';
+import { createPostgresAtRiskWeekOutputRepository } from '../detectors/at-risk-week-output-repository.js';
+import { createPostgresAtRiskWeekUsageRepository } from '../detectors/at-risk-week-usage-repository.js';
 import {
   shutdownFleetGraphLangfuseTracing,
   startFleetGraphLangfuseTracing,
@@ -382,10 +384,11 @@ async function runLiveDetectionQualityCase(
             now: () => new Date().toISOString(),
           },
           outputNodeDependencies: {
-            client,
+            outputRepository: createPostgresAtRiskWeekOutputRepository(client),
             broadcastToUser: () => undefined,
             now: () => new Date().toISOString(),
           },
+          usageRepository: createPostgresAtRiskWeekUsageRepository(client),
           traceRunner: options.trace
             ? createLangfuseAtRiskWeekTraceRunner(config)
             : passthroughAtRiskWeekTraceRunner,
