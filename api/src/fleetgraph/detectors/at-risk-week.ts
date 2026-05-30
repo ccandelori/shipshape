@@ -27,11 +27,7 @@ import {
   type FleetGraphTracePublicationMetadata,
   type FleetGraphTracePublicationResult,
 } from '../langfuse.js';
-import {
-  autoExecuteIfAllowedInTransaction,
-  classifyFleetGraphPolicy,
-  persistPendingActionInTransaction,
-} from '../policy.js';
+import { classifyFleetGraphPolicy } from '../policy.js';
 import {
   evidenceItemSchema,
   fleetGraphEvidenceSourceTypeSchema,
@@ -46,6 +42,16 @@ import {
   type FleetGraphReversibility,
   type FleetGraphSeverity,
 } from '../types.js';
+import {
+  createPostgresAtRiskWeekOutputRepository,
+  type PersistedAtRiskWeekOutput,
+} from './at-risk-week-output-repository.js';
+import {
+  createPostgresAtRiskWeekUsageRepository,
+  type AtRiskWeekUsageRecord,
+} from './at-risk-week-usage-repository.js';
+
+export { AtRiskWeekPersistenceError } from './at-risk-week-output-repository.js';
 
 export {
   evaluateAtRiskWeekPreFilter,
@@ -530,12 +536,6 @@ export type AtRiskWeekGraphDependencies = {
   checkpointer: BaseCheckpointSaver;
 };
 
-type PersistedAtRiskWeekOutput = {
-  findingId: string;
-  actionCandidateId: string | null;
-  lifecycleState: FleetGraphLifecycleState;
-};
-
 export type AtRiskWeekNodeDependencies = {
   client: FleetGraphQueryClient;
   buildWeekContext: (
@@ -554,22 +554,6 @@ export type AtRiskWeekNodeDependencies = {
 
 type ScopeResolutionRow = QueryResultRow & {
   id: string;
-};
-
-type InsertedIdRow = QueryResultRow & {
-  id: string;
-};
-
-type AtRiskWeekUsageRecord = {
-  runId: string;
-  workspaceId: string;
-  trigger: FleetGraphTrigger;
-  detector: typeof atRiskWeekDetectorType;
-  modelName: string;
-  inputTokens: number;
-  outputTokens: number;
-  estimatedCost: number;
-  traceMetadata: AtRiskWeekTraceMetadata;
 };
 
 export function createAtRiskWeekInitialState(input: AtRiskWeekGraphInput): AtRiskWeekGraphState {
@@ -1497,149 +1481,28 @@ async function persistAtRiskWeekOutput(
   lifecycleState: 'open' | 'pending_review',
   dependencies: AtRiskWeekOutputNodeDependencies
 ): Promise<PersistedAtRiskWeekOutput> {
-  try {
-    await dependencies.client.query<QueryResultRow>('BEGIN', []);
-    const initialLifecycleState = policy.actionCandidate === null ? lifecycleState : 'open';
-    const findingId = await insertAtRiskWeekFinding(state, reasoning, initialLifecycleState, dependencies);
-    const pendingAction = policy.actionCandidate === null
-      ? {
-          actionCandidateId: null,
-          lifecycleState: initialLifecycleState,
-        }
-      : await persistAtRiskWeekActionCandidate(findingId, policy.actionCandidate, state, dependencies);
-
-    await dependencies.client.query<QueryResultRow>('COMMIT', []);
-
-    return {
-      findingId,
-      actionCandidateId: pendingAction.actionCandidateId,
-      lifecycleState: pendingAction.lifecycleState,
-    };
-  } catch (error) {
-    await rollbackAtRiskWeekOutput(dependencies);
-    throw new AtRiskWeekPersistenceError({
-      workspaceId: state.scope.workspaceId,
-      scopedDocId: state.scope.scopedDocId,
-      runId: state.scope.runId,
-      message: errorMessage(error),
-    });
-  }
-}
-
-async function insertAtRiskWeekFinding(
-  state: AtRiskWeekGraphState,
-  reasoning: Extract<AtRiskWeekReasoningOutput, { isAtRisk: true }>,
-  lifecycleState: 'open' | 'pending_review',
-  dependencies: AtRiskWeekOutputNodeDependencies
-): Promise<string> {
   const context = requireAtRiskWeekContext(state, 'output');
   const guard = requireAtRiskWeekGuard(state, 'output');
-  const result = await dependencies.client.query<InsertedIdRow>(
-    `INSERT INTO fleetgraph_findings (
-       workspace_id, scoped_document_id, detector_type, severity, evidence,
-       recipient_user_id, lifecycle_state, material_change_key
-     )
-     VALUES ($1, $2, $3, $4, $5::jsonb, $6, $7, $8)
-     RETURNING id`,
-    [
-      state.scope.workspaceId,
-      state.scope.scopedDocId,
-      atRiskWeekDetectorType,
-      reasoning.severity,
-      JSON.stringify(reasoning.evidence),
-      context.ownerUserId,
-      lifecycleState,
-      guard.materialChangeKey,
-    ]
-  );
 
-  return requireInsertedId(
-    result.rows[0],
-    'fleetgraph_findings',
-    state.scope.workspaceId,
-    state.scope.scopedDocId,
-    state.scope.runId
-  );
-}
-
-async function persistAtRiskWeekActionCandidate(
-  findingId: string,
-  actionCandidate: ActionCandidate,
-  state: AtRiskWeekGraphState,
-  dependencies: AtRiskWeekOutputNodeDependencies
-): Promise<Pick<PersistedAtRiskWeekOutput, 'actionCandidateId' | 'lifecycleState'>> {
-  const actionCandidateId = await persistPendingActionInTransaction(
-    dependencies.client,
-    {
-      id: findingId,
-      workspaceId: state.scope.workspaceId,
-      expectedLifecycleState: 'open',
-    },
-    actionCandidate
-  );
-  const execution = await autoExecuteIfAllowedInTransaction(
-    dependencies.client,
-    {
-      id: findingId,
-      workspaceId: state.scope.workspaceId,
-      scopedDocumentId: state.scope.scopedDocId,
-      expectedLifecycleState: 'pending_review',
-    },
-    actionCandidate
-  );
-
-  return {
-    actionCandidateId,
-    lifecycleState: execution.lifecycleState,
-  };
-}
-
-async function rollbackAtRiskWeekOutput(dependencies: AtRiskWeekOutputNodeDependencies): Promise<void> {
-  try {
-    await dependencies.client.query<QueryResultRow>('ROLLBACK', []);
-  } catch (error) {
-    throw new AtRiskWeekPersistenceError({
-      workspaceId: 'unknown',
-      scopedDocId: 'unknown',
-      runId: 'unknown',
-      message: `Rollback failed after persistence error: ${errorMessage(error)}`,
-    });
-  }
+  return createPostgresAtRiskWeekOutputRepository(dependencies.client).persistOutput({
+    workspaceId: state.scope.workspaceId,
+    scopedDocId: state.scope.scopedDocId,
+    runId: state.scope.runId,
+    detectorType: atRiskWeekDetectorType,
+    severity: reasoning.severity,
+    evidence: reasoning.evidence,
+    recipientUserId: context.ownerUserId,
+    lifecycleState,
+    materialChangeKey: guard.materialChangeKey,
+    actionCandidate: policy.actionCandidate,
+  });
 }
 
 async function persistAtRiskWeekUsage(
   state: AtRiskWeekGraphState,
   client: FleetGraphQueryClient
 ): Promise<void> {
-  const usage = createAtRiskWeekUsageRecord(state);
-
-  try {
-    await client.query<QueryResultRow>(
-      `INSERT INTO fleetgraph_usage (
-         run_id, workspace_id, trigger, detector, model_name,
-         input_tokens, output_tokens, estimated_cost_usd, trace_metadata
-       )
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9::jsonb)`,
-      [
-        usage.runId,
-        usage.workspaceId,
-        usage.trigger,
-        usage.detector,
-        usage.modelName,
-        usage.inputTokens,
-        usage.outputTokens,
-        usage.estimatedCost,
-        JSON.stringify(usage.traceMetadata),
-      ]
-    );
-  } catch (error) {
-    throw new AtRiskWeekPersistenceError({
-      workspaceId: state.scope.workspaceId,
-      scopedDocId: state.scope.scopedDocId,
-      runId: state.scope.runId,
-      message: `Usage persistence failed: ${errorMessage(error)}`,
-    });
-  }
+  await createPostgresAtRiskWeekUsageRepository(client).persistUsage(createAtRiskWeekUsageRecord(state));
 }
 
 function createAtRiskWeekUsageRecord(state: AtRiskWeekGraphState): AtRiskWeekUsageRecord {
@@ -1677,25 +1540,6 @@ function toFleetGraphUsageTrigger(triggerSource: AtRiskWeekTriggerSource): Fleet
   }
 
   throw new AtRiskWeekNodeContractError(`Unsupported at-risk Week trigger source: triggerSource=${triggerSource}`);
-}
-
-function requireInsertedId(
-  row: InsertedIdRow | undefined,
-  tableName: string,
-  workspaceId: string,
-  scopedDocId: string,
-  runId: string
-): string {
-  if (!row) {
-    throw new AtRiskWeekPersistenceError({
-      workspaceId,
-      scopedDocId,
-      runId,
-      message: `${tableName} insert returned no id`,
-    });
-  }
-
-  return row.id;
 }
 
 export function createOpenAIAtRiskWeekReasoner(config: FleetGraphConfig): AtRiskWeekStructuredReasoner {
@@ -1988,33 +1832,6 @@ export class AtRiskWeekStructuredOutputError extends Error {
     this.name = 'AtRiskWeekStructuredOutputError';
     this.modelName = input.modelName;
     this.parsedOutput = parsedOutput;
-  }
-}
-
-type AtRiskWeekPersistenceErrorInput = {
-  workspaceId: string;
-  scopedDocId: string;
-  runId: string;
-  message: string;
-};
-
-export class AtRiskWeekPersistenceError extends Error {
-  readonly workspaceId: string;
-  readonly scopedDocId: string;
-  readonly runId: string;
-
-  constructor(input: AtRiskWeekPersistenceErrorInput) {
-    super([
-      'At-risk Week output persistence failed',
-      `workspaceId=${input.workspaceId}`,
-      `scopedDocId=${input.scopedDocId}`,
-      `runId=${input.runId}`,
-      `errorMessage=${input.message}`,
-    ].join(', '));
-    this.name = 'AtRiskWeekPersistenceError';
-    this.workspaceId = input.workspaceId;
-    this.scopedDocId = input.scopedDocId;
-    this.runId = input.runId;
   }
 }
 
