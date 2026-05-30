@@ -87,6 +87,8 @@ export const shipCoreDemoIssues: ShipCoreDemoIssueSeed[] = [
   },
 ];
 
+export const shipCoreDemoIssueTitles = shipCoreDemoIssues.map((issue) => issue.title);
+
 export function createIssueContent(description: string, acceptanceCriteria: string[]): TipTapDocument {
   const content: TipTapNode[] = description.split('\n\n').map(createParagraphNode);
 

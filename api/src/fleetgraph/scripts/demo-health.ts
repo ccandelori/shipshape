@@ -1,5 +1,6 @@
 import { pathToFileURL } from 'url';
 import { pool } from '../../db/client.js';
+import { shipCoreDemoIssueTitles } from '../../db/shipCoreDemoIssues.js';
 
 type DemoHealthStatus = 'pass' | 'warn' | 'fail';
 type DemoHealthMode = 'health' | 'reset';
@@ -80,12 +81,7 @@ const requiredDocumentTitles = [
   'FleetGraph - Embedded Agent Chat',
   'FleetGraph - Trace Evidence Pipeline',
   'Capture Langfuse trace URLs for shared review',
-  'Real-time collaboration merge conflicts under load',
-  'Week planning flow is confusing for first-time users',
-] as const;
-const meatyIssueChatTitles = [
-  'Real-time collaboration merge conflicts under load',
-  'Week planning flow is confusing for first-time users',
+  ...shipCoreDemoIssueTitles,
 ] as const;
 
 export function parseDemoHealthArgs(args: string[]): DemoHealthArgs {
@@ -556,7 +552,7 @@ async function createDemoDocumentLinks(appUrl: string, workspaceId: string): Pro
        AND document_type = 'issue'
        AND title = ANY($2::text[])
      ORDER BY array_position($2::text[], title)`,
-    [workspaceId, meatyIssueChatTitles]
+    [workspaceId, shipCoreDemoIssueTitles]
   );
 
   return [
