@@ -54,6 +54,12 @@ interface DemoDocumentRow {
   title: string;
 }
 
+interface DemoWeekOverviewRow {
+  id: string;
+  title: string;
+  content_node_count: number;
+}
+
 interface DemoFindingRow {
   id: string;
   material_change_key: string;
@@ -514,6 +520,7 @@ async function checkSeededDemoState(): Promise<{
   });
   checks.push(await checkDemoUser(workspace.id));
   checks.push(...await checkDemoDocuments(workspace.id));
+  checks.push(await checkDemoWeekOverviewContent(workspace.id));
   checks.push(...await checkDemoFindings(workspace.id));
   checks.push(await checkUsageEvidence(workspace.id));
 
@@ -645,6 +652,50 @@ async function checkDemoDocuments(workspaceId: string): Promise<DemoHealthCheck[
     name: 'Demo documents',
     detail: `Missing documents: ${missingTitles.join(', ')}`,
   }];
+}
+
+async function checkDemoWeekOverviewContent(workspaceId: string): Promise<DemoHealthCheck> {
+  const result = await pool.query<DemoWeekOverviewRow>(
+    `SELECT
+       doc.id,
+       doc.title,
+       CASE
+         WHEN jsonb_typeof(doc.content) = 'object'
+          AND jsonb_typeof(doc.content->'content') = 'array'
+         THEN jsonb_array_length(doc.content->'content')
+         ELSE 0
+       END AS content_node_count
+     FROM fleetgraph_findings finding
+     INNER JOIN documents doc
+       ON doc.id = finding.scoped_document_id
+     WHERE finding.workspace_id = $1
+       AND finding.material_change_key = $2
+     LIMIT 1`,
+    [workspaceId, pendingFindingKey]
+  );
+  const row = result.rows[0];
+
+  if (!row) {
+    return {
+      status: 'fail',
+      name: 'Week overview content',
+      detail: 'Pending-review FleetGraph Week document is missing; run pnpm --filter api db:seed.',
+    };
+  }
+
+  if (row.content_node_count <= 0) {
+    return {
+      status: 'fail',
+      name: 'Week overview content',
+      detail: `${row.title} has an empty Overview body; run migrations and seed before recording.`,
+    };
+  }
+
+  return {
+    status: 'pass',
+    name: 'Week overview content',
+    detail: `${row.title} has ${row.content_node_count} Overview body nodes for chat context`,
+  };
 }
 
 async function checkDemoFindings(workspaceId: string): Promise<DemoHealthCheck[]> {

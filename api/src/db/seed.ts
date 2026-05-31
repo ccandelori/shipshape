@@ -22,6 +22,73 @@ const __dirname = dirname(__filename);
 config({ path: join(__dirname, '../../.env.local') });
 config({ path: join(__dirname, '../../.env') });
 
+type TipTapNode = {
+  type: string;
+  attrs?: Record<string, unknown>;
+  content?: TipTapNode[];
+  text?: string;
+};
+
+type TipTapDocument = {
+  type: 'doc';
+  content: TipTapNode[];
+};
+
+function tiptapText(text: string): TipTapNode {
+  return { type: 'text', text };
+}
+
+function tiptapParagraph(text: string): TipTapNode {
+  return {
+    type: 'paragraph',
+    content: [tiptapText(text)],
+  };
+}
+
+function tiptapHeading(text: string, level: number): TipTapNode {
+  return {
+    type: 'heading',
+    attrs: { level },
+    content: [tiptapText(text)],
+  };
+}
+
+function tiptapBulletList(items: string[]): TipTapNode {
+  return {
+    type: 'bulletList',
+    content: items.map((item) => ({
+      type: 'listItem',
+      content: [tiptapParagraph(item)],
+    })),
+  };
+}
+
+function createWeekOverviewContent(input: {
+  weekNumber: number;
+  goal: string;
+  plan: string;
+  successCriteria: string;
+  ownerName: string;
+  teammateName: string;
+}): TipTapDocument {
+  return {
+    type: 'doc',
+    content: [
+      tiptapParagraph(`Week ${input.weekNumber} focuses on ${input.goal.toLowerCase()}.`),
+      tiptapHeading('Plan', 2),
+      tiptapParagraph(input.plan),
+      tiptapHeading('Success criteria', 2),
+      tiptapBulletList([
+        input.successCriteria,
+        `${input.ownerName} owns recovery and weekly coordination.`,
+        `${input.teammateName} is available as the secondary implementation partner.`,
+      ]),
+      tiptapHeading('Context for FleetGraph', 2),
+      tiptapParagraph('Use this overview with the assigned issues, standups, and comments to evaluate blockers, ownership, and next actions.'),
+    ],
+  };
+}
+
 /**
  * Helper to create document associations in the junction table
  * This replaces the legacy program_id, project_id, sprint_id columns
@@ -557,13 +624,56 @@ async function seed() {
 
     const sprints: Array<{ id: string; programId: string; projectId: string; number: number }> = [];
     let sprintsCreated = 0;
+    let sprintContentBackfilled = 0;
+
+    const sprintGoals = [
+      'Complete core feature implementation and initial testing',
+      'Deliver bug fixes and stability improvements',
+      'Optimize performance and reduce technical debt',
+      'Build out user-facing features with accessibility',
+      'Finalize integrations and prepare for release',
+      'Focus on documentation and developer experience',
+      'Ship incremental improvements based on feedback',
+    ];
+    const sprintPlans = [
+      'If we complete these features, we will unblock the next milestone.',
+      'Fixing these issues will reduce user-reported problems by 50%.',
+      'Performance gains will improve user engagement metrics.',
+      'New features will increase user activation rate.',
+      'These changes will enable the team to move faster.',
+      'Better docs will reduce onboarding time for new developers.',
+      'Incremental shipping will maintain momentum and user trust.',
+    ];
+    const sprintSuccessCriteria = [
+      'All planned stories marked done, tests passing',
+      'Bug count reduced by at least 10, no P0 issues remaining',
+      'Load time under 2 seconds, memory usage stable',
+      'Feature flags enabled for 100% of users',
+      'All integrations passing health checks',
+      'README and API docs up to date',
+      'User feedback incorporated in next sprint planning',
+    ];
 
     for (const sprint of sprintsToCreate) {
       const owner = allUsers[sprint.ownerIdx]!;
+      const team = programTeams[sprint.programId]!;
+      const otherIdx = team.find(idx => idx !== sprint.ownerIdx) ?? team[0]!;
+      const otherUser = allUsers[otherIdx]!;
+      const goal = sprintGoals[sprint.number % sprintGoals.length]!;
+      const plan = sprintPlans[sprint.number % sprintPlans.length]!;
+      const successCriteria = sprintSuccessCriteria[sprint.number % sprintSuccessCriteria.length]!;
+      const weekOverviewContent = createWeekOverviewContent({
+        weekNumber: sprint.number,
+        goal,
+        plan,
+        successCriteria,
+        ownerName: owner.name,
+        teammateName: otherUser.name,
+      });
 
       // Check for existing sprint by sprint_number and project (via junction table)
       const existingSprint = await pool.query(
-        `SELECT d.id FROM documents d
+        `SELECT d.id, d.content FROM documents d
          JOIN document_associations da ON da.document_id = d.id
            AND da.related_id = $2 AND da.relationship_type = 'project'
          WHERE d.workspace_id = $1 AND d.document_type = 'sprint'
@@ -571,45 +681,28 @@ async function seed() {
         [workspaceId, sprint.projectId, sprint.number]
       );
 
-      if (existingSprint.rows[0]) {
+      const existingSprintRow = existingSprint.rows[0];
+      if (existingSprintRow) {
+        const existingContent = existingSprintRow.content;
+        const existingContentNodes = Array.isArray(existingContent?.content)
+          ? existingContent.content.length
+          : 0;
+        if (existingContentNodes === 0) {
+          await pool.query(
+            `UPDATE documents
+             SET content = $1, yjs_state = NULL, updated_at = NOW()
+             WHERE id = $2`,
+            [JSON.stringify(weekOverviewContent), existingSprintRow.id]
+          );
+          sprintContentBackfilled++;
+        }
         sprints.push({
-          id: existingSprint.rows[0].id,
+          id: existingSprintRow.id,
           programId: sprint.programId,
           projectId: sprint.projectId,
           number: sprint.number,
         });
       } else {
-        // Sprint properties with full planning details
-        // Dates and status are computed at runtime from sprint_number + workspace.sprint_start_date
-        // Confidence is 0-100 scale (different from project ICE scores which are 1-10)
-        const sprintGoals = [
-          'Complete core feature implementation and initial testing',
-          'Deliver bug fixes and stability improvements',
-          'Optimize performance and reduce technical debt',
-          'Build out user-facing features with accessibility',
-          'Finalize integrations and prepare for release',
-          'Focus on documentation and developer experience',
-          'Ship incremental improvements based on feedback',
-        ];
-        const sprintPlans = [
-          'If we complete these features, we will unblock the next milestone.',
-          'Fixing these issues will reduce user-reported problems by 50%.',
-          'Performance gains will improve user engagement metrics.',
-          'New features will increase user activation rate.',
-          'These changes will enable the team to move faster.',
-          'Better docs will reduce onboarding time for new developers.',
-          'Incremental shipping will maintain momentum and user trust.',
-        ];
-        const sprintSuccessCriteria = [
-          'All planned stories marked done, tests passing',
-          'Bug count reduced by at least 10, no P0 issues remaining',
-          'Load time under 2 seconds, memory usage stable',
-          'Feature flags enabled for 100% of users',
-          'All integrations passing health checks',
-          'README and API docs up to date',
-          'User feedback incorporated in next sprint planning',
-        ];
-
         // Calculate confidence based on sprint timing (future sprints have lower confidence)
         const sprintOffset = sprint.number - currentSprintNumber;
         let baseConfidence = 80;
@@ -618,10 +711,6 @@ async function seed() {
         else if (sprintOffset === 1) baseConfidence = 60; // Next sprint - medium
         else baseConfidence = 40; // Future sprints - lower confidence
 
-        // Other assignee comes from the same program team (not global +1)
-        const team = programTeams[sprint.programId]!;
-        const otherIdx = team.find(idx => idx !== sprint.ownerIdx) ?? team[0]!;
-        const otherUser = allUsers[otherIdx]!;
         // Set sprint status based on timing so action items don't fire for past sprints
         let sprintStatus: string | undefined;
         if (sprintOffset < 0) sprintStatus = 'completed';
@@ -632,17 +721,22 @@ async function seed() {
           owner_id: owner.id,
           project_id: sprint.projectId, // Required for team allocation
           assignee_ids: [owner.person_doc_id, otherUser.person_doc_id].filter(Boolean), // Person doc IDs for allocation
-          plan: sprintPlans[sprint.number % sprintPlans.length],
-          success_criteria: sprintSuccessCriteria[sprint.number % sprintSuccessCriteria.length],
+          plan,
+          success_criteria: successCriteria,
           confidence: baseConfidence + (Math.random() * 10 - 5), // Add some variance
           ...(sprintStatus && { status: sprintStatus }),
         };
         // Create sprint document without legacy project_id and program_id columns
         const sprintResult = await pool.query(
-          `INSERT INTO documents (workspace_id, document_type, title, properties)
-           VALUES ($1, 'sprint', $2, $3)
+          `INSERT INTO documents (workspace_id, document_type, title, content, properties)
+           VALUES ($1, 'sprint', $2, $3, $4)
            RETURNING id`,
-          [workspaceId, `Week ${sprint.number}`, JSON.stringify(sprintProperties)]
+          [
+            workspaceId,
+            `Week ${sprint.number}`,
+            JSON.stringify(weekOverviewContent),
+            JSON.stringify(sprintProperties),
+          ]
         );
         const sprintId = sprintResult.rows[0].id;
 
@@ -664,6 +758,9 @@ async function seed() {
       console.log(`✅ Created ${sprintsCreated} weeks`);
     } else {
       console.log('ℹ️  All weeks already exist');
+    }
+    if (sprintContentBackfilled > 0) {
+      console.log(`✅ Backfilled overview content for ${sprintContentBackfilled} existing weeks`);
     }
 
     // Get Ship Core program for comprehensive sprint testing
