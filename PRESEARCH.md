@@ -184,7 +184,7 @@ Runtime components:
 - Server-Sent Events for `/api/fleetgraph/chat`.
 - PostgreSQL for durable findings and action lifecycle state.
 
-Public deployment evidence is recorded in `FLEETGRAPH.md`: release `20260529-151518` was smoke-tested at `https://143.198.163.184.nip.io/` with login, inbox tabs, a trace-backed finding surface, and graph-routed Week chat.
+Public deployment evidence is recorded in `FLEETGRAPH.md`: release `20260530-183403` from commit `65ec41b6ff4e348265c37c695df124dd1cb0f4bc` was smoke-tested at `https://143.198.163.184.nip.io/` with health 200, login, `/my-week` recovery, inbox tabs, a trace-backed finding surface, and graph-routed issue chat.
 
 ### Trigger Model
 
@@ -253,7 +253,7 @@ Verification already recorded:
 - Focused FleetGraph API, OpenAPI, and demo-health tests pass.
 - Focused FleetGraph web component and hook tests pass.
 - API and web type-check/build passed during the latest polish pass.
-- Full API regression passed with 61 test files and 669 tests.
+- Full API regression passed with 62 test files and 675 tests.
 
 Live trace evidence in `FLEETGRAPH.md`:
 

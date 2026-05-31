@@ -1,7 +1,7 @@
 # FleetGraph 5-Minute Demo Script (Beginner-Friendly)
 
 Created: 2026-05-26  
-Updated: 2026-05-29
+Updated: 2026-05-30
 
 This guide assumes you have **never used Ship before**. Every on-stage step says **where to click**, **what you should see**, and **what to say**.
 
@@ -401,7 +401,7 @@ Use a **full-width** browser window. Have tabs 1–4 from Part 3D ready.
 
 1. Switch to **Tab 4** (Langfuse, already open).
 2. Point at: trace name, branch metadata, model tokens, latency fields, and observations like `fleetgraph.at_risk_week.run`, `fleetgraph.at_risk_week.reason`, or `fleetgraph.chat.response`.
-3. If you show the finding trace, point out the `ChatOpenAI` generation and finding id `c17a13f0-52a0-4192-9935-ad125eb0ff4d`. If you show the quiet trace, point out there are no generation observations.
+3. If you show the finding trace, point out the `ChatOpenAI` generation and finding id `8cf63756-2cc0-428c-9488-7c3306130760`. If you show the quiet trace, point out there are no generation observations.
 
 **Say:**
 

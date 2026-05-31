@@ -27,7 +27,7 @@ Use this block for the final walkthrough and submission review.
 
 The deployed finding, quiet, and Week chat Langfuse links above were captured from the public droplet on 2026-05-28 and verified through the Langfuse API with `public: true`. The chat person-name trace was captured on 2026-05-29 from current code against seeded Ship data to prove that on-demand chat resolves assignee ids to human names. Langfuse is the observability provider for this submission; it satisfies the PRD's shared trace requirement by exposing the same run tree, branch metadata, model usage, token counts, and public trace URLs that the PRD requested from LangSmith. FleetGraph keeps public trace export opt-in because public links expose prompt, context, and run metadata to anyone with the URL.
 
-Deployed smoke status, 2026-05-29 3:16 PM CDT: release `20260529-151518` is live on the public droplet. `/health` returns HTTP 200 over both the droplet HTTP route and `https://143.198.163.184.nip.io/health`; `dev@ship.local` login works in Brave; FleetGraph inbox tabs render with Needs Review counts; and the Week chat opens from the `Ask FleetGraph` pill with source-linked context through the shared FleetGraph graph.
+Deployed smoke status, 2026-05-30 6:34 PM CDT: release `20260530-183403` from commit `65ec41b6ff4e348265c37c695df124dd1cb0f4bc` is live on the public droplet. `https://143.198.163.184.nip.io/health` returns HTTP 200; `dev@ship.local` login works in Brave; `/my-week` loads with recovery actions instead of a dead-end error; FleetGraph inbox tabs render with Needs Review findings; and issue-scoped chat opens from the `Ask FleetGraph` pill, sends, streams an answer, names the assignee, and shows a source chip through the shared FleetGraph graph.
 
 ## Agent Responsibility
 
@@ -252,7 +252,7 @@ Verification run:
 - `DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev pnpm --filter @ship/api exec vitest run src/fleetgraph/context.test.ts src/fleetgraph/chat-runner.test.ts src/routes/fleetgraph-chat.test.ts src/fleetgraph/graph.test.ts src/fleetgraph/detectors/at-risk-week.test.ts`
 - Result: 5 test files passed, 60 tests passed.
 - Full API regression: `DATABASE_URL=postgresql://ship:ship_dev_password@127.0.0.1:5433/ship_dev pnpm --filter @ship/api test`
-- Result: 61 test files passed, 669 tests passed.
+- Result: 62 test files passed, 675 tests passed.
 
 ## Use Cases
 

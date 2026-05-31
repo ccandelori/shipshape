@@ -28,7 +28,7 @@ No architectural rebuild is needed. The original grading issue - on-demand chat 
 | At least one human-in-the-loop gate | Pass | `api/src/fleetgraph/policy.ts`, `api/src/routes/fleetgraph.ts`, inbox `Needs Review` and `Approved` tabs | None |
 | Running against real Ship data; no mocked production responses | Pass | Production context builders read Postgres Ship documents/issues/standups; deployed smoke traces use real document ids; detection-quality traces use controlled Ship-shaped golden contexts for repeatable edge-case coverage | Keep demo clear when using seeded rows, golden eval traces, and deployed real-document traces |
 | Agent chat and notifications accessible in UI | Pass | `web/src/components/FleetGraph/*`, `web/src/components/Editor.tsx`, `web/src/pages/App.tsx` | None |
-| Deployed and publicly accessible | Pass | Release `20260529-151518` is live at `https://143.198.163.184.nip.io/`; `/health` returned HTTP 200 and Brave smoke verified login, FleetGraph inbox tabs, and Week chat on 2026-05-29 | Re-smoke immediately before submitting only if another deploy occurs |
+| Deployed and publicly accessible | Pass | Release `20260530-183403` from commit `65ec41b6ff4e348265c37c695df124dd1cb0f4bc` is live at `https://143.198.163.184.nip.io/`; `/health` returned HTTP 200 and Brave smoke verified login, `/my-week` recovery, FleetGraph inbox tabs, and issue-scoped chat streaming on 2026-05-30 | Re-smoke immediately before submitting only if another deploy occurs |
 | Trigger model documented and defended | Pass | `FLEETGRAPH.md` and `PRESEARCH.md` hybrid trigger section | None |
 
 ## PRD Performance Checklist
