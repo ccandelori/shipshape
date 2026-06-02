@@ -5,7 +5,7 @@
  * Seed data from e2e/fixtures/isolated-env.ts (N+2 apps/subs, expect asserts, no conditional skip).
  */
 
-import { test, expect } from '@playwright/test';
+import { test, expect } from './fixtures/isolated-env';
 import http from 'http';
 import { ShipClient } from '../sdk/src/index.js'; // use source for test (or built)
 import { verifyWebhook } from '../sdk/src/webhooks.js';

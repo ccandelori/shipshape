@@ -51,15 +51,14 @@ publicApp.use((err: any, req: Request, res: Response, next: NextFunction) => {
   const code = err.code || 'INTERNAL_ERROR';
   const message = err.message || 'Internal server error';
 
-  // Log with request id for correlation
+  // Log with request id for correlation (full details server side only)
   console.error(`[public-api] ${requestId} ${code} ${status}: ${message}`, err.stack);
 
-  res.status(status).json({
-    code,
-    message,
-    details: err.details,
-    request_id: requestId,
-  });
+  const body: any = { code, message, request_id: requestId };
+  if (status < 500 && err.details) {
+    body.details = err.details;
+  }
+  res.status(status).json(body);
 });
 
 const deliverer = new WebhookDeliverer(inMemoryBus);
@@ -94,5 +93,5 @@ if (process.env.NODE_ENV !== 'test') {
 }
 
 // Re-export for convenience in tests/composition
-export { publicApp, inMemoryBus };
+export { publicApp, inMemoryBus, deliverer as webhookDeliverer };
 export type { IEventBus };

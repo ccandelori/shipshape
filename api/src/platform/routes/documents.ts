@@ -85,11 +85,10 @@ documentsPublicRouter.post('/', requireScope('documents:write'), async (req, res
     return res.status(201).json({ ...doc, request_id: requestId });
   } catch (e: any) {
     const requestId = (req as any).requestId || 'unknown';
-    console.error('[public docs create error]', e);
+    console.error('[public docs create error]', requestId, e && e.message);
     return res.status(500).json({
       code: 'INTERNAL_ERROR',
-      message: 'Failed to create document',
-      details: { error: e.message, stack: e.stack?.split('\n').slice(0,3) },
+      message: 'Internal server error',
       request_id: requestId,
     });
   }

@@ -49,13 +49,15 @@ export const issuePort: IssuePort = {
 
       const issue = extractIssuePublic(row);
 
+      await client.query('COMMIT');
+
+      // Publish STRICTLY AFTER successful COMMIT (prevents phantom events on rollback)
       await inMemoryBus.publish({
         type: PUBLIC_EVENT_TYPES.ISSUE_CREATED,
         payload: { id: issue.id, title: issue.title, workspace_id: input.workspaceId, state: issue.state },
         idempotencyKey: `issue-create-${issue.id}`,
       });
 
-      await client.query('COMMIT');
       return issue;
     } catch (e) {
       await client.query('ROLLBACK');
@@ -154,13 +156,15 @@ export const issuePort: IssuePort = {
 
       const issue = { id: row.id, title: row.title, updated_at: row.updated_at ? new Date(row.updated_at).toISOString() : undefined };
 
+      await client.query('COMMIT');
+
+      // Publish STRICTLY AFTER successful COMMIT (prevents phantom events on rollback)
       await inMemoryBus.publish({
         type: PUBLIC_EVENT_TYPES.ISSUE_STATUS_CHANGED, // or updated; use status for common
         payload: { id: issue.id, title: issue.title, workspace_id: workspaceId },
         idempotencyKey: `issue-update-${issue.id}`,
       });
 
-      await client.query('COMMIT');
       return issue;
     } catch (e) {
       await client.query('ROLLBACK');
@@ -181,14 +185,18 @@ export const issuePort: IssuePort = {
         [id, workspaceId]
       );
       const deleted = res.rows.length > 0;
+
+      await client.query('COMMIT');
+
       if (deleted) {
+        // Publish STRICTLY AFTER successful COMMIT (prevents phantom events on rollback)
         await inMemoryBus.publish({
           type: PUBLIC_EVENT_TYPES.ISSUE_STATUS_CHANGED, // reuse for delete signal
           payload: { id, workspace_id: workspaceId },
           idempotencyKey: `issue-delete-${id}`,
         });
       }
-      await client.query('COMMIT');
+
       return deleted;
     } catch (e) {
       await client.query('ROLLBACK');

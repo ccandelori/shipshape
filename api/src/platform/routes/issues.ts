@@ -34,7 +34,7 @@ issuesPublicRouter.post('/', requireScope('issues:write'), async (req, res) => {
   try {
     const issue = await issuePort.create({ title: parsed.data.title, workspaceId: ws, authorId: null, state: parsed.data.state, priority: parsed.data.priority, assignee_id: parsed.data.assignee_id || null });
     return res.status(201).json({ ...issue, request_id: (req as any).requestId });
-  } catch (e: any) { const rid = (req as any).requestId || 'unknown'; console.error('[public issues create error]', e); return res.status(500).json({ code: 'INTERNAL_ERROR', message: 'Create failed', details: { error: e.message }, request_id: rid }); }
+  } catch (e: any) { const rid = (req as any).requestId || 'unknown'; console.error('[public issues create error]', rid, e && e.message); return res.status(500).json({ code: 'INTERNAL_ERROR', message: 'Internal server error', request_id: rid }); }
 });
 
 registry.registerPath({

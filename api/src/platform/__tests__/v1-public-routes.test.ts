@@ -4,6 +4,7 @@ import request from 'supertest';
 import { pool } from '../../db/client.js';
 import { publicApp, inMemoryBus, stopPublicPlatform, createPublicPlatform } from '../index.js';
 import { generateRequestId } from '../../utils/requestId.js';
+import { documentPort } from '../ports/documents.js';
 
 // Integration contract test for public v1 routes (U1).
 // Uses real DB (via TRUNCATE from global setup), supertest against mounted public surface, bus spy for publish-after-commit.
@@ -186,5 +187,27 @@ describe('public v1 routes (documents/issues/sprints + cursor + OpenAPI)', { seq
     expect(hasInternal).toBe(false);
     // components has bearer and error schema
     expect(res.body.components?.securitySchemes?.bearerAuth).toBeDefined();
+  });
+
+  it('characterization: no publish on rollback path (post-commit publish prevents phantoms per residual P0)', async () => {
+    const publishes: any[] = [];
+    const unsub = (inMemoryBus as any).subscribe ? (inMemoryBus as any).subscribe((e: any) => publishes.push(e)) : null;
+
+    let threw = false;
+    try {
+      // Bad workspace_id triggers FK violation at INSERT (rollback path exercised; publish now after COMMIT so never fires)
+      await documentPort.create({
+        title: 'phantom-rollback-test',
+        workspaceId: '00000000-0000-0000-0000-000000000000',
+      });
+    } catch (e) {
+      threw = true;
+    }
+
+    if (unsub) unsub();
+
+    expect(threw).toBe(true);
+    const phantom = publishes.find((p: any) => p && p.payload && p.payload.title === 'phantom-rollback-test');
+    expect(phantom).toBeFalsy();
   });
 });

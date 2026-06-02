@@ -45,14 +45,15 @@ export const documentPort: DocumentPort = {
 
       const doc = extractDocumentPublic(row);
 
-      // Publish ONLY after persistence success, before COMMIT (still in txn but after write)
+      await client.query('COMMIT');
+
+      // Publish STRICTLY AFTER successful COMMIT (prevents phantom events on rollback)
       await inMemoryBus.publish({
         type: PUBLIC_EVENT_TYPES.DOCUMENT_CREATED,
         payload: { id: doc.id, title: doc.title, workspace_id: input.workspaceId },
         idempotencyKey: `doc-create-${doc.id}`,
       });
 
-      await client.query('COMMIT');
       return doc;
     } catch (e) {
       await client.query('ROLLBACK');
@@ -153,13 +154,15 @@ export const documentPort: DocumentPort = {
 
       const doc = { id: row.id, title: row.title, updated_at: row.updated_at ? new Date(row.updated_at).toISOString() : undefined };
 
+      await client.query('COMMIT');
+
+      // Publish STRICTLY AFTER successful COMMIT (prevents phantom events on rollback)
       await inMemoryBus.publish({
         type: PUBLIC_EVENT_TYPES.DOCUMENT_UPDATED,
         payload: { id: doc.id, title: doc.title, workspace_id: workspaceId },
         idempotencyKey: `doc-update-${doc.id}-${Date.now()}`,
       });
 
-      await client.query('COMMIT');
       return doc;
     } catch (e) {
       await client.query('ROLLBACK');
@@ -182,7 +185,10 @@ export const documentPort: DocumentPort = {
       );
       const deleted = res.rows.length > 0;
 
+      await client.query('COMMIT');
+
       if (deleted) {
+        // Publish STRICTLY AFTER successful COMMIT (prevents phantom events on rollback)
         await inMemoryBus.publish({
           type: PUBLIC_EVENT_TYPES.DOCUMENT_DELETED,
           payload: { id, workspace_id: workspaceId },
@@ -190,7 +196,6 @@ export const documentPort: DocumentPort = {
         });
       }
 
-      await client.query('COMMIT');
       return deleted;
     } catch (e) {
       await client.query('ROLLBACK');

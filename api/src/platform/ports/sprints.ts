@@ -49,13 +49,15 @@ export const sprintPort: SprintPort = {
 
       const sprint = extractSprintPublic(row);
 
+      await client.query('COMMIT');
+
+      // Publish STRICTLY AFTER successful COMMIT (prevents phantom events on rollback)
       await inMemoryBus.publish({
         type: PUBLIC_EVENT_TYPES.SPRINT_STARTED,
         payload: { id: sprint.id, title: sprint.title, workspace_id: input.workspaceId },
         idempotencyKey: `sprint-create-${sprint.id}`,
       });
 
-      await client.query('COMMIT');
       return sprint;
     } catch (e) {
       await client.query('ROLLBACK');
@@ -140,13 +142,15 @@ export const sprintPort: SprintPort = {
 
       const sprint = { id: row.id, title: row.title, updated_at: row.updated_at ? new Date(row.updated_at).toISOString() : undefined };
 
+      await client.query('COMMIT');
+
+      // Publish STRICTLY AFTER successful COMMIT (prevents phantom events on rollback)
       await inMemoryBus.publish({
         type: PUBLIC_EVENT_TYPES.SPRINT_COMPLETED, // or started; generic for update
         payload: { id: sprint.id, title: sprint.title, workspace_id: workspaceId },
         idempotencyKey: `sprint-update-${sprint.id}`,
       });
 
-      await client.query('COMMIT');
       return sprint;
     } catch (e) {
       await client.query('ROLLBACK');
@@ -167,14 +171,18 @@ export const sprintPort: SprintPort = {
         [id, workspaceId]
       );
       const deleted = res.rows.length > 0;
+
+      await client.query('COMMIT');
+
       if (deleted) {
+        // Publish STRICTLY AFTER successful COMMIT (prevents phantom events on rollback)
         await inMemoryBus.publish({
           type: PUBLIC_EVENT_TYPES.SPRINT_COMPLETED,
           payload: { id, workspace_id: workspaceId },
           idempotencyKey: `sprint-delete-${id}`,
         });
       }
-      await client.query('COMMIT');
+
       return deleted;
     } catch (e) {
       await client.query('ROLLBACK');

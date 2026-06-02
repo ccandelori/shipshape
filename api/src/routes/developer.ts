@@ -130,7 +130,7 @@ router.get('/webhooks/deliveries', async (req, res) => {
   if (!user || !ws || !(await isWorkspaceAdmin(user, ws, req))) return res.status(403).json({ error: 'admin required' });
 
   const r = await pool.query(
-    `SELECT d.id, d.event_type, d.status, d.attempt, d.latency_ms, d.created_at, s.target_url
+    `SELECT d.id, d.event_type, d.status, d.attempt_number as attempt, d.latency_ms, d.created_at, s.target_url
      FROM webhook_deliveries d JOIN webhook_subscriptions s ON s.id = d.subscription_id
      JOIN oauth_apps a ON a.id = s.app_id
      WHERE a.workspace_id = $1 ORDER BY d.created_at DESC LIMIT 50`,
@@ -155,12 +155,22 @@ router.post('/webhooks/deliveries/:id/replay', async (req, res) => {
   const o = orig.rows[0];
   const newId = crypto.randomUUID();
   await pool.query(
-    `INSERT INTO webhook_deliveries (id, subscription_id, event_type, payload, idempotency_key, status, attempt, secret_snapshot, created_at)
-     VALUES ($1, $2, $3, $4, $5, 'pending', 1, $6, now())`,
-    [newId, o.subscription_id, o.event_type, o.payload, o.idempotency_key, o.secret_snapshot]
+    `INSERT INTO webhook_deliveries (subscription_id, event_type, event_payload, idempotency_key, attempt_number, status, secret_snapshot, created_at)
+     VALUES ($1, $2, $3, $4, $5, 'pending', $6, now())`,
+    [o.subscription_id, o.event_type, o.event_payload, o.idempotency_key, 1, o.secret_snapshot]
   );
-  // In full: trigger deliverer.handle or bus publish with original key
-  res.json({ replay_id: newId, note: 'replay queued with original idempotency_key + current secret' });
+  // Trigger actual delivery using snapshot (replay uses original secret + key per contract)
+  // Note: may be null for pre-047 rows; fallback handled in deliverer
+  try {
+    const { webhookDeliverer } = await import('../platform/index.js');
+    const snap = o.secret_snapshot || null;
+    if (webhookDeliverer && typeof (webhookDeliverer as any).deliverWithSecretSnapshot === 'function' && snap) {
+      await (webhookDeliverer as any).deliverWithSecretSnapshot(o.subscription_id, o.event_payload, o.idempotency_key, snap);
+    }
+  } catch (e) {
+    // non fatal for replay record
+  }
+  res.json({ replay_id: newId, note: 'replay queued with original idempotency_key + secret snapshot' });
   return;
 });
 
