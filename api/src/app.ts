@@ -25,6 +25,7 @@ import { filesRouter } from './routes/files.js';
 import caiaAuthRoutes from './routes/caia-auth.js';
 import apiTokensRoutes from './routes/api-tokens.js';
 import adminCredentialsRoutes from './routes/admin-credentials.js';
+import developerRoutes from './routes/developer.js';
 import claudeRoutes from './routes/claude.js';
 import activityRoutes from './routes/activity.js';
 import dashboardRoutes from './routes/dashboard.js';
@@ -40,6 +41,7 @@ import shipshapeRoutes from './routes/shipshape.js';
 import { setupSwagger } from './swagger.js';
 import { COOKIE_SECURE } from './utils/cookieSecure.js';
 import { initializeCAIA } from './services/caia.js';
+import { createPublicPlatform } from './platform/index.js';
 
 // Validate SESSION_SECRET in production
 if (process.env.NODE_ENV === 'production' && !process.env.SESSION_SECRET) {
@@ -154,6 +156,12 @@ export function createApp(corsOrigin: string = 'http://localhost:5173'): express
   app.use(express.urlencoded({ extended: true, limit: '10mb' })); // For HTML form submissions
   app.use(cookieParser(sessionSecret));
 
+  // Plugforge public platform surface — mount early so the isolated sub-app
+  // can control its own auth, error shape, and request_id without interference
+  // from later internal session/CSRF middleware.
+  // The sub-app itself uses Bearer-only auth and skips CSRF for public tokens.
+  createPublicPlatform(app);
+
   // Session middleware for CSRF token storage. cookie.secure flag shared
   // with the auth session_id cookie via COOKIE_SECURE — see utils/cookieSecure.
   app.use(session({
@@ -253,6 +261,9 @@ export function createApp(corsOrigin: string = 'http://localhost:5173'): express
 
   // Admin credentials management (CSRF protected, super-admin only)
   app.use('/api/admin/credentials', conditionalCsrf, adminCredentialsRoutes);
+
+  // Internal privileged only for Developer Portal (app reg/rotate/subs/log/replay). Session + admin. No public /api/v1 leakage.
+  app.use('/api/developer', conditionalCsrf, developerRoutes);
 
   // File upload routes (CSRF protected for POST endpoints)
   app.use('/api/files', conditionalCsrf, filesRouter);

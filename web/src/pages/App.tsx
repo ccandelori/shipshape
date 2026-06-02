@@ -552,7 +552,48 @@ export function AppLayout() {
                 <TeamSidebar />
               )}
               {activeMode === 'settings' && (
-                <div className="px-3 py-2 text-sm text-muted">Settings</div>
+                <div className="p-4 text-sm">
+                  <div className="mb-4">
+                    <div className="font-medium">Developer Platform (Plugforge public /api/v1)</div>
+                    <div className="text-muted">Internal mgmt (session+admin). Dogfoods public SDK for verify demo.</div>
+                  </div>
+                  <div className="space-y-3">
+                    <button
+                      onClick={async () => {
+                        const res = await fetch('/api/developer/apps', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'Portal Test App' }) });
+                        const j = await res.json();
+                        alert('Registered. Secret (save now): ' + (j.client_secret || JSON.stringify(j)));
+                      }}
+                      className="px-3 py-1 border rounded hover:bg-accent"
+                    >Register test app (returns secret once)</button>
+                    <button
+                      onClick={async () => {
+                        const apps = await (await fetch('/api/developer/apps')).json();
+                        alert('Apps: ' + JSON.stringify(apps));
+                      }}
+                      className="px-3 py-1 border rounded hover:bg-accent ml-2"
+                    >List my apps</button>
+                    <div className="pt-2 border-t">
+                      <button
+                        onClick={async () => {
+                          // Dogfood public via direct fetch (browser SDK would use same)
+                          const token = prompt('Paste a public Bearer token (from login or CC) or leave for anon (will 401):') || '';
+                          const v1 = '/api/v1';
+                          const res = await fetch(v1 + '/documents', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json', ...(token ? { Authorization: 'Bearer ' + token } : {}) },
+                            body: JSON.stringify({ title: 'Dogfood from Portal ' + Date.now() }),
+                          });
+                          const j = await res.json().catch(() => ({}));
+                          alert('Public create result: ' + JSON.stringify(j));
+                          // In real: also create sub + show in log + verify button using sdk verify
+                        }}
+                        className="px-3 py-1 border rounded hover:bg-accent"
+                      >Dogfood: public create (exercises routes/ports/webhooks)</button>
+                    </div>
+                    <div className="text-xs text-muted">Replay / subs / log: use /api/developer/webhooks/* (or portal UI polish in follow-up). See docs/plugforge/usage.md</div>
+                  </div>
+                </div>
               )}
               {activeMode === 'dashboard' && (
                 <DashboardSidebar />
