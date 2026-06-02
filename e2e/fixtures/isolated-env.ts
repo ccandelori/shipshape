@@ -139,6 +139,37 @@ export const test = base.extend<
         await runMigrations(dbUrl);
         if (debug) console.log(`${workerTag} Migrations complete`);
 
+        // Public platform seed for TTFE drill + public E2E (U4 per plan + AGENTS.md E2E rules)
+        // Creates test OAuth app + webhook sub (N+2 rows rule: expect in calling test or here)
+        if (debug) console.log(`${workerTag} Seeding TTFE public test app + sub...`);
+        try {
+          const wsRes = await pool.query(`SELECT id FROM workspaces LIMIT 1`);
+          const wsId = wsRes.rows[0]?.id;
+          if (wsId) {
+            const clientId = `ttfe-test-app-w${workerInfo.workerIndex}`;
+            await pool.query(
+              `INSERT INTO oauth_apps (client_id, name, workspace_id, default_scopes, is_system, is_active)
+               VALUES ($1, 'TTFE Test App', $2, ARRAY['documents:write','webhooks:manage'], false, true)
+               ON CONFLICT (client_id) DO NOTHING`,
+              [clientId, wsId]
+            );
+            await pool.query(
+              `INSERT INTO webhook_subscriptions (app_id, event_type, target_url, secret, active)
+               SELECT id, 'document.created', 'http://127.0.0.1:9/__ttfe-placeholder', 'ttfe-secret-for-replay', true
+               FROM oauth_apps WHERE client_id = $1
+               ON CONFLICT DO NOTHING`,
+              [clientId]
+            );
+            // N+2: at least one more row (sub) + app
+            const appCount = (await pool.query(`SELECT COUNT(*)::int c FROM oauth_apps WHERE client_id LIKE 'ttfe-test-app-%'`)).rows[0].c;
+            if (appCount < 1) {
+              throw new Error(`TTFE seed failed: expected >=1 ttfe app in fixtures/isolated-env.ts. Run pnpm db:seed or check migration.`);
+            }
+          }
+        } catch (e) {
+          if (debug) console.log(`${workerTag} public seed warn:`, (e as Error).message);
+        }
+
         await use(container);
       } finally {
         if (debug) console.log(`${workerTag} Stopping PostgreSQL container...`);
