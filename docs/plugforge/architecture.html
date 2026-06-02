@@ -1,0 +1,869 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Plugforge Architecture • Interactive Draft</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+        
+        :root {
+            --accent: #3b82f6;
+        }
+        
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+        }
+        
+        .font-display {
+            font-family: 'Space Grotesk', 'Inter', system_ui, sans-serif;
+            font-weight: 600;
+        }
+
+        .section-header {
+            font-size: 1.1rem;
+            letter-spacing: -.025em;
+        }
+
+        .architecture-card {
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .architecture-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        }
+
+        .layer {
+            transition: all 0.2s ease;
+        }
+        
+        .layer.active, .layer:hover {
+            transform: scale(1.02);
+            filter: brightness(1.05);
+        }
+
+        .mermaid {
+            background: #0b1120;
+            border-radius: 12px;
+            padding: 1.25rem 1rem;
+            border: 1px solid #1e2937;
+        }
+
+        .inspector {
+            scrollbar-width: thin;
+            scrollbar-color: #334155 #1e2937;
+        }
+
+        .nav-link {
+            transition: all 0.1s ease;
+        }
+        
+        .nav-link.active {
+            background-color: #1e2937;
+            color: white;
+            border-radius: 6px;
+        }
+
+        .decision-card {
+            border-left: 3px solid #3b82f6;
+        }
+
+        .prereq {
+            font-size: 0.75rem;
+            padding: 1px 6px;
+            border-radius: 3px;
+        }
+
+        .code-ref {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.75rem;
+        }
+
+        .metric {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .plugforge-gradient {
+            background: linear-gradient(135deg, #1e40af, #3b82f6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .diagram-container {
+            background: #0f172a;
+            border: 1px solid #334155;
+        }
+
+        .clickable-component {
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        
+        .clickable-component:hover {
+            filter: brightness(1.15);
+            stroke: #60a5fa !important;
+        }
+
+        .helper-text {
+            font-size: 0.875rem;
+            line-height: 1.5;
+        }
+
+        .status-pill {
+            font-size: 0.65rem;
+            padding: 0.5px 6px;
+            border-radius: 9999px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200">
+    <!-- Top Nav -->
+    <div class="border-b border-slate-800 bg-slate-900 sticky top-0 z-50">
+        <div class="max-w-screen-2xl mx-auto px-6 py-4 flex items-center justify-between">
+            <div class="flex items-center gap-x-4">
+                <div class="flex items-center gap-x-3">
+                    <div class="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center">
+                        <i class="fa-solid fa-plug text-white text-xl"></i>
+                    </div>
+                    <div>
+                        <span class="font-display text-2xl font-semibold tracking-tighter">Plugforge</span>
+                        <span class="text-blue-400 text-sm font-medium ml-1.5">ARCHITECTURE</span>
+                    </div>
+                </div>
+                <div class="px-3 py-1 bg-slate-800 text-slate-400 text-xs font-medium rounded-full border border-slate-700 flex items-center gap-x-1.5">
+                    <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span>DRAFT v0.2 • Grounded in Ship codebase</span>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-x-2 text-sm">
+                <div class="flex items-center bg-slate-900 border border-slate-800 rounded-lg px-1 py-1">
+                    <button onclick="switchTab('overview')" class="nav-link px-3 py-1 text-sm flex items-center gap-x-1.5 active" data-tab="overview">
+                        <i class="fa-solid fa-layer-group w-3.5"></i>
+                        <span class="hidden md:inline">Overview</span>
+                    </button>
+                    <button onclick="switchTab('flows')" class="nav-link px-3 py-1 text-sm flex items-center gap-x-1.5" data-tab="flows">
+                        <i class="fa-solid fa-project-diagram w-3.5"></i>
+                        <span class="hidden md:inline">Flows</span>
+                    </button>
+                    <button onclick="switchTab('decisions')" class="nav-link px-3 py-1 text-sm flex items-center gap-x-1.5" data-tab="decisions">
+                        <i class="fa-solid fa-balance-scale w-3.5"></i>
+                        <span class="hidden md:inline">Decisions</span>
+                    </button>
+                    <button onclick="switchTab('explorer')" class="nav-link px-3 py-1 text-sm flex items-center gap-x-1.5" data-tab="explorer">
+                        <i class="fa-solid fa-map w-3.5"></i>
+                        <span class="hidden md:inline">Explorer</span>
+                    </button>
+                </div>
+                
+                <button onclick="window.print()" 
+                        class="px-3 py-1.5 text-xs bg-slate-800 hover:bg-slate-700 border border-slate-700 rounded-lg flex items-center gap-x-2 transition-colors">
+                    <i class="fa-solid fa-print"></i>
+                    <span class="hidden sm:inline">Print / PDF</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="max-w-screen-2xl mx-auto px-6 pt-8 pb-16">
+        
+        <!-- Hero -->
+        <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-y-4 mb-8">
+            <div>
+                <div class="flex items-center gap-x-3 mb-2">
+                    <h1 class="font-display text-5xl tracking-tighter font-semibold">Platform Architecture</h1>
+                    <span class="px-3 py-1 text-xs font-semibold bg-blue-600/20 text-blue-400 border border-blue-600/30 rounded-full">PLUGFORGE</span>
+                </div>
+                <p class="text-xl text-slate-400 max-w-2xl">Developer-first public contract layer for Ship. Small, correct, and proven by the Time-to-First-Event drill.</p>
+                
+                <div class="flex items-center gap-x-4 mt-4 text-sm">
+                    <div class="flex items-center gap-x-1.5 text-emerald-400">
+                        <i class="fa-solid fa-check-circle"></i>
+                        <span class="font-medium">Grounded in existing Ship patterns</span>
+                    </div>
+                    <div class="text-slate-500">•</div>
+                    <div class="text-slate-400 text-xs">Synthesized via Compound Engineering research process • 2026-06</div>
+                </div>
+            </div>
+            
+            <div class="flex flex-col items-end gap-y-1 text-right text-xs">
+                <div class="font-medium text-slate-300">Key Principle</div>
+                <div class="text-blue-400 font-semibold">"A small public API that matches its spec beats a sprawling public API that contradicts it."</div>
+                <div class="text-[10px] text-slate-500">— Plugforge PRD</div>
+            </div>
+        </div>
+
+        <!-- Status Bar -->
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 mb-8 grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div class="flex items-center gap-x-3">
+                <div class="w-8 h-8 bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-cube text-blue-400"></i></div>
+                <div>
+                    <div class="text-slate-400 text-xs">Current Foundation</div>
+                    <div class="font-semibold">Mature OpenAPI + Zod + Dedicated Public OAuth Middleware</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-x-3">
+                <div class="w-8 h-8 bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-shield-halved text-emerald-400"></i></div>
+                <div>
+                    <div class="text-slate-400 text-xs">Public/Internal Boundary</div>
+                    <div class="font-semibold">Lint-enforced (one-way door)</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-x-3">
+                <div class="w-8 h-8 bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-bolt text-amber-400"></i></div>
+                <div>
+                    <div class="text-slate-400 text-xs">Signature Challenge</div>
+                    <div class="font-semibold">TTFE &lt; 60s CI / ≤30min clean machine</div>
+                </div>
+            </div>
+            <div class="flex items-center gap-x-3">
+                <div class="w-8 h-8 bg-slate-800 rounded-xl flex items-center justify-center flex-shrink-0"><i class="fa-solid fa-robot text-violet-400"></i></div>
+                <div>
+                    <div class="text-slate-400 text-xs">Agent Payoff</div>
+                    <div class="font-semibold">First-class OAuth citizen via SDK</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- OVERVIEW TAB -->
+        <div id="tab-overview" class="tab-content">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                
+                <!-- Left: Layers -->
+                <div class="lg:col-span-7">
+                    <div class="flex items-center justify-between mb-3 px-1">
+                        <div class="font-semibold section-header flex items-center gap-x-2">
+                            <i class="fa-solid fa-layer-group text-blue-400"></i> 
+                            <span>Layered Architecture</span>
+                        </div>
+                        <div class="text-xs px-2 py-1 bg-slate-900 rounded text-slate-400 border border-slate-800">Click components in Explorer tab</div>
+                    </div>
+                    
+                    <div class="diagram-container rounded-3xl p-6">
+                        <div class="space-y-3">
+                            <!-- Layer 1: External -->
+                            <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4">
+                                <div class="flex justify-between items-center mb-3">
+                                    <div class="font-semibold flex items-center gap-x-2 text-sm">
+                                        <span class="status-pill bg-violet-500/20 text-violet-400">EXTERNAL</span>
+                                        <span>Third-party Developers • CLI • Slack • GitHub • Internal Agent (Client Credentials)</span>
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-3 gap-3 text-xs">
+                                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+                                        <div class="font-medium">@ship/sdk</div>
+                                        <div class="text-[10px] text-slate-400 mt-0.5">Typed client • Device login • verifyWebhook • async iterators</div>
+                                    </div>
+                                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+                                        <div class="font-medium">Browser Apps</div>
+                                        <div class="text-[10px] text-slate-400 mt-0.5">Auth Code + PKCE flow</div>
+                                    </div>
+                                    <div class="bg-slate-950 border border-slate-800 rounded-xl p-3">
+                                        <div class="font-medium">Integrations</div>
+                                        <div class="text-[10px] text-slate-400 mt-0.5">Webhook subscribers + SDK consumers</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Layer 2: Public Contract -->
+                            <div onclick="highlightLayer(this, 'public')" class="clickable-component bg-blue-600/10 border border-blue-500/40 rounded-2xl p-4 hover:border-blue-400 cursor-pointer">
+                                <div class="flex items-center justify-between">
+                                    <div>
+                                        <span class="status-pill bg-blue-500/20 text-blue-400">PUBLIC CONTRACT</span>
+                                        <span class="ml-3 font-semibold">/api/v1/*</span>
+                                    </div>
+                                    <div class="text-xs text-blue-400">Generated OpenAPI 3.1 • Scope-enforced • Rate-limited</div>
+                                </div>
+                                <div class="mt-3 text-xs grid grid-cols-2 gap-x-4 text-slate-300">
+                                    <div>• OAuth apps, tokens, webhooks, documents, issues, sprints</div>
+                                    <div>• Consistent ApiError shape • Cursor pagination • Audit trail</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Layer 3: Platform Services -->
+                            <div onclick="highlightLayer(this, 'platform')" class="clickable-component bg-emerald-600/10 border border-emerald-500/30 rounded-2xl p-4 hover:border-emerald-400 cursor-pointer">
+                                <div class="flex items-center gap-x-2 mb-2">
+                                    <span class="status-pill bg-emerald-500/20 text-emerald-400">PLATFORM SERVICES</span>
+                                    <span class="font-semibold text-sm">api/src/platform/</span>
+                                </div>
+                                <div class="grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                                    <div class="bg-slate-950/70 px-3 py-2 rounded-xl">OAuth (apps, PKCE, Device Grant, refresh rotation)</div>
+                                    <div class="bg-slate-950/70 px-3 py-2 rounded-xl">ScopeRegistry (data-driven)</div>
+                                    <div class="bg-slate-950/70 px-3 py-2 rounded-xl">IEventBus + Webhook deliverer (retry/DLQ/replay)</div>
+                                    <div class="bg-slate-950/70 px-3 py-2 rounded-xl">Rate limiter • Public audit • OpenAPI generator</div>
+                                </div>
+                            </div>
+                            
+                            <!-- Layer 4: Internal Domain -->
+                            <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4">
+                                <div class="flex items-center justify-between mb-2">
+                                    <span class="status-pill bg-slate-500/20 text-slate-400">INTERNAL (PRIVILEGED)</span>
+                                    <span class="text-xs text-slate-400">Existing routes/services • Direct DB access • FleetGraph AI</span>
+                                </div>
+                                <div class="text-xs text-slate-400">All existing behavior preserved. Agent rewire (Epic 7) becomes a platform citizen behind feature flag.</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-[10px] text-center text-slate-500 mt-2">The platform layer is the only path from external actors to domain services.</div>
+                </div>
+                
+                <!-- Right: Core Numbers -->
+                <div class="lg:col-span-5 space-y-6">
+                    <div>
+                        <div class="font-semibold section-header mb-2 px-1">MVP Requirements (from PRD)</div>
+                        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-4 text-sm space-y-2">
+                            <div class="flex gap-x-2">☐ OAuth app registration + hashed secret shown once</div>
+                            <div class="flex gap-x-2">☐ Auth Code + PKCE E2E (Playwright, negative verifier case)</div>
+                            <div class="flex gap-x-2">☐ Device Authorization Grant + slow-down semantics</div>
+                            <div class="flex gap-x-2">☐ Dedicated OAuth bearer middleware on /api/v1 (validates app, user, scopes; distinct expired token error)</div>
+                            <div class="flex gap-x-2">☐ Generated OpenAPI (with fitness parity test)</div>
+                            <div class="flex gap-x-2">☐ SDK with resource clients + Client Credentials support</div>
+                            <div class="flex gap-x-2">☐ CLI reference integration (must-ship)</div>
+                            <div class="flex gap-x-2">☐ TTFE drill in CI + deployed grader OAuth app</div>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <div class="font-semibold section-header mb-2 px-1">Performance &amp; Quality Targets</div>
+                        <div class="grid grid-cols-2 gap-2 text-xs">
+                            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+                                <div class="text-slate-400">TTFE (CI)</div>
+                                <div class="text-2xl font-semibold tabular-nums">&lt; 60s</div>
+                            </div>
+                            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+                                <div class="text-slate-400">Webhook P95 first delivery</div>
+                                <div class="text-2xl font-semibold tabular-nums">&lt; 2s</div>
+                            </div>
+                            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+                                <div class="text-slate-400">OAuth Code+PKCE P95</div>
+                                <div class="text-2xl font-semibold tabular-nums">&lt; 3s</div>
+                            </div>
+                            <div class="bg-slate-900 border border-slate-800 rounded-2xl p-3">
+                                <div class="text-slate-400">SDK install size (prod)</div>
+                                <div class="text-2xl font-semibold tabular-nums">&lt; 250KB</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- FLOWS TAB -->
+        <div id="tab-flows" class="tab-content hidden">
+            <div class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+                
+                <div>
+                    <div class="mb-3 font-semibold flex items-center gap-x-2 px-1">
+                        <i class="fa-solid fa-key text-amber-400"></i>
+                        <span>OAuth 2.0 Flows (must support both)</span>
+                    </div>
+                    <div class="diagram-container p-5 rounded-3xl">
+                        <pre class="mermaid text-xs">%%{init: {"theme": "dark", "themeVariables": {"textColor": "#e2e8f0", "lineColor": "#94a3b8", "signalTextColor": "#e2e8f0", "actorTextColor": "#f1f5f9", "noteTextColor": "#e0f2fe"}}}%%
+sequenceDiagram
+    actor CLI as CLI Client
+    participant Ship as Ship Platform
+    participant DB as Postgres
+    actor User as User
+
+    %% Device Authorization Grant (for CLI)
+    CLI->>Ship: POST /oauth/device/code
+    Ship->>DB: create device_code + user_code
+    Ship-->>CLI: {user_code, verification_uri}
+    CLI->>User: Show code + URL
+    User->>Ship: Login + consent (browser)
+    Ship->>DB: mark device_code authorized
+    CLI->>Ship: POST /oauth/token (poll)
+    alt not ready
+        Ship-->>CLI: 400 slow_down / pending
+    else success
+        Ship-->>CLI: access_token + refresh_token
+    end
+
+    %% Authorization Code + PKCE (for web/SPA)
+    actor Browser as Browser / SPA
+    Browser->>Ship: GET /oauth/authorize (code_challenge + client_id)
+    User->>Ship: Login + consent
+    Ship-->>Browser: code
+    Browser->>Ship: POST /oauth/token (code + code_verifier)
+    Ship-->>Browser: access_token + refresh_token</pre>
+                    </div>
+                    <div class="text-[10px] mt-2 text-slate-300 px-1">Both flows populate the same token + scope model used by the public API middleware.</div>
+                </div>
+
+                <!-- Agent Authentication Decision (new, matching architecture.md) -->
+                <div>
+                    <div class="mb-3 font-semibold flex items-center gap-x-2 px-1">
+                        <i class="fa-solid fa-user-shield text-rose-400"></i>
+                        <span>Agent Authentication Decision</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 text-sm">
+                        The internal agent authenticates using the <strong>Client Credentials grant</strong> (RFC 6749 §4.4) via a dedicated system OAuth app seeded at deployment time.<br><br>
+                        <strong>Rationale:</strong> Machine-to-machine (no interactive user), standard OAuth flow for this case, clean audit trail under a distinct <code>client_id</code>. Alternatives (Device Grant or long-lived tokens) were rejected for auditability or unnecessary user interaction reasons.<br><br>
+                        The agent uses <code>ShipClient.clientCredentials()</code> (or direct token injection) and all its actions appear in the public audit trail exactly like external developers.
+                    </div>
+                </div>
+
+                <!-- Developer Portal (matching architecture.md) -->
+                <div>
+                    <div class="mb-3 font-semibold flex items-center gap-x-2 px-1">
+                        <i class="fa-solid fa-window-maximize text-sky-400"></i>
+                        <span>Developer Portal</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 text-sm">
+                        In-app UI (consuming the public <code>/api/v1</code> surface) for: listing/registering OAuth apps, one-time secret display &amp; rotation, managing subscriptions, browsing delivery logs, and replaying failed deliveries.<br><br>
+                        <strong>Dogfooding note:</strong> Portal users authenticate with their normal Ship session. The portal uses that session context to call the public OAuth app registration endpoints (with workspace-admin privileges where required).
+                    </div>
+                </div>
+
+                <!-- Reference Integration & TTFE (matching architecture.md) -->
+                <div>
+                    <div class="mb-3 font-semibold flex items-center gap-x-2 px-1">
+                        <i class="fa-solid fa-terminal text-amber-400"></i>
+                        <span>Reference Integration &amp; TTFE Drill</span>
+                    </div>
+                    <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 text-sm">
+                        A reference CLI implementation (in <code>integrations/cli/</code>, consuming <code>@ship/sdk</code>) proves the platform:<br>
+                        <code>ship login</code> (Device flow) → <code>ship docs create</code> → <code>ship webhooks tail</code> (verified signed delivery).<br><br>
+                        The Time-to-First-Event (TTFE) drill is the key validation: from a clean machine, <code>pnpm install @ship/sdk</code> → login → create document → receive cryptographically verified webhook. Target: &lt;60s in CI, ≤30min on clean hardware. Runs on every PR.
+                    </div>
+                </div>
+                
+                <div>
+                    <div class="mb-3 font-semibold flex items-center gap-x-2 px-1">
+                        <i class="fa-solid fa-broadcast-tower text-emerald-400"></i>
+                        <span>Webhook Pipeline (IEventBus core)</span>
+                    </div>
+                    <div class="diagram-container p-5 rounded-3xl">
+                        <pre class="mermaid text-xs">%%{init: {"theme": "dark", "themeVariables": {"textColor": "#e2e8f0", "lineColor": "#94a3b8", "signalTextColor": "#e2e8f0", "actorTextColor": "#f1f5f9", "noteTextColor": "#e0f2fe"}}}%%
+sequenceDiagram
+    actor Domain as Domain Service
+    participant Bus as IEventBus
+    participant Matcher as Subscription Matcher
+    participant Signer as HMAC Signer
+    participant Deliver as Deliverer
+    actor Sub as Subscriber
+
+    Domain->>Bus: publish("document.created", payload, idempotencyKey)
+    Bus->>Matcher: find subscriptions for event + app
+    loop for each matching subscription
+        Matcher->>Signer: sign(payload, secret, timestamp)
+        Signer-->>Deliver: Ship-Signature header
+        Deliver->>Sub: POST target_url + Idempotency-Key
+        alt success (2xx)
+            Deliver->>DB: record success
+        else 4xx
+            Deliver->>DB: permanent failure (no retry)
+        else 5xx or timeout
+            Deliver->>Deliver: schedule retry (1s,4s,16s,1m,5m,30m)
+            Deliver->>DB: log attempt
+        end
+    end
+    Note over Deliver: After 6 failures → DLQ<br/>Replay re-emits original event</pre>
+                    </div>
+                    <div class="text-xs mt-2 bg-slate-900 border border-slate-700 rounded-xl p-3 text-slate-200">
+                        <strong class="text-emerald-400">Key invariant:</strong> Domain layer publishes. Route handlers never do. 
+                        In-memory deliverer is synchronous for tests. Real implementation uses deterministic clock injection.
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- DECISIONS TAB -->
+        <div id="tab-decisions" class="tab-content hidden">
+            <div class="font-semibold section-header mb-4 px-1">Key Technical Decisions &amp; Rationale (Compound Engineering output)</div>
+            
+            <div class="space-y-3">
+                <div class="decision-card bg-slate-900 border border-slate-700 rounded-2xl p-4">
+                    <div class="flex justify-between">
+                        <div class="font-semibold">Public / Internal Boundary as a One-Way Door</div>
+                        <div class="text-xs px-2 py-0.5 bg-red-500/10 text-red-400 rounded">HIGH IMPACT</div>
+                    </div>
+                    <div class="helper-text mt-2 text-slate-300">New directory <span class="code-ref bg-slate-800 px-1.5 py-px rounded">api/src/platform/</span>. All /api/v1 routes and platform services live here or import exclusively from here. A custom ESLint rule + import/no-internal-modules fails the build on violations from internal code.</div>
+                    <div class="mt-2 text-xs flex gap-x-4 text-slate-400">
+                        <div><span class="font-medium text-slate-200">Why:</span> PRD explicitly calls this a "one-way door". Retrofitting later is far more expensive.</div>
+                        <div><span class="font-medium text-slate-200">Current hook:</span> api/src/app.ts router mounting + existing lint setup.</div>
+                    </div>
+                </div>
+                
+                <div class="decision-card bg-slate-900 border border-slate-700 rounded-2xl p-4">
+                    <div class="font-semibold">OpenAPI Generation — Extend, Do Not Fork</div>
+                    <div class="helper-text mt-1.5">Reuse the mature <span class="code-ref">api/src/openapi/registry.ts</span> + <span class="code-ref">@asteasolutions/zod-to-openapi</span>. Register new v1 schemas and paths. Minor upgrade path to OpenAPI 3.1 generator. Fitness test extends existing openapi tests.</div>
+                    <div class="mt-2 text-xs text-emerald-400">Strong existing pattern — zero greenfield risk here.</div>
+                </div>
+                
+                <div class="decision-card bg-slate-900 border border-slate-700 rounded-2xl p-4">
+                    <div class="font-semibold">Event Bus Introduction (Dependency Inversion)</div>
+                    <div class="helper-text mt-1.5">Define <span class="code-ref">IEventBus</span> immediately. Domain services publish events on writes. First implementation: in-memory (synchronous for tests). Queue-backed (BullMQ/Inngest/SQS) is Liskov-substitutable later.</div>
+                    <div class="text-xs mt-1.5 text-slate-400">Prevents the common anti-pattern of webhook logic leaking into route handlers.</div>
+                </div>
+                
+                <div class="decision-card bg-slate-900 border border-slate-700 rounded-2xl p-4">
+                    <div class="font-semibold">SDK as Pure Consumer Package</div>
+                    <div class="helper-text mt-1.5">New workspace package <span class="code-ref">sdk/</span> (added to pnpm-workspace.yaml). Zero imports from api/src or web/. Hand-written for quality + fitness-tested against generated OpenAPI. Includes pluggable ITokenStore.</div>
+                </div>
+                
+                <div class="decision-card bg-slate-900 border border-slate-700 rounded-2xl p-4">
+                    <div class="font-semibold">Dedicated Public OAuth Middleware</div>
+                    <div class="helper-text mt-1.5">A distinct <span class="code-ref">oauthBearerAuth</span> middleware is used on all <span class="code-ref">/api/v1/*</span> routes. It validates OAuth access tokens (app, user, granted scopes) and produces the correct error codes, including a distinct code for expired tokens. The existing internal <span class="code-ref">authMiddleware</span> (session + legacy API tokens) is not used for the public surface.</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- EXPLORER TAB (Interactive) -->
+        <div id="tab-explorer" class="tab-content hidden">
+            <div class="mb-3 flex items-center justify-between px-1">
+                <div class="font-semibold">Interactive Architecture Explorer</div>
+                <div class="text-xs text-slate-400">Click any component to inspect • Grounded in PRD + current code</div>
+            </div>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+                <!-- Visual Map -->
+                <div class="lg:col-span-5 bg-slate-900 border border-slate-700 rounded-3xl p-5">
+                    <div class="text-xs uppercase tracking-widest text-slate-400 mb-3 font-medium px-1">Platform Component Map</div>
+                    
+                    <div class="space-y-2 text-sm" id="component-map">
+                        <div onclick="inspectComponent('oauth')" class="clickable-component flex justify-between items-center bg-slate-800 hover:bg-slate-700 border border-slate-600 px-4 py-3 rounded-2xl group">
+                            <div class="font-medium flex items-center gap-x-2"><i class="fa-solid fa-key w-4 text-amber-400"></i> OAuth Layer</div>
+                            <div class="text-xs text-amber-400 group-hover:text-amber-300">oauth_apps • codes • device_codes</div>
+                        </div>
+                        
+                        <div onclick="inspectComponent('scopes')" class="clickable-component flex justify-between items-center bg-slate-800 hover:bg-slate-700 border border-slate-600 px-4 py-3 rounded-2xl group">
+                            <div class="font-medium flex items-center gap-x-2"><i class="fa-solid fa-list-check w-4 text-emerald-400"></i> ScopeRegistry</div>
+                            <div class="text-xs text-emerald-400 group-hover:text-emerald-300">data-driven, registered at module load</div>
+                        </div>
+                        
+                        <div onclick="inspectComponent('webhooks')" class="clickable-component flex justify-between items-center bg-slate-800 hover:bg-slate-700 border border-slate-600 px-4 py-3 rounded-2xl group">
+                            <div class="font-medium flex items-center gap-x-2"><i class="fa-solid fa-broadcast-tower w-4 text-sky-400"></i> Webhook Pipeline</div>
+                            <div class="text-xs text-sky-400 group-hover:text-sky-300">IEventBus → signer → deliverer + DLQ</div>
+                        </div>
+                        
+                        <div onclick="inspectComponent('openapi')" class="clickable-component flex justify-between items-center bg-slate-800 hover:bg-slate-700 border border-slate-600 px-4 py-3 rounded-2xl group">
+                            <div class="font-medium flex items-center gap-x-2"><i class="fa-solid fa-file-code w-4 text-violet-400"></i> OpenAPI Generator</div>
+                            <div class="text-xs text-violet-400 group-hover:text-violet-300">Extend existing registry.ts</div>
+                        </div>
+                        
+                        <div onclick="inspectComponent('sdk')" class="clickable-component flex justify-between items-center bg-slate-800 hover:bg-slate-700 border border-slate-600 px-4 py-3 rounded-2xl group">
+                            <div class="font-medium flex items-center gap-x-2"><i class="fa-solid fa-box w-4 text-fuchsia-400"></i> @ship/sdk</div>
+                            <div class="text-xs text-fuchsia-400 group-hover:text-fuchsia-300">New workspace package</div>
+                        </div>
+                        
+                        <div onclick="inspectComponent('agent')" class="clickable-component flex justify-between items-center bg-slate-800 hover:bg-slate-700 border border-slate-600 px-4 py-3 rounded-2xl group">
+                            <div class="font-medium flex items-center gap-x-2"><i class="fa-solid fa-robot w-4 text-rose-400"></i> Agent Rewire (Epic 7)</div>
+                            <div class="text-xs text-rose-400 group-hover:text-rose-300">Feature flag → SDK only</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Inspector Panel -->
+                <div class="lg:col-span-7 bg-slate-900 border border-slate-700 rounded-3xl p-5 flex flex-col" style="min-height: 420px">
+                    <div class="flex items-center justify-between mb-3">
+                        <div id="inspector-title" class="font-semibold text-lg">Select a component</div>
+                        <div id="inspector-badge" class="text-xs px-2 py-1 rounded-full bg-slate-800 text-slate-400 hidden"></div>
+                    </div>
+                    
+                    <div id="inspector-body" class="helper-text text-slate-300 flex-1 overflow-auto inspector pr-2">
+                        Click any component on the left to see grounded details: PRD requirements addressed, current code to extend, proposed files, trade-offs considered, and SOLID notes.
+                    </div>
+                    
+                    <div id="inspector-footer" class="text-[10px] text-slate-500 mt-4 pt-3 border-t border-slate-700 hidden">
+                        References: <span id="inspector-refs"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- SOLID + Failure Modes -->
+        <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div>
+                <div class="font-semibold section-header mb-3 px-1">SOLID Mapping (required by PRD architecture doc)</div>
+                <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 text-sm space-y-3">
+                    <div><span class="font-semibold text-emerald-400">OCP</span> — ScopeRegistry: new scopes register at module load. No edits to middleware required.</div>
+                    <div><span class="font-semibold text-emerald-400">DIP</span> — IEventBus interface. Domain depends on abstraction; deliverer implementations are swappable.</div>
+                    <div><span class="font-semibold text-emerald-400">ISP</span> — SDK resource clients (DocumentsClient, WebhooksClient) are segregated by concern.</div>
+                    <div><span class="font-semibold text-emerald-400">SRP</span> — Each platform service owns exactly one cross-cutting concern (auth, scopes, webhooks, rate-limit, audit).</div>
+                    <div><span class="font-semibold text-emerald-400">LSP</span> — In-memory and queue-backed deliverers are substitutable; tests use the in-memory one.</div>
+                </div>
+            </div>
+            
+            <div>
+                <div class="font-semibold section-header mb-3 px-1">Failure Modes (required by PRD)</div>
+                <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 text-sm space-y-2 text-xs">
+                    <div><span class="font-medium">Token store corrupted</span> — Affected OAuth clients receive clear, actionable errors. Existing sessions and legacy API tokens are unaffected. Client secrets can be rotated through the developer portal.</div>
+                    <div><span class="font-medium">Webhook secret rotated mid-flight</span> — Every delivery attempt uses the secret currently active for the subscription at signing time. Replay uses the active secret at the time of replay. No secret versioning.</div>
+                    <div><span class="font-medium">Queue deliverer crashes</span> — At-least-once with idempotency keys; subscribers must be idempotent. <code>webhook_deliveries</code> table records <code>subscription_id</code>, <code>event_id</code>, <code>attempt_number</code>, <code>response_status</code>, <code>response_excerpt</code>, <code>latency_ms</code> (queryable per app).</div>
+                    <div><span class="font-medium">OpenAPI generator throws at boot</span> — Fail fast with clear message; registry is validated in CI.</div>
+                </div>
+            </div>
+
+            <!-- Event Registry (matching architecture.md) -->
+            <div>
+                <div class="font-semibold section-header mb-3 px-1">Event Registry</div>
+                <div class="bg-slate-900 border border-slate-700 rounded-2xl p-4 text-sm text-xs">
+                    Event types are data with Zod schemas (in <code>platform/events/definitions.ts</code>). Required events include: <code>document.created</code>, <code>document.updated</code>, <code>document.deleted</code>, <code>issue.created</code>, <code>issue.assigned</code>, <code>issue.status_changed</code>, <code>sprint.started</code>, <code>sprint.completed</code>. New events are registered at module load (OCP).
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-8 pt-6 border-t border-slate-800 text-xs text-slate-400 flex flex-col md:flex-row md:items-center gap-x-4 gap-y-2">
+            <div>
+                <strong class="text-slate-300">Research Sources:</strong> 
+                docs/application-architecture.md • docs/claude-reference/architecture.md • docs/claude-reference/patterns.md • 
+                api/src/app.ts • api/src/middleware/auth.ts • api/src/openapi/registry.ts • api/src/db/schema.sql (oauth_state + api_tokens already present) • 
+                Plugforge-PRD.pdf (full requirements + Pre-Search checklist)
+            </div>
+            <div class="md:ml-auto text-[10px] bg-slate-900 px-2 py-1 rounded border border-slate-700">Produced following Compound Engineering methodology (ce-architecture-strategist + pattern research + explicit decisions)</div>
+        </div>
+    </div>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        // Tailwind script
+        function initializeTailwind() {
+            document.querySelectorAll('script[src*="tailwind"]').forEach(s => s.remove());
+            
+            const style = document.createElement('style');
+            style.textContent = `
+                .mermaid svg { max-width: 100%; height: auto; }
+                .tab-content { animation: fadeIn 0.2s ease forwards; }
+                @keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // Mermaid init
+        function initMermaid() {
+            if (window.mermaid) {
+                // High-contrast dark theme for better readability on dark backgrounds
+                mermaid.initialize({ 
+                    startOnLoad: false, 
+                    theme: 'dark',
+                    flowchart: { curve: 'basis' },
+                    sequence: { 
+                        diagramMarginX: 20, 
+                        diagramMarginY: 12,
+                        useMaxWidth: true
+                    },
+                    themeVariables: {
+                        // Light text for excellent contrast on dark diagrams
+                        textColor: '#e2e8f0',           // light slate-200
+                        lineColor: '#94a3b8',           // slate-400 for arrows
+                        signalColor: '#64748b',         // visible arrow lines
+                        signalTextColor: '#e2e8f0',     // light text on signals
+                        actorTextColor: '#f1f5f9',      // near-white
+                        actorBkg: '#1e2937',            // dark slate
+                        actorBorder: '#475569',
+                        noteTextColor: '#e0f2fe',       // light blue for notes
+                        noteBkgColor: '#1e2937',
+                        noteBorderColor: '#475569',
+                        labelTextColor: '#e2e8f0',
+                        loopTextColor: '#bae6fd',
+                        activationBkgColor: '#1e2937',
+                        activationBorderColor: '#475569'
+                    }
+                });
+                
+                // Render all mermaid blocks
+                document.querySelectorAll('.mermaid').forEach((el, i) => {
+                    const id = 'mermaid-' + i;
+                    el.id = id;
+                    try {
+                        mermaid.render(id + '-svg', el.textContent.trim()).then(result => {
+                            el.innerHTML = result.svg;
+                        });
+                    } catch(e) {
+                        console.warn('Mermaid render issue', e);
+                        el.innerHTML = '<div class="text-red-400 text-xs p-4">Diagram failed to render. See console for details.</div>';
+                    }
+                });
+            }
+        }
+
+        // Tab switching
+        let currentTab = 'overview';
+        
+        function switchTab(tab) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById('tab-' + tab).classList.remove('hidden');
+            
+            // Update nav
+            document.querySelectorAll('.nav-link').forEach(el => {
+                el.classList.remove('active', 'bg-slate-800');
+                if (el.dataset.tab === tab) el.classList.add('active', 'bg-slate-800');
+            });
+            
+            currentTab = tab;
+            
+            // Lazy init mermaid when flows tab is first opened
+            if (tab === 'flows' && window.mermaid) {
+                setTimeout(() => {
+                    document.querySelectorAll('#tab-flows .mermaid').forEach((el, i) => {
+                        if (!el.querySelector('svg')) {
+                            const id = 'mermaid-flows-' + i;
+                            el.id = id;
+                            mermaid.render(id + '-svg', el.textContent.trim()).then(r => el.innerHTML = r.svg);
+                        }
+                    });
+                }, 80);
+            }
+        }
+
+        // Interactive component inspector
+        const componentData = {
+            oauth: {
+                title: "OAuth Layer",
+                badge: "FOUNDATIONAL",
+                body: `Implements full RFC 6749 + 7636 (PKCE) + 8628 (Device Authorization Grant).<br><br>
+                <strong>Proposed files:</strong><br>
+                • api/src/platform/oauth/apps.ts — registration, rotation, listing<br>
+                • api/src/platform/oauth/codes.ts — authorization codes + PKCE verifier<br>
+                • api/src/platform/oauth/device.ts — device_code + user_code flows + slow_down<br>
+                • api/src/platform/oauth/tokens.ts — issuance, refresh rotation, stolen token detection<br><br>
+                <strong>Reuses:</strong> existing oauth_state table (already has code_verifier) and audit service. Sessions are used only for consent screens and portal bootstrap; public bearer token validation itself is handled by the dedicated OAuth path and does not rely on the internal session mechanism.`,
+                refs: "PRD § OAuth App Model, Device Authorization Grant • api/src/services/oauth-state.ts • migration 010_oauth_state.sql"
+            },
+            scopes: {
+                title: "ScopeRegistry",
+                badge: "OCP / DATA-DRIVEN",
+                body: `Scopes are data, not code. Registered at module load time.<br><br>
+                <strong>Core scopes (minimum):</strong> documents:read, documents:write, issues:read, issues:write, sprints:read, sprints:write, webhooks:manage.<br><br>
+                <strong>Proposed:</strong> api/src/platform/scopes/registry.ts + requireScope(scope) middleware factory.<br>
+                403 responses explicitly name the missing scope (no opaque "forbidden").`,
+                refs: "PRD § Scope Registry • Fitness test requirement"
+            },
+            webhooks: {
+                title: "Webhook Pipeline",
+                badge: "CRITICAL PATH",
+                body: `Event-driven via IEventBus (DIP). Domain services publish after persistence.<br><br>
+                <strong>Reliability contract:</strong><br>
+                • 4xx = permanent failure<br>
+                • 5xx/timeout = retry with schedule 1s, 4s, 16s, 1m, 5m, 30m<br>
+                • DLQ after 6 attempts<br>
+                • Replay preserves original Idempotency-Key<br><br>
+                <strong>Invariant:</strong> Only the domain layer publishes events. Routes never do.`,
+                refs: "PRD Webhooks section + Testing Scenarios 5-7 • IEventBus requirement"
+            },
+            openapi: {
+                title: "OpenAPI + SDK Parity",
+                badge: "EXISTING STRENGTH",
+                body: `Extend the battle-tested registry already in api/src/openapi/.<br><br>
+                <strong>Plan:</strong><br>
+                1. Register all new /api/v1 schemas and paths (Zod first)<br>
+                2. Minor generator bump for OpenAPI 3.1 if needed<br>
+                3. Fitness test walks every registered operation and asserts SDK surface + error shape<br><br>
+                <strong>Current assets:</strong> api/src/openapi/registry.ts, generate-openapi.ts, 20+ schema files, existing swagger UI.`,
+                refs: "api/src/openapi/* • scripts/generate-openapi.ts • PRD OpenAPI 3.1 + fitness test"
+            },
+            sdk: {
+                title: "@ship/sdk",
+                badge: "MUST-SHIP",
+                body: `New pnpm workspace package.<br><br>
+                <strong>Surface (minimum):</strong><br>
+                • ShipClient with <code>deviceLogin</code>, <code>authorizationCodeFlow</code>, and <code>clientCredentials</code> (for the internal agent)<br>
+                • <code>client.documents</code>, <code>.issues</code>, <code>.sprints</code>, <code>.webhooks</code><br>
+                • <code>verifyWebhook(headers, rawBody, secret)</code><br>
+                • Async iterator pagination<br>
+                • Discriminated error union<br><br>
+                <strong>Contract:</strong> Hand-written for DX quality + parity-tested against generated OpenAPI in CI. The agent uses Client Credentials via <code>ShipClient.clientCredentials()</code> (or direct token injection).`,
+                refs: "PRD SDK requirements + TTFE drill • New entry in pnpm-workspace.yaml"
+            },
+            agent: {
+                title: "Agent-as-Citizen Rewire (Epic 7)",
+                badge: "ARCHITECTURAL PAYOFF",
+                body: `The existing FleetGraph / AI code is refactored to authenticate using <strong>Client Credentials</strong> as a first-class OAuth app and consume the public API exclusively through the SDK (via <code>ShipClient.clientCredentials()</code> or direct token injection).<br><br>
+                <strong>Mechanism:</strong> Feature flag during transition. A dedicated system OAuth app (seeded at deploy time) provides the credentials. All actions appear in the public audit trail under the agent's <code>client_id</code>.<br><br>
+                <strong>Outcome:</strong> The agent becomes a normal platform citizen with identical rate limits, scopes, and audit visibility as any external developer.`,
+                refs: "PRD Epic 7 + Agent-as-Citizen diagram requirement • fleetgraph/ and ai/ directories"
+            }
+        };
+
+        function inspectComponent(key) {
+            const data = componentData[key];
+            if (!data) return;
+            
+            document.getElementById('inspector-title').innerHTML = data.title;
+            document.getElementById('inspector-badge').innerHTML = data.badge;
+            document.getElementById('inspector-badge').classList.remove('hidden');
+            document.getElementById('inspector-body').innerHTML = data.body;
+            document.getElementById('inspector-refs').innerHTML = data.refs;
+            document.getElementById('inspector-footer').classList.remove('hidden');
+            
+            // Highlight active in map
+            document.querySelectorAll('#component-map > div').forEach(el => el.classList.remove('!border-blue-400', 'ring-1', 'ring-blue-400/50'));
+            event.currentTarget?.classList.add('!border-blue-400', 'ring-1', 'ring-blue-400/50');
+        }
+
+        function highlightLayer(el, layer) {
+            document.querySelectorAll('.clickable-component').forEach(e => e.classList.remove('ring-2', 'ring-offset-2', 'ring-offset-slate-950', 'ring-blue-400'));
+            el.classList.add('ring-2', 'ring-offset-2', 'ring-offset-slate-950', 'ring-blue-400');
+            
+            // Bonus: auto-open explorer + select related
+            setTimeout(() => {
+                switchTab('explorer');
+                if (layer === 'public') inspectComponent('openapi');
+                if (layer === 'platform') inspectComponent('webhooks');
+            }, 420);
+        }
+
+        // Keyboard shortcuts
+        function setupKeyboard() {
+            document.addEventListener('keydown', (e) => {
+                if (e.key === '/' && document.activeElement.tagName === 'BODY') {
+                    e.preventDefault();
+                    const explorer = document.getElementById('tab-explorer');
+                    if (!explorer.classList.contains('hidden')) {
+                        document.querySelector('#component-map > div')?.click();
+                    } else {
+                        switchTab('explorer');
+                    }
+                }
+                if (e.metaKey && e.key === 'k') {
+                    e.preventDefault();
+                    switchTab('decisions');
+                }
+            });
+            
+            // Click anywhere on overview layers to jump
+            document.querySelectorAll('#tab-overview .clickable-component').forEach(el => {
+                el.addEventListener('click', () => switchTab('explorer'));
+            });
+        }
+
+        // Boot
+        function boot() {
+            initializeTailwind();
+            
+            // Default tab
+            document.getElementById('tab-overview').classList.remove('hidden');
+            
+            // Mermaid
+            setTimeout(initMermaid, 180);
+            
+            setupKeyboard();
+            
+            // Subtle auto-hint for explorer
+            setTimeout(() => {
+                const map = document.getElementById('component-map');
+                if (map && !document.getElementById('tab-explorer').classList.contains('hidden')) return;
+                // no-op in production
+            }, 4200);
+            
+            // Accessibility: announce
+            console.log('%c[Plugforge Architecture] Interactive draft ready. Use tabs or click components.', 'color:#64748b');
+        }
+        
+        // Expose a couple helpers for console / future extension
+        window.PLUGFORGE_ARCH = {
+            switchTab,
+            inspect: (key) => { switchTab('explorer'); inspectComponent(key); }
+        };
+        
+        window.onload = boot;
+    </script>
+</body>
+</html>

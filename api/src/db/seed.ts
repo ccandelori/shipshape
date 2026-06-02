@@ -1894,8 +1894,8 @@ async function seed() {
             // Prod: load from SSM (never commit)
             try {
               const { loadProductionSecrets } = await import('../config/ssm.js');
-              const secrets = await loadProductionSecrets();
-              secret = secrets.SYSTEM_CLIENT_SECRET;
+              const secrets: any = await loadProductionSecrets();
+              secret = secrets?.SYSTEM_CLIENT_SECRET;
             } catch (e) {
               console.warn('Could not load SYSTEM_CLIENT_SECRET from SSM; set env for seed.');
             }

@@ -37,14 +37,17 @@ function hashSecret(s: string) {
 }
 
 // POST /api/developer/apps : register (returns plaintext secret ONCE)
-router.post('/apps', isWorkspaceAdmin, async (req, res) => {
+router.post('/apps', async (req, res) => {
+  const user = getUser(req);
+  const ws = getWs(req);
+  if (!user || !ws || !(await isWorkspaceAdmin(user, ws, req))) {
+    return res.status(403).json({ error: 'workspace admin required' });
+  }
   const { name, redirect_uris = [], default_scopes = ['documents:read'] } = req.body || {};
   if (!name) return res.status(400).json({ error: 'name required' });
   const clientId = 'app-' + crypto.randomBytes(8).toString('hex');
   const secret = crypto.randomBytes(32).toString('hex');
   const secretHash = hashSecret(secret);
-  const ws = getWs(req);
-  const user = getUser(req);
   const r = await pool.query(
     `INSERT INTO oauth_apps (client_id, client_secret_hash, name, owner_user_id, workspace_id, redirect_uris, default_scopes, is_system, is_active)
      VALUES ($1, $2, $3, $4, $5, $6, $7, false, true)
@@ -53,12 +56,15 @@ router.post('/apps', isWorkspaceAdmin, async (req, res) => {
   );
   // Return secret once (never stored plaintext again)
   res.status(201).json({ ...r.rows[0], client_secret: secret, note: 'Save secret now; it is not shown again.' });
+  return;
 });
 
 // POST /api/developer/apps/:id/rotate : rotate secret (return new plaintext once)
-router.post('/apps/:id/rotate', isWorkspaceAdmin, async (req, res) => {
+router.post('/apps/:id/rotate', async (req, res) => {
+  const user = getUser(req); const ws = getWs(req);
+  if (!user || !ws || !(await isWorkspaceAdmin(user, ws, req))) return res.status(403).json({ error: 'admin required' });
+
   const { id } = req.params;
-  const ws = getWs(req);
   const secret = crypto.randomBytes(32).toString('hex');
   const secretHash = hashSecret(secret);
   const r = await pool.query(
@@ -69,21 +75,27 @@ router.post('/apps/:id/rotate', isWorkspaceAdmin, async (req, res) => {
   );
   if (r.rows.length === 0) return res.status(404).json({ error: 'not found or system' });
   res.json({ ...r.rows[0], client_secret: secret, note: 'Old secret now invalid. Save new one.' });
+  return;
 });
 
 // GET /api/developer/apps : list for ws
-router.get('/apps', isWorkspaceAdmin, async (req, res) => {
-  const ws = getWs(req);
+router.get('/apps', async (req, res) => {
+  const user = getUser(req); const ws = getWs(req);
+  if (!user || !ws || !(await isWorkspaceAdmin(user, ws, req))) return res.status(403).json({ error: 'admin required' });
+
   const r = await pool.query(
     `SELECT id, client_id, name, default_scopes, is_active, created_at FROM oauth_apps WHERE workspace_id = $1 ORDER BY created_at DESC`,
     [ws]
   );
   res.json({ apps: r.rows });
+  return;
 });
 
 // Webhook subs mgmt (minimal)
-router.get('/webhooks/subs', isWorkspaceAdmin, async (req, res) => {
-  const ws = getWs(req);
+router.get('/webhooks/subs', async (req, res) => {
+  const user = getUser(req); const ws = getWs(req);
+  if (!user || !ws || !(await isWorkspaceAdmin(user, ws, req))) return res.status(403).json({ error: 'admin required' });
+
   const r = await pool.query(
     `SELECT s.id, a.client_id, s.event_type, s.target_url, s.active, s.created_at
      FROM webhook_subscriptions s JOIN oauth_apps a ON a.id = s.app_id
@@ -91,10 +103,13 @@ router.get('/webhooks/subs', isWorkspaceAdmin, async (req, res) => {
     [ws]
   );
   res.json({ subs: r.rows });
+  return;
 });
 
-router.post('/webhooks/subs', isWorkspaceAdmin, async (req, res) => {
-  const ws = getWs(req);
+router.post('/webhooks/subs', async (req, res) => {
+  const user = getUser(req); const ws = getWs(req);
+  if (!user || !ws || !(await isWorkspaceAdmin(user, ws, req))) return res.status(403).json({ error: 'admin required' });
+
   const { app_client_id, event_type, target_url } = req.body || {};
   if (!app_client_id || !event_type || !target_url) return res.status(400).json({ error: 'missing' });
   const app = await pool.query(`SELECT id FROM oauth_apps WHERE client_id = $1 AND workspace_id = $2`, [app_client_id, ws]);
@@ -106,11 +121,14 @@ router.post('/webhooks/subs', isWorkspaceAdmin, async (req, res) => {
     [app.rows[0].id, event_type, target_url, secret]
   );
   res.status(201).json({ id: r.rows[0].id, secret /* once */ });
+  return;
 });
 
 // Deliveries log + replay (minimal)
-router.get('/webhooks/deliveries', isWorkspaceAdmin, async (req, res) => {
-  const ws = getWs(req);
+router.get('/webhooks/deliveries', async (req, res) => {
+  const user = getUser(req); const ws = getWs(req);
+  if (!user || !ws || !(await isWorkspaceAdmin(user, ws, req))) return res.status(403).json({ error: 'admin required' });
+
   const r = await pool.query(
     `SELECT d.id, d.event_type, d.status, d.attempt, d.latency_ms, d.created_at, s.target_url
      FROM webhook_deliveries d JOIN webhook_subscriptions s ON s.id = d.subscription_id
@@ -119,13 +137,16 @@ router.get('/webhooks/deliveries', isWorkspaceAdmin, async (req, res) => {
     [ws]
   );
   res.json({ deliveries: r.rows });
+  return;
 });
 
-router.post('/webhooks/deliveries/:id/replay', isWorkspaceAdmin, async (req, res) => {
+router.post('/webhooks/deliveries/:id/replay', async (req, res) => {
+  const user = getUser(req); const ws = getWs(req);
+  if (!user || !ws || !(await isWorkspaceAdmin(user, ws, req))) return res.status(403).json({ error: 'admin required' });
+
   // Replay: copy row with new id, original idempotency, trigger deliverer (in real via bus or direct)
   // For MVP: just log new row with same key, status pending (deliverer would pick if polling; here stub success)
   const { id } = req.params;
-  const ws = getWs(req);
   const orig = await pool.query(
     `SELECT d.* FROM webhook_deliveries d JOIN webhook_subscriptions s ON s.id = d.subscription_id JOIN oauth_apps a ON a.id = s.app_id WHERE d.id = $1 AND a.workspace_id = $2`,
     [id, ws]
@@ -140,6 +161,7 @@ router.post('/webhooks/deliveries/:id/replay', isWorkspaceAdmin, async (req, res
   );
   // In full: trigger deliverer.handle or bus publish with original key
   res.json({ replay_id: newId, note: 'replay queued with original idempotency_key + current secret' });
+  return;
 });
 
 export default router;
