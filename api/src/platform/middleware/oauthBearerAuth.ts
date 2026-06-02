@@ -9,9 +9,6 @@ import { oauthService } from '../oauth/service.js';
 //   - req.grantedScopes
 //   - Produces distinct error codes (PUBLIC_TOKEN_EXPIRED, etc.)
 
-// Placeholder implementation - will be fully implemented in U-CPS-01
-// For now it allows everything so the skeleton can mount and compile.
-
 export async function oauthBearerAuth(req: Request, res: Response, next: NextFunction) {
   const path = req.path || req.url || '';
   // Public discovery endpoints (no auth required)
@@ -45,8 +42,6 @@ export async function oauthBearerAuth(req: Request, res: Response, next: NextFun
     req.oauthClientId = validated.client_id; // public opaque client_id (not internal app uuid)
     req.grantedScopes = validated.scopes || [];
     req.oauthWorkspaceId = validated.workspace_id || null;
-
-    // TODO U-CPS-02: use narrow port for workspace membership check here if needed for public paths.
 
     return next();
   } catch (err) {

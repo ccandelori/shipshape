@@ -1,9 +1,9 @@
 import express from 'express';
 import { Request, Response, NextFunction } from 'express';
 import { publicContext } from './middleware/publicContext.js';
-import { oauthBearerAuth } from './middleware/oauthBearerAuth.js'; // stub for now
-import { scopeEnforcer } from './middleware/scopeEnforcer.js'; // stub for now
-import { v1Router } from './routes/v1.js'; // stub for now
+import { oauthBearerAuth } from './middleware/oauthBearerAuth.js';
+import { scopeEnforcer } from './middleware/scopeEnforcer.js';
+import { v1Router } from './routes/v1.js';
 import { generateRequestId } from '../utils/requestId.js';
 import { inMemoryBus } from './events/inMemoryBus.js';
 import { IEventBus } from './events/IEventBus.js';
