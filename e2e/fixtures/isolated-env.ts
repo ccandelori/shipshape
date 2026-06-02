@@ -139,6 +139,41 @@ export const test = base.extend<
         await runMigrations(dbUrl);
         if (debug) console.log(`${workerTag} Migrations complete`);
 
+        // Public platform seed for TTFE drill + public E2E (U4 per plan + AGENTS.md E2E rules)
+        // Creates test OAuth app + webhook sub (N+2 rows rule: expect in calling test or here)
+        if (debug) console.log(`${workerTag} Seeding TTFE public test app + sub...`);
+        const seedPool = new Pool({ connectionString: dbUrl });
+        try {
+          const wsRes = await seedPool.query(`SELECT id FROM workspaces LIMIT 1`);
+          const wsId = wsRes.rows[0]?.id;
+          if (wsId) {
+            const clientId = `ttfe-test-app-w${workerInfo.workerIndex}`;
+            await seedPool.query(
+              `INSERT INTO oauth_apps (client_id, name, workspace_id, redirect_uris, allowed_grant_types, default_scopes, is_system, is_active)
+               VALUES ($1, 'TTFE Test App', $2, '[]'::jsonb, ARRAY['authorization_code','device_code','client_credentials'], ARRAY['documents:write','webhooks:manage'], false, true)
+               ON CONFLICT (client_id) DO NOTHING`,
+              [clientId, wsId]
+            );
+            await seedPool.query(
+              `INSERT INTO webhook_subscriptions (app_id, event_type, target_url, secret, active)
+               SELECT id, 'document.created', 'http://127.0.0.1:9/__ttfe-placeholder', 'ttfe-secret-for-replay', true
+               FROM oauth_apps WHERE client_id = $1
+               ON CONFLICT DO NOTHING`,
+              [clientId]
+            );
+            // N+2: at least one more row (sub) + app
+            const appCount = (await seedPool.query(`SELECT COUNT(*)::int c FROM oauth_apps WHERE client_id LIKE 'ttfe-test-app-%'`)).rows[0].c;
+            if (appCount < 1) {
+              throw new Error(`TTFE seed failed: expected >=1 ttfe app in fixtures/isolated-env.ts. Run pnpm db:seed or check migration.`);
+            }
+          }
+        } catch (e) {
+          console.warn(`${workerTag} public/TTFE seed error (may affect TTFE gate):`, (e as Error).message);
+          if (debug) console.log(e);
+        } finally {
+          await seedPool.end();
+        }
+
         await use(container);
       } finally {
         if (debug) console.log(`${workerTag} Stopping PostgreSQL container...`);
@@ -310,6 +345,22 @@ async function runMigrations(dbUrl: string): Promise<void> {
         'INSERT INTO schema_migrations (version) VALUES ($1) ON CONFLICT DO NOTHING',
         [version]
       );
+    }
+
+    // Apply post-schema platform migrations (045+) explicitly. schema.sql is base only (per rules);
+    // 045/046/047 add oauth/webhook tables not present in initial schema. Uses IF NOT EXISTS in their SQL.
+    // This enables TTFE + public E2E in isolated containers (N+2 fixtures per AGENTS).
+    const platformMigs = [
+      '045_oauth_platform_core.sql',
+      '046_webhook_subscriptions_and_deliveries.sql',
+      '047_add_webhook_delivery_secret_snapshot.sql',
+    ];
+    for (const f of platformMigs) {
+      const p = path.join(migrationsDir, f);
+      if (existsSync(p)) {
+        const sql = readFileSync(p, 'utf-8');
+        await pool.query(sql);
+      }
     }
 
     // Step 5: Seed minimal test data

@@ -15,7 +15,10 @@ beforeAll(async () => {
     workspace_invites, sessions, files, document_links, document_history,
     comments, document_associations, document_snapshots, sprint_iterations,
     issue_iterations, documents, audit_logs, workspace_memberships,
-    users, workspaces
+    users, workspaces,
+    -- Plugforge public platform tables (from 045/046)
+    oauth_apps, oauth_authorization_codes, oauth_device_codes, oauth_issued_tokens,
+    webhook_subscriptions, webhook_deliveries
     CASCADE`)
 })
 
