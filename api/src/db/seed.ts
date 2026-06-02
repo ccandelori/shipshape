@@ -2,6 +2,7 @@ import { config } from 'dotenv';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { readFileSync } from 'fs';
+import crypto from 'crypto';
 import pg from 'pg';
 import bcrypt from 'bcryptjs';
 import { loadProductionSecrets } from '../config/ssm.js';
@@ -1879,6 +1880,48 @@ async function seed() {
     console.log('Login credentials:');
     console.log('  Email: dev@ship.local');
     console.log('  Password: admin123');
+
+    // U6: System OAuth app for Agent (Client Credentials first-class citizen)
+    // is_system=true, narrow scopes only. Secret from env (dev) or SSM (prod) - never git.
+    // Idempotent. Audit will show under client_id.
+    try {
+      const systemClientId = process.env.SYSTEM_CLIENT_ID || 'ship-agent-system';
+      const existing = await pool.query(`SELECT id, is_system FROM oauth_apps WHERE client_id = $1`, [systemClientId]);
+      if (existing.rows.length === 0 || !existing.rows[0].is_system) {
+        let secret = process.env.SYSTEM_CLIENT_SECRET;
+        if (!secret) {
+          if (process.env.NODE_ENV === 'production' || process.env.ENVIRONMENT === 'prod') {
+            // Prod: load from SSM (never commit)
+            try {
+              const { loadProductionSecrets } = await import('../config/ssm.js');
+              const secrets = await loadProductionSecrets();
+              secret = secrets.SYSTEM_CLIENT_SECRET;
+            } catch (e) {
+              console.warn('Could not load SYSTEM_CLIENT_SECRET from SSM; set env for seed.');
+            }
+          }
+        }
+        if (!secret) {
+          // Dev fallback only (not for prod)
+          secret = 'dev-system-secret-for-agent-only';
+          console.warn('Using dev fallback SYSTEM_CLIENT_SECRET for system app seed. Set env/SSM in prod.');
+        }
+        const secretHash = crypto.createHash('sha256').update(secret).digest('hex');
+        const scopes = ['documents:read', 'documents:write', 'issues:read', 'issues:write', 'sprints:read', 'sprints:write', 'webhooks:manage'];
+        await pool.query(
+          `INSERT INTO oauth_apps (client_id, client_secret_hash, name, description, workspace_id, default_scopes, is_system, is_active)
+           SELECT $1, $2, 'Ship Agent (System)', 'Internal agent / MCP / FleetGraph client (Client Credentials)', w.id, $3, true, true
+           FROM workspaces w LIMIT 1
+           ON CONFLICT (client_id) DO UPDATE SET client_secret_hash = EXCLUDED.client_secret_hash, is_system = true, default_scopes = EXCLUDED.default_scopes`,
+          [systemClientId, secretHash, scopes]
+        );
+        console.log(`Seeded system OAuth app for Agent (client_id=${systemClientId}, scopes=${scopes.length})`);
+      } else {
+        console.log('System app already present; skipping.');
+      }
+    } catch (e) {
+      console.warn('Public platform system app seed skipped (tables or ws missing?):', (e as Error).message);
+    }
   } catch (error) {
     console.error('❌ Seed failed:', error);
     process.exit(1);
